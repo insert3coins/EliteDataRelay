@@ -1,6 +1,6 @@
 <div align="left">
 
-    <h2> Elite Dangerous Cargo Monitor</h2>
+     Elite Dangerous Cargo Monitor
         <p>
 	<em><code>❯ A simple little app to monitor ya cargo.json</code></em>
 </p>
@@ -16,9 +16,6 @@
 	<!-- default option, no dependency badges. -->
 </p>
     </div>
-</div>
-<br clear="left"/>
-
 ## 🔗 Table of Contents
 
 I. [📍 Overview](#-overview)
