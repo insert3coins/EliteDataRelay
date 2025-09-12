@@ -1,7 +1,6 @@
 <div align="left">
 
-    <div style="display: inline-block;">
-        <h2 style="display: inline-block; vertical-align: middle; margin-top: 0;">Elite Dangerous Cargo Monitor</h2>
+    <h2> Elite Dangerous Cargo Monitor</h2>
         <p>
 	<em><code>❯ A simple little app to monitor ya cargo.json</code></em>
 </p>
