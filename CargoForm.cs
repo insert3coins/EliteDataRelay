@@ -356,7 +356,7 @@ namespace EliteCargoMonitor
         private void UpdateUI(CargoSnapshot snapshot)
         {
             string cargoString = string.Join(
-                Environment.NewLine,
+                " ",
                 snapshot.Inventory.Select(item =>
                     $"{(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)} ({item.Count})"));
 
@@ -389,7 +389,7 @@ namespace EliteCargoMonitor
                 Directory.CreateDirectory(outputDir);
 
             string cargoString = string.Join(
-                Environment.NewLine,
+                " ",
                 snapshot.Inventory.Select(item =>
                     $"{(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)} ({item.Count})"));
 
