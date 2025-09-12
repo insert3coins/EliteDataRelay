@@ -1,8 +1,8 @@
 <div align="left">
 
      Elite Dangerous Cargo Monitor
-        <p>
-	<code>❯ A simple little app to monitor ya cargo.json</code>
+    
+	❯ A simple little app to monitor ya cargo.json
 </p>
         <p>
 	<img src="https://img.shields.io/github/license/insert3coins/EliteCargoMonitor?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
