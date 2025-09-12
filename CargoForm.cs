@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Media; // Added for SoundPlayer
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -15,6 +16,9 @@ namespace EliteCargoMonitor
 {
     public partial class CargoForm : Form
     {
+        private readonly SoundPlayer _startSound;
+        private readonly SoundPlayer _stopSound;
+
         /* -----------------------------------------------------------------
          *   Data‑models used by the JSON serializer
          * ----------------------------------------------------------------- */
@@ -58,11 +62,12 @@ namespace EliteCargoMonitor
         private const int DebounceMs = 500;          // 500 ms debounce window
         private string? _lastInventoryHash;
 
-        /* -----------------------------------------------------------------
-         *   Constructor – UI layout + welcome text
-         * ----------------------------------------------------------------- */
         public CargoForm()
         {
+            // Initialize sound players
+            _startSound = new SoundPlayer(Properties.Resources.Start);
+            _stopSound = new SoundPlayer(Properties.Resources.Stop);
+
             // Basic window
             Text = $"Cargo Monitor – Stopped: {CargoPath}";
             Width = 800;
@@ -127,6 +132,8 @@ namespace EliteCargoMonitor
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
             StopMonitoringInternal();
+            _startSound.Dispose();
+            _stopSound.Dispose();
         }
 
         /* -----------------------------------------------------------------
@@ -134,6 +141,7 @@ namespace EliteCargoMonitor
          * ----------------------------------------------------------------- */
         private void StartMonitoring(object? sender, EventArgs e)
         {
+            _startSound.Play();  // Play start sound
             _startBtn.Enabled = false;
             _stopBtn.Enabled = true;
             Text = $"Cargo Monitor – Watching: {CargoPath}";
@@ -147,6 +155,7 @@ namespace EliteCargoMonitor
 
         private void StopMonitoringInternal()
         {
+            _stopSound.Play();  // Play stop sound
             _startBtn.Enabled = true;
             _stopBtn.Enabled = false;
             Text = $"Cargo Monitor – Stopped: {CargoPath}";
