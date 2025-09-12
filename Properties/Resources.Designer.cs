@@ -87,5 +87,15 @@ namespace EliteCargoMonitor.Properties {
                 return ResourceManager.GetStream("Stop", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] VerdanaFont {
+            get {
+                object obj = ResourceManager.GetObject("VerdanaFont", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

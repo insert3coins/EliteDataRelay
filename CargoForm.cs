@@ -18,6 +18,7 @@ namespace EliteCargoMonitor
     {
         private readonly SoundPlayer _startSound;
         private readonly SoundPlayer _stopSound;
+        private readonly Font _verdanaFont;
 
         /* -----------------------------------------------------------------
          *   Data‑models used by the JSON serializer
@@ -64,6 +65,10 @@ namespace EliteCargoMonitor
 
         public CargoForm()
         {
+            // Initialize font
+            var fontStream = new MemoryStream(Properties.Resources.VerdanaFont);
+            _verdanaFont = new System.Drawing.Font("Verdana", 10);
+
             // Initialize sound players
             _startSound = new SoundPlayer(Properties.Resources.Start);
             _stopSound = new SoundPlayer(Properties.Resources.Stop);
@@ -95,6 +100,9 @@ namespace EliteCargoMonitor
 
             Controls.Add(_textBox);
             Controls.Add(buttonPanel);
+
+            // Set font for text box
+            _textBox.Font = _verdanaFont;
 
             /* -----------------------------------------------------------------
              *   Welcome text – show it immediately on startup
@@ -134,6 +142,7 @@ namespace EliteCargoMonitor
             StopMonitoringInternal();
             _startSound.Dispose();
             _stopSound.Dispose();
+            _verdanaFont.Dispose();
         }
 
         /* -----------------------------------------------------------------
@@ -414,6 +423,12 @@ namespace EliteCargoMonitor
             _textBox.AppendText($"{aboutText}{Environment.NewLine}");
             _textBox.SelectionStart = _textBox.TextLength;
             _textBox.ScrollToCaret();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            _verdanaFont?.Dispose();
         }
     }
 }
