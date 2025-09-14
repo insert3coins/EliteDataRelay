@@ -23,7 +23,10 @@ namespace EliteCargoMonitor
         /* -----------------------------------------------------------------
          *   Data‑models used by the JSON serializer
          * ----------------------------------------------------------------- */
-        public record CargoSnapshot([property: JsonPropertyName("Inventory")] List<CargoItem> Inventory);
+        public record CargoSnapshot(
+            [property: JsonPropertyName("Inventory")] List<CargoItem> Inventory,
+            [property: JsonPropertyName("Count")] int Count);
+
         public record CargoItem(
             [property: JsonPropertyName("Name")] string Name,
             [property: JsonPropertyName("Count")] int Count,
@@ -332,7 +335,7 @@ namespace EliteCargoMonitor
                     if (snapshot == null) return;
 
                     //  Fingerprint guard – skip duplicate snapshots
-                    string hash = ComputeHash(snapshot.Inventory);
+                    string hash = ComputeHash(snapshot);
                     if (hash == _lastInventoryHash) return;
                     _lastInventoryHash = hash;
 
@@ -359,10 +362,14 @@ namespace EliteCargoMonitor
             }
         }
 
-        private string ComputeHash(List<CargoItem> inventory)
+        private string ComputeHash(CargoSnapshot snapshot)
         {
             string json = JsonSerializer.Serialize(
-                inventory,
+                new
+                {
+                    snapshot.Count,
+                    snapshot.Inventory
+                },
                 new JsonSerializerOptions { WriteIndented = false, PropertyNameCaseInsensitive = true });
 
             using var sha = SHA256.Create();
@@ -373,7 +380,8 @@ namespace EliteCargoMonitor
 
         private void UpdateUI(CargoSnapshot snapshot)
         {
-            string cargoString = string.Join(
+            string cargoString = $"Total Cargo {snapshot.Count}: ";
+            cargoString += string.Join(
                 " ",
                 snapshot.Inventory.Select(item =>
                     $"{(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)} ({item.Count})"));
@@ -406,7 +414,8 @@ namespace EliteCargoMonitor
             if (!Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
 
-            string cargoString = string.Join(
+            string cargoString = $"Total Cargo: {snapshot.Count} ";
+            cargoString += string.Join(
                 " ",
                 snapshot.Inventory.Select(item =>
                     $"{(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)} ({item.Count})"));
