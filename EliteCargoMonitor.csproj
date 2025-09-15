@@ -7,8 +7,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <StartupObject>EliteCargoMonitor.Program</StartupObject>
-    <ApplicationIcon>EliteCargoMonitor.app.ico</ApplicationIcon>
 	<PublishSingleFile>true</PublishSingleFile>
+	<ApplicationIcon>Resources\Appicon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="EliteCargoMonitor.app.ico" />
+    <Content Include="Resources\Appicon.ico" />
   </ItemGroup>
 
   <ItemGroup>
