@@ -61,7 +61,12 @@ namespace EliteCargoMonitor.Configuration
         /// <summary>
         /// About text for the application.
         /// </summary>
-        public static string AboutText { get; } = "Elite Cargo Monitor v1.1\nCreated by insert3coins";
+        public static string AboutInfo { get; } = "Elite Cargo Monitor v0.7a" + Environment.NewLine + "Created by insert3coins";
+
+        /// <summary>
+        /// The URL for the project's GitHub page.
+        /// </summary>
+        public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
 
         /// <summary>
         /// Welcome message displayed on startup.

@@ -1,5 +1,6 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
+using System.Diagnostics;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 using EliteCargoMonitor.Services;
@@ -144,7 +145,29 @@ namespace EliteCargoMonitor
 
         private void OnAboutClicked(object? sender, EventArgs e)
         {
-            _cargoFormUI.AppendText($"{AppConfiguration.AboutText}{Environment.NewLine}");
+            string fullAboutText = $"{AppConfiguration.AboutInfo}{Environment.NewLine}Project Page: {AppConfiguration.AboutUrl}";
+            //_cargoFormUI.AppendText(fullAboutText + Environment.NewLine);
+
+            string message = $"{fullAboutText}{Environment.NewLine}{Environment.NewLine}Would you like to open the project page in your browser?";
+
+            var result = MessageBox.Show(
+                this,
+                message,
+                "About Elite Cargo Monitor",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(AppConfiguration.AboutUrl) { UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Failed to open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         #endregion
