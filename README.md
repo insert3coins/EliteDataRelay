@@ -13,7 +13,7 @@ A lightweight Windows utility for players of Elite Dangerous. It monitors your i
 
 This tool provides a simple way to keep an eye on your ship's cargo without having to tab into the game's right-hand panel. It reads the `Cargo.json` file that Elite Dangerous generates, along with player journals to determine total capacity. The output is displayed in the app window and also written to a `cargo.txt` file, which is perfect for adding a cargo display to your stream via OBS or other broadcasting software.
 
-!Elite Cargo Monitor Screenshot
+![Screenshot](https://github.com/insert3coins/EliteCargoMonitor/blob/master/Images/Screnshot.png)
 
 ## ✨ Features
 
