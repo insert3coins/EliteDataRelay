@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -80,6 +80,7 @@ namespace EliteCargoMonitor
             _cargoFormUI.StopClicked += OnStopClicked;
             _cargoFormUI.ExitClicked += OnExitClicked;
             _cargoFormUI.AboutClicked += OnAboutClicked;
+            _cargoFormUI.SettingsClicked += OnSettingsClicked;
 
             // Wire up service events
             _fileMonitoringService.FileChanged += OnFileChanged;
@@ -179,6 +180,14 @@ namespace EliteCargoMonitor
             }
         }
 
+        private void OnSettingsClicked(object? sender, EventArgs e)
+        {
+            using (var settingsForm = new SettingsForm())
+            {
+                settingsForm.ShowDialog(this);
+            }
+        }
+
         #endregion
 
         #region Service Event Handlers
@@ -191,11 +200,13 @@ namespace EliteCargoMonitor
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
+            // Let the FileOutputService handle both formatting the string and writing the file.
+            // This ensures the format is consistent and respects all user settings.
+            string formattedCargoString = _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+
             // Update UI with new cargo data
-            _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
-            
-            // Write to output file
-            _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+            string entry = $"{formattedCargoString}{Environment.NewLine}";
+            _cargoFormUI.AppendText(entry);
         }
 
         private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)

@@ -75,10 +75,31 @@ If you want to build the project yourself:
 7.  Minimize or close the window to send the application to the system tray. You can restore it by double-clicking the tray icon.
 8.  To fully close the application, use the **Exit** button or right-click the tray icon and select **Exit**.
 
+## ⚙️ Settings
+
+You can customize the application's behavior by clicking the **Settings** button.
+
+### Output File Format
+
+You can change the format of the text written to the output file using a custom format string. The following placeholders are available:
+
+-   `{count}`: Total number of items in cargo.
+-   `{capacity}`: Total cargo capacity (blank if not yet known).
+-   `{count_slash_capacity}`: A combined view, e.g., "128/256" or just "128".
+-   `{items}`: A single-line list of all cargo items, e.g., `Gold (10) Silver (5)`.
+-   `{items_multiline}`: A multi-line list of all cargo items.
+-   `\n`: Inserts a newline character.
+
+**Default format:** `{count_slash_capacity} | {items}`
+
+### Output File Name
+
+You can change the name of the output file (default is `cargo.txt`).
+
 ## 📌 Project Roadmap
 
--   [ ] Create a settings UI for easier configuration (e.g., custom file paths).
--   [ ] Allow customization of the `cargo.txt` output format.
+-   [x] Create a settings UI for easier configuration.
+-   [x] Allow customization of the `cargo.txt` output format.
 -   [x] Add a system tray icon for running in the background.
 -   [ ] Package the application with an installer.
 

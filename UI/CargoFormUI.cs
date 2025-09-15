@@ -20,6 +20,7 @@ namespace EliteCargoMonitor.UI
         private Button? _stopBtn;
         private Button? _exitBtn;
         private Button? _aboutBtn;
+        private Button? _settingsBtn;
         private Font? _verdanaFont;
         private Font? _consolasFont;
         private PrivateFontCollection? _privateFonts;
@@ -60,6 +61,11 @@ namespace EliteCargoMonitor.UI
         /// Event raised when the about button is clicked
         /// </summary>
         public event EventHandler? AboutClicked;
+
+        /// <summary>
+        /// Event raised when the settings button is clicked
+        /// </summary>
+        public event EventHandler? SettingsClicked;
 
         /// <summary>
         /// Initialize the UI components and layout
@@ -113,13 +119,6 @@ namespace EliteCargoMonitor.UI
             {
                 // Fallback to default font if custom font fails
                 _verdanaFont = new Font(FontFamily.GenericSansSerif, AppConfiguration.DefaultFontSize);
-
-                // Clean up any resources allocated before the exception
-                if (_fontMemoryPtr != IntPtr.Zero)
-                {
-                    Marshal.FreeCoTaskMem(_fontMemoryPtr);
-                    _fontMemoryPtr = IntPtr.Zero;
-                }
                 _privateFonts?.Dispose();
             }
 
@@ -262,6 +261,7 @@ namespace EliteCargoMonitor.UI
             _startBtn = new Button { Text = "Start", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
             _stopBtn = new Button { Text = "Stop", Height = AppConfiguration.ButtonHeight, Enabled = false, Font = _consolasFont };
             _exitBtn = new Button { Text = "Exit", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
+            _settingsBtn = new Button { Text = "Settings", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
             _aboutBtn = new Button { Text = "About", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
 
             CreateTrayIcon();
@@ -292,7 +292,7 @@ namespace EliteCargoMonitor.UI
         private void SetupLayout()
         {
             if (_form == null || _textBox == null || _startBtn == null || 
-                _stopBtn == null || _aboutBtn == null || _exitBtn == null) return;
+                _stopBtn == null || _aboutBtn == null || _settingsBtn == null || _exitBtn == null) return;
 
             // Create button panel
             var buttonPanel = new FlowLayoutPanel
@@ -304,10 +304,11 @@ namespace EliteCargoMonitor.UI
                 Margin = Padding.Empty
             };
 
-            // Add buttons in order: Start | Stop | About | Exit
+            // Add buttons in order: Start | Stop | About | Settings | Exit
             buttonPanel.Controls.Add(_startBtn);
             buttonPanel.Controls.Add(_stopBtn);
             buttonPanel.Controls.Add(_aboutBtn);
+            buttonPanel.Controls.Add(_settingsBtn);
             buttonPanel.Controls.Add(_exitBtn);
 
             // Add controls to form
@@ -320,6 +321,7 @@ namespace EliteCargoMonitor.UI
             if (_startBtn != null) _startBtn.Click += (s, e) => StartClicked?.Invoke(s, e);
             if (_stopBtn != null) _stopBtn.Click += (s, e) => StopClicked?.Invoke(s, e);
             if (_exitBtn != null) _exitBtn.Click += (s, e) => ExitClicked?.Invoke(s, e);
+            if (_settingsBtn != null) _settingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
             if (_aboutBtn != null) _aboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
 
             // Tray icon event handlers
@@ -342,10 +344,9 @@ namespace EliteCargoMonitor.UI
         /// <param name="cargoCapacity">The total cargo capacity</param>
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
-            string cargoString = FormatCargoString(snapshot, cargoCapacity);
-            string entry = $"{cargoString}{Environment.NewLine}";
-            
-            AppendText(entry);
+            // This method is now obsolete as formatting is handled by FileOutputService
+            // and text is appended directly in CargoForm.
+            // We keep the method to satisfy the interface but it does nothing.
             TrimTextBoxLines();
             ScrollToBottom();
         }
@@ -411,18 +412,6 @@ namespace EliteCargoMonitor.UI
             // Also update tray menu items
             if (_trayMenuStart != null) _trayMenuStart.Enabled = startEnabled;
             if (_trayMenuStop != null) _trayMenuStop.Enabled = stopEnabled;
-        }
-
-        private string FormatCargoString(CargoSnapshot snapshot, int? cargoCapacity)
-        {
-            string capacityString = cargoCapacity.HasValue ? $"/{cargoCapacity.Value}" : "";
-            string cargoString = $"Total Cargo {snapshot.Count}{capacityString}: ";
-            cargoString += string.Join(
-                " ",
-                snapshot.Inventory.Select(item =>
-                    $"{(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)} ({item.Count})"));
-
-            return cargoString;
         }
 
         private void TrimTextBoxLines()
@@ -511,14 +500,11 @@ namespace EliteCargoMonitor.UI
             _stopBtn?.Dispose();
             _exitBtn?.Dispose();
             _aboutBtn?.Dispose();
+            _settingsBtn?.Dispose();
             _notifyIcon?.Dispose();
             _trayMenu?.Dispose();
             _animationTimer?.Dispose();
             _privateFonts?.Dispose();
-            if (_fontMemoryPtr != IntPtr.Zero)
-            {
-                Marshal.FreeCoTaskMem(_fontMemoryPtr);
-            }
         }
     }
 }

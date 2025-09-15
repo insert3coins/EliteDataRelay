@@ -30,6 +30,11 @@ namespace EliteCargoMonitor.UI
         event EventHandler? AboutClicked;
 
         /// <summary>
+        /// Event raised when the settings button is clicked
+        /// </summary>
+        event EventHandler? SettingsClicked;
+
+        /// <summary>
         /// Initialize the UI components and layout
         /// </summary>
         /// <param name="form">The main form to initialize</param>

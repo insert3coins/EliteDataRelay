@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Media;
 
 namespace EliteCargoMonitor.Services
@@ -16,9 +17,12 @@ namespace EliteCargoMonitor.Services
         {
             try
             {
-                // Initialize sound players with embedded resources
-                _startSound = new SoundPlayer(Properties.Resources.Start);
-                _stopSound = new SoundPlayer(Properties.Resources.Stop);
+                // Initialize sound players with embedded resources.
+                // We copy the UnmanagedMemoryStream from resources into a managed MemoryStream.
+                // This is a safer approach that avoids potential heap corruption issues (0xc0000374)
+                // that can occur when SoundPlayer handles the lifetime of an unmanaged stream.
+                _startSound = new SoundPlayer(CreateMemoryStreamFromResource(Properties.Resources.Start));
+                _stopSound = new SoundPlayer(CreateMemoryStreamFromResource(Properties.Resources.Stop));
             }
             catch (Exception ex)
             {
@@ -58,6 +62,29 @@ namespace EliteCargoMonitor.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"[SoundService] Error playing stop sound: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Creates a managed <see cref="MemoryStream"/> from an unmanaged resource stream.
+        /// </summary>
+        /// <param name="sourceStream">The source <see cref="UnmanagedMemoryStream"/> from application resources.</param>
+        /// <returns>A new <see cref="MemoryStream"/> containing the sound data.</returns>
+        /// <remarks>
+        /// This method prevents potential heap corruption by copying the data from the
+        /// unmanaged stream into a managed one. The <see cref="SoundPlayer"/> can then safely
+        /// manage the lifetime of the <see cref="MemoryStream"/>. The source stream is disposed of.
+        /// </remarks>
+        private static MemoryStream CreateMemoryStreamFromResource(UnmanagedMemoryStream? sourceStream)
+        {
+            if (sourceStream is null) return new MemoryStream();
+
+            using (sourceStream)
+            {
+                var memoryStream = new MemoryStream();
+                sourceStream.CopyTo(memoryStream);
+                memoryStream.Position = 0;
+                return memoryStream;
             }
         }
 

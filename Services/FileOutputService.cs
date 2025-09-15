@@ -17,7 +17,8 @@ namespace EliteCargoMonitor.Services
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to write</param>
         /// <param name="cargoCapacity">The total cargo capacity, if known</param>
-        public void WriteCargoSnapshot(CargoSnapshot snapshot, int? cargoCapacity)
+        /// <returns>The formatted string that was written to the file.</returns>
+        public string WriteCargoSnapshot(CargoSnapshot snapshot, int? cargoCapacity)
         {
             try
             {
@@ -37,11 +38,13 @@ namespace EliteCargoMonitor.Services
                 File.WriteAllText(outputPath, cargoString);
                 
                 Debug.WriteLine($"[FileOutputService] Written cargo data to: {outputPath}");
+                return cargoString;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[FileOutputService] Error writing cargo snapshot: {ex}");
             }
+            return string.Empty;
         }
 
         /// <summary>
@@ -52,15 +55,29 @@ namespace EliteCargoMonitor.Services
         /// <returns>Formatted cargo string</returns>
         private string FormatCargoString(CargoSnapshot snapshot, int? cargoCapacity)
         {
-            string capacityString = cargoCapacity.HasValue ? $"/{cargoCapacity.Value}" : "";
-            string cargoString = $"Total Cargo: {snapshot.Count}{capacityString} ";
-
-            cargoString += string.Join(
+            string countSlashCapacity = cargoCapacity.HasValue
+                ? $"{snapshot.Count}/{cargoCapacity.Value}"
+                : snapshot.Count.ToString();
+    
+            string singleLineItems = string.Join(
                 " ",
                 snapshot.Inventory.Select(item =>
                     $"{(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)} ({item.Count})"));
-
-            return cargoString;
+    
+            string multiLineItems = string.Join(
+                Environment.NewLine,
+                snapshot.Inventory.Select(item =>
+                    $"- {(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)}: {item.Count}"));
+    
+            var outputString = AppConfiguration.OutputFileFormat
+                .Replace("{count}", snapshot.Count.ToString())
+                .Replace("{capacity}", cargoCapacity.HasValue ? cargoCapacity.Value.ToString() : "")
+                .Replace("{count_slash_capacity}", countSlashCapacity)
+                .Replace("{items}", singleLineItems)
+                .Replace("{items_multiline}", multiLineItems)
+                .Replace("\\n", Environment.NewLine);
+    
+            return outputString;
         }
     }
 }

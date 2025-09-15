@@ -12,6 +12,6 @@ namespace EliteCargoMonitor.Services
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to write</param>
         /// <param name="cargoCapacity">The total cargo capacity, if known</param>
-        void WriteCargoSnapshot(CargoSnapshot snapshot, int? cargoCapacity);
+        string WriteCargoSnapshot(CargoSnapshot snapshot, int? cargoCapacity);
     }
 }
