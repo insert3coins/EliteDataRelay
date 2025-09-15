@@ -21,6 +21,7 @@ namespace EliteCargoMonitor.UI
         private Button? _exitBtn;
         private Button? _aboutBtn;
         private Button? _settingsBtn;
+        private ToolTip? _toolTip;
         private Font? _verdanaFont;
         private Font? _consolasFont;
         private PrivateFontCollection? _privateFonts;
@@ -264,6 +265,14 @@ namespace EliteCargoMonitor.UI
             _settingsBtn = new Button { Text = "Settings", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
             _aboutBtn = new Button { Text = "About", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
 
+            // Create ToolTip and assign to buttons
+            _toolTip = new ToolTip();
+            _toolTip.SetToolTip(_startBtn, "Start monitoring for cargo changes");
+            _toolTip.SetToolTip(_stopBtn, "Stop monitoring for cargo changes");
+            _toolTip.SetToolTip(_exitBtn, "Exit the application");
+            _toolTip.SetToolTip(_settingsBtn, "Configure application settings");
+            _toolTip.SetToolTip(_aboutBtn, "Show information about the application");
+
             CreateTrayIcon();
         }
 
@@ -501,6 +510,7 @@ namespace EliteCargoMonitor.UI
             _exitBtn?.Dispose();
             _aboutBtn?.Dispose();
             _settingsBtn?.Dispose();
+            _toolTip?.Dispose();
             _notifyIcon?.Dispose();
             _trayMenu?.Dispose();
             _animationTimer?.Dispose();
