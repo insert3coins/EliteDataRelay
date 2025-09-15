@@ -2,6 +2,8 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Drawing.Text;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 using EliteCargoMonitor.Models;
@@ -19,6 +21,9 @@ namespace EliteCargoMonitor.UI
         private Button? _exitBtn;
         private Button? _aboutBtn;
         private Font? _verdanaFont;
+        private Font? _consolasFont;
+        private PrivateFontCollection? _privateFonts;
+        private IntPtr _fontMemoryPtr = IntPtr.Zero;
         private Form? _form;
         private NotifyIcon? _notifyIcon;
         private ContextMenuStrip? _trayMenu;
@@ -92,13 +97,40 @@ namespace EliteCargoMonitor.UI
         {
             try
             {
-                // Initialize Verdana font from embedded resources or fallback to system font
-                _verdanaFont = new Font(AppConfiguration.VerdanaFontName, AppConfiguration.DefaultFontSize);
+                // Initialize Verdana font from embedded resources.
+                byte[] fontData = Properties.Resources.VerdanaFont;
+
+                // Allocate unmanaged memory and copy font data. This memory must not be freed until the PrivateFontCollection is disposed.
+                _fontMemoryPtr = Marshal.AllocCoTaskMem(fontData.Length);
+                Marshal.Copy(fontData, 0, _fontMemoryPtr, fontData.Length);
+
+                _privateFonts = new PrivateFontCollection();
+                _privateFonts.AddMemoryFont(_fontMemoryPtr, fontData.Length);
+
+                _verdanaFont = new Font(_privateFonts.Families[0], AppConfiguration.DefaultFontSize);
             }
             catch
             {
                 // Fallback to default font if custom font fails
                 _verdanaFont = new Font(FontFamily.GenericSansSerif, AppConfiguration.DefaultFontSize);
+
+                // Clean up any resources allocated before the exception
+                if (_fontMemoryPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeCoTaskMem(_fontMemoryPtr);
+                    _fontMemoryPtr = IntPtr.Zero;
+                }
+                _privateFonts?.Dispose();
+            }
+
+            // Initialize Consolas font from system
+            try
+            {
+                _consolasFont = new Font(AppConfiguration.ConsolasFontName, AppConfiguration.DefaultFontSize);
+            }
+            catch
+            {
+                _consolasFont = new Font(FontFamily.GenericMonospace, AppConfiguration.DefaultFontSize);
             }
         }
 
@@ -213,7 +245,7 @@ namespace EliteCargoMonitor.UI
             _textBox = new TextBox
             {
                 Dock = DockStyle.Fill,
-                Font = new Font(AppConfiguration.ConsolasFontName, AppConfiguration.DefaultFontSize),
+                Font = _consolasFont,
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 ReadOnly = true,
@@ -227,10 +259,10 @@ namespace EliteCargoMonitor.UI
             }
 
             // Create control buttons
-            _startBtn = new Button { Text = "Start", Height = AppConfiguration.ButtonHeight };
-            _stopBtn = new Button { Text = "Stop", Height = AppConfiguration.ButtonHeight, Enabled = false };
-            _exitBtn = new Button { Text = "Exit", Height = AppConfiguration.ButtonHeight };
-            _aboutBtn = new Button { Text = "About", Height = AppConfiguration.ButtonHeight };
+            _startBtn = new Button { Text = "Start", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
+            _stopBtn = new Button { Text = "Stop", Height = AppConfiguration.ButtonHeight, Enabled = false, Font = _consolasFont };
+            _exitBtn = new Button { Text = "Exit", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
+            _aboutBtn = new Button { Text = "About", Height = AppConfiguration.ButtonHeight, Font = _consolasFont };
 
             CreateTrayIcon();
         }
@@ -473,6 +505,7 @@ namespace EliteCargoMonitor.UI
         public void Dispose()
         {
             _verdanaFont?.Dispose();
+            _consolasFont?.Dispose();
             _textBox?.Dispose();
             _startBtn?.Dispose();
             _stopBtn?.Dispose();
@@ -481,6 +514,11 @@ namespace EliteCargoMonitor.UI
             _notifyIcon?.Dispose();
             _trayMenu?.Dispose();
             _animationTimer?.Dispose();
+            _privateFonts?.Dispose();
+            if (_fontMemoryPtr != IntPtr.Zero)
+            {
+                Marshal.FreeCoTaskMem(_fontMemoryPtr);
+            }
         }
     }
 }
