@@ -11,7 +11,7 @@ namespace EliteCargoMonitor.UI
     /// <summary>
     /// UI management class for the cargo form interface
     /// </summary>
-    public class CargoFormUI : ICargoFormUI, IDisposable
+    public class CargoFormUI : ICargoFormUI
     {
         private TextBox? _textBox;
         private Button? _startBtn;
@@ -26,6 +26,15 @@ namespace EliteCargoMonitor.UI
         private ToolStripMenuItem? _trayMenuStart;
         private ToolStripMenuItem? _trayMenuStop;
         private ToolStripMenuItem? _trayMenuExit;
+
+        // Animation fields
+        private System.Windows.Forms.Timer? _animationTimer;
+        private string _baseTitle = "";
+        private int _animationFrame = 0;
+        private bool _animationForward = true; // To control direction
+        private const string Ship = ">-=>"; // Ship design for forward travel
+        private const string ReversedShip = "<=-<"; // Ship design for reverse travel
+        private int _animationWidth = 30; // Width of the animation area in characters
 
         /// <summary>
         /// Event raised when the start button is clicked
@@ -57,6 +66,7 @@ namespace EliteCargoMonitor.UI
             _form.Resize += OnFormResize;
 
             InitializeFonts();
+            InitializeAnimationTimer();
             CreateControls();
             SetupFormProperties();
             SetupLayout();
@@ -71,6 +81,11 @@ namespace EliteCargoMonitor.UI
                 _form.Hide();
                 _notifyIcon?.ShowBalloonTip(1000, "Elite Cargo Monitor", "Minimized to tray.", ToolTipIcon.Info);
             }
+            else if (_form?.WindowState == FormWindowState.Normal || _form?.WindowState == FormWindowState.Maximized)
+            {
+                // Recalculate animation width when window is resized
+                UpdateAnimationWidth();
+            }
         }
 
         private void InitializeFonts()
@@ -84,6 +99,111 @@ namespace EliteCargoMonitor.UI
             {
                 // Fallback to default font if custom font fails
                 _verdanaFont = new Font(FontFamily.GenericSansSerif, AppConfiguration.DefaultFontSize);
+            }
+        }
+
+        private void InitializeAnimationTimer()
+        {
+            _animationTimer = new System.Windows.Forms.Timer { Interval = 150 }; // Animation speed
+            _animationTimer.Tick += AnimationTimer_Tick;
+        }
+
+        private void AnimationTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_form == null || string.IsNullOrEmpty(_baseTitle)) return;
+
+            // Choose ship design and length based on direction
+            string currentShip = _animationForward ? Ship : ReversedShip;
+            int shipLength = currentShip.Length;
+
+            // Total width for the animation cycle (ship starts off-screen, moves across, and exits)
+            int totalCycleWidth = _animationWidth + shipLength;
+
+            // Current position of the ship's first character.
+            // This calculation remains the same for both directions.
+            int shipPosition = _animationFrame - shipLength;
+
+            var frameChars = new char[_animationWidth];
+            // Draw the part of the ship that is visible in the frame
+            for (int i = 0; i < _animationWidth; i++)
+            {
+                int shipCharIndex = i - shipPosition;
+                if (shipCharIndex >= 0 && shipCharIndex < shipLength)
+                {
+                    frameChars[i] = currentShip[shipCharIndex];
+                }
+                else
+                {
+                    frameChars[i] = ' ';
+                }
+            }
+
+            // Update frame and direction for ping-pong effect
+            if (_animationForward)
+            {
+                _animationFrame++;
+                if (_animationFrame >= totalCycleWidth)
+                {
+                    _animationForward = false;
+                    _animationFrame = totalCycleWidth - 1; // Start moving back from the end
+                }
+            }
+            else // Moving backward
+            {
+                _animationFrame--;
+                if (_animationFrame <= 0)
+                {
+                    _animationForward = true;
+                    _animationFrame = 1; // Start moving forward from the beginning
+                }
+            }
+
+            _form.Text = $"{_baseTitle} [{new string(frameChars)}]";
+        }
+
+        private void UpdateAnimationWidth()
+        {
+            if (_form?.IsDisposed != false || _form.Handle == IntPtr.Zero) return;
+
+            // To calculate the available animation width, we subtract the width of all other title bar elements
+            // from the total width of the form.
+
+            // A constant to estimate the total width of the right-side window chrome (minimize, maximize, close buttons, and their padding).
+            // This value is an approximation, as the exact width can vary based on Windows version, themes, and DPI settings.
+            // There is no direct .NET API to get this value perfectly. This value has been adjusted
+            // to be more conservative and provide more space for the animation on most systems.
+            const int RightSideChromeWidth = 115;
+            int iconWidth = _form.ShowIcon ? SystemInformation.SmallIconSize.Width : 0;
+            int frameBorderWidth = _form.Width - _form.ClientSize.Width; // Get the exact total border width.
+
+            // Measure the width of the static part of the title.
+            Size titleSize = TextRenderer.MeasureText(_baseTitle + " []", SystemFonts.CaptionFont);
+
+            // Calculate the remaining width available for the animation.
+            int availableWidth = _form.Width - titleSize.Width - RightSideChromeWidth - iconWidth - frameBorderWidth;
+
+            int newWidth = _animationWidth;
+            if (availableWidth > 0)
+            {
+                // Estimate character width using a space character in the caption font.
+                int charWidth = TextRenderer.MeasureText(" ", SystemFonts.CaptionFont).Width;
+                if (charWidth > 0)
+                {
+                    newWidth = availableWidth / charWidth;
+                }
+            }
+
+            // Ensure a minimum width for the animation.
+            if (newWidth < 10)
+            {
+                newWidth = 10;
+            }
+
+            if (newWidth != _animationWidth)
+            {
+                _animationWidth = newWidth;
+                _animationFrame = 0; // Reset animation on resize to prevent graphical glitches.
+                _animationForward = true;
             }
         }
 
@@ -120,10 +240,11 @@ namespace EliteCargoMonitor.UI
             if (_form == null) return;
 
             // Basic form properties
-            _form.Text = $"Cargo Monitor – Stopped: {AppConfiguration.CargoPath}";
+            _form.Text = "Cargo Monitor – Stopped";
             _form.Width = AppConfiguration.FormWidth;
             _form.Height = AppConfiguration.FormHeight;
             _form.Padding = Padding.Empty;
+            _baseTitle = _form.Text;
 
             // Set application icon
             try
@@ -221,9 +342,27 @@ namespace EliteCargoMonitor.UI
         /// <param name="title">New title text</param>
         public void UpdateTitle(string title)
         {
+            _baseTitle = title;
+
             if (_form != null)
             {
-                _form.Text = title;
+                _form.Text = _baseTitle;
+            }
+
+            // Start/stop animation based on monitoring state
+            if (title.Contains("Watching") && _animationTimer?.Enabled == false)
+            {
+                UpdateAnimationWidth(); // Calculate width before starting
+                _animationFrame = 0;
+                _animationForward = true; // Ensure animation starts by moving forward
+                _animationTimer.Start();
+            }
+            else if (!title.Contains("Watching") && _animationTimer?.Enabled == true)
+            {
+                _animationTimer.Stop();
+                // Restore the title without animation
+                if (_form != null)
+                    _form.Text = _baseTitle;
             }
         }
 
@@ -341,6 +480,7 @@ namespace EliteCargoMonitor.UI
             _aboutBtn?.Dispose();
             _notifyIcon?.Dispose();
             _trayMenu?.Dispose();
+            _animationTimer?.Dispose();
         }
     }
 }

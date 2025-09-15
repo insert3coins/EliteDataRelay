@@ -7,7 +7,7 @@ namespace EliteCargoMonitor.UI
     /// <summary>
     /// Interface for cargo form UI management
     /// </summary>
-    public interface ICargoFormUI
+    public interface ICargoFormUI : IDisposable
     {
         /// <summary>
         /// Event raised when the start button is clicked
@@ -60,10 +60,5 @@ namespace EliteCargoMonitor.UI
         /// <param name="startEnabled">Whether start button should be enabled</param>
         /// <param name="stopEnabled">Whether stop button should be enabled</param>
         void SetButtonStates(bool startEnabled, bool stopEnabled);
-
-        /// <summary>
-        /// Dispose of UI resources
-        /// </summary>
-        void Dispose();
     }
 }

@@ -214,7 +214,7 @@ namespace EliteCargoMonitor
             
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
-            _cargoFormUI.UpdateTitle($"Cargo Monitor – Watching: {AppConfiguration.CargoPath}");
+            _cargoFormUI.UpdateTitle("Cargo Monitor – Watching");
 
             // Start journal monitoring to find capacity before the first cargo read
             _journalWatcherService.StartMonitoring();
@@ -233,7 +233,7 @@ namespace EliteCargoMonitor
             
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: true, stopEnabled: false);
-            _cargoFormUI.UpdateTitle($"Cargo Monitor – Stopped: {AppConfiguration.CargoPath}");
+            _cargoFormUI.UpdateTitle("Cargo Monitor – Stopped");
 
             // Stop file monitoring
             _fileMonitoringService.StopMonitoring();
