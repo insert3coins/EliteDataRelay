@@ -3,7 +3,7 @@ using EliteCargoMonitor.Models;
 namespace EliteCargoMonitor.Services
 {
     /// <summary>
-    /// Service interface for writing cargo data to output files
+    /// Interface for writing cargo data to output files
     /// </summary>
     public interface IFileOutputService
     {
@@ -11,6 +11,7 @@ namespace EliteCargoMonitor.Services
         /// Write the cargo snapshot data to the output file
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to write</param>
-        void WriteCargoSnapshot(CargoSnapshot snapshot);
+        /// <param name="cargoCapacity">The total cargo capacity, if known</param>
+        void WriteCargoSnapshot(CargoSnapshot snapshot, int? cargoCapacity);
     }
 }

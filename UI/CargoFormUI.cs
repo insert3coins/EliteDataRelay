@@ -161,9 +161,10 @@ namespace EliteCargoMonitor.UI
         /// Update the UI with new cargo data
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to display</param>
-        public void UpdateCargoDisplay(CargoSnapshot snapshot)
+        /// <param name="cargoCapacity">The total cargo capacity</param>
+        public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
-            string cargoString = FormatCargoString(snapshot);
+            string cargoString = FormatCargoString(snapshot, cargoCapacity);
             string entry = $"{cargoString}{Environment.NewLine}";
             
             AppendText(entry);
@@ -212,9 +213,10 @@ namespace EliteCargoMonitor.UI
             if (_stopBtn != null) _stopBtn.Enabled = stopEnabled;
         }
 
-        private string FormatCargoString(CargoSnapshot snapshot)
+        private string FormatCargoString(CargoSnapshot snapshot, int? cargoCapacity)
         {
-            string cargoString = $"Total Cargo {snapshot.Count}: ";
+            string capacityString = cargoCapacity.HasValue ? $"/{cargoCapacity.Value}" : "";
+            string cargoString = $"Total Cargo {snapshot.Count}{capacityString}: ";
             cargoString += string.Join(
                 " ",
                 snapshot.Inventory.Select(item =>

@@ -16,7 +16,8 @@ namespace EliteCargoMonitor.Services
         /// Write the cargo snapshot data to the output file
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to write</param>
-        public void WriteCargoSnapshot(CargoSnapshot snapshot)
+        /// <param name="cargoCapacity">The total cargo capacity, if known</param>
+        public void WriteCargoSnapshot(CargoSnapshot snapshot, int? cargoCapacity)
         {
             try
             {
@@ -30,7 +31,7 @@ namespace EliteCargoMonitor.Services
                 }
 
                 // Format cargo string similar to original implementation
-                string cargoString = FormatCargoString(snapshot);
+                string cargoString = FormatCargoString(snapshot, cargoCapacity);
 
                 // Write to file
                 File.WriteAllText(outputPath, cargoString);
@@ -47,11 +48,13 @@ namespace EliteCargoMonitor.Services
         /// Format the cargo snapshot into a readable string format
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to format</param>
+        /// <param name="cargoCapacity">The total cargo capacity, if known</param>
         /// <returns>Formatted cargo string</returns>
-        private string FormatCargoString(CargoSnapshot snapshot)
+        private string FormatCargoString(CargoSnapshot snapshot, int? cargoCapacity)
         {
-            string cargoString = $"Total Cargo: {snapshot.Count} ";
-            
+            string capacityString = cargoCapacity.HasValue ? $"/{cargoCapacity.Value}" : "";
+            string cargoString = $"Total Cargo: {snapshot.Count}{capacityString} ";
+
             cargoString += string.Join(
                 " ",
                 snapshot.Inventory.Select(item =>

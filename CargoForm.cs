@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
@@ -15,6 +15,7 @@ namespace EliteCargoMonitor
         // Service dependencies
         private readonly IFileMonitoringService _fileMonitoringService;
         private readonly ICargoProcessorService _cargoProcessorService;
+        private readonly IJournalWatcherService _journalWatcherService;
         private readonly ISoundService _soundService;
         private readonly IFileOutputService _fileOutputService;
         private readonly ICargoFormUI _cargoFormUI;
@@ -25,12 +26,14 @@ namespace EliteCargoMonitor
         public CargoForm(
             IFileMonitoringService fileMonitoringService,
             ICargoProcessorService cargoProcessorService,
+            IJournalWatcherService journalWatcherService,
             ISoundService soundService,
             IFileOutputService fileOutputService,
             ICargoFormUI cargoFormUI)
         {
             _fileMonitoringService = fileMonitoringService ?? throw new ArgumentNullException(nameof(fileMonitoringService));
             _cargoProcessorService = cargoProcessorService ?? throw new ArgumentNullException(nameof(cargoProcessorService));
+            _journalWatcherService = journalWatcherService ?? throw new ArgumentNullException(nameof(journalWatcherService));
             _soundService = soundService ?? throw new ArgumentNullException(nameof(soundService));
             _fileOutputService = fileOutputService ?? throw new ArgumentNullException(nameof(fileOutputService));
             _cargoFormUI = cargoFormUI ?? throw new ArgumentNullException(nameof(cargoFormUI));
@@ -47,6 +50,7 @@ namespace EliteCargoMonitor
             // Create default service instances for design-time and simple usage
             _fileMonitoringService = new FileMonitoringService();
             _cargoProcessorService = new CargoProcessorService();
+            _journalWatcherService = new JournalWatcherService();
             _soundService = new SoundService();
             _fileOutputService = new FileOutputService();
             _cargoFormUI = new CargoFormUI();
@@ -54,6 +58,8 @@ namespace EliteCargoMonitor
             InitializeComponent();
             SetupEventHandlers();
         }
+
+        private int? _cargoCapacity;
 
         private void InitializeComponent()
         {
@@ -76,6 +82,7 @@ namespace EliteCargoMonitor
             // Wire up service events
             _fileMonitoringService.FileChanged += OnFileChanged;
             _cargoProcessorService.CargoProcessed += OnCargoProcessed;
+            _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
         }
 
         #region Form Events
@@ -92,6 +99,16 @@ namespace EliteCargoMonitor
                     MessageBoxIcon.Error);
                 return;
             }
+
+            // Check if journal directory exists
+            if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
+            {
+                MessageBox.Show(
+                    $"Journal directory not found.\nJournal watcher will be disabled.\nPath: {_journalWatcherService.JournalDirectoryPath}",
+                    "Directory not found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
         }
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
@@ -100,6 +117,7 @@ namespace EliteCargoMonitor
             StopMonitoringInternal();
             
             // Dispose services
+            (_journalWatcherService as IDisposable)?.Dispose();
             (_fileMonitoringService as IDisposable)?.Dispose();
             (_soundService as IDisposable)?.Dispose();
             _cargoFormUI?.Dispose();
@@ -142,10 +160,15 @@ namespace EliteCargoMonitor
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
             // Update UI with new cargo data
-            _cargoFormUI.UpdateCargoDisplay(e.Snapshot);
+            _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
             
             // Write to output file
-            _fileOutputService.WriteCargoSnapshot(e.Snapshot);
+            _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+        }
+
+        private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
+        {
+            _cargoCapacity = e.CargoCapacity;
         }
 
         #endregion
@@ -166,6 +189,9 @@ namespace EliteCargoMonitor
             
             // Start file monitoring
             _fileMonitoringService.StartMonitoring();
+
+            // Start journal monitoring
+            _journalWatcherService.StartMonitoring();
         }
 
         private void StopMonitoringInternal()
@@ -179,6 +205,9 @@ namespace EliteCargoMonitor
 
             // Stop file monitoring
             _fileMonitoringService.StopMonitoring();
+
+            // Stop journal monitoring
+            _journalWatcherService.StopMonitoring();
         }
 
         #endregion
@@ -188,6 +217,7 @@ namespace EliteCargoMonitor
             if (disposing)
             {
                 // Dispose services
+                (_journalWatcherService as IDisposable)?.Dispose();
                 (_fileMonitoringService as IDisposable)?.Dispose();
                 (_soundService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();

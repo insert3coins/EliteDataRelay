@@ -39,7 +39,8 @@ namespace EliteCargoMonitor.UI
         /// Update the UI with new cargo data
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to display</param>
-        void UpdateCargoDisplay(CargoSnapshot snapshot);
+        /// <param name="cargoCapacity">The total cargo capacity</param>
+        void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity);
 
         /// <summary>
         /// Append text to the display

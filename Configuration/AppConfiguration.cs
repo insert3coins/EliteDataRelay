@@ -4,46 +4,88 @@ using System.IO;
 namespace EliteCargoMonitor.Configuration
 {
     /// <summary>
-    /// Central configuration class containing all application constants and settings
+    /// Static class to hold application configuration values.
+    /// In a real application, these might be loaded from a config file.
     /// </summary>
     public static class AppConfiguration
     {
-        // File paths
-        public static readonly string CargoPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Saved Games",
-            "Frontier Developments",
-            "Elite Dangerous",
-            "Cargo.json");
+        private static readonly string UserSavedGames = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous");
 
-        public const string OutputDirectory = "out";
-        public const string OutputFileName = "cargo.txt";
-        
-        // Timing configurations
-        public const int DebounceDelayMs = 500;
-        public const int FileReadRetryDelayMs = 100;
-        public const int FileReadMaxAttempts = 10;
-        public const int PollingIntervalMs = 1000;
-        public const int ThreadRetryDelayMs = 20;
-        public const int ThreadMaxRetries = 10;
-        public const int FileSystemDelayMs = 50;
+        /// <summary>
+        /// The path to the Cargo.json file.
+        /// </summary>
+        public static string CargoPath { get; } = Path.Combine(UserSavedGames, "Cargo.json");
 
-        // UI configurations  
-        public const int MaxTextBoxLines = 100;
-        public const int FormWidth = 800;
-        public const int FormHeight = 600;
-        public const int ButtonHeight = 30;
-        public const int ButtonPanelHeight = 35;
+        /// <summary>
+        /// The path to the Elite Dangerous Player Journal directory.
+        /// If not specified (is null or empty), the application will default to the standard journal location within the user's "Saved Games" folder.
+        /// This can be overridden if the journal files are in a custom location.
+        /// </summary>
+        public static string JournalPath { get; set; } = UserSavedGames;
 
-        // Application metadata
-        public const string AboutText = "Made by insert3coins. Version 0.5a";
-        public static string WelcomeMessage = "Welcome to Cargo Watcher" + Environment.NewLine +
-                                             "Please press Start to start watching cargo" + Environment.NewLine +
-                                             "Press Stop to stop watching" + Environment.NewLine +
-                                             "Exit to shutdown program.";
-        // Font configurations
-        public const string ConsolasFontName = "Consolas";
-        public const string VerdanaFontName = "Verdana";
-        public const float DefaultFontSize = 10f;
+        /// <summary>
+        /// Polling interval in milliseconds for checking file changes.
+        /// </summary>
+        public static int PollingIntervalMs { get; } = 1000;
+
+        /// <summary>
+        /// Debounce delay in milliseconds to wait for file write to complete.
+        /// </summary>
+        public static int DebounceDelayMs { get; } = 250;
+
+        /// <summary>
+        /// Extra delay to give the file system before reading a changed file.
+        /// </summary>
+        public static int FileSystemDelayMs { get; } = 50;
+
+        /// <summary>
+        /// Maximum number of retries for background thread operations.
+        /// </summary>
+        public static int ThreadMaxRetries { get; } = 5;
+
+        /// <summary>
+        /// Delay in milliseconds between thread retries.
+        /// </summary>
+        public static int ThreadRetryDelayMs { get; } = 100;
+
+        /// <summary>
+        /// Maximum number of attempts to read a file.
+        /// </summary>
+        public static int FileReadMaxAttempts { get; } = 5;
+
+        /// <summary>
+        /// Delay in milliseconds between file read retries.
+        /// </summary>
+        public static int FileReadRetryDelayMs { get; } = 100;
+
+        /// <summary>
+        /// About text for the application.
+        /// </summary>
+        public static string AboutText { get; } = "Elite Cargo Monitor v1.1\nCreated by insert3coins";
+
+        /// <summary>
+        /// Welcome message displayed on startup.
+        /// </summary>
+        public static string WelcomeMessage { get; } = "Welcome to Elite Cargo Monitor!";
+
+        /// <summary>
+        /// Output directory for the cargo text file.
+        /// </summary>
+        public static string OutputDirectory { get; } = "out";
+
+        /// <summary>
+        /// Output file name for the cargo text file.
+        /// </summary>
+        public static string OutputFileName { get; } = "cargo.txt";
+
+        // UI Configuration
+        public static int FormWidth { get; } = 800;
+        public static int FormHeight { get; } = 600;
+        public static int ButtonHeight { get; } = 30;
+        public static int ButtonPanelHeight { get; } = 40;
+        public static float DefaultFontSize { get; } = 9.0f;
+        public static string VerdanaFontName { get; } = "Verdana";
+        public static string ConsolasFontName { get; } = "Consolas";
+        public static int MaxTextBoxLines { get; } = 1000;
     }
 }
