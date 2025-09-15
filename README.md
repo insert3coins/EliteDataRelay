@@ -24,6 +24,7 @@ This tool provides a simple way to keep an eye on your ship's cargo without havi
 -   **Text File Output**: Exports cargo data to `out/cargo.txt` for easy integration with other tools (like OBS for streaming).
 -   **Audio Cues**: Plays sounds when monitoring starts and stops.
 -   **Automatic Path Detection**: Automatically finds the default Elite Dangerous player data folder.
+-   **System Tray**: Minimizes to the system tray to run unobtrusively in the background.
 
 ## 🚀 Getting Started
 
@@ -71,12 +72,14 @@ If you want to build the project yourself:
 4.  The application window will update whenever your cargo changes.
 5.  A file named `cargo.txt` will be created and updated in an `out` sub-folder inside the application's directory. You can add this text file as a source in OBS.
 6.  Click **Stop** to pause monitoring.
+7.  Minimize or close the window to send the application to the system tray. You can restore it by double-clicking the tray icon.
+8.  To fully close the application, use the **Exit** button or right-click the tray icon and select **Exit**.
 
 ## 📌 Project Roadmap
 
 -   [ ] Create a settings UI for easier configuration (e.g., custom file paths).
 -   [ ] Allow customization of the `cargo.txt` output format.
--   [ ] Add a system tray icon for running in the background.
+-   [x] Add a system tray icon for running in the background.
 -   [ ] Package the application with an installer.
 
 ## 🔰 Contributing

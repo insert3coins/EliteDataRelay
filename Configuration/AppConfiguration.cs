@@ -91,6 +91,6 @@ namespace EliteCargoMonitor.Configuration
         public static float DefaultFontSize { get; } = 9.0f;
         public static string VerdanaFontName { get; } = "Verdana";
         public static string ConsolasFontName { get; } = "Consolas";
-        public static int MaxTextBoxLines { get; } = 1000;
+        public static int MaxTextBoxLines { get; } = 100;
     }
 }

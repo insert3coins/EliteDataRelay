@@ -61,6 +61,7 @@ namespace EliteCargoMonitor
         }
 
         private int? _cargoCapacity;
+        private bool _isExiting;
 
         private void InitializeComponent()
         {
@@ -114,14 +115,21 @@ namespace EliteCargoMonitor
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            // Stop monitoring and dispose services
-            StopMonitoringInternal();
-            
-            // Dispose services
-            (_journalWatcherService as IDisposable)?.Dispose();
-            (_fileMonitoringService as IDisposable)?.Dispose();
-            (_soundService as IDisposable)?.Dispose();
-            _cargoFormUI?.Dispose();
+            // If user closes window, hide to tray instead of exiting
+            if (e.CloseReason == CloseReason.UserClosing && !_isExiting)
+            {
+                e.Cancel = true;
+                WindowState = FormWindowState.Minimized; // This will trigger the hide logic in CargoFormUI
+            }
+            else
+            {
+                // Stop monitoring and dispose services on actual exit
+                StopMonitoringInternal();
+                (_journalWatcherService as IDisposable)?.Dispose();
+                (_fileMonitoringService as IDisposable)?.Dispose();
+                (_soundService as IDisposable)?.Dispose();
+                _cargoFormUI?.Dispose();
+            }
         }
 
         #endregion
@@ -140,6 +148,7 @@ namespace EliteCargoMonitor
 
         private void OnExitClicked(object? sender, EventArgs e)
         {
+            _isExiting = true;
             Close();
         }
 

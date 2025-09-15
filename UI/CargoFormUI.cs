@@ -20,6 +20,12 @@ namespace EliteCargoMonitor.UI
         private Button? _aboutBtn;
         private Font? _verdanaFont;
         private Form? _form;
+        private NotifyIcon? _notifyIcon;
+        private ContextMenuStrip? _trayMenu;
+        private ToolStripMenuItem? _trayMenuShow;
+        private ToolStripMenuItem? _trayMenuStart;
+        private ToolStripMenuItem? _trayMenuStop;
+        private ToolStripMenuItem? _trayMenuExit;
 
         /// <summary>
         /// Event raised when the start button is clicked
@@ -48,6 +54,7 @@ namespace EliteCargoMonitor.UI
         public void InitializeUI(Form form)
         {
             _form = form ?? throw new ArgumentNullException(nameof(form));
+            _form.Resize += OnFormResize;
 
             InitializeFonts();
             CreateControls();
@@ -55,6 +62,15 @@ namespace EliteCargoMonitor.UI
             SetupLayout();
             SetupEventHandlers();
             DisplayWelcomeMessage();
+        }
+
+        private void OnFormResize(object? sender, EventArgs e)
+        {
+            if (_form?.WindowState == FormWindowState.Minimized)
+            {
+                _form.Hide();
+                _notifyIcon?.ShowBalloonTip(1000, "Elite Cargo Monitor", "Minimized to tray.", ToolTipIcon.Info);
+            }
         }
 
         private void InitializeFonts()
@@ -95,6 +111,8 @@ namespace EliteCargoMonitor.UI
             _stopBtn = new Button { Text = "Stop", Height = AppConfiguration.ButtonHeight, Enabled = false };
             _exitBtn = new Button { Text = "Exit", Height = AppConfiguration.ButtonHeight };
             _aboutBtn = new Button { Text = "About", Height = AppConfiguration.ButtonHeight };
+
+            CreateTrayIcon();
         }
 
         private void SetupFormProperties()
@@ -150,6 +168,13 @@ namespace EliteCargoMonitor.UI
             if (_stopBtn != null) _stopBtn.Click += (s, e) => StopClicked?.Invoke(s, e);
             if (_exitBtn != null) _exitBtn.Click += (s, e) => ExitClicked?.Invoke(s, e);
             if (_aboutBtn != null) _aboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
+
+            // Tray icon event handlers
+            if (_notifyIcon != null) _notifyIcon.DoubleClick += OnTrayIconDoubleClick;
+            if (_trayMenuShow != null) _trayMenuShow.Click += OnTrayMenuShowClick;
+            if (_trayMenuStart != null) _trayMenuStart.Click += (s, e) => StartClicked?.Invoke(s, e);
+            if (_trayMenuStop != null) _trayMenuStop.Click += (s, e) => StopClicked?.Invoke(s, e);
+            if (_trayMenuExit != null) _trayMenuExit.Click += (s, e) => ExitClicked?.Invoke(s, e);
         }
 
         private void DisplayWelcomeMessage()
@@ -211,6 +236,10 @@ namespace EliteCargoMonitor.UI
         {
             if (_startBtn != null) _startBtn.Enabled = startEnabled;
             if (_stopBtn != null) _stopBtn.Enabled = stopEnabled;
+
+            // Also update tray menu items
+            if (_trayMenuStart != null) _trayMenuStart.Enabled = startEnabled;
+            if (_trayMenuStop != null) _trayMenuStop.Enabled = stopEnabled;
         }
 
         private string FormatCargoString(CargoSnapshot snapshot, int? cargoCapacity)
@@ -257,6 +286,51 @@ namespace EliteCargoMonitor.UI
             }
         }
 
+        private void CreateTrayIcon()
+        {
+            _trayMenuShow = new ToolStripMenuItem("Show");
+            _trayMenuStart = new ToolStripMenuItem("Start");
+            _trayMenuStop = new ToolStripMenuItem("Stop") { Enabled = false };
+            _trayMenuExit = new ToolStripMenuItem("Exit");
+
+            _trayMenu = new ContextMenuStrip();
+            _trayMenu.Items.Add(_trayMenuShow);
+            _trayMenu.Items.Add(new ToolStripSeparator());
+            _trayMenu.Items.Add(_trayMenuStart);
+            _trayMenu.Items.Add(_trayMenuStop);
+            _trayMenu.Items.Add(new ToolStripSeparator());
+            _trayMenu.Items.Add(_trayMenuExit);
+
+            _notifyIcon = new NotifyIcon
+            {
+                Text = "Elite Cargo Monitor",
+                Visible = true,
+                ContextMenuStrip = _trayMenu
+            };
+
+            try
+            {
+                _notifyIcon.Icon = new Icon(new MemoryStream(Properties.Resources.AppIcon));
+            }
+            catch
+            {
+                // Ignore icon errors
+            }
+        }
+
+        private void OnTrayIconDoubleClick(object? sender, EventArgs e) => ShowForm();
+
+        private void OnTrayMenuShowClick(object? sender, EventArgs e) => ShowForm();
+
+        private void ShowForm()
+        {
+            if (_form == null || _notifyIcon == null) return;
+
+            _form.Show();
+            _form.WindowState = FormWindowState.Normal;
+            _form.Activate();
+        }
+
         public void Dispose()
         {
             _verdanaFont?.Dispose();
@@ -265,6 +339,8 @@ namespace EliteCargoMonitor.UI
             _stopBtn?.Dispose();
             _exitBtn?.Dispose();
             _aboutBtn?.Dispose();
+            _notifyIcon?.Dispose();
+            _trayMenu?.Dispose();
         }
     }
 }
