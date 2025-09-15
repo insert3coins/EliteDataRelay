@@ -207,14 +207,14 @@ namespace EliteCargoMonitor
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
             _cargoFormUI.UpdateTitle($"Cargo Monitor – Watching: {AppConfiguration.CargoPath}");
 
+            // Start journal monitoring to find capacity before the first cargo read
+            _journalWatcherService.StartMonitoring();
+
             // Process initial file snapshot
             _cargoProcessorService.ProcessCargoFile();
             
             // Start file monitoring
             _fileMonitoringService.StartMonitoring();
-
-            // Start journal monitoring
-            _journalWatcherService.StartMonitoring();
         }
 
         private void StopMonitoringInternal()
