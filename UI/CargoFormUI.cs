@@ -394,10 +394,8 @@ namespace EliteCargoMonitor.UI
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
             // This method is now obsolete as formatting is handled by FileOutputService
-            // and text is appended directly in CargoForm.
-            // We keep the method to satisfy the interface but it does nothing.
-            TrimTextBoxLines();
-            ScrollToBottom();
+            // and text is appended directly in CargoForm. We keep the method to satisfy
+            // the interface. Pruning and scrolling are now handled in AppendText().
         }
 
         /// <summary>
@@ -411,6 +409,8 @@ namespace EliteCargoMonitor.UI
             try
             {
                 _textBox.AppendText(text);
+                TrimTextBoxLines();
+                ScrollToBottom();
             }
             catch (Exception ex)
             {
