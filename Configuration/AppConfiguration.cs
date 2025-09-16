@@ -56,6 +56,12 @@ namespace EliteCargoMonitor.Configuration
                 needsSave = true;
             }
 
+            if (string.IsNullOrEmpty(Settings.OutputDirectory))
+            {
+                Settings.OutputDirectory = "out";
+                needsSave = true;
+            }
+
             // Save to create the file on first run or to add new default properties to an existing file
             if (needsSave || !File.Exists(SettingsFileName))
             {
@@ -163,7 +169,11 @@ namespace EliteCargoMonitor.Configuration
         /// <summary>
         /// Output directory for the cargo text file.
         /// </summary>
-        public static string OutputDirectory { get; } = "out";
+        public static string OutputDirectory
+        {
+            get => Settings.OutputDirectory ?? "out";
+            set => Settings.OutputDirectory = value;
+        }
 
         /// <summary>
         /// Output file name for the cargo text file.

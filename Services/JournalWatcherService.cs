@@ -20,6 +20,7 @@ namespace EliteCargoMonitor.Services
         private FileSystemWatcher? _watcher;
         private readonly System.Windows.Forms.Timer _pollTimer;
         private string? _currentJournalFile;
+        private string? _lastStarSystem;
         private string? _lastCargoHash;
         private long _lastPosition;
         private bool _isMonitoring;
@@ -33,6 +34,11 @@ namespace EliteCargoMonitor.Services
         /// Event raised when the cargo inventory changes.
         /// </summary>
         public event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
+
+        /// <summary>
+        /// Event raised when the player's location (StarSystem) changes.
+        /// </summary>
+        public event EventHandler<LocationChangedEventArgs>? LocationChanged;
 
         /// <summary>
         /// Gets whether the monitoring service is currently active.
@@ -180,6 +186,19 @@ namespace EliteCargoMonitor.Services
                             CargoInventoryChanged?.Invoke(this, new CargoInventoryEventArgs(snapshot));
                         }
                     }
+                    else if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
+                    {
+                        if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement))
+                        {
+                            var starSystem = starSystemElement.GetString();
+                            if (!string.IsNullOrEmpty(starSystem) && starSystem != _lastStarSystem)
+                            {
+                                _lastStarSystem = starSystem;
+                                Debug.WriteLine($"[JournalWatcherService] Found Location event. StarSystem: {starSystem}");
+                                LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem));
+                            }
+                        }
+                    }
                 }
                 _lastPosition = fs.Position;
             }
@@ -229,5 +248,18 @@ namespace EliteCargoMonitor.Services
         public CargoSnapshot Snapshot { get; }
 
         public CargoInventoryEventArgs(CargoSnapshot snapshot) => Snapshot = snapshot;
+    }
+
+    /// <summary>
+    /// Provides data for the <see cref="IJournalWatcherService.LocationChanged"/> event.
+    /// </summary>
+    public class LocationChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Gets the current star system.
+        /// </summary>
+        public string StarSystem { get; }
+
+        public LocationChangedEventArgs(string starSystem) => StarSystem = starSystem;
     }
 }

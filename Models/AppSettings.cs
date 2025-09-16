@@ -14,5 +14,10 @@ namespace EliteCargoMonitor.Models
         /// The file name for the cargo text file.
         /// </summary>
         public string? OutputFileName { get; set; }
+
+        /// <summary>
+        /// The output directory for the cargo text file.
+        /// </summary>
+        public string? OutputDirectory { get; set; }
     }
 }

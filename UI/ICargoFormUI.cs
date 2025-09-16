@@ -60,6 +60,12 @@ namespace EliteCargoMonitor.UI
         void UpdateTitle(string title);
 
         /// <summary>
+        /// Update the location display.
+        /// </summary>
+        /// <param name="starSystem">The name of the star system.</param>
+        void UpdateLocation(string starSystem);
+
+        /// <summary>
         /// Set the enabled state of the start and stop buttons
         /// </summary>
         /// <param name="startEnabled">Whether start button should be enabled</param>

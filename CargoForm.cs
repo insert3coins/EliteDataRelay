@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -86,6 +86,7 @@ namespace EliteCargoMonitor
             _fileMonitoringService.FileChanged += OnFileChanged;
             _cargoProcessorService.CargoProcessed += OnCargoProcessed;
             _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
+            _journalWatcherService.LocationChanged += OnLocationChanged;
         }
 
         #region Form Events
@@ -212,6 +213,11 @@ namespace EliteCargoMonitor
         private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
         {
             _cargoCapacity = e.CargoCapacity;
+        }
+
+        private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        {
+            _cargoFormUI.UpdateLocation(e.StarSystem);
         }
 
         #endregion

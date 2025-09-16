@@ -33,15 +33,32 @@ namespace EliteCargoMonitor.UI
         private ToolStripMenuItem? _trayMenuStart;
         private ToolStripMenuItem? _trayMenuStop;
         private ToolStripMenuItem? _trayMenuExit;
+        private Label? _locationLabel;
 
         // Animation fields
         private System.Windows.Forms.Timer? _animationTimer;
         private string _baseTitle = "";
         private int _animationFrame = 0;
         private bool _animationForward = true; // To control direction
-        private const string Ship = ">-=>"; // Ship design for forward travel
-        private const string ReversedShip = "<=-<"; // Ship design for reverse travel
         private int _animationWidth = 30; // Width of the animation area in characters
+
+        // Ship designs for the title bar animation
+        private static readonly List<(string Forward, string Reversed)> ShipDesigns = new List<(string, string)>
+        {
+            (">-=>",    "<=-<"),    // Original
+            (">--o-->", "<--o--<"), // Freighter
+            (">((')>",  "<((')<"),  // Clipper-like
+            (">-(~)-<", ">-(~)-<"), // Symmetrical 1
+            (">->",     "<-<"),     // Fighter
+            (">o<",     ">o<"),     // Symmetrical 2 (Hauler?)
+            (">|===>",  "<===|<"),  // Bulkier
+            ("~>~",     "<~<"),     // Wavy
+            (">-^-",    "-^-<"),    // Krait-like
+            (">--=--<", ">--=--<")  // Symmetrical 3 (Wide)
+        };
+        private readonly Random _random = new Random();
+        private string _currentShip = ShipDesigns[0].Forward;
+        private string _currentReversedShip = ShipDesigns[0].Reversed;
 
         /// <summary>
         /// Event raised when the start button is clicked
@@ -145,7 +162,7 @@ namespace EliteCargoMonitor.UI
             if (_form == null || string.IsNullOrEmpty(_baseTitle)) return;
 
             // Choose ship design and length based on direction
-            string currentShip = _animationForward ? Ship : ReversedShip;
+            string currentShip = _animationForward ? _currentShip : _currentReversedShip;
             int shipLength = currentShip.Length;
 
             // Total width for the animation cycle (ship starts off-screen, moves across, and exits)
@@ -274,6 +291,15 @@ namespace EliteCargoMonitor.UI
             _toolTip.SetToolTip(_aboutBtn, "Show information about the application");
 
             CreateTrayIcon();
+
+            // Create label for location
+            _locationLabel = new Label
+            {
+                Text = "Location: Unknown",
+                Font = _consolasFont,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleRight
+            };
         }
 
         private void SetupFormProperties()
@@ -301,28 +327,42 @@ namespace EliteCargoMonitor.UI
         private void SetupLayout()
         {
             if (_form == null || _textBox == null || _startBtn == null || 
-                _stopBtn == null || _aboutBtn == null || _settingsBtn == null || _exitBtn == null) return;
+                _stopBtn == null || _aboutBtn == null || _settingsBtn == null || _exitBtn == null || _locationLabel == null) return;
 
-            // Create button panel
-            var buttonPanel = new FlowLayoutPanel
+            // Create a FlowLayoutPanel for the buttons
+            var buttonFlowPanel = new FlowLayoutPanel
             {
-                Dock = DockStyle.Bottom,
                 FlowDirection = FlowDirection.LeftToRight,
-                Height = AppConfiguration.ButtonPanelHeight,
+                WrapContents = false,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = Padding.Empty,
                 Margin = Padding.Empty
             };
 
             // Add buttons in order: Start | Stop | About | Settings | Exit
-            buttonPanel.Controls.Add(_startBtn);
-            buttonPanel.Controls.Add(_stopBtn);
-            buttonPanel.Controls.Add(_aboutBtn);
-            buttonPanel.Controls.Add(_settingsBtn);
-            buttonPanel.Controls.Add(_exitBtn);
+            buttonFlowPanel.Controls.Add(_startBtn);
+            buttonFlowPanel.Controls.Add(_stopBtn);
+            buttonFlowPanel.Controls.Add(_aboutBtn);
+            buttonFlowPanel.Controls.Add(_settingsBtn);
+            buttonFlowPanel.Controls.Add(_exitBtn);
+
+            // Use a TableLayoutPanel to align buttons left and location label right
+            var bottomPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                Height = AppConfiguration.ButtonPanelHeight,
+                ColumnCount = 2,
+                RowCount = 1,
+            };
+            bottomPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            bottomPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            bottomPanel.Controls.Add(buttonFlowPanel, 0, 0);
+            bottomPanel.Controls.Add(_locationLabel, 1, 0);
 
             // Add controls to form
             _form.Controls.Add(_textBox);
-            _form.Controls.Add(buttonPanel);
+            _form.Controls.Add(bottomPanel);
         }
 
         private void SetupEventHandlers()
@@ -379,6 +419,17 @@ namespace EliteCargoMonitor.UI
         }
 
         /// <summary>
+        /// Update the location display on the status bar.
+        /// </summary>
+        /// <param name="starSystem">The name of the star system.</param>
+        public void UpdateLocation(string starSystem)
+        {
+            if (_locationLabel == null) return;
+
+            _locationLabel.Text = $"Location: {starSystem}";
+        }
+
+        /// <summary>
         /// Update the form title
         /// </summary>
         /// <param name="title">New title text</param>
@@ -394,6 +445,11 @@ namespace EliteCargoMonitor.UI
             // Start/stop animation based on monitoring state
             if (title.Contains("Watching") && _animationTimer?.Enabled == false)
             {
+                // Select a random ship for this session
+                int index = _random.Next(ShipDesigns.Count);
+                _currentShip = ShipDesigns[index].Forward;
+                _currentReversedShip = ShipDesigns[index].Reversed;
+
                 UpdateAnimationWidth(); // Calculate width before starting
                 _animationFrame = 0;
                 _animationForward = true; // Ensure animation starts by moving forward
@@ -514,6 +570,7 @@ namespace EliteCargoMonitor.UI
             _notifyIcon?.Dispose();
             _trayMenu?.Dispose();
             _animationTimer?.Dispose();
+            _locationLabel?.Dispose();
             _privateFonts?.Dispose();
         }
     }

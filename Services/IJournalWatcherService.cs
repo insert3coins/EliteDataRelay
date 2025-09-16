@@ -9,5 +9,6 @@ namespace EliteCargoMonitor.Services
         void StopMonitoring();
         bool IsMonitoring { get; }
         string JournalDirectoryPath { get; }
+        event EventHandler<LocationChangedEventArgs>? LocationChanged;
     }
 }

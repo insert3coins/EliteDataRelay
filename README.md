@@ -21,7 +21,7 @@ This tool provides a simple way to keep an eye on your ship's cargo without havi
 -   **Real-time Monitoring**: Watches `Cargo.json` for any changes and updates instantly.
 -   **Cargo Capacity**: Reads player journal files to display your total cargo capacity (e.g., `128/256`).
 -   **Simple UI**: A clean, no-fuss window displays your current cargo list.
--   **Text File Output**: Exports cargo data to `out/cargo.txt` for easy integration with other tools (like OBS for streaming).
+-   **Text File Output**: Exports cargo data to a configurable text file (default: `out/cargo.txt`) for easy integration with other tools (like OBS for streaming).
 -   **Audio Cues**: Plays sounds when monitoring starts and stops.
 -   **Automatic Path Detection**: Automatically finds the default Elite Dangerous player data folder.
 -   **System Tray**: Minimizes to the system tray to run unobtrusively in the background.
@@ -70,7 +70,7 @@ If you want to build the project yourself:
 2.  Run `EliteCargoMonitor.exe`.
 3.  Click **Start** to begin monitoring.
 4.  The application window will update whenever your cargo changes.
-5.  A file named `cargo.txt` will be created and updated in an `out` sub-folder inside the application's directory. You can add this text file as a source in OBS.
+5.  A file named `cargo.txt` (by default) will be created and updated in the configured output directory (by default, an `out` sub-folder). You can add this text file as a source in OBS.
 6.  Click **Stop** to pause monitoring.
 7.  Minimize or close the window to send the application to the system tray. You can restore it by double-clicking the tray icon.
 8.  To fully close the application, use the **Exit** button or right-click the tray icon and select **Exit**.
@@ -95,6 +95,10 @@ You can change the format of the text written to the output file using a custom 
 ### Output File Name
 
 You can change the name of the output file (default is `cargo.txt`).
+
+### Output Directory
+
+You can specify the folder where the output file will be saved. By default, it is saved in an `out` sub-folder. You can type a path directly or use the **Browse...** button to open a folder selection dialog.
 
 ## 📌 Project Roadmap
 
