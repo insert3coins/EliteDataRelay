@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 
 namespace EliteCargoMonitor.Configuration
@@ -28,7 +29,7 @@ namespace EliteCargoMonitor.Configuration
         public static int ThreadRetryDelayMs { get; } = 100;
         public static int FileReadMaxAttempts { get; } = 5;
         public static int FileReadRetryDelayMs { get; } = 100;
-        public static string AboutInfo { get; } = "Elite Cargo Monitor v1.0";
+        public static string AboutInfo { get; } = $"Elite Cargo Monitor v{GetAppVersion()}";
         public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
 
         /// <summary>
@@ -38,6 +39,24 @@ namespace EliteCargoMonitor.Configuration
         public static bool EnableFileOutput { get; set; } = false;
 
         private const string SettingsFileName = "settings.json";
+
+        /// <summary>
+        /// Gets the application version from the assembly.
+        /// </summary>
+        /// <returns>The application version string (e.g., "0.8.6").</returns>
+        private static string GetAppVersion()
+        {
+            try
+            {
+                var version = Assembly.GetExecutingAssembly().GetName().Version; 
+                // Use Major.Minor.Build to reflect the full version from the .csproj file.
+                return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "0.8.6";
+            }
+            catch
+            {
+                return "0.8.6"; // Fallback
+            }
+        }
 
         /// <summary>
         /// A private model for serializing/deserializing settings.
@@ -51,13 +70,17 @@ namespace EliteCargoMonitor.Configuration
         }
 
         /// <summary>
-        /// Loads settings from settings.json. If the file doesn't exist or fails to load, defaults are used.
+        /// Loads settings from settings.json. If the file doesn't exist, it is created with default values.
         /// </summary>
         public static void Load()
         {
             try
             {
-                if (!File.Exists(SettingsFileName)) return;
+                if (!File.Exists(SettingsFileName))
+                {
+                    Save(); // Create file with default values
+                    return;
+                }
 
                 string json = File.ReadAllText(SettingsFileName);
                 var model = JsonSerializer.Deserialize<SettingsModel>(json);

@@ -143,6 +143,7 @@ namespace EliteCargoMonitor
 
         private void OnStopClicked(object? sender, EventArgs e)
         {
+            _soundService.PlayStopSound();
             StopMonitoringInternal();
         }
 
@@ -253,9 +254,6 @@ namespace EliteCargoMonitor
 
         private void StopMonitoringInternal()
         {
-            // Play stop sound
-            _soundService.PlayStopSound();
-            
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: true, stopEnabled: false);
             _cargoFormUI.UpdateTitle("Cargo Monitor – Stopped");

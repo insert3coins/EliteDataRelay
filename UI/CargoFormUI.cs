@@ -24,6 +24,7 @@ namespace EliteCargoMonitor.UI
         private ToolTip? _toolTip;
         private Font? _verdanaFont;
         private Font? _consolasFont;
+        private Font? _animationFont;
         private PrivateFontCollection? _privateFonts;
         private IntPtr _fontMemoryPtr = IntPtr.Zero;
         private Form? _form;
@@ -67,62 +68,31 @@ namespace EliteCargoMonitor.UI
         // Our working when we hit start
         private static readonly string[] WatchingCargo = new[]
 		{
-			"⢀⠀",
-			"⡀⠀",
-			"⠄⠀",
-			"⢂⠀",
-			"⡂⠀",
-			"⠅⠀",
-			"⢃⠀",
-			"⡃⠀",
-			"⠍⠀",
-			"⢋⠀",
-			"⡋⠀",
-			"⠍⠁",
-			"⢋⠁",
-			"⡋⠁",
-			"⠍⠉",
-			"⠋⠉",
-			"⠋⠉",
-			"⠉⠙",
-			"⠉⠙",
-			"⠉⠩",
-			"⠈⢙",
-			"⠈⡙",
-			"⢈⠩",
-			"⡀⢙",
-			"⠄⡙",
-			"⢂⠩",
-			"⡂⢘",
-			"⠅⡘",
-			"⢃⠨",
-			"⡃⢐",
-			"⠍⡐",
-			"⢋⠠",
-			"⡋⢀",
-			"⠍⡁",
-			"⢋⠁",
-			"⡋⠁",
-			"⠍⠉",
-			"⠋⠉",
-			"⠋⠉",
-			"⠉⠙",
-			"⠉⠙",
-			"⠉⠩",
-			"⠈⢙",
-			"⠈⡙",
-			"⠈⠩",
-			"⠀⢙",
-			"⠀⡙",
-			"⠀⠩",
-			"⠀⢘",
-			"⠀⡘",
-			"⠀⠨",
-			"⠀⢐",
-			"⠀⡐",
-			"⠀⠠",
-			"⠀⢀",
-			"⠀⡀"
+			"⢄",
+			"⢂",
+			"⢁",
+			" ",
+			"⡈",
+			"⡐",
+			"⡠",
+			"⡰",
+			"⣠",
+			"⣐",
+			"⣈",
+			"⣁",
+			"⣂",
+			"⣄",
+			"⣆",
+			"⣇",
+			"⣧",
+			"⣷",
+			"⣾",
+			"⣶",
+			"⣼",
+			"⣸",
+			"⣙",
+			"⣉",
+			"⣁"
 		};
         // Cargo storage sizes for bottom right of our ui
         private static readonly string[] CargoSize = new[]
@@ -247,10 +217,12 @@ namespace EliteCargoMonitor.UI
             try
             {
                 _consolasFont = new Font(AppConfiguration.ConsolasFontName, AppConfiguration.DefaultFontSize);
+                _animationFont = new Font(AppConfiguration.ConsolasFontName, 12f); // Larger font for animation
             }
             catch
             {
                 _consolasFont = new Font(FontFamily.GenericMonospace, AppConfiguration.DefaultFontSize);
+                _animationFont = new Font(FontFamily.GenericMonospace, 12f); // Fallback for animation font
             }
         }
 
@@ -327,15 +299,15 @@ namespace EliteCargoMonitor.UI
             // Create a "label" for the watching animation using a styled, disabled button.
             // Calculate the max width needed for the animation to prevent layout shifts.
             int animationWidth = 0;
-            if (_consolasFont != null)
+            if (_animationFont != null)
             {
-                animationWidth = WatchingCargo.Max(frame => TextRenderer.MeasureText(frame, _consolasFont).Width);
+                animationWidth = WatchingCargo.Max(frame => TextRenderer.MeasureText(frame, _animationFont).Width);
             }
 
             _watchingLabel = new Button
             {
                 Text = "",
-                Font = _consolasFont,
+                Font = _animationFont,
                 AutoSize = false, // Must be false to set a fixed size and prevent resizing
                 Width = animationWidth > 0 ? animationWidth : 20, // Set fixed width, with a fallback
                 TextAlign = ContentAlignment.MiddleCenter,
@@ -418,6 +390,7 @@ namespace EliteCargoMonitor.UI
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = Padding.Empty,
                 Margin = Padding.Empty,
+                Anchor = AnchorStyles.Left, // Vertically center and align left
             };
 
             // Add controls to the button panel
@@ -437,7 +410,7 @@ namespace EliteCargoMonitor.UI
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = Padding.Empty,
                 Margin = Padding.Empty,
-                Dock = DockStyle.Right
+                Anchor = AnchorStyles.Right, // Vertically center and align right
             };
             rightPanel.Controls.Add(_cargoHeaderLabel);
             rightPanel.Controls.Add(_cargoSizeLabel);
@@ -625,12 +598,15 @@ namespace EliteCargoMonitor.UI
                 if (stopEnabled) // This means monitoring is now active
                 {
                     _watchingFrame = 0;
+                    _watchingLabel.Text = WatchingCargo[_watchingFrame];
+                    _watchingLabel.ForeColor = Color.Black; // Use a distinct color for visibility
                     _watchingTimer.Start();
                 }
                 else // Monitoring is stopped
                 {
                     _watchingTimer.Stop();
                     _watchingLabel.Text = "";
+                    _watchingLabel.ForeColor = SystemColors.ControlText; // Reset to default color
                 }
             }
         }
@@ -685,6 +661,7 @@ namespace EliteCargoMonitor.UI
         {
             _verdanaFont?.Dispose();
             _consolasFont?.Dispose();
+            _animationFont?.Dispose();
             _listView?.Dispose();
 
             // Detach paint handlers to be tidy
