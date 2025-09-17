@@ -12,6 +12,9 @@ using EliteCargoMonitor.Models;
 
 namespace EliteCargoMonitor.Services
 {
+    /// <summary>
+    /// Service for monitoring the Elite Dangerous journal for Loadout events to determine cargo capacity.
+    /// </summary>
     public class JournalWatcherService : IJournalWatcherService, IDisposable
     {
         private readonly string _journalDir;
@@ -23,16 +26,34 @@ namespace EliteCargoMonitor.Services
         private long _lastPosition;
         private bool _isMonitoring;
 
+        /// <summary>
+        /// Event raised when the cargo capacity is found in a Loadout event.
+        /// </summary>
         public event EventHandler<CargoCapacityEventArgs>? CargoCapacityChanged;
 
+        /// <summary>
+        /// Event raised when a 'Cargo' event is read from the journal.
+        /// </summary>
         public event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
 
+        /// <summary>
+        /// Event raised when the player's location (StarSystem) changes.
+        /// </summary>
         public event EventHandler<LocationChangedEventArgs>? LocationChanged;
 
+        /// <summary>
+        /// Gets whether the monitoring service is currently active.
+        /// </summary>
         public bool IsMonitoring => _isMonitoring;
 
+        /// <summary>
+        /// Gets the path to the journal directory being monitored.
+        /// </summary>
         public string JournalDirectoryPath => _journalDir;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JournalWatcherService"/> class.
+        /// </summary>
         public JournalWatcherService()
         {
             _journalDir = AppConfiguration.JournalPath;
@@ -44,6 +65,9 @@ namespace EliteCargoMonitor.Services
             _pollTimer.Tick += PollTimer_Tick;
         }
 
+        /// <summary>
+        /// Starts monitoring the journal files for relevant events.
+        /// </summary>
         public async void StartMonitoring()
         {
             if (_isMonitoring || string.IsNullOrEmpty(_journalDir) || !Directory.Exists(_journalDir)) return;
@@ -55,6 +79,9 @@ namespace EliteCargoMonitor.Services
             Debug.WriteLine("[JournalWatcherService] Started monitoring");
         }
 
+        /// <summary>
+        /// Stops monitoring the journal files.
+        /// </summary>
         public void StopMonitoring()
         {
             if (!_isMonitoring) return;
@@ -191,6 +218,9 @@ namespace EliteCargoMonitor.Services
             }
         }
 
+        /// <summary>
+        /// Releases the resources used by the service.
+        /// </summary>
         public void Dispose()
         {
             StopMonitoring();
@@ -198,6 +228,11 @@ namespace EliteCargoMonitor.Services
             _watcher?.Dispose();
         }
 
+        /// <summary>
+        /// Computes a SHA256 hash of the cargo snapshot to detect duplicates.
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot to hash.</param>
+        /// <returns>A Base64-encoded string representing the hash.</returns>
         private string ComputeHash(CargoSnapshot snapshot)
         {
             string json = JsonSerializer.Serialize(
@@ -215,17 +250,37 @@ namespace EliteCargoMonitor.Services
         }
     }
 
+    /// <summary>
+    /// Provides data for the <see cref="IJournalWatcherService.CargoInventoryChanged"/> event.
+    /// </summary>
     public class CargoInventoryEventArgs : EventArgs
     {
+        /// <summary>
+        /// Gets the cargo snapshot from the journal event.
+        /// </summary>
         public CargoSnapshot Snapshot { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CargoInventoryEventArgs"/> class.
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot.</param>
         public CargoInventoryEventArgs(CargoSnapshot snapshot) => Snapshot = snapshot;
     }
 
+    /// <summary>
+    /// Provides data for the <see cref="IJournalWatcherService.LocationChanged"/> event.
+    /// </summary>
     public class LocationChangedEventArgs : EventArgs
     {
+        /// <summary>
+        /// Gets the current star system name.
+        /// </summary>
         public string StarSystem { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LocationChangedEventArgs"/> class.
+        /// </summary>
+        /// <param name="starSystem">The name of the star system.</param>
         public LocationChangedEventArgs(string starSystem) => StarSystem = starSystem;
     }
 }

@@ -208,8 +208,19 @@ namespace EliteCargoMonitor.UI
 
         private void CreateControls()
         {
-            // Main ListView to display cargo items
-            _listView = new ListView
+            // This method orchestrates the creation of all UI controls by calling specialized methods.
+            CreateListView();
+            CreateActionButtons();
+            CreateStatusLabels();
+            CreateToolTips();
+            CreateTrayIcon();
+        }
+
+        private void CreateListView()
+        {
+            // Creates and configures the main ListView for displaying cargo items.
+            // It's set to auto-size its columns and has a clean, modern appearance.
+            _listView = new ListView 
             {
                 Dock = DockStyle.Fill,
                 View = View.Details,
@@ -217,110 +228,106 @@ namespace EliteCargoMonitor.UI
                 FullRowSelect = true,
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
                 BorderStyle = BorderStyle.None,
-                BackColor = SystemColors.Window, // Use standard window background
-                GridLines = false // Cleaner look without grid lines
+                BackColor = SystemColors.Window,
+                GridLines = false
             };
-
-            // Define columns for the ListView
-            _listView.Columns.Add("Commodity", -2, HorizontalAlignment.Left); // -2 makes it auto-size
+            _listView.Columns.Add("Commodity", -2, HorizontalAlignment.Left);
             _listView.Columns.Add("Count", 80, HorizontalAlignment.Right);
+        }
 
-            // Create control buttons
+        private void CreateActionButtons()
+        {
+            // Creates the main user action buttons (Start, Stop, etc.).
+            // These buttons are styled with a flat look and custom hover/active colors
+            // to provide clear visual feedback to the user.
             _startBtn = new Button { Text = "Start", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _stopBtn = new Button { Text = "Stop", Enabled = false, Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _exitBtn = new Button { Text = "Exit", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _settingsBtn = new Button { Text = "Settings", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _aboutBtn = new Button { Text = "About", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
 
-            // Apply a modern, flat style to the buttons to make them "pop"
             var buttonsToStyle = new[] { _startBtn, _stopBtn, _exitBtn, _settingsBtn, _aboutBtn };
             foreach (var btn in buttonsToStyle)
             {
                 if (btn == null) continue;
                 btn.FlatStyle = FlatStyle.Flat;
-                btn.FlatAppearance.BorderSize = 0; // We'll draw our own border to keep it consistent
-                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(229, 241, 251); // Light blue hover
+                btn.FlatAppearance.BorderSize = 0;
+                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(229, 241, 251);
                 btn.BackColor = DefaultButtonBackColor;
                 btn.Paint += Button_Paint;
             }
 
-            // Set the initial "active" color for the Start button to guide the user.
             if (_startBtn != null)
             {
                 _startBtn.BackColor = StartButtonActiveColor;
             }
+        }
 
-            // Create ToolTip and assign to buttons
-            _toolTip = new ToolTip();
-            if (_startBtn != null) _toolTip.SetToolTip(_startBtn, "Start monitoring for cargo changes");
-            if (_stopBtn != null) _toolTip.SetToolTip(_stopBtn, "Stop monitoring for cargo changes");
-            if (_exitBtn != null) _toolTip.SetToolTip(_exitBtn, "Exit the application");
-            if (_settingsBtn != null) _toolTip.SetToolTip(_settingsBtn, "Configure application settings");
-            if (_aboutBtn != null) _toolTip.SetToolTip(_aboutBtn, "Show information about the application");
+        private void CreateStatusLabels()
+        {
+            // Creates the non-interactive "labels" used in the status bar.
+            // These are implemented as styled, disabled buttons to ensure consistent alignment
+            // and appearance with the actual buttons in the same panel.
 
-            // Create a "label" for the cargo meter using a styled, disabled button for alignment.
-            _cargoSizeLabel = new Button
+            // The cargo meter that visually represents how full the cargo hold is.
+            _cargoSizeLabel = new Button 
             {
                 Text = CargoSize[0],
                 Font = _consolasFont,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlatStyle = FlatStyle.Flat,
-                Enabled = true, // Keep enabled to preserve color
-                Cursor = Cursors.Default, // Make it look non-interactive
-                FlatAppearance = {
-                    BorderSize = 0,
-                    MouseDownBackColor = Color.Transparent,
-                    MouseOverBackColor = Color.Transparent
-                },
+                Enabled = true,
+                Cursor = Cursors.Default,
+                FlatAppearance = { BorderSize = 0, MouseDownBackColor = Color.Transparent, MouseOverBackColor = Color.Transparent },
                 Margin = new Padding(5, 3, 3, 3),
             };
 
-            // Create a "label" for the watching animation using a styled, disabled button.
-            // Calculate the max width needed for the animation to prevent layout shifts.
             int animationWidth = 0;
             if (_animationFont != null)
             {
                 animationWidth = WatchingCargo.Max(frame => TextRenderer.MeasureText(frame, _animationFont).Width);
             }
 
+            // The label that displays the "watching" animation. It has a fixed width to prevent layout shifts.
             _watchingLabel = new Button
             {
                 Text = "",
                 Font = _animationFont,
-                AutoSize = false, // Must be false to set a fixed size and prevent resizing
-                Width = animationWidth > 0 ? animationWidth : 20, // Set fixed width, with a fallback
+                AutoSize = false,
+                Width = animationWidth > 0 ? animationWidth : 20,
                 TextAlign = ContentAlignment.MiddleCenter,
                 FlatStyle = FlatStyle.Flat,
-                Enabled = true, // Keep enabled to preserve color
-                Cursor = Cursors.Default, // Make it look non-interactive
-                FlatAppearance = {
-                    BorderSize = 0,
-                    MouseDownBackColor = Color.Transparent,
-                    MouseOverBackColor = Color.Transparent
-                },
+                Enabled = true,
+                Cursor = Cursors.Default,
+                FlatAppearance = { BorderSize = 0, MouseDownBackColor = Color.Transparent, MouseOverBackColor = Color.Transparent },
                 Margin = new Padding(3),
             };
 
-            // Create a "label" for the cargo count header using a styled, disabled button.
+            // The label that displays the cargo count (e.g., "Cargo: 128/256").
             _cargoHeaderLabel = new Button
             {
                 Text = "Cargo: 0",
-                Font = _verdanaFont, // Use more readable font
+                Font = _verdanaFont,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlatStyle = FlatStyle.Flat,
-                Enabled = true, // Keep enabled to preserve color
-                Cursor = Cursors.Default, // Make it look non-interactive
-                FlatAppearance = {
-                    BorderSize = 0,
-                    MouseDownBackColor = Color.Transparent,
-                    MouseOverBackColor = Color.Transparent
-                },
+                Enabled = true,
+                Cursor = Cursors.Default,
+                FlatAppearance = { BorderSize = 0, MouseDownBackColor = Color.Transparent, MouseOverBackColor = Color.Transparent },
                 Margin = new Padding(0, 3, 0, 3),
             };
+        }
 
-            CreateTrayIcon();
+        private void CreateToolTips()
+        {
+            // Creates and assigns tooltips to the action buttons to provide helpful hints on hover.
+            _toolTip = new ToolTip();
+            if (_startBtn != null) _toolTip.SetToolTip(_startBtn, "Start monitoring for cargo changes");
+            if (_stopBtn != null) _toolTip.SetToolTip(_stopBtn, "Stop monitoring for cargo changes");
+            if (_exitBtn != null) _toolTip.SetToolTip(_exitBtn, "Exit the application");
+            if (_settingsBtn != null) _toolTip.SetToolTip(_settingsBtn, "Configure application settings");
+            if (_aboutBtn != null) _toolTip.SetToolTip(_aboutBtn, "Show information about the application");
         }
 
         private void Button_Paint(object? sender, PaintEventArgs e)

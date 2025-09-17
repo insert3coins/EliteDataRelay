@@ -10,12 +10,21 @@ using EliteCargoMonitor.Models;
 
 namespace EliteCargoMonitor.Services
 {
+    /// <summary>
+    /// Implements the service for processing cargo data from the Elite Dangerous `Cargo.json` file.
+    /// </summary>
     public class CargoProcessorService : ICargoProcessorService
     {
         private string? _lastInventoryHash;
 
+        /// <summary>
+        /// Event raised when new cargo data has been successfully processed.
+        /// </summary>
         public event EventHandler<CargoProcessedEventArgs>? CargoProcessed;
 
+        /// <summary>
+        /// Asynchronously reads, parses, and processes the `Cargo.json` file, handling file locks and retries.
+        /// </summary>
         public async Task ProcessCargoFileAsync()
         {
             for (int attempt = 1; attempt <= AppConfiguration.FileReadMaxAttempts; attempt++)
