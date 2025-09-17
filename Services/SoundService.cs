@@ -79,13 +79,13 @@ namespace EliteCargoMonitor.Services
         {
             if (sourceStream is null) return new MemoryStream();
 
-            using (sourceStream)
-            {
-                var memoryStream = new MemoryStream();
-                sourceStream.CopyTo(memoryStream);
-                memoryStream.Position = 0;
-                return memoryStream;
-            }
+            // Do not dispose the sourceStream with 'using'. The ResourceManager, which
+            // provides the stream, manages its lifetime. Disposing it here can lead
+            // to memory corruption and crashes on application exit.
+            var memoryStream = new MemoryStream();
+            sourceStream.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+            return memoryStream;
         }
 
         public void Dispose()

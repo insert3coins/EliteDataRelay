@@ -1,71 +1,95 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using System.Reflection;
-using EliteCargoMonitor.Models;
+using System.Collections.Generic;
 
 namespace EliteCargoMonitor.Configuration
 {
-    /// <summary>
-    /// Static class to hold application configuration values.
-    /// Manages loading and saving user-configurable settings from/to settings.json.
-    /// </summary>
     public static class AppConfiguration
     {
+        // --- User-configurable settings (saved to settings.json) ---
+        public static string OutputFileFormat { get; set; } = "{count_slash_capacity} | {items}";
+        public static string OutputFileName { get; set; } = "cargo.txt";
+        public static string OutputDirectory { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "out");
+        public static bool UseShipPrefix { get; set; } = false;
+        private static readonly List<string> _defaultShipDesigns = new List<string>
+        {
+            "[<=#=>] ", // Hauler
+            ">--=--< ", // Fighter
+            ">--^--< ", // Interceptor
+            "(#####) ", // Freighter
+            "<(-O-)> ", // Explorer
+            ">--o--< ", // Courier
+            " ~<o>~  ", // Alien Ship
+            ">-(*)-< ", // Heavy Fighter
+            " /_O_\\  ", // Shuttle
+            "<==*==> "  // Corvette
+        };
+        public static List<string> ShipDesigns { get; set; } = new List<string>(_defaultShipDesigns);
+
+        // --- Application constants and paths ---
+        public static string CargoPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous", "Cargo.json");
+        public static string JournalPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous");
+        public static int FormWidth { get; } = 600;
+        public static int FormHeight { get; } = 400;
+        public static int ButtonHeight { get; } = 23;
+        public static int ButtonPanelHeight { get; } = 35;
+        public static float DefaultFontSize { get; } = 9f;
+        public static string ConsolasFontName { get; } = "Consolas";
+        public static string WelcomeMessage { get; } = "Welcome to Elite Cargo Monitor. Click Start to begin.";
+        public static int MaxTextBoxLines { get; } = 500;
+        public static int DebounceDelayMs { get; } = 250;
+        public static int PollingIntervalMs { get; } = 1000;
+        public static int FileSystemDelayMs { get; } = 50;
+        public static int ThreadMaxRetries { get; } = 5;
+        public static int ThreadRetryDelayMs { get; } = 100;
+        public static int FileReadMaxAttempts { get; } = 5;
+        public static int FileReadRetryDelayMs { get; } = 100;
+        public static string AboutInfo { get; } = "Elite Cargo Monitor v1.0";
+        public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
+
         private const string SettingsFileName = "settings.json";
-        private static readonly string UserSavedGames = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous");
 
         /// <summary>
-        /// Gets the current application settings.
+        /// A private model for serializing/deserializing settings.
         /// </summary>
-        public static AppSettings Settings { get; private set; } = new AppSettings();
+        private class SettingsModel
+        {
+            public string OutputFileFormat { get; set; } = AppConfiguration.OutputFileFormat;
+            public string OutputFileName { get; set; } = AppConfiguration.OutputFileName;
+            public string OutputDirectory { get; set; } = AppConfiguration.OutputDirectory;
+            public bool UseShipPrefix { get; set; } = AppConfiguration.UseShipPrefix;
+            public List<string>? ShipDesigns { get; set; } = AppConfiguration.ShipDesigns;
+        }
 
         /// <summary>
-        /// Loads settings from settings.json or creates a default file.
+        /// Loads settings from settings.json. If the file doesn't exist or fails to load, defaults are used.
         /// </summary>
         public static void Load()
         {
-            AppSettings? loadedSettings = null;
-            if (File.Exists(SettingsFileName))
+            try
             {
-                try
+                if (!File.Exists(SettingsFileName)) return;
+
+                string json = File.ReadAllText(SettingsFileName);
+                var model = JsonSerializer.Deserialize<SettingsModel>(json);
+
+                if (model != null)
                 {
-                    string json = File.ReadAllText(SettingsFileName);
-                    loadedSettings = JsonSerializer.Deserialize<AppSettings>(json);
+                    OutputFileFormat = model.OutputFileFormat;
+                    OutputFileName = model.OutputFileName;
+                    OutputDirectory = model.OutputDirectory;
+                    UseShipPrefix = model.UseShipPrefix;
+                    if (model.ShipDesigns != null)
+                    {
+                        ShipDesigns = model.ShipDesigns;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[AppConfiguration] Error loading {SettingsFileName}: {ex.Message}. Using defaults.");
-                }
             }
-
-            Settings = loadedSettings ?? new AppSettings();
-
-            // Apply defaults for any missing properties and mark for saving
-            bool needsSave = false;
-            if (string.IsNullOrEmpty(Settings.OutputFileFormat))
+            catch (Exception ex)
             {
-                Settings.OutputFileFormat = "{count_slash_capacity} | {items}";
-                needsSave = true;
-            }
-
-            if (string.IsNullOrEmpty(Settings.OutputFileName))
-            {
-                Settings.OutputFileName = "cargo.txt";
-                needsSave = true;
-            }
-
-            if (string.IsNullOrEmpty(Settings.OutputDirectory))
-            {
-                Settings.OutputDirectory = "out";
-                needsSave = true;
-            }
-
-            // Save to create the file on first run or to add new default properties to an existing file
-            if (needsSave || !File.Exists(SettingsFileName))
-            {
-                Save();
+                System.Diagnostics.Debug.WriteLine($"[AppConfiguration] Error loading settings: {ex.Message}");
+                // Fallback to defaults if loading fails
             }
         }
 
@@ -76,131 +100,31 @@ namespace EliteCargoMonitor.Configuration
         {
             try
             {
+                var model = new SettingsModel
+                {
+                    OutputFileFormat = OutputFileFormat,
+                    OutputFileName = OutputFileName,
+                    OutputDirectory = OutputDirectory,
+                    UseShipPrefix = UseShipPrefix,
+                    ShipDesigns = ShipDesigns
+                };
+
                 var options = new JsonSerializerOptions { WriteIndented = true };
-                string json = JsonSerializer.Serialize(Settings, options);
+                string json = JsonSerializer.Serialize(model, options);
                 File.WriteAllText(SettingsFileName, json);
-                Debug.WriteLine($"[AppConfiguration] Settings saved to {SettingsFileName}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AppConfiguration] Error saving {SettingsFileName}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[AppConfiguration] Error saving settings: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// The path to the Cargo.json file.
+        /// Gets a copy of the original default ship designs.
         /// </summary>
-        public static string CargoPath { get; } = Path.Combine(UserSavedGames, "Cargo.json");
-
-        /// <summary>
-        /// The path to the Elite Dangerous Player Journal directory.
-        /// This defaults to the standard journal location within the user's "Saved Games" folder.
-        /// </summary>
-        public static string JournalPath { get; } = UserSavedGames;
-
-        /// <summary>
-        /// Polling interval in milliseconds for checking file changes.
-        /// </summary>
-        public static int PollingIntervalMs { get; } = 1000;
-
-        /// <summary>
-        /// Debounce delay in milliseconds to wait for file write to complete.
-        /// </summary>
-        public static int DebounceDelayMs { get; } = 250;
-
-        /// <summary>
-        /// Extra delay to give the file system before reading a changed file.
-        /// </summary>
-        public static int FileSystemDelayMs { get; } = 50;
-
-        /// <summary>
-        /// Maximum number of retries for background thread operations.
-        /// </summary>
-        public static int ThreadMaxRetries { get; } = 5;
-
-        /// <summary>
-        /// Delay in milliseconds between thread retries.
-        /// </summary>
-        public static int ThreadRetryDelayMs { get; } = 100;
-
-        /// <summary>
-        /// Maximum number of attempts to read a file.
-        /// </summary>
-        public static int FileReadMaxAttempts { get; } = 5;
-
-        /// <summary>
-        /// Delay in milliseconds between file read retries.
-        /// </summary>
-        public static int FileReadRetryDelayMs { get; } = 100;
-
-        /// <summary>
-        /// Gets the application version from the assembly.
-        /// </summary>
-        public static string AppVersion { get; } = GetAppVersion();
-
-        /// <summary>
-        /// About text for the application.
-        /// </summary>
-        public static string AboutInfo { get; } = $"Elite Cargo Monitor v{AppVersion}" + Environment.NewLine + "Created by insert3coins";
-
-        private static string GetAppVersion()
+        public static List<string> GetDefaultShipDesigns()
         {
-            // Use AssemblyInformationalVersion for semantic versioning (e.g., 1.0.0-beta), which is set by the <Version> tag in the .csproj
-            var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            if (!string.IsNullOrEmpty(version))
-            {
-                return version;
-            }
-
-            // Fallback to AssemblyVersion (e.g., 1.0.0.0) if the informational version isn't available for some reason.
-            return Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+            return new List<string>(_defaultShipDesigns);
         }
-
-        /// <summary>
-        /// The URL for the project's GitHub page.
-        /// </summary>
-        public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
-
-        /// <summary>
-        /// Welcome message displayed on startup.
-        /// </summary>
-        public static string WelcomeMessage { get; } = "Welcome to Elite Cargo Monitor!";
-
-        /// <summary>
-        /// Output directory for the cargo text file.
-        /// </summary>
-        public static string OutputDirectory
-        {
-            get => Settings.OutputDirectory ?? "out";
-            set => Settings.OutputDirectory = value;
-        }
-
-        /// <summary>
-        /// Output file name for the cargo text file.
-        /// </summary>
-        public static string OutputFileName
-        {
-            get => Settings.OutputFileName ?? "cargo.txt";
-            set => Settings.OutputFileName = value;
-        }
-
-        /// <summary>
-        /// The format string for the cargo.txt output file.
-        /// </summary>
-        public static string OutputFileFormat
-        {
-            get => Settings.OutputFileFormat ?? "{count_slash_capacity} | {items}";
-            set => Settings.OutputFileFormat = value;
-        }
-
-        // UI Configuration
-        public static int FormWidth { get; } = 800;
-        public static int FormHeight { get; } = 600;
-        public static int ButtonHeight { get; } = 30;
-        public static int ButtonPanelHeight { get; } = 40;
-        public static float DefaultFontSize { get; } = 9.0f;
-        public static string VerdanaFontName { get; } = "Verdana";
-        public static string ConsolasFontName { get; } = "Consolas";
-        public static int MaxTextBoxLines { get; } = 100;
     }
 }

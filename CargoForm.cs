@@ -127,10 +127,6 @@ namespace EliteCargoMonitor
             {
                 // Stop monitoring and dispose services on actual exit
                 StopMonitoringInternal();
-                (_journalWatcherService as IDisposable)?.Dispose();
-                (_fileMonitoringService as IDisposable)?.Dispose();
-                (_soundService as IDisposable)?.Dispose();
-                _cargoFormUI?.Dispose();
             }
         }
 
@@ -208,6 +204,9 @@ namespace EliteCargoMonitor
             // Update UI with new cargo data
             string entry = $"{formattedCargoString}{Environment.NewLine}";
             _cargoFormUI.AppendText(entry);
+
+            // Update the visual cargo size indicator
+            _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
         }
 
         private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)

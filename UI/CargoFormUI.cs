@@ -33,32 +33,92 @@ namespace EliteCargoMonitor.UI
         private ToolStripMenuItem? _trayMenuStart;
         private ToolStripMenuItem? _trayMenuStop;
         private ToolStripMenuItem? _trayMenuExit;
-        private Label? _locationLabel;
+        private Icon? _appIcon;
+        private Label? _cargoSizeLabel;
+        private MemoryStream? _iconStream;
+        private Label? _watchingLabel;
+        private System.Windows.Forms.Timer? _watchingTimer;
+        private int _watchingFrame = 0;
+        private string _currentLocation = "Unknown";
 
-        // Animation fields
-        private System.Windows.Forms.Timer? _animationTimer;
         private string _baseTitle = "";
-        private int _animationFrame = 0;
-        private bool _animationForward = true; // To control direction
-        private int _animationWidth = 30; // Width of the animation area in characters
-
-        // Ship designs for the title bar animation
-        private static readonly List<(string Forward, string Reversed)> ShipDesigns = new List<(string, string)>
-        {
-            (">-=>",    "<=-<"),    // Original
-            (">--o-->", "<--o--<"), // Freighter
-            (">((')>",  "<((')<"),  // Clipper-like
-            (">-(~)-<", ">-(~)-<"), // Symmetrical 1
-            (">->",     "<-<"),     // Fighter
-            (">o<",     ">o<"),     // Symmetrical 2 (Hauler?)
-            (">|===>",  "<===|<"),  // Bulkier
-            ("~>~",     "<~<"),     // Wavy
-            (">-^-",    "-^-<"),    // Krait-like
-            (">--=--<", ">--=--<")  // Symmetrical 3 (Wide)
-        };
         private readonly Random _random = new Random();
-        private string _currentShip = ShipDesigns[0].Forward;
-        private string _currentReversedShip = ShipDesigns[0].Reversed;
+
+        // Our working when we hit start
+        private static readonly string[] WatchingCargo = new[]
+		{
+			"⢀⠀",
+			"⡀⠀",
+			"⠄⠀",
+			"⢂⠀",
+			"⡂⠀",
+			"⠅⠀",
+			"⢃⠀",
+			"⡃⠀",
+			"⠍⠀",
+			"⢋⠀",
+			"⡋⠀",
+			"⠍⠁",
+			"⢋⠁",
+			"⡋⠁",
+			"⠍⠉",
+			"⠋⠉",
+			"⠋⠉",
+			"⠉⠙",
+			"⠉⠙",
+			"⠉⠩",
+			"⠈⢙",
+			"⠈⡙",
+			"⢈⠩",
+			"⡀⢙",
+			"⠄⡙",
+			"⢂⠩",
+			"⡂⢘",
+			"⠅⡘",
+			"⢃⠨",
+			"⡃⢐",
+			"⠍⡐",
+			"⢋⠠",
+			"⡋⢀",
+			"⠍⡁",
+			"⢋⠁",
+			"⡋⠁",
+			"⠍⠉",
+			"⠋⠉",
+			"⠋⠉",
+			"⠉⠙",
+			"⠉⠙",
+			"⠉⠩",
+			"⠈⢙",
+			"⠈⡙",
+			"⠈⠩",
+			"⠀⢙",
+			"⠀⡙",
+			"⠀⠩",
+			"⠀⢘",
+			"⠀⡘",
+			"⠀⠨",
+			"⠀⢐",
+			"⠀⡐",
+			"⠀⠠",
+			"⠀⢀",
+			"⠀⡀"
+		};
+        // Cargo storage sizes for bottom right of our ui
+        private static readonly string[] CargoSize = new[]
+        {
+            "▱▱▱▱▱▱▱▱▱▱",
+            "▰▱▱▱▱▱▱▱▱▱",
+            "▰▰▱▱▱▱▱▱▱▱",
+            "▰▰▰▱▱▱▱▱▱▱",
+            "▰▰▰▰▱▱▱▱▱▱",
+            "▰▰▰▰▰▱▱▱▱▱",
+            "▰▰▰▰▰▰▱▱▱▱",
+            "▰▰▰▰▰▰▰▱▱▱",
+            "▰▰▰▰▰▰▰▰▱▱",
+            "▰▰▰▰▰▰▰▰▰▱",
+            "▰▰▰▰▰▰▰▰▰▰",
+        };
 
         /// <summary>
         /// Event raised when the start button is clicked
@@ -94,8 +154,9 @@ namespace EliteCargoMonitor.UI
             _form = form ?? throw new ArgumentNullException(nameof(form));
             _form.Resize += OnFormResize;
 
+            InitializeIcon();
             InitializeFonts();
-            InitializeAnimationTimer();
+            InitializeAnimation();
             CreateControls();
             SetupFormProperties();
             SetupLayout();
@@ -112,9 +173,31 @@ namespace EliteCargoMonitor.UI
             }
             else if (_form?.WindowState == FormWindowState.Normal || _form?.WindowState == FormWindowState.Maximized)
             {
-                // Recalculate animation width when window is resized
-                UpdateAnimationWidth();
             }
+        }
+
+        private void InitializeIcon()
+        {
+            try
+            {
+                // Create a MemoryStream from the icon resource. This stream must be kept open
+                // for the lifetime of the Icon object. We store it in a field and dispose of
+                // it when the UI is disposed. This prevents heap corruption (0xc0000374) that
+                // can occur if the stream is garbage collected while the Icon is still in use.
+                _iconStream = new MemoryStream(Properties.Resources.AppIcon);
+                _appIcon = new Icon(_iconStream);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error initializing application icon: {ex}");
+                // If icon fails to load, _appIcon will remain null, and the form/tray will use defaults.
+            }
+        }
+
+        private void InitializeAnimation()
+        {
+            _watchingTimer = new System.Windows.Forms.Timer { Interval = 100 };
+            _watchingTimer.Tick += WatchingTimer_Tick;
         }
 
         private void InitializeFonts()
@@ -148,111 +231,6 @@ namespace EliteCargoMonitor.UI
             catch
             {
                 _consolasFont = new Font(FontFamily.GenericMonospace, AppConfiguration.DefaultFontSize);
-            }
-        }
-
-        private void InitializeAnimationTimer()
-        {
-            _animationTimer = new System.Windows.Forms.Timer { Interval = 150 }; // Animation speed
-            _animationTimer.Tick += AnimationTimer_Tick;
-        }
-
-        private void AnimationTimer_Tick(object? sender, EventArgs e)
-        {
-            if (_form == null || string.IsNullOrEmpty(_baseTitle)) return;
-
-            // Choose ship design and length based on direction
-            string currentShip = _animationForward ? _currentShip : _currentReversedShip;
-            int shipLength = currentShip.Length;
-
-            // Total width for the animation cycle (ship starts off-screen, moves across, and exits)
-            int totalCycleWidth = _animationWidth + shipLength;
-
-            // Current position of the ship's first character.
-            // This calculation remains the same for both directions.
-            int shipPosition = _animationFrame - shipLength;
-
-            var frameChars = new char[_animationWidth];
-            // Draw the part of the ship that is visible in the frame
-            for (int i = 0; i < _animationWidth; i++)
-            {
-                int shipCharIndex = i - shipPosition;
-                if (shipCharIndex >= 0 && shipCharIndex < shipLength)
-                {
-                    frameChars[i] = currentShip[shipCharIndex];
-                }
-                else
-                {
-                    frameChars[i] = ' ';
-                }
-            }
-
-            // Update frame and direction for ping-pong effect
-            if (_animationForward)
-            {
-                _animationFrame++;
-                if (_animationFrame >= totalCycleWidth)
-                {
-                    _animationForward = false;
-                    _animationFrame = totalCycleWidth - 1; // Start moving back from the end
-                }
-            }
-            else // Moving backward
-            {
-                _animationFrame--;
-                if (_animationFrame <= 0)
-                {
-                    _animationForward = true;
-                    _animationFrame = 1; // Start moving forward from the beginning
-                }
-            }
-
-            _form.Text = $"{_baseTitle} [{new string(frameChars)}]";
-        }
-
-        private void UpdateAnimationWidth()
-        {
-            if (_form?.IsDisposed != false || _form.Handle == IntPtr.Zero) return;
-
-            // To calculate the available animation width, we subtract the width of all other title bar elements
-            // from the total width of the form.
-
-            // A constant to estimate the total width of the right-side window chrome (minimize, maximize, close buttons, and their padding).
-            // This value is an approximation, as the exact width can vary based on Windows version, themes, and DPI settings.
-            // There is no direct .NET API to get this value perfectly. This value has been adjusted
-            // to be more conservative and provide more space for the animation on most systems.
-            const int RightSideChromeWidth = 115;
-            int iconWidth = _form.ShowIcon ? SystemInformation.SmallIconSize.Width : 0;
-            int frameBorderWidth = _form.Width - _form.ClientSize.Width; // Get the exact total border width.
-
-            // Measure the width of the static part of the title.
-            Size titleSize = TextRenderer.MeasureText(_baseTitle + " []", SystemFonts.CaptionFont);
-
-            // Calculate the remaining width available for the animation.
-            int availableWidth = _form.Width - titleSize.Width - RightSideChromeWidth - iconWidth - frameBorderWidth;
-
-            int newWidth = _animationWidth;
-            if (availableWidth > 0)
-            {
-                // Estimate character width using a space character in the caption font.
-                int charWidth = TextRenderer.MeasureText(" ", SystemFonts.CaptionFont).Width;
-                if (charWidth > 0)
-                {
-                    newWidth = availableWidth / charWidth;
-                }
-            }
-
-            // Ensure a minimum width for the animation.
-            if (newWidth < 10)
-            {
-                newWidth = 10;
-            }
-
-            if (newWidth != _animationWidth)
-            {
-                _animationWidth = newWidth;
-                _animationFrame = 0; // Reset animation on resize to prevent graphical glitches.
-                _animationForward = true;
             }
         }
 
@@ -290,16 +268,30 @@ namespace EliteCargoMonitor.UI
             _toolTip.SetToolTip(_settingsBtn, "Configure application settings");
             _toolTip.SetToolTip(_aboutBtn, "Show information about the application");
 
-            CreateTrayIcon();
-
-            // Create label for location
-            _locationLabel = new Label
+            _cargoSizeLabel = new Label
             {
-                Text = "Location: Unknown",
+                Text = $"{CargoSize[0]}",
                 Font = _consolasFont,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleRight
+                Anchor = AnchorStyles.Right,
+                AutoSize = true,
             };
+
+            // Calculate a fixed width for the animation label to ensure consistent layout.
+            // Using "WW" as a reference for two wide characters in a monospaced font.
+            var animationWidth = TextRenderer.MeasureText("WW", _consolasFont).Width;
+
+            _watchingLabel = new Label
+            {
+                Text = "",
+                Font = _consolasFont,
+                AutoSize = false, // Disable AutoSize to manually control alignment
+                TextAlign = ContentAlignment.MiddleCenter, // Center the animation character vertically and horizontally
+                Height = AppConfiguration.ButtonHeight, // Match the height of the buttons
+                Width = animationWidth,
+                Margin = new Padding(3) // Use default button margins for consistent spacing
+            };
+
+            CreateTrayIcon();
         }
 
         private void SetupFormProperties()
@@ -312,22 +304,16 @@ namespace EliteCargoMonitor.UI
             _form.Height = AppConfiguration.FormHeight;
             _form.Padding = Padding.Empty;
             _baseTitle = _form.Text;
+            UpdateFullTitleText();
 
-            // Set application icon
-            try
-            {
-                _form.Icon = new Icon(new MemoryStream(Properties.Resources.AppIcon));
-            }
-            catch
-            {
-                // Ignore icon errors - form will use default icon
-            }
+            // Set application icon from pre-loaded resource
+            if (_appIcon != null) _form.Icon = _appIcon;
         }
-
         private void SetupLayout()
         {
             if (_form == null || _textBox == null || _startBtn == null || 
-                _stopBtn == null || _aboutBtn == null || _settingsBtn == null || _exitBtn == null || _locationLabel == null) return;
+                _stopBtn == null || _aboutBtn == null || _settingsBtn == null || _exitBtn == null || _watchingLabel == null ||
+                _cargoSizeLabel == null) return;
 
             // Create a FlowLayoutPanel for the buttons
             var buttonFlowPanel = new FlowLayoutPanel
@@ -337,17 +323,18 @@ namespace EliteCargoMonitor.UI
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = Padding.Empty,
-                Margin = Padding.Empty
+                Margin = Padding.Empty,
             };
 
-            // Add buttons in order: Start | Stop | About | Settings | Exit
+            // Add buttons in order: Spinner | Start | Stop | About | Settings | Exit
+            buttonFlowPanel.Controls.Add(_watchingLabel);
             buttonFlowPanel.Controls.Add(_startBtn);
             buttonFlowPanel.Controls.Add(_stopBtn);
             buttonFlowPanel.Controls.Add(_aboutBtn);
             buttonFlowPanel.Controls.Add(_settingsBtn);
             buttonFlowPanel.Controls.Add(_exitBtn);
 
-            // Use a TableLayoutPanel to align buttons left and location label right
+            // Use a TableLayoutPanel to hold the buttons at the bottom, which helps with vertical alignment.
             var bottomPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Bottom,
@@ -355,10 +342,10 @@ namespace EliteCargoMonitor.UI
                 ColumnCount = 2,
                 RowCount = 1,
             };
-            bottomPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             bottomPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            bottomPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             bottomPanel.Controls.Add(buttonFlowPanel, 0, 0);
-            bottomPanel.Controls.Add(_locationLabel, 1, 0);
+            bottomPanel.Controls.Add(_cargoSizeLabel, 1, 0);
 
             // Add controls to form
             _form.Controls.Add(_textBox);
@@ -386,6 +373,14 @@ namespace EliteCargoMonitor.UI
             AppendText(AppConfiguration.WelcomeMessage + Environment.NewLine);
         }
 
+        private void WatchingTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_watchingLabel == null) return;
+
+            _watchingFrame = (_watchingFrame + 1) % WatchingCargo.Length;
+            _watchingLabel.Text = WatchingCargo[_watchingFrame];
+        }
+
         /// <summary>
         /// Update the UI with new cargo data
         /// </summary>
@@ -393,9 +388,22 @@ namespace EliteCargoMonitor.UI
         /// <param name="cargoCapacity">The total cargo capacity</param>
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
-            // This method is now obsolete as formatting is handled by FileOutputService
-            // and text is appended directly in CargoForm. We keep the method to satisfy
-            // the interface. Pruning and scrolling are now handled in AppendText().
+            if (_cargoSizeLabel == null) return;
+
+            int count = snapshot.Inventory.Sum(item => item.Count);
+            int index = 0;
+
+            // Calculate index based on percentage if capacity is known
+            if (cargoCapacity is > 0)
+            {
+                double percentage = (double)count / cargoCapacity.Value;
+                percentage = Math.Clamp(percentage, 0.0, 1.0);
+
+                index = (int)Math.Round(percentage * (CargoSize.Length - 1));
+                index = Math.Clamp(index, 0, CargoSize.Length - 1);
+            }
+
+            _cargoSizeLabel.Text = $"Hold: {CargoSize[index]}";
         }
 
         /// <summary>
@@ -406,9 +414,32 @@ namespace EliteCargoMonitor.UI
         {
             if (_textBox == null) return;
 
+            string textToAppend = text;
+            if (AppConfiguration.UseShipPrefix && AppConfiguration.ShipDesigns.Any())
+            {
+                var randomShip = AppConfiguration.ShipDesigns[_random.Next(AppConfiguration.ShipDesigns.Count)];
+
+                // Remove trailing newline if it exists, we'll add it back later.
+                bool hadTrailingNewline = text.EndsWith(Environment.NewLine);
+                string content = hadTrailingNewline ? text.Substring(0, text.Length - Environment.NewLine.Length) : text;
+
+                var lines = content.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+                var prefixedLines = lines.Select(line =>
+                    string.IsNullOrWhiteSpace(line) ? line : $"{randomShip}{line}"
+                );
+
+                textToAppend = string.Join(Environment.NewLine, prefixedLines);
+
+                if (hadTrailingNewline)
+                {
+                    textToAppend += Environment.NewLine;
+                }
+            }
+
             try
             {
-                _textBox.AppendText(text);
+                _textBox.AppendText(textToAppend);
                 TrimTextBoxLines();
                 ScrollToBottom();
             }
@@ -424,9 +455,9 @@ namespace EliteCargoMonitor.UI
         /// <param name="starSystem">The name of the star system.</param>
         public void UpdateLocation(string starSystem)
         {
-            if (_locationLabel == null) return;
+            _currentLocation = starSystem;
 
-            _locationLabel.Text = $"Location: {starSystem}";
+            UpdateFullTitleText();
         }
 
         /// <summary>
@@ -437,31 +468,7 @@ namespace EliteCargoMonitor.UI
         {
             _baseTitle = title;
 
-            if (_form != null)
-            {
-                _form.Text = _baseTitle;
-            }
-
-            // Start/stop animation based on monitoring state
-            if (title.Contains("Watching") && _animationTimer?.Enabled == false)
-            {
-                // Select a random ship for this session
-                int index = _random.Next(ShipDesigns.Count);
-                _currentShip = ShipDesigns[index].Forward;
-                _currentReversedShip = ShipDesigns[index].Reversed;
-
-                UpdateAnimationWidth(); // Calculate width before starting
-                _animationFrame = 0;
-                _animationForward = true; // Ensure animation starts by moving forward
-                _animationTimer.Start();
-            }
-            else if (!title.Contains("Watching") && _animationTimer?.Enabled == true)
-            {
-                _animationTimer.Stop();
-                // Restore the title without animation
-                if (_form != null)
-                    _form.Text = _baseTitle;
-            }
+            UpdateFullTitleText();
         }
 
         /// <summary>
@@ -477,6 +484,28 @@ namespace EliteCargoMonitor.UI
             // Also update tray menu items
             if (_trayMenuStart != null) _trayMenuStart.Enabled = startEnabled;
             if (_trayMenuStop != null) _trayMenuStop.Enabled = stopEnabled;
+
+            // Control the animation
+            if (_watchingTimer != null && _watchingLabel != null)
+            {
+                if (stopEnabled) // This means monitoring is now active
+                {
+                    _watchingFrame = 0;
+                    _watchingTimer.Start();
+                }
+                else // Monitoring is stopped
+                {
+                    _watchingTimer.Stop();
+                    _watchingLabel.Text = "";
+                }
+            }
+        }
+
+        private void UpdateFullTitleText()
+        {
+            if (_form == null) return;
+
+            _form.Text = $"{_baseTitle} - Location: {_currentLocation}";
         }
 
         private void TrimTextBoxLines()
@@ -533,14 +562,8 @@ namespace EliteCargoMonitor.UI
                 ContextMenuStrip = _trayMenu
             };
 
-            try
-            {
-                _notifyIcon.Icon = new Icon(new MemoryStream(Properties.Resources.AppIcon));
-            }
-            catch
-            {
-                // Ignore icon errors
-            }
+            // Set tray icon from pre-loaded resource
+            if (_appIcon != null) _notifyIcon.Icon = _appIcon;
         }
 
         private void OnTrayIconDoubleClick(object? sender, EventArgs e) => ShowForm();
@@ -566,12 +589,20 @@ namespace EliteCargoMonitor.UI
             _exitBtn?.Dispose();
             _aboutBtn?.Dispose();
             _settingsBtn?.Dispose();
+            _watchingLabel?.Dispose();
+            _cargoSizeLabel?.Dispose();
             _toolTip?.Dispose();
             _notifyIcon?.Dispose();
             _trayMenu?.Dispose();
-            _animationTimer?.Dispose();
-            _locationLabel?.Dispose();
+            _watchingTimer?.Dispose();
             _privateFonts?.Dispose();
+            if (_fontMemoryPtr != IntPtr.Zero)
+            {
+                Marshal.FreeCoTaskMem(_fontMemoryPtr);
+                _fontMemoryPtr = IntPtr.Zero;
+            }
+            _appIcon?.Dispose();
+            _iconStream?.Dispose();
         }
     }
 }
