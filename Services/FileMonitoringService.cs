@@ -117,21 +117,32 @@ namespace EliteCargoMonitor.Services
             Debug.WriteLine("[FileMonitoringService] Polling fallback started");
         }
 
-        private void PollTimer_Tick(object? sender, EventArgs e)
+        private async void PollTimer_Tick(object? sender, EventArgs e)
         {
             try
             {
-                if (!File.Exists(AppConfiguration.CargoPath)) return;
+                // Perform file I/O on a background thread to avoid blocking the UI.
+                var (changed, nowWrite, nowSize) = await Task.Run(() =>
+                {
+                    if (!File.Exists(AppConfiguration.CargoPath))
+                    {
+                        return (false, DateTime.MinValue, 0L);
+                    }
 
-                var nowWrite = File.GetLastWriteTimeUtc(AppConfiguration.CargoPath);
-                var nowSize = new FileInfo(AppConfiguration.CargoPath).Length;
+                    var currentWrite = File.GetLastWriteTimeUtc(AppConfiguration.CargoPath);
+                    var currentSize = new FileInfo(AppConfiguration.CargoPath).Length;
 
-                if (nowWrite != _lastWriteTimeUtc || nowSize != _lastSize)
+                    bool hasChanged = currentWrite != _lastWriteTimeUtc || currentSize != _lastSize;
+                    return (hasChanged, currentWrite, currentSize);
+                });
+
+                if (changed)
                 {
                     _lastWriteTimeUtc = nowWrite;
                     _lastSize = nowSize;
                     
                     Debug.WriteLine("[FileMonitoringService] Polling detected change");
+                    // This is invoked on the UI thread because we awaited on the UI thread.
                     FileChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
