@@ -11,7 +11,7 @@ A lightweight Windows utility for players of Elite Dangerous. It monitors your i
 
 ## 📍 Overview
 
-This tool provides a simple way to keep an eye on your ship's cargo without having to tab into the game's right-hand panel. It reads the `Cargo.json` file that Elite Dangerous generates, along with player journals to determine total capacity. The output is displayed in the app window and also written to a `cargo.txt` file, which is perfect for adding a cargo display to your stream via OBS or other broadcasting software.
+This tool provides a simple way to keep an eye on your ship's cargo without having to tab into the game's right-hand panel. It reads the `Cargo.json` file that Elite Dangerous generates, along with player journals to determine total capacity. The output is displayed in a clean interface that includes a real-time cargo list, a visual meter for your cargo hold, and an indicator to show when monitoring is active. The data is also written to a `cargo.txt` file, which is perfect for adding a cargo display to your stream via OBS or other broadcasting software.
 
 ## 📸 Screenshot
 ![Screenshot](https://github.com/insert3coins/EliteCargoMonitor/blob/master/Images/Screenshot.png?raw=true)
@@ -21,6 +21,8 @@ This tool provides a simple way to keep an eye on your ship's cargo without havi
 -   **Real-time Monitoring**: Watches `Cargo.json` for any changes and updates instantly.
 -   **Cargo Capacity**: Reads player journal files to display your total cargo capacity (e.g., `128/256`).
 -   **Simple UI**: A clean, no-fuss window displays your current cargo list.
+-   **Visual Cargo Meter**: A bar in the bottom-right corner visually represents how full your cargo hold is.
+-   **Active Status Indicator**: A subtle animation appears when monitoring is active, providing clear visual feedback.
 -   **Text File Output**: Exports cargo data to a configurable text file (default: `out/cargo.txt`) for easy integration with other tools (like OBS for streaming).
 -   **Audio Cues**: Plays sounds when monitoring starts and stops.
 -   **Automatic Path Detection**: Automatically finds the default Elite Dangerous player data folder.
