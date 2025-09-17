@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 using EliteCargoMonitor.Services;
@@ -55,6 +56,7 @@ namespace EliteCargoMonitor
 
         private int? _cargoCapacity;
         private bool _isExiting;
+        private SettingsForm? _settingsForm;
 
         private void InitializeComponent()
         {
@@ -84,24 +86,29 @@ namespace EliteCargoMonitor
 
         #region Form Events
 
-        private void CargoForm_Load(object? sender, EventArgs e)
+        private async void CargoForm_Load(object? sender, EventArgs e)
         {
-            // Check if cargo file exists on startup
-            if (!File.Exists(AppConfiguration.CargoPath))
+            // Asynchronously check if cargo file exists on startup to avoid blocking UI on slow I/O
+            bool cargoFileExists = await Task.Run(() => File.Exists(AppConfiguration.CargoPath));
+            if (!cargoFileExists)
             {
                 MessageBox.Show(
-                    $"Cargo.json not found.\nMake sure Elite Dangerous is running\nand the file is at:\n{AppConfiguration.CargoPath}",
+                    this,
+                    $"Cargo.json not found.\nPlease make sure Elite Dangerous is running and the file exists at:\n{AppConfiguration.CargoPath}",
                     "File not found",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 return;
             }
 
-            // Check if journal directory exists
-            if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
+            // Asynchronously check if journal directory exists
+            string? journalPath = _journalWatcherService.JournalDirectoryPath;
+            bool journalDirExists = await Task.Run(() => !string.IsNullOrEmpty(journalPath) && Directory.Exists(journalPath));
+            if (!journalDirExists)
             {
                 MessageBox.Show(
-                    $"Journal directory not found.\nJournal watcher will be disabled.\nPath: {_journalWatcherService.JournalDirectoryPath}",
+                    this,
+                    $"Journal directory not found.\nJournal watcher will be disabled.\nExpected path: {journalPath}",
                     "Directory not found",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -127,15 +134,15 @@ namespace EliteCargoMonitor
 
         #region UI Event Handlers
 
-        private void OnStartClicked(object? sender, EventArgs e)
+        private async void OnStartClicked(object? sender, EventArgs e)
         {
-            StartMonitoring();
+            await StartMonitoring();
         }
 
-        private void OnStopClicked(object? sender, EventArgs e)
+        private async void OnStopClicked(object? sender, EventArgs e)
         {
             _soundService.PlayStopSound();
-            StopMonitoringInternal();
+            await StopMonitoringInternal();
         }
 
         private void OnExitClicked(object? sender, EventArgs e)
@@ -144,10 +151,9 @@ namespace EliteCargoMonitor
             Close();
         }
 
-        private void OnAboutClicked(object? sender, EventArgs e)
+        private async void OnAboutClicked(object? sender, EventArgs e)
         {
             string fullAboutText = $"{AppConfiguration.AboutInfo}{Environment.NewLine}Project Page: {AppConfiguration.AboutUrl}";
-            //_cargoFormUI.AppendText(fullAboutText + Environment.NewLine);
 
             string message = $"{fullAboutText}{Environment.NewLine}{Environment.NewLine}Would you like to open the project page in your browser?";
 
@@ -162,7 +168,7 @@ namespace EliteCargoMonitor
             {
                 try
                 {
-                    Process.Start(new ProcessStartInfo(AppConfiguration.AboutUrl) { UseShellExecute = true });
+                    await Task.Run(() => Process.Start(new ProcessStartInfo(AppConfiguration.AboutUrl) { UseShellExecute = true }));
                 }
                 catch (Exception ex)
                 {
@@ -173,20 +179,28 @@ namespace EliteCargoMonitor
 
         private void OnSettingsClicked(object? sender, EventArgs e)
         {
-            using (var settingsForm = new SettingsForm())
+            // If the settings form is already open, bring it to the front.
+            if (_settingsForm != null && !_settingsForm.IsDisposed)
             {
-                settingsForm.ShowDialog(this);
+                _settingsForm.Activate();
+                return;
             }
+
+            // Otherwise, create and show a new instance.
+            _settingsForm = new SettingsForm();
+            // Nullify the reference when the form is closed so a new one can be created next time.
+            _settingsForm.FormClosed += (s, args) => _settingsForm = null;
+            _settingsForm.Show(this);
         }
 
         #endregion
 
         #region Service Event Handlers
 
-        private void OnFileChanged(object? sender, EventArgs e)
+        private async void OnFileChanged(object? sender, EventArgs e)
         {
             // Delegate file processing to the cargo processor service
-            _cargoProcessorService.ProcessCargoFile();
+            await _cargoProcessorService.ProcessCargoFileAsync();
         }
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
@@ -224,7 +238,7 @@ namespace EliteCargoMonitor
 
         #region Monitoring Control
 
-        private void StartMonitoring()
+        private Task StartMonitoring()
         {
             // Play start sound
             _soundService.PlayStartSound();
@@ -233,27 +247,36 @@ namespace EliteCargoMonitor
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
             _cargoFormUI.UpdateTitle("Cargo Monitor – Watching");
 
-            // Start journal monitoring to find capacity before the first cargo read
-            _journalWatcherService.StartMonitoring();
+            // Run the rest of the start-up logic on a background thread
+            // to keep the UI responsive, especially during the initial file read.
+            return Task.Run(async () =>
+            {
+                // Start journal monitoring to find capacity before the first cargo read
+                _journalWatcherService.StartMonitoring();
 
-            // Process initial file snapshot
-            _cargoProcessorService.ProcessCargoFile();
-            
-            // Start file monitoring
-            _fileMonitoringService.StartMonitoring();
+                // Process initial file snapshot
+                await _cargoProcessorService.ProcessCargoFileAsync();
+                
+                // Start file monitoring
+                _fileMonitoringService.StartMonitoring();
+            });
         }
 
-        private void StopMonitoringInternal()
+        private Task StopMonitoringInternal()
         {
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: true, stopEnabled: false);
             _cargoFormUI.UpdateTitle("Cargo Monitor – Stopped");
 
-            // Stop file monitoring
-            _fileMonitoringService.StopMonitoring();
+            // Run shutdown on a background thread to keep UI responsive.
+            return Task.Run(() =>
+            {
+                // Stop file monitoring
+                _fileMonitoringService.StopMonitoring();
 
-            // Stop journal monitoring
-            _journalWatcherService.StopMonitoring();
+                // Stop journal monitoring
+                _journalWatcherService.StopMonitoring();
+            });
         }
 
         #endregion

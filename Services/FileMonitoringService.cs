@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 
@@ -93,55 +94,16 @@ namespace EliteCargoMonitor.Services
             _debounceTimer.Start();
         }
 
-        private void DebounceTimer_Tick(object? sender, EventArgs e)
+        private async void DebounceTimer_Tick(object? sender, EventArgs e)
         {
             _debounceTimer.Stop();
-
-            // Give the file system a little breathing room before we try to read
-            Thread.Sleep(AppConfiguration.FileSystemDelayMs);
-
-            // Use polling thread with retries to handle file locking
-            new Thread(() =>
-            {
-                for (int attempt = 0; attempt < AppConfiguration.ThreadMaxRetries; attempt++)
-                {
-                    try
-                    {
-                        // Trigger the file changed event on the UI thread
-                        if (FileChanged != null)
-                        {
-                            // We need to invoke on the UI thread if we have a form context
-                            if (System.Windows.Forms.Application.OpenForms.Count > 0)
-                            {
-                                var mainForm = System.Windows.Forms.Application.OpenForms[0];
-                                if (mainForm?.InvokeRequired == true)
-                                {
-                                    mainForm.Invoke(new EventHandler((s, args) => FileChanged?.Invoke(this, EventArgs.Empty)), sender, e);
-                                }
-                                else
-                                {
-                                    FileChanged?.Invoke(this, EventArgs.Empty);
-                                }
-                            }
-                            else
-                            {
-                                FileChanged?.Invoke(this, EventArgs.Empty);
-                            }
-                        }
-                        break; // Success - exit retry loop
-                    }
-                    catch (IOException)
-                    {
-                        // File still locked - wait before retrying
-                        Thread.Sleep(AppConfiguration.ThreadRetryDelayMs);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"[FileMonitoringService] Debounce thread error: {ex}");
-                        break; // Unexpected error - stop retrying
-                    }
-                }
-            }).Start();
+ 
+            // Give the file system a little breathing room before we try to read.
+            // The actual read and retry logic is now handled by the processor service.
+            await Task.Delay(AppConfiguration.FileSystemDelayMs);
+ 
+            // Raise the event. The consumer is responsible for handling file access and retries.
+            FileChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void StartPollingFallback()

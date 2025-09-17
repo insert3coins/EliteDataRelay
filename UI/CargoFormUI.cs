@@ -157,8 +157,10 @@ namespace EliteCargoMonitor.UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error initializing application icon: {ex}");
-                // If icon fails to load, _appIcon will remain null, and the form/tray will use defaults.
+                // If the icon resource is missing or corrupt, an exception will be thrown.
+                // We catch it here to prevent the application from crashing on startup.
+                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error initializing application icon: {ex.Message}");
+                // By leaving _appIcon as null, the form and notify icon will gracefully fall back to using their default icons.
             }
         }
 
