@@ -10,9 +10,6 @@ using EliteCargoMonitor.UI;
 
 namespace EliteCargoMonitor
 {
-    /// <summary>
-    /// Main form that coordinates between UI and services
-    /// </summary>
     public partial class CargoForm : Form
     {
         // Service dependencies
@@ -23,9 +20,6 @@ namespace EliteCargoMonitor
         private readonly IFileOutputService _fileOutputService;
         private readonly ICargoFormUI _cargoFormUI;
 
-        /// <summary>
-        /// Constructor with dependency injection
-        /// </summary>
         public CargoForm(
             IFileMonitoringService fileMonitoringService,
             ICargoProcessorService cargoProcessorService,
@@ -45,9 +39,6 @@ namespace EliteCargoMonitor
             SetupEventHandlers();
         }
 
-        /// <summary>
-        /// Parameterless constructor for design-time support and simple instantiation
-        /// </summary>
         public CargoForm()
         {
             // Create default service instances for design-time and simple usage

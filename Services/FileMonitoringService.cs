@@ -7,9 +7,6 @@ using EliteCargoMonitor.Configuration;
 
 namespace EliteCargoMonitor.Services
 {
-    /// <summary>
-    /// Service for monitoring file system changes to the cargo file with debouncing and polling fallback
-    /// </summary>
     public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         private FileSystemWatcher? _watcher;
@@ -19,14 +16,8 @@ namespace EliteCargoMonitor.Services
         private long _lastSize;
         private bool _isMonitoring;
 
-        /// <summary>
-        /// Event raised when the cargo file has changed and debounce period has elapsed
-        /// </summary>
         public event EventHandler? FileChanged;
 
-        /// <summary>
-        /// Gets whether the monitoring service is currently active
-        /// </summary>
         public bool IsMonitoring => _isMonitoring;
 
         public FileMonitoringService()
@@ -46,9 +37,6 @@ namespace EliteCargoMonitor.Services
             _pollTimer.Tick += PollTimer_Tick;
         }
 
-        /// <summary>
-        /// Start monitoring the cargo file for changes
-        /// </summary>
         public void StartMonitoring()
         {
             if (_isMonitoring) return;
@@ -60,9 +48,6 @@ namespace EliteCargoMonitor.Services
             Debug.WriteLine("[FileMonitoringService] Started monitoring");
         }
 
-        /// <summary>
-        /// Stop monitoring the cargo file
-        /// </summary>
         public void StopMonitoring()
         {
             if (!_isMonitoring) return;

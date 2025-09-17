@@ -10,9 +10,6 @@ using EliteCargoMonitor.Models;
 
 namespace EliteCargoMonitor.UI
 {
-    /// <summary>
-    /// UI management class for the cargo form interface
-    /// </summary>
     public class CargoFormUI : ICargoFormUI
     {
         private ListView? _listView;
@@ -110,35 +107,16 @@ namespace EliteCargoMonitor.UI
             "▰▰▰▰▰▰▰▰▰▰",
         };
 
-        /// <summary>
-        /// Event raised when the start button is clicked
-        /// </summary>
         public event EventHandler? StartClicked;
 
-        /// <summary>
-        /// Event raised when the stop button is clicked  
-        /// </summary>
         public event EventHandler? StopClicked;
 
-        /// <summary>
-        /// Event raised when the exit button is clicked
-        /// </summary>
         public event EventHandler? ExitClicked;
 
-        /// <summary>
-        /// Event raised when the about button is clicked
-        /// </summary>
         public event EventHandler? AboutClicked;
 
-        /// <summary>
-        /// Event raised when the settings button is clicked
-        /// </summary>
         public event EventHandler? SettingsClicked;
 
-        /// <summary>
-        /// Initialize the UI components and layout
-        /// </summary>
-        /// <param name="form">The main form to initialize</param>
         public void InitializeUI(Form form)
         {
             _form = form ?? throw new ArgumentNullException(nameof(form));
@@ -468,11 +446,6 @@ namespace EliteCargoMonitor.UI
             _watchingLabel.Text = WatchingCargo[_watchingFrame];
         }
 
-        /// <summary>
-        /// Updates the header display with the current cargo count.
-        /// </summary>
-        /// <param name="currentCount">The current number of items in cargo.</param>
-        /// <param name="capacity">The total cargo capacity.</param>
         public void UpdateCargoHeader(int currentCount, int? capacity)
         {
             if (_cargoHeaderLabel == null) return;
@@ -483,10 +456,6 @@ namespace EliteCargoMonitor.UI
             _cargoHeaderLabel.Text = headerText;
         }
 
-        /// <summary>
-        /// Updates the main display with the current cargo list.
-        /// </summary>
-        /// <param name="snapshot">The cargo snapshot to display.</param>
         public void UpdateCargoList(CargoSnapshot snapshot)
         {
             if (_listView == null) return;
@@ -520,11 +489,6 @@ namespace EliteCargoMonitor.UI
             _listView.EndUpdate();
         }
 
-        /// <summary>
-        /// Update the UI with new cargo data
-        /// </summary>
-        /// <param name="snapshot">The cargo snapshot to display</param>
-        /// <param name="cargoCapacity">The total cargo capacity</param>
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
             if (_cargoSizeLabel == null) return;
@@ -545,10 +509,6 @@ namespace EliteCargoMonitor.UI
             _cargoSizeLabel.Text = CargoSize[index];
         }
 
-        /// <summary>
-        /// Update the location display on the status bar.
-        /// </summary>
-        /// <param name="starSystem">The name of the star system.</param>
         public void UpdateLocation(string starSystem)
         {
             _currentLocation = starSystem;
@@ -556,10 +516,6 @@ namespace EliteCargoMonitor.UI
             UpdateFullTitleText();
         }
 
-        /// <summary>
-        /// Update the form title
-        /// </summary>
-        /// <param name="title">New title text</param>
         public void UpdateTitle(string title)
         {
             _baseTitle = title;
@@ -567,11 +523,6 @@ namespace EliteCargoMonitor.UI
             UpdateFullTitleText();
         }
 
-        /// <summary>
-        /// Set the enabled state of the start and stop buttons
-        /// </summary>
-        /// <param name="startEnabled">Whether start button should be enabled</param>
-        /// <param name="stopEnabled">Whether stop button should be enabled</param>
         public void SetButtonStates(bool startEnabled, bool stopEnabled)
         {
             if (_startBtn != null)

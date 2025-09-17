@@ -10,21 +10,12 @@ using EliteCargoMonitor.Models;
 
 namespace EliteCargoMonitor.Services
 {
-    /// <summary>
-    /// Service for processing cargo data from the Elite Dangerous cargo file
-    /// </summary>
     public class CargoProcessorService : ICargoProcessorService
     {
         private string? _lastInventoryHash;
 
-        /// <summary>
-        /// Event raised when new cargo data has been successfully processed
-        /// </summary>
         public event EventHandler<CargoProcessedEventArgs>? CargoProcessed;
 
-        /// <summary>
-        /// Process the cargo file and extract cargo snapshot data
-        /// </summary>
         public void ProcessCargoFile()
         {
             for (int attempt = 1; attempt <= AppConfiguration.FileReadMaxAttempts; attempt++)
@@ -90,11 +81,6 @@ namespace EliteCargoMonitor.Services
             }
         }
 
-        /// <summary>
-        /// Compute SHA256 hash of cargo snapshot for duplicate detection
-        /// </summary>
-        /// <param name="snapshot">The cargo snapshot to hash</param>
-        /// <returns>Base64-encoded SHA256 hash</returns>
         private string ComputeHash(CargoSnapshot snapshot)
         {
             string json = JsonSerializer.Serialize(

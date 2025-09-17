@@ -32,24 +32,16 @@ namespace EliteCargoMonitor.Configuration
         public static string AboutInfo { get; } = $"Elite Cargo Monitor v{GetAppVersion()}";
         public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
 
-        /// <summary>
-        /// Gets or sets a value indicating whether to write cargo data to a text file.
-        /// Defaults to false.
-        /// </summary>
         public static bool EnableFileOutput { get; set; } = false;
 
         private const string SettingsFileName = "settings.json";
 
-        /// <summary>
-        /// Gets the application version from the assembly.
-        /// </summary>
-        /// <returns>The application version string (e.g., "0.8.6").</returns>
         private static string GetAppVersion()
         {
             try
             {
                 var version = Assembly.GetExecutingAssembly().GetName().Version; 
-                // Use Major.Minor.Build to reflect the full version from the .csproj file.
+                // Use Major.Minor.Build to reflect the full version from the .csproj file. in this case if there no version in the .csproj then we set one
                 return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "0.8.6";
             }
             catch
@@ -58,9 +50,6 @@ namespace EliteCargoMonitor.Configuration
             }
         }
 
-        /// <summary>
-        /// A private model for serializing/deserializing settings.
-        /// </summary>
         private class SettingsModel
         {
             public string OutputFileFormat { get; set; } = AppConfiguration.OutputFileFormat;
@@ -69,9 +58,6 @@ namespace EliteCargoMonitor.Configuration
             public bool EnableFileOutput { get; set; } = AppConfiguration.EnableFileOutput;
         }
 
-        /// <summary>
-        /// Loads settings from settings.json. If the file doesn't exist, it is created with default values.
-        /// </summary>
         public static void Load()
         {
             try
@@ -100,9 +86,6 @@ namespace EliteCargoMonitor.Configuration
             }
         }
 
-        /// <summary>
-        /// Saves the current settings to settings.json.
-        /// </summary>
         public static void Save()
         {
             try
