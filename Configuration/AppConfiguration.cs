@@ -47,6 +47,7 @@ namespace EliteCargoMonitor.Configuration
             public string OutputFileFormat { get; set; } = AppConfiguration.OutputFileFormat;
             public string OutputFileName { get; set; } = AppConfiguration.OutputFileName;
             public string OutputDirectory { get; set; } = AppConfiguration.OutputDirectory;
+            public bool EnableFileOutput { get; set; } = AppConfiguration.EnableFileOutput;
         }
 
         /// <summary>
@@ -66,6 +67,7 @@ namespace EliteCargoMonitor.Configuration
                     OutputFileFormat = model.OutputFileFormat;
                     OutputFileName = model.OutputFileName;
                     OutputDirectory = model.OutputDirectory;
+                    EnableFileOutput = model.EnableFileOutput;
                 }
             }
             catch (Exception ex)
@@ -87,6 +89,7 @@ namespace EliteCargoMonitor.Configuration
                     OutputFileFormat = OutputFileFormat,
                     OutputFileName = OutputFileName,
                     OutputDirectory = OutputDirectory,
+                    EnableFileOutput = EnableFileOutput,
                 };
 
                 var options = new JsonSerializerOptions { WriteIndented = true };

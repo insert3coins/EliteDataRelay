@@ -81,6 +81,10 @@ If you want to build the project yourself:
 
 You can customize the application's behavior by clicking the **Settings** button.
 
+### Enable File Output
+
+You can enable or disable the creation of the output text file. This is useful if you only want to use the application's UI and don't need the file for streaming overlays. By default, this is disabled.
+
 ### Output File Format
 
 You can change the format of the text written to the output file using a custom format string. The following placeholders are available:
