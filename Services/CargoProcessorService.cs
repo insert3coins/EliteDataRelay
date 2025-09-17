@@ -4,28 +4,28 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Threading;
 using EliteCargoMonitor.Configuration;
 using EliteCargoMonitor.Models;
 
 namespace EliteCargoMonitor.Services
 {
     /// <summary>
-    /// Implements the service for processing cargo data from the Elite Dangerous `Cargo.json` file.
+    /// Service for processing cargo data from the Elite Dangerous cargo file
     /// </summary>
     public class CargoProcessorService : ICargoProcessorService
     {
         private string? _lastInventoryHash;
 
         /// <summary>
-        /// Event raised when new cargo data has been successfully processed.
+        /// Event raised when new cargo data has been successfully processed
         /// </summary>
         public event EventHandler<CargoProcessedEventArgs>? CargoProcessed;
 
         /// <summary>
-        /// Asynchronously reads, parses, and processes the `Cargo.json` file, handling file locks and retries.
+        /// Process the cargo file and extract cargo snapshot data
         /// </summary>
-        public async Task ProcessCargoFileAsync()
+        public void ProcessCargoFile()
         {
             for (int attempt = 1; attempt <= AppConfiguration.FileReadMaxAttempts; attempt++)
             {
@@ -36,20 +36,20 @@ namespace EliteCargoMonitor.Services
                     // Open file with shared read-write to handle file locking
                     using var stream = new FileStream(AppConfiguration.CargoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     using var reader = new StreamReader(stream, Encoding.UTF8);
-                    string json = await reader.ReadToEndAsync();
+                    string json = reader.ReadToEnd();
 
                     // Guard against empty or partially written files
                     var trimmed = json.Trim();
                     if (string.IsNullOrWhiteSpace(trimmed))
                     {
-                        await Task.Delay(AppConfiguration.FileReadRetryDelayMs);
+                        Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                         continue;
                     }
 
                     // Quick sanity check – it must start with "{" or "["
                     if (!trimmed.StartsWith("{") && !trimmed.StartsWith("["))
                     {
-                        await Task.Delay(AppConfiguration.FileReadRetryDelayMs);
+                        Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                         continue;
                     }
 
@@ -74,13 +74,13 @@ namespace EliteCargoMonitor.Services
                 {
                     // File still locked – wait before retrying
                     Debug.WriteLine($"[CargoProcessorService] File locked, retry attempt {attempt}/{AppConfiguration.FileReadMaxAttempts}");
-                    await Task.Delay(AppConfiguration.FileReadRetryDelayMs);
+                    Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                 }
                 catch (JsonException jsonEx)
                 {
                     // Malformed JSON – ignore for now and try again later
                     Debug.WriteLine($"[CargoProcessorService] JSON parsing error: {jsonEx.Message}");
-                    await Task.Delay(AppConfiguration.FileReadRetryDelayMs);
+                    Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                 }
                 catch (Exception ex)
                 {
@@ -90,6 +90,11 @@ namespace EliteCargoMonitor.Services
             }
         }
 
+        /// <summary>
+        /// Compute SHA256 hash of cargo snapshot for duplicate detection
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot to hash</param>
+        /// <returns>Base64-encoded SHA256 hash</returns>
         private string ComputeHash(CargoSnapshot snapshot)
         {
             string json = JsonSerializer.Serialize(

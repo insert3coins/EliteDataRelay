@@ -10,6 +10,9 @@ using EliteCargoMonitor.Models;
 
 namespace EliteCargoMonitor.UI
 {
+    /// <summary>
+    /// UI management class for the cargo form interface
+    /// </summary>
     public class CargoFormUI : ICargoFormUI
     {
         private ListView? _listView;
@@ -107,16 +110,35 @@ namespace EliteCargoMonitor.UI
             "▰▰▰▰▰▰▰▰▰▰",
         };
 
+        /// <summary>
+        /// Event raised when the start button is clicked
+        /// </summary>
         public event EventHandler? StartClicked;
 
+        /// <summary>
+        /// Event raised when the stop button is clicked  
+        /// </summary>
         public event EventHandler? StopClicked;
 
+        /// <summary>
+        /// Event raised when the exit button is clicked
+        /// </summary>
         public event EventHandler? ExitClicked;
 
+        /// <summary>
+        /// Event raised when the about button is clicked
+        /// </summary>
         public event EventHandler? AboutClicked;
 
+        /// <summary>
+        /// Event raised when the settings button is clicked
+        /// </summary>
         public event EventHandler? SettingsClicked;
 
+        /// <summary>
+        /// Initialize the UI components and layout
+        /// </summary>
+        /// <param name="form">The main form to initialize</param>
         public void InitializeUI(Form form)
         {
             _form = form ?? throw new ArgumentNullException(nameof(form));
@@ -157,10 +179,8 @@ namespace EliteCargoMonitor.UI
             }
             catch (Exception ex)
             {
-                // If the icon resource is missing or corrupt, an exception will be thrown.
-                // We catch it here to prevent the application from crashing on startup.
-                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error initializing application icon: {ex.Message}");
-                // By leaving _appIcon as null, the form and notify icon will gracefully fall back to using their default icons.
+                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error initializing application icon: {ex}");
+                // If icon fails to load, _appIcon will remain null, and the form/tray will use defaults.
             }
         }
 
@@ -208,19 +228,8 @@ namespace EliteCargoMonitor.UI
 
         private void CreateControls()
         {
-            // This method orchestrates the creation of all UI controls by calling specialized methods.
-            CreateListView();
-            CreateActionButtons();
-            CreateStatusLabels();
-            CreateToolTips();
-            CreateTrayIcon();
-        }
-
-        private void CreateListView()
-        {
-            // Creates and configures the main ListView for displaying cargo items.
-            // It's set to auto-size its columns and has a clean, modern appearance.
-            _listView = new ListView 
+            // Main ListView to display cargo items
+            _listView = new ListView
             {
                 Dock = DockStyle.Fill,
                 View = View.Details,
@@ -228,106 +237,110 @@ namespace EliteCargoMonitor.UI
                 FullRowSelect = true,
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
                 BorderStyle = BorderStyle.None,
-                BackColor = SystemColors.Window,
-                GridLines = false
+                BackColor = SystemColors.Window, // Use standard window background
+                GridLines = false // Cleaner look without grid lines
             };
-            _listView.Columns.Add("Commodity", -2, HorizontalAlignment.Left);
-            _listView.Columns.Add("Count", 80, HorizontalAlignment.Right);
-        }
 
-        private void CreateActionButtons()
-        {
-            // Creates the main user action buttons (Start, Stop, etc.).
-            // These buttons are styled with a flat look and custom hover/active colors
-            // to provide clear visual feedback to the user.
+            // Define columns for the ListView
+            _listView.Columns.Add("Commodity", -2, HorizontalAlignment.Left); // -2 makes it auto-size
+            _listView.Columns.Add("Count", 80, HorizontalAlignment.Right);
+
+            // Create control buttons
             _startBtn = new Button { Text = "Start", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _stopBtn = new Button { Text = "Stop", Enabled = false, Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _exitBtn = new Button { Text = "Exit", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _settingsBtn = new Button { Text = "Settings", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             _aboutBtn = new Button { Text = "About", Font = _consolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
 
+            // Apply a modern, flat style to the buttons to make them "pop"
             var buttonsToStyle = new[] { _startBtn, _stopBtn, _exitBtn, _settingsBtn, _aboutBtn };
             foreach (var btn in buttonsToStyle)
             {
                 if (btn == null) continue;
                 btn.FlatStyle = FlatStyle.Flat;
-                btn.FlatAppearance.BorderSize = 0;
-                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(229, 241, 251);
+                btn.FlatAppearance.BorderSize = 0; // We'll draw our own border to keep it consistent
+                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(229, 241, 251); // Light blue hover
                 btn.BackColor = DefaultButtonBackColor;
                 btn.Paint += Button_Paint;
             }
 
+            // Set the initial "active" color for the Start button to guide the user.
             if (_startBtn != null)
             {
                 _startBtn.BackColor = StartButtonActiveColor;
             }
-        }
 
-        private void CreateStatusLabels()
-        {
-            // Creates the non-interactive "labels" used in the status bar.
-            // These are implemented as styled, disabled buttons to ensure consistent alignment
-            // and appearance with the actual buttons in the same panel.
-
-            // The cargo meter that visually represents how full the cargo hold is.
-            _cargoSizeLabel = new Button 
-            {
-                Text = CargoSize[0],
-                Font = _consolasFont,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                FlatStyle = FlatStyle.Flat,
-                Enabled = true,
-                Cursor = Cursors.Default,
-                FlatAppearance = { BorderSize = 0, MouseDownBackColor = Color.Transparent, MouseOverBackColor = Color.Transparent },
-                Margin = new Padding(5, 3, 3, 3),
-            };
-
-            int animationWidth = 0;
-            if (_animationFont != null)
-            {
-                animationWidth = WatchingCargo.Max(frame => TextRenderer.MeasureText(frame, _animationFont).Width);
-            }
-
-            // The label that displays the "watching" animation. It has a fixed width to prevent layout shifts.
-            _watchingLabel = new Button
-            {
-                Text = "",
-                Font = _animationFont,
-                AutoSize = false,
-                Width = animationWidth > 0 ? animationWidth : 20,
-                TextAlign = ContentAlignment.MiddleCenter,
-                FlatStyle = FlatStyle.Flat,
-                Enabled = true,
-                Cursor = Cursors.Default,
-                FlatAppearance = { BorderSize = 0, MouseDownBackColor = Color.Transparent, MouseOverBackColor = Color.Transparent },
-                Margin = new Padding(3),
-            };
-
-            // The label that displays the cargo count (e.g., "Cargo: 128/256").
-            _cargoHeaderLabel = new Button
-            {
-                Text = "Cargo: 0",
-                Font = _verdanaFont,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                FlatStyle = FlatStyle.Flat,
-                Enabled = true,
-                Cursor = Cursors.Default,
-                FlatAppearance = { BorderSize = 0, MouseDownBackColor = Color.Transparent, MouseOverBackColor = Color.Transparent },
-                Margin = new Padding(0, 3, 0, 3),
-            };
-        }
-
-        private void CreateToolTips()
-        {
-            // Creates and assigns tooltips to the action buttons to provide helpful hints on hover.
+            // Create ToolTip and assign to buttons
             _toolTip = new ToolTip();
             if (_startBtn != null) _toolTip.SetToolTip(_startBtn, "Start monitoring for cargo changes");
             if (_stopBtn != null) _toolTip.SetToolTip(_stopBtn, "Stop monitoring for cargo changes");
             if (_exitBtn != null) _toolTip.SetToolTip(_exitBtn, "Exit the application");
             if (_settingsBtn != null) _toolTip.SetToolTip(_settingsBtn, "Configure application settings");
             if (_aboutBtn != null) _toolTip.SetToolTip(_aboutBtn, "Show information about the application");
+
+            // Create a "label" for the cargo meter using a styled, disabled button for alignment.
+            _cargoSizeLabel = new Button
+            {
+                Text = CargoSize[0],
+                Font = _consolasFont,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlatStyle = FlatStyle.Flat,
+                Enabled = true, // Keep enabled to preserve color
+                Cursor = Cursors.Default, // Make it look non-interactive
+                FlatAppearance = {
+                    BorderSize = 0,
+                    MouseDownBackColor = Color.Transparent,
+                    MouseOverBackColor = Color.Transparent
+                },
+                Margin = new Padding(5, 3, 3, 3),
+            };
+
+            // Create a "label" for the watching animation using a styled, disabled button.
+            // Calculate the max width needed for the animation to prevent layout shifts.
+            int animationWidth = 0;
+            if (_animationFont != null)
+            {
+                animationWidth = WatchingCargo.Max(frame => TextRenderer.MeasureText(frame, _animationFont).Width);
+            }
+
+            _watchingLabel = new Button
+            {
+                Text = "",
+                Font = _animationFont,
+                AutoSize = false, // Must be false to set a fixed size and prevent resizing
+                Width = animationWidth > 0 ? animationWidth : 20, // Set fixed width, with a fallback
+                TextAlign = ContentAlignment.MiddleCenter,
+                FlatStyle = FlatStyle.Flat,
+                Enabled = true, // Keep enabled to preserve color
+                Cursor = Cursors.Default, // Make it look non-interactive
+                FlatAppearance = {
+                    BorderSize = 0,
+                    MouseDownBackColor = Color.Transparent,
+                    MouseOverBackColor = Color.Transparent
+                },
+                Margin = new Padding(3),
+            };
+
+            // Create a "label" for the cargo count header using a styled, disabled button.
+            _cargoHeaderLabel = new Button
+            {
+                Text = "Cargo: 0",
+                Font = _verdanaFont, // Use more readable font
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlatStyle = FlatStyle.Flat,
+                Enabled = true, // Keep enabled to preserve color
+                Cursor = Cursors.Default, // Make it look non-interactive
+                FlatAppearance = {
+                    BorderSize = 0,
+                    MouseDownBackColor = Color.Transparent,
+                    MouseOverBackColor = Color.Transparent
+                },
+                Margin = new Padding(0, 3, 0, 3),
+            };
+
+            CreateTrayIcon();
         }
 
         private void Button_Paint(object? sender, PaintEventArgs e)
@@ -455,6 +468,11 @@ namespace EliteCargoMonitor.UI
             _watchingLabel.Text = WatchingCargo[_watchingFrame];
         }
 
+        /// <summary>
+        /// Updates the header display with the current cargo count.
+        /// </summary>
+        /// <param name="currentCount">The current number of items in cargo.</param>
+        /// <param name="capacity">The total cargo capacity.</param>
         public void UpdateCargoHeader(int currentCount, int? capacity)
         {
             if (_cargoHeaderLabel == null) return;
@@ -465,6 +483,10 @@ namespace EliteCargoMonitor.UI
             _cargoHeaderLabel.Text = headerText;
         }
 
+        /// <summary>
+        /// Updates the main display with the current cargo list.
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot to display.</param>
         public void UpdateCargoList(CargoSnapshot snapshot)
         {
             if (_listView == null) return;
@@ -498,6 +520,11 @@ namespace EliteCargoMonitor.UI
             _listView.EndUpdate();
         }
 
+        /// <summary>
+        /// Update the UI with new cargo data
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot to display</param>
+        /// <param name="cargoCapacity">The total cargo capacity</param>
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
             if (_cargoSizeLabel == null) return;
@@ -518,6 +545,10 @@ namespace EliteCargoMonitor.UI
             _cargoSizeLabel.Text = CargoSize[index];
         }
 
+        /// <summary>
+        /// Update the location display on the status bar.
+        /// </summary>
+        /// <param name="starSystem">The name of the star system.</param>
         public void UpdateLocation(string starSystem)
         {
             _currentLocation = starSystem;
@@ -525,6 +556,10 @@ namespace EliteCargoMonitor.UI
             UpdateFullTitleText();
         }
 
+        /// <summary>
+        /// Update the form title
+        /// </summary>
+        /// <param name="title">New title text</param>
         public void UpdateTitle(string title)
         {
             _baseTitle = title;
@@ -532,6 +567,11 @@ namespace EliteCargoMonitor.UI
             UpdateFullTitleText();
         }
 
+        /// <summary>
+        /// Set the enabled state of the start and stop buttons
+        /// </summary>
+        /// <param name="startEnabled">Whether start button should be enabled</param>
+        /// <param name="stopEnabled">Whether stop button should be enabled</param>
         public void SetButtonStates(bool startEnabled, bool stopEnabled)
         {
             if (_startBtn != null)

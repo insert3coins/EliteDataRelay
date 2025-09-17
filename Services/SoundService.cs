@@ -5,6 +5,9 @@ using System.Media;
 
 namespace EliteCargoMonitor.Services
 {
+    /// <summary>
+    /// Service for managing application sound effects
+    /// </summary>
     public class SoundService : ISoundService, IDisposable
     {
         private readonly SoundPlayer _startSound;
@@ -30,6 +33,9 @@ namespace EliteCargoMonitor.Services
             }
         }
 
+        /// <summary>
+        /// Play the start monitoring sound
+        /// </summary>
         public void PlayStartSound()
         {
             try
@@ -43,6 +49,9 @@ namespace EliteCargoMonitor.Services
             }
         }
 
+        /// <summary>
+        /// Play the stop monitoring sound
+        /// </summary>
         public void PlayStopSound()
         {
             try
@@ -56,6 +65,16 @@ namespace EliteCargoMonitor.Services
             }
         }
 
+        /// <summary>
+        /// Creates a managed <see cref="MemoryStream"/> from an unmanaged resource stream.
+        /// </summary>
+        /// <param name="sourceStream">The source <see cref="UnmanagedMemoryStream"/> from application resources.</param>
+        /// <returns>A new <see cref="MemoryStream"/> containing the sound data.</returns>
+        /// <remarks>
+        /// This method prevents potential heap corruption by copying the data from the
+        /// unmanaged stream into a managed one. The <see cref="SoundPlayer"/> can then safely
+        /// manage the lifetime of the <see cref="MemoryStream"/>. The source stream is disposed of.
+        /// </remarks>
         private static MemoryStream CreateMemoryStreamFromResource(UnmanagedMemoryStream? sourceStream)
         {
             if (sourceStream is null) return new MemoryStream();

@@ -7,8 +7,17 @@ using EliteCargoMonitor.Models;
 
 namespace EliteCargoMonitor.Services
 {
+    /// <summary>
+    /// Service for writing cargo data to output files
+    /// </summary>
     public class FileOutputService : IFileOutputService
     {
+        /// <summary>
+        /// Write the cargo snapshot data to the output file
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot to write</param>
+        /// <param name="cargoCapacity">The total cargo capacity, if known</param>
+        /// <returns>The formatted string that was written to the file.</returns>
         public string WriteCargoSnapshot(CargoSnapshot snapshot, int? cargoCapacity)
         {
             try
@@ -22,7 +31,7 @@ namespace EliteCargoMonitor.Services
                     Debug.WriteLine($"[FileOutputService] Created output directory: {AppConfiguration.OutputDirectory}");
                 }
 
-                // Format cargo string
+                // Format cargo string similar to original implementation
                 string cargoString = FormatCargoString(snapshot, cargoCapacity);
 
                 // Write to file
@@ -38,6 +47,12 @@ namespace EliteCargoMonitor.Services
             return string.Empty;
         }
 
+        /// <summary>
+        /// Format the cargo snapshot into a readable string format
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot to format</param>
+        /// <param name="cargoCapacity">The total cargo capacity, if known</param>
+        /// <returns>Formatted cargo string</returns>
         private string FormatCargoString(CargoSnapshot snapshot, int? cargoCapacity)
         {
             string countSlashCapacity = cargoCapacity.HasValue

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 using EliteCargoMonitor.Models;
@@ -32,7 +31,7 @@ namespace EliteCargoMonitor.Services
         public event EventHandler<CargoCapacityEventArgs>? CargoCapacityChanged;
 
         /// <summary>
-        /// Event raised when a 'Cargo' event is read from the journal.
+        /// Event raised when the cargo inventory changes.
         /// </summary>
         public event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
 
@@ -51,9 +50,6 @@ namespace EliteCargoMonitor.Services
         /// </summary>
         public string JournalDirectoryPath => _journalDir;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="JournalWatcherService"/> class.
-        /// </summary>
         public JournalWatcherService()
         {
             _journalDir = AppConfiguration.JournalPath;
@@ -65,23 +61,17 @@ namespace EliteCargoMonitor.Services
             _pollTimer.Tick += PollTimer_Tick;
         }
 
-        /// <summary>
-        /// Starts monitoring the journal files for relevant events.
-        /// </summary>
-        public async void StartMonitoring()
+        public void StartMonitoring()
         {
             if (_isMonitoring || string.IsNullOrEmpty(_journalDir) || !Directory.Exists(_journalDir)) return;
 
             InitializeFileSystemWatcher();
-            await SwitchToLatestJournal();
+            SwitchToLatestJournal();
             _pollTimer.Start();
             _isMonitoring = true;
             Debug.WriteLine("[JournalWatcherService] Started monitoring");
         }
 
-        /// <summary>
-        /// Stops monitoring the journal files.
-        /// </summary>
         public void StopMonitoring()
         {
             if (!_isMonitoring) return;
@@ -105,13 +95,13 @@ namespace EliteCargoMonitor.Services
             _watcher.Created += OnJournalFileCreated;
         }
 
-        private async void OnJournalFileCreated(object sender, FileSystemEventArgs e)
+        private void OnJournalFileCreated(object sender, FileSystemEventArgs e)
         {
             Debug.WriteLine($"[JournalWatcherService] New journal file detected: {e.Name}");
-            await SwitchToLatestJournal();
+            SwitchToLatestJournal();
         }
 
-        private async Task SwitchToLatestJournal()
+        private void SwitchToLatestJournal()
         {
             var latestJournal = FindLatestJournalFile();
             if (latestJournal != null && latestJournal != _currentJournalFile)
@@ -119,7 +109,7 @@ namespace EliteCargoMonitor.Services
                 _currentJournalFile = latestJournal;
                 _lastPosition = 0; // Reset position for new file
                 Debug.WriteLine($"[JournalWatcherService] Switched to journal file: {_currentJournalFile}");
-                await ProcessNewJournalEntries(); // Process the whole file to find the last known cargo capacity
+                ProcessNewJournalEntries(); // Process the whole file to find the last known cargo capacity
             }
         }
 
@@ -138,16 +128,16 @@ namespace EliteCargoMonitor.Services
             }
         }
 
-        private async void PollTimer_Tick(object? sender, EventArgs e)
+        private void PollTimer_Tick(object? sender, EventArgs e)
         {
-            await ProcessNewJournalEntries();
+            ProcessNewJournalEntries();
         }
 
-        private async Task ProcessNewJournalEntries()
+        private void ProcessNewJournalEntries()
         {
             if (_currentJournalFile == null || !File.Exists(_currentJournalFile))
             {
-                await SwitchToLatestJournal();
+                SwitchToLatestJournal();
                 return;
             }
 
@@ -160,7 +150,7 @@ namespace EliteCargoMonitor.Services
 
                 using var reader = new StreamReader(fs);
                 string? line;
-                while ((line = await reader.ReadLineAsync()) != null)
+                while ((line = reader.ReadLine()) != null)
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
 
@@ -218,9 +208,6 @@ namespace EliteCargoMonitor.Services
             }
         }
 
-        /// <summary>
-        /// Releases the resources used by the service.
-        /// </summary>
         public void Dispose()
         {
             StopMonitoring();
@@ -229,10 +216,10 @@ namespace EliteCargoMonitor.Services
         }
 
         /// <summary>
-        /// Computes a SHA256 hash of the cargo snapshot to detect duplicates.
+        /// Compute SHA256 hash of cargo snapshot for duplicate detection.
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to hash.</param>
-        /// <returns>A Base64-encoded string representing the hash.</returns>
+        /// <returns>Base64-encoded SHA256 hash.</returns>
         private string ComputeHash(CargoSnapshot snapshot)
         {
             string json = JsonSerializer.Serialize(
@@ -256,14 +243,10 @@ namespace EliteCargoMonitor.Services
     public class CargoInventoryEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets the cargo snapshot from the journal event.
+        /// Gets the cargo snapshot.
         /// </summary>
         public CargoSnapshot Snapshot { get; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CargoInventoryEventArgs"/> class.
-        /// </summary>
-        /// <param name="snapshot">The cargo snapshot.</param>
         public CargoInventoryEventArgs(CargoSnapshot snapshot) => Snapshot = snapshot;
     }
 
@@ -273,14 +256,10 @@ namespace EliteCargoMonitor.Services
     public class LocationChangedEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets the current star system name.
+        /// Gets the current star system.
         /// </summary>
         public string StarSystem { get; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LocationChangedEventArgs"/> class.
-        /// </summary>
-        /// <param name="starSystem">The name of the star system.</param>
         public LocationChangedEventArgs(string starSystem) => StarSystem = starSystem;
     }
 }
