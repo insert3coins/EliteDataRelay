@@ -31,6 +31,12 @@ namespace EliteCargoMonitor.Configuration
         public static string AboutInfo { get; } = "Elite Cargo Monitor v1.0";
         public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to write cargo data to a text file.
+        /// Defaults to false.
+        /// </summary>
+        public static bool EnableFileOutput { get; set; } = false;
+
         private const string SettingsFileName = "settings.json";
 
         /// <summary>

@@ -199,9 +199,12 @@ namespace EliteCargoMonitor
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
-            // --- File Output (remains unchanged) ---
-            // This call writes the snapshot to cargo.txt with user-defined formatting.
-            _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+            // --- File Output ---
+            // If enabled in settings, write the snapshot to the output text file.
+            if (AppConfiguration.EnableFileOutput)
+            {
+                _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+            }
 
             int totalCount = e.Snapshot.Inventory.Sum(item => item.Count);
 
