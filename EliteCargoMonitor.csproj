@@ -11,7 +11,7 @@
 	<ApplicationIcon>Resources\Appicon.ico</ApplicationIcon>
 
     <!-- Assembly Information for File Details -->
-    <Version>0.8.6</Version> <!-- This sets the product version and is used for file version. -->
+    <Version>0.8.7</Version> <!-- This sets the product version and is used for file version. -->
     <Company>insert3coins</Company>
     <Product>Elite Cargo Monitor</Product>
     <Copyright>Copyright © 2025 insert3coins</Copyright>
