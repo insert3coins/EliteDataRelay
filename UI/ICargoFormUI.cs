@@ -48,13 +48,20 @@ namespace EliteCargoMonitor.UI
         void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity);
 
         /// <summary>
-        /// Append text to the display
+        /// Updates the header display with the current cargo count.
         /// </summary>
-        /// <param name="text">Text to append</param>
-        void AppendText(string text);
+        /// <param name="currentCount">The current number of items in cargo.</param>
+        /// <param name="capacity">The total cargo capacity.</param>
+        void UpdateCargoHeader(int currentCount, int? capacity);
 
         /// <summary>
-        /// Update the form title
+        /// Updates the main display with the current cargo list.
+        /// </summary>
+        /// <param name="snapshot">The cargo snapshot to display.</param>
+        void UpdateCargoList(CargoSnapshot snapshot);
+
+        /// <summary>
+        /// Update the form title.
         /// </summary>
         /// <param name="title">New title text</param>
         void UpdateTitle(string title);

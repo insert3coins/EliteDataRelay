@@ -1,6 +1,8 @@
 ﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 using EliteCargoMonitor.Services;
@@ -197,13 +199,17 @@ namespace EliteCargoMonitor
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
-            // Let the FileOutputService handle both formatting the string and writing the file.
-            // This ensures the format is consistent and respects all user settings.
-            string formattedCargoString = _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+            // --- File Output (remains unchanged) ---
+            // This call writes the snapshot to cargo.txt with user-defined formatting.
+            _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
 
-            // Update UI with new cargo data
-            string entry = $"{formattedCargoString}{Environment.NewLine}";
-            _cargoFormUI.AppendText(entry);
+            int totalCount = e.Snapshot.Inventory.Sum(item => item.Count);
+
+            // Update the header label in the button panel
+            _cargoFormUI.UpdateCargoHeader(totalCount, _cargoCapacity);
+
+            // Update the main window display with the new list view
+            _cargoFormUI.UpdateCargoList(e.Snapshot);
 
             // Update the visual cargo size indicator
             _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);

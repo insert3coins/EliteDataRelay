@@ -21,7 +21,6 @@ namespace EliteCargoMonitor.Configuration
         public static float DefaultFontSize { get; } = 9f;
         public static string ConsolasFontName { get; } = "Consolas";
         public static string WelcomeMessage { get; } = "Welcome to Elite Cargo Monitor. Click Start to begin.";
-        public static int MaxTextBoxLines { get; } = 100;
         public static int DebounceDelayMs { get; } = 250;
         public static int PollingIntervalMs { get; } = 1000;
         public static int FileSystemDelayMs { get; } = 50;
