@@ -127,11 +127,16 @@ namespace EliteCargoMonitor.UI
             };
 
             // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 318) };
-            _btnOk.Click += (sender, e) => SaveSettings();
+            _btnOk = new Button { Text = "OK", Location = new Point(296, 318) };
+            _btnOk.Click += (sender, e) =>
+            {
+                SaveSettings();
+                Close();
+            };
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 318) };
+            _btnCancel = new Button { Text = "Cancel", Location = new Point(377, 318) };
+            _btnCancel.Click += (sender, e) => Close();
 
             // Add Controls
             _grpOutputFormat.Controls.Add(_chkEnableFileOutput);
