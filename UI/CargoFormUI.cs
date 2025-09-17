@@ -42,7 +42,21 @@ namespace EliteCargoMonitor.UI
         private string _currentLocation = "Unknown";
 
         private string _baseTitle = "";
-        private readonly Random _random = new Random();
+
+        // Ship designs, kept for potential future use.
+        private static readonly string[] ShipDesigns =
+        {
+            "[<=#=>] ", // Hauler
+            ">--=--< ", // Fighter
+            ">--^--< ", // Interceptor
+            "(#####) ", // Freighter
+            "<(-O-)> ", // Explorer
+            ">--o--< ", // Courier
+            " ~<o>~  ", // Alien Ship
+            ">-(*)-< ", // Heavy Fighter
+            " /_O_\\  ", // Shuttle
+            "<==*==> "  // Corvette
+        };
 
         // Our working when we hit start
         private static readonly string[] WatchingCargo = new[]
@@ -270,7 +284,7 @@ namespace EliteCargoMonitor.UI
 
             _cargoSizeLabel = new Label
             {
-                Text = $"{CargoSize[0]}",
+                Text = CargoSize[0],
                 Font = _consolasFont,
                 Anchor = AnchorStyles.Right,
                 AutoSize = true,
@@ -403,7 +417,7 @@ namespace EliteCargoMonitor.UI
                 index = Math.Clamp(index, 0, CargoSize.Length - 1);
             }
 
-            _cargoSizeLabel.Text = $"Hold: {CargoSize[index]}";
+            _cargoSizeLabel.Text = CargoSize[index];
         }
 
         /// <summary>
@@ -414,32 +428,9 @@ namespace EliteCargoMonitor.UI
         {
             if (_textBox == null) return;
 
-            string textToAppend = text;
-            if (AppConfiguration.UseShipPrefix && AppConfiguration.ShipDesigns.Any())
-            {
-                var randomShip = AppConfiguration.ShipDesigns[_random.Next(AppConfiguration.ShipDesigns.Count)];
-
-                // Remove trailing newline if it exists, we'll add it back later.
-                bool hadTrailingNewline = text.EndsWith(Environment.NewLine);
-                string content = hadTrailingNewline ? text.Substring(0, text.Length - Environment.NewLine.Length) : text;
-
-                var lines = content.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-
-                var prefixedLines = lines.Select(line =>
-                    string.IsNullOrWhiteSpace(line) ? line : $"{randomShip}{line}"
-                );
-
-                textToAppend = string.Join(Environment.NewLine, prefixedLines);
-
-                if (hadTrailingNewline)
-                {
-                    textToAppend += Environment.NewLine;
-                }
-            }
-
             try
             {
-                _textBox.AppendText(textToAppend);
+                _textBox.AppendText(text);
                 TrimTextBoxLines();
                 ScrollToBottom();
             }

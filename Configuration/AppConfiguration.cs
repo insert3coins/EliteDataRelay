@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using System.Collections.Generic;
 
 namespace EliteCargoMonitor.Configuration
 {
@@ -11,21 +10,6 @@ namespace EliteCargoMonitor.Configuration
         public static string OutputFileFormat { get; set; } = "{count_slash_capacity} | {items}";
         public static string OutputFileName { get; set; } = "cargo.txt";
         public static string OutputDirectory { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "out");
-        public static bool UseShipPrefix { get; set; } = false;
-        private static readonly List<string> _defaultShipDesigns = new List<string>
-        {
-            "[<=#=>] ", // Hauler
-            ">--=--< ", // Fighter
-            ">--^--< ", // Interceptor
-            "(#####) ", // Freighter
-            "<(-O-)> ", // Explorer
-            ">--o--< ", // Courier
-            " ~<o>~  ", // Alien Ship
-            ">-(*)-< ", // Heavy Fighter
-            " /_O_\\  ", // Shuttle
-            "<==*==> "  // Corvette
-        };
-        public static List<string> ShipDesigns { get; set; } = new List<string>(_defaultShipDesigns);
 
         // --- Application constants and paths ---
         public static string CargoPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous", "Cargo.json");
@@ -37,7 +21,7 @@ namespace EliteCargoMonitor.Configuration
         public static float DefaultFontSize { get; } = 9f;
         public static string ConsolasFontName { get; } = "Consolas";
         public static string WelcomeMessage { get; } = "Welcome to Elite Cargo Monitor. Click Start to begin.";
-        public static int MaxTextBoxLines { get; } = 500;
+        public static int MaxTextBoxLines { get; } = 100;
         public static int DebounceDelayMs { get; } = 250;
         public static int PollingIntervalMs { get; } = 1000;
         public static int FileSystemDelayMs { get; } = 50;
@@ -58,8 +42,6 @@ namespace EliteCargoMonitor.Configuration
             public string OutputFileFormat { get; set; } = AppConfiguration.OutputFileFormat;
             public string OutputFileName { get; set; } = AppConfiguration.OutputFileName;
             public string OutputDirectory { get; set; } = AppConfiguration.OutputDirectory;
-            public bool UseShipPrefix { get; set; } = AppConfiguration.UseShipPrefix;
-            public List<string>? ShipDesigns { get; set; } = AppConfiguration.ShipDesigns;
         }
 
         /// <summary>
@@ -79,11 +61,6 @@ namespace EliteCargoMonitor.Configuration
                     OutputFileFormat = model.OutputFileFormat;
                     OutputFileName = model.OutputFileName;
                     OutputDirectory = model.OutputDirectory;
-                    UseShipPrefix = model.UseShipPrefix;
-                    if (model.ShipDesigns != null)
-                    {
-                        ShipDesigns = model.ShipDesigns;
-                    }
                 }
             }
             catch (Exception ex)
@@ -105,8 +82,6 @@ namespace EliteCargoMonitor.Configuration
                     OutputFileFormat = OutputFileFormat,
                     OutputFileName = OutputFileName,
                     OutputDirectory = OutputDirectory,
-                    UseShipPrefix = UseShipPrefix,
-                    ShipDesigns = ShipDesigns
                 };
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
@@ -117,14 +92,6 @@ namespace EliteCargoMonitor.Configuration
             {
                 System.Diagnostics.Debug.WriteLine($"[AppConfiguration] Error saving settings: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// Gets a copy of the original default ship designs.
-        /// </summary>
-        public static List<string> GetDefaultShipDesigns()
-        {
-            return new List<string>(_defaultShipDesigns);
         }
     }
 }

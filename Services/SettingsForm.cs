@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 
@@ -14,19 +12,15 @@ namespace EliteCargoMonitor.UI
     public class SettingsForm : Form
     {
         private TextBox _txtOutputFormat = null!;
-        private Label _lblShipDesigns = null!;
-        private TextBox _txtShipDesigns = null!;
         private TextBox _txtOutputFileName = null!;
         private TextBox _txtOutputDirectory = null!;
         private Button _btnBrowse = null!;
         private Label _lblDescription = null!;
-        private Button _btnRestoreShips = null!;
         private Button _btnOk = null!;
         private Button _btnCancel = null!;
         private Label _lblPlaceholders = null!;
         private GroupBox _grpOutputFormat = null!;
         private Label _lblOutputDirectory = null!;
-        private CheckBox _chkUseShipPrefix = null!;
         private Label _lblOutputFileName = null!;
 
         public SettingsForm()
@@ -39,7 +33,7 @@ namespace EliteCargoMonitor.UI
         {
             // Form Properties
             Text = "Settings";
-            ClientSize = new Size(464, 471);
+            ClientSize = new Size(464, 319);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -51,7 +45,7 @@ namespace EliteCargoMonitor.UI
             {
                 Text = "Text File Output Format",
                 Location = new Point(12, 12),
-                Size = new Size(440, 420),
+                Size = new Size(440, 268),
             };
 
             // Description Label
@@ -108,42 +102,6 @@ namespace EliteCargoMonitor.UI
             };
             _btnBrowse.Click += OnBrowseClicked;
 
-            // Ship Prefix CheckBox
-            _chkUseShipPrefix = new CheckBox
-            {
-                Text = "Use ship designs as line prefixes in main window",
-                Location = new Point(18, 158),
-                AutoSize = true
-            };
-
-            // New Label for Ship Designs
-            _lblShipDesigns = new Label
-            {
-                Text = "Ship prefixes (one per line, max 8 characters each):",
-                Location = new Point(15, 188),
-                AutoSize = true
-            };
-
-            // New TextBox for Ship Designs
-            _txtShipDesigns = new TextBox
-            {
-                Location = new Point(18, 204),
-                Size = new Size(407, 80),
-                Multiline = true,
-                ScrollBars = ScrollBars.Vertical,
-                AcceptsReturn = true
-            };
-
-            // Restore Defaults Button for Ship Designs
-            _btnRestoreShips = new Button
-            {
-                Text = "Restore Defaults",
-                Location = new Point(310, 184),
-                Size = new Size(115, 22),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
-            };
-            _btnRestoreShips.Click += OnRestoreShipsClicked;
-
             // Placeholders Label
             _lblPlaceholders = new Label
             {
@@ -154,16 +112,16 @@ namespace EliteCargoMonitor.UI
                        "{items} - Single-line list of items, e.g., \"Gold (10) Silver (5)\"\n" +
                        "{items_multiline} - Multi-line list of items\n" +
                        "\\n - Newline character", // Note: Backslash needs to be escaped in C# string literal
-                Location = new Point(15, 294),
+                Location = new Point(15, 158),
                 AutoSize = true
             };
 
             // OK Button
-            _btnOk = new Button { Text = "OK", Location = new Point(296, 440) };
-            _btnOk.Click += OnOkClicked;
+            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 288) };
+            _btnOk.Click += (sender, e) => SaveSettings();
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 440) };
+            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 288) };
 
             // Add Controls
             _grpOutputFormat.Controls.Add(_lblDescription);
@@ -173,10 +131,6 @@ namespace EliteCargoMonitor.UI
             _grpOutputFormat.Controls.Add(_btnBrowse);
             _grpOutputFormat.Controls.Add(_lblOutputFileName);
             _grpOutputFormat.Controls.Add(_txtOutputFileName);
-            _grpOutputFormat.Controls.Add(_chkUseShipPrefix);
-            _grpOutputFormat.Controls.Add(_lblShipDesigns);
-            _grpOutputFormat.Controls.Add(_txtShipDesigns);
-            _grpOutputFormat.Controls.Add(_btnRestoreShips);
             _grpOutputFormat.Controls.Add(_lblPlaceholders);
             Controls.Add(_grpOutputFormat);
             Controls.Add(_btnOk);
@@ -190,8 +144,6 @@ namespace EliteCargoMonitor.UI
             _txtOutputFormat.Text = AppConfiguration.OutputFileFormat;
             _txtOutputFileName.Text = AppConfiguration.OutputFileName;
             _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
-            _chkUseShipPrefix.Checked = AppConfiguration.UseShipPrefix;
-            _txtShipDesigns.Text = string.Join(Environment.NewLine, AppConfiguration.ShipDesigns);
         }
 
         private void OnBrowseClicked(object? sender, EventArgs e)
@@ -219,50 +171,13 @@ namespace EliteCargoMonitor.UI
             }
         }
 
-        private void OnRestoreShipsClicked(object? sender, EventArgs e)
+        private void SaveSettings()
         {
-            var defaultShips = AppConfiguration.GetDefaultShipDesigns();
-            _txtShipDesigns.Text = string.Join(Environment.NewLine, defaultShips);
-        }
-
-        private void OnOkClicked(object? sender, EventArgs e)
-        {
-            if (TrySaveSettings())
-            {
-                DialogResult = DialogResult.OK;
-            }
-        }
-
-        private bool TrySaveSettings()
-        {
-            // --- Validation ---
-            var lines = _txtShipDesigns.Text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                                            .Select(l => l.TrimEnd())
-                                            .ToList();
-
-            foreach (var line in lines)
-            {
-                if (line.Length > 8)
-                {
-                    MessageBox.Show(
-                        this,
-                        $"The ship design \"{line}\" is longer than the maximum of 8 characters.",
-                        "Invalid Ship Design",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
-                    _txtShipDesigns.Focus();
-                    return false; // Indicate failure
-                }
-            }
-
             // --- Save all settings ---
             AppConfiguration.OutputFileFormat = _txtOutputFormat.Text;
             AppConfiguration.OutputFileName = _txtOutputFileName.Text;
             AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
-            AppConfiguration.UseShipPrefix = _chkUseShipPrefix.Checked;
-            AppConfiguration.ShipDesigns = lines;
             AppConfiguration.Save();
-            return true;
         }
     }
 }
