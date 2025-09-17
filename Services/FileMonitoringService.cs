@@ -2,14 +2,12 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
 
 namespace EliteCargoMonitor.Services
 {
-    /// <summary>
-    /// Service for monitoring file system changes to the cargo file with debouncing and polling fallback
-    /// </summary>
     public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         private FileSystemWatcher? _watcher;
@@ -19,14 +17,8 @@ namespace EliteCargoMonitor.Services
         private long _lastSize;
         private bool _isMonitoring;
 
-        /// <summary>
-        /// Event raised when the cargo file has changed and debounce period has elapsed
-        /// </summary>
         public event EventHandler? FileChanged;
 
-        /// <summary>
-        /// Gets whether the monitoring service is currently active
-        /// </summary>
         public bool IsMonitoring => _isMonitoring;
 
         public FileMonitoringService()
@@ -46,9 +38,6 @@ namespace EliteCargoMonitor.Services
             _pollTimer.Tick += PollTimer_Tick;
         }
 
-        /// <summary>
-        /// Start monitoring the cargo file for changes
-        /// </summary>
         public void StartMonitoring()
         {
             if (_isMonitoring) return;
@@ -60,9 +49,6 @@ namespace EliteCargoMonitor.Services
             Debug.WriteLine("[FileMonitoringService] Started monitoring");
         }
 
-        /// <summary>
-        /// Stop monitoring the cargo file
-        /// </summary>
         public void StopMonitoring()
         {
             if (!_isMonitoring) return;
@@ -108,55 +94,16 @@ namespace EliteCargoMonitor.Services
             _debounceTimer.Start();
         }
 
-        private void DebounceTimer_Tick(object? sender, EventArgs e)
+        private async void DebounceTimer_Tick(object? sender, EventArgs e)
         {
             _debounceTimer.Stop();
-
-            // Give the file system a little breathing room before we try to read
-            Thread.Sleep(AppConfiguration.FileSystemDelayMs);
-
-            // Use polling thread with retries to handle file locking
-            new Thread(() =>
-            {
-                for (int attempt = 0; attempt < AppConfiguration.ThreadMaxRetries; attempt++)
-                {
-                    try
-                    {
-                        // Trigger the file changed event on the UI thread
-                        if (FileChanged != null)
-                        {
-                            // We need to invoke on the UI thread if we have a form context
-                            if (System.Windows.Forms.Application.OpenForms.Count > 0)
-                            {
-                                var mainForm = System.Windows.Forms.Application.OpenForms[0];
-                                if (mainForm?.InvokeRequired == true)
-                                {
-                                    mainForm.Invoke(new EventHandler((s, args) => FileChanged?.Invoke(this, EventArgs.Empty)), sender, e);
-                                }
-                                else
-                                {
-                                    FileChanged?.Invoke(this, EventArgs.Empty);
-                                }
-                            }
-                            else
-                            {
-                                FileChanged?.Invoke(this, EventArgs.Empty);
-                            }
-                        }
-                        break; // Success - exit retry loop
-                    }
-                    catch (IOException)
-                    {
-                        // File still locked - wait before retrying
-                        Thread.Sleep(AppConfiguration.ThreadRetryDelayMs);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"[FileMonitoringService] Debounce thread error: {ex}");
-                        break; // Unexpected error - stop retrying
-                    }
-                }
-            }).Start();
+ 
+            // Give the file system a little breathing room before we try to read.
+            // The actual read and retry logic is now handled by the processor service.
+            await Task.Delay(AppConfiguration.FileSystemDelayMs);
+ 
+            // Raise the event. The consumer is responsible for handling file access and retries.
+            FileChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void StartPollingFallback()
@@ -170,21 +117,32 @@ namespace EliteCargoMonitor.Services
             Debug.WriteLine("[FileMonitoringService] Polling fallback started");
         }
 
-        private void PollTimer_Tick(object? sender, EventArgs e)
+        private async void PollTimer_Tick(object? sender, EventArgs e)
         {
             try
             {
-                if (!File.Exists(AppConfiguration.CargoPath)) return;
+                // Perform file I/O on a background thread to avoid blocking the UI.
+                var (changed, nowWrite, nowSize) = await Task.Run(() =>
+                {
+                    if (!File.Exists(AppConfiguration.CargoPath))
+                    {
+                        return (false, DateTime.MinValue, 0L);
+                    }
 
-                var nowWrite = File.GetLastWriteTimeUtc(AppConfiguration.CargoPath);
-                var nowSize = new FileInfo(AppConfiguration.CargoPath).Length;
+                    var currentWrite = File.GetLastWriteTimeUtc(AppConfiguration.CargoPath);
+                    var currentSize = new FileInfo(AppConfiguration.CargoPath).Length;
 
-                if (nowWrite != _lastWriteTimeUtc || nowSize != _lastSize)
+                    bool hasChanged = currentWrite != _lastWriteTimeUtc || currentSize != _lastSize;
+                    return (hasChanged, currentWrite, currentSize);
+                });
+
+                if (changed)
                 {
                     _lastWriteTimeUtc = nowWrite;
                     _lastSize = nowSize;
                     
                     Debug.WriteLine("[FileMonitoringService] Polling detected change");
+                    // This is invoked on the UI thread because we awaited on the UI thread.
                     FileChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
