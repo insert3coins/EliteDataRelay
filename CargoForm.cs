@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
+using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using EliteCargoMonitor.Configuration;
@@ -95,6 +96,34 @@ namespace EliteCargoMonitor
 
         private void CargoForm_Load(object? sender, EventArgs e)
         {
+            // Restore window size and location from settings
+            if (AppConfiguration.WindowSize.Width > 0 && AppConfiguration.WindowSize.Height > 0)
+            {
+                this.Size = AppConfiguration.WindowSize;
+            }
+
+            // Ensure the form is not loaded off-screen
+            if (AppConfiguration.WindowLocation != Point.Empty)
+            {
+                bool isVisible = Screen.AllScreens.Any(s => s.WorkingArea.Contains(AppConfiguration.WindowLocation));
+
+                if (isVisible)
+                {
+                    this.StartPosition = FormStartPosition.Manual;
+                    this.Location = AppConfiguration.WindowLocation;
+                }
+            }
+
+            // Restore window state, but don't start minimized.
+            if (AppConfiguration.WindowState == FormWindowState.Maximized)
+            {
+                this.WindowState = FormWindowState.Maximized;
+            }
+            else
+            {
+                this.WindowState = FormWindowState.Normal;
+            }
+
             // Check if cargo file exists on startup
             if (!File.Exists(AppConfiguration.CargoPath))
             {
@@ -119,6 +148,28 @@ namespace EliteCargoMonitor
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
+            // Save window state before closing.
+            // Use RestoreBounds if the window is minimized or maximized.
+            switch (this.WindowState)
+            {
+                case FormWindowState.Maximized:
+                    AppConfiguration.WindowState = FormWindowState.Maximized;
+                    AppConfiguration.WindowLocation = this.RestoreBounds.Location;
+                    AppConfiguration.WindowSize = this.RestoreBounds.Size;
+                    break;
+                case FormWindowState.Normal:
+                    AppConfiguration.WindowState = FormWindowState.Normal;
+                    AppConfiguration.WindowLocation = this.Location;
+                    AppConfiguration.WindowSize = this.Size;
+                    break;
+                default: // Minimized
+                    AppConfiguration.WindowState = FormWindowState.Normal; // Don't save as minimized
+                    AppConfiguration.WindowLocation = this.RestoreBounds.Location;
+                    AppConfiguration.WindowSize = this.RestoreBounds.Size;
+                    break;
+            }
+            AppConfiguration.Save();
+
             // If user closes window, hide to tray instead of exiting
             if (e.CloseReason == CloseReason.UserClosing && !_isExiting)
             {
@@ -155,28 +206,10 @@ namespace EliteCargoMonitor
 
         private void OnAboutClicked(object? sender, EventArgs e)
         {
-            string fullAboutText = $"{AppConfiguration.AboutInfo}{Environment.NewLine}Project Page: {AppConfiguration.AboutUrl}";
-            //_cargoFormUI.AppendText(fullAboutText + Environment.NewLine);
-
-            string message = $"{fullAboutText}{Environment.NewLine}{Environment.NewLine}Would you like to open the project page in your browser?";
-
-            var result = MessageBox.Show(
-                this,
-                message,
-                "About Elite Cargo Monitor",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (result == DialogResult.Yes)
+            // Open the dedicated About form instead of a simple MessageBox.
+            using (var aboutForm = new AboutForm())
             {
-                try
-                {
-                    Process.Start(new ProcessStartInfo(AppConfiguration.AboutUrl) { UseShellExecute = true });
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, $"Failed to open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                aboutForm.ShowDialog(this);
             }
         }
 

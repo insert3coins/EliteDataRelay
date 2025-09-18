@@ -1,6 +1,8 @@
 using System;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Windows.Forms;
 using System.Text.Json;
 
 namespace EliteCargoMonitor.Configuration
@@ -11,15 +13,13 @@ namespace EliteCargoMonitor.Configuration
         public static string OutputFileFormat { get; set; } = "{count_slash_capacity} | {items}";
         public static string OutputFileName { get; set; } = "cargo.txt";
         public static string OutputDirectory { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "out");
+        public static bool EnableFileOutput { get; set; } = false;
 
         // --- Application constants and paths ---
         public static string CargoPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous", "Cargo.json");
         public static string JournalPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous");
         public static string StatusJsonPath { get; } = Path.Combine(JournalPath, "Status.json");
-        public static int FormWidth { get; } = 600;
-        public static int FormHeight { get; } = 400;
         public static int ButtonHeight { get; } = 23;
-        public static int ButtonPanelHeight { get; } = 35;
         public static float DefaultFontSize { get; } = 9f;
         public static string ConsolasFontName { get; } = "Consolas";
         public static string WelcomeMessage { get; } = "Welcome to Elite Cargo Monitor. Click Start to begin.";
@@ -32,12 +32,14 @@ namespace EliteCargoMonitor.Configuration
         public static int FileReadRetryDelayMs { get; } = 100;
         public static string AboutInfo { get; } = $"Elite Cargo Monitor v{GetAppVersion()}";
         public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
+        public static string LicenseUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor/blob/main/LICENSE.txt";
 
-        /// <summary>
-        /// Gets or sets a value indicating whether to write cargo data to a text file.
-        /// Defaults to false.
-        /// </summary>
-        public static bool EnableFileOutput { get; set; } = false;
+        // --- Window and Sizing Constants ---
+        public static int FormWidth { get; } = 600;
+        public static int FormHeight { get; } = 400;
+        public static Size WindowSize { get; set; } = new Size(FormWidth, FormHeight);
+        public static Point WindowLocation { get; set; } = Point.Empty;
+        public static FormWindowState WindowState { get; set; } = FormWindowState.Normal;
 
         private const string SettingsFileName = "settings.json";
 
@@ -68,6 +70,9 @@ namespace EliteCargoMonitor.Configuration
             public string OutputFileName { get; set; } = AppConfiguration.OutputFileName;
             public string OutputDirectory { get; set; } = AppConfiguration.OutputDirectory;
             public bool EnableFileOutput { get; set; } = AppConfiguration.EnableFileOutput;
+            public Size WindowSize { get; set; }
+            public Point WindowLocation { get; set; }
+            public FormWindowState WindowState { get; set; }
         }
 
         /// <summary>
@@ -92,6 +97,14 @@ namespace EliteCargoMonitor.Configuration
                     OutputFileName = model.OutputFileName;
                     OutputDirectory = model.OutputDirectory;
                     EnableFileOutput = model.EnableFileOutput;
+
+                    // Load window settings, with validation
+                    if (model.WindowSize.Width >= 300 && model.WindowSize.Height >= 200) // Basic sanity check
+                    {
+                        WindowSize = model.WindowSize;
+                    }
+                    WindowLocation = model.WindowLocation;
+                    WindowState = model.WindowState;
                 }
             }
             catch (Exception ex)
@@ -114,6 +127,9 @@ namespace EliteCargoMonitor.Configuration
                     OutputFileName = OutputFileName,
                     OutputDirectory = OutputDirectory,
                     EnableFileOutput = EnableFileOutput,
+                    WindowSize = WindowSize,
+                    WindowLocation = WindowLocation,
+                    WindowState = WindowState
                 };
 
                 var options = new JsonSerializerOptions { WriteIndented = true };

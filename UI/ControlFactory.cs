@@ -40,8 +40,8 @@ namespace EliteCargoMonitor.UI
 
             // Define columns for the ListView
             ListView.Columns.Add("Commodity", 200, HorizontalAlignment.Left);
-            ListView.Columns.Add("Count", 80, HorizontalAlignment.Right);
-            ListView.Columns.Add("Category", -2, HorizontalAlignment.Left);
+            ListView.Columns.Add("Count", 80, HorizontalAlignment.Center);
+            ListView.Columns.Add("Category", -2, HorizontalAlignment.Center);
 
             // Create control buttons
             StartBtn = new Button { Text = "Start", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };

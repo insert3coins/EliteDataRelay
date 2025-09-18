@@ -8,6 +8,9 @@ namespace EliteCargoMonitor.UI
     /// </summary>
     public static class UIConstants
     {
+        // Sizing constants
+        public static int ButtonPanelHeight { get; } = 35;
+
         // Colors for button states to provide better visual feedback.
         public static readonly Color DefaultButtonBackColor = Color.FromArgb(240, 240, 240);
         public static readonly Color StartButtonActiveColor = Color.FromArgb(232, 245, 233); // A subtle light green

@@ -41,8 +41,8 @@ namespace EliteCargoMonitor.UI
             _buttonFlowPanel.Controls.Add(_controls.WatchingLabel);
             _buttonFlowPanel.Controls.Add(_controls.StartBtn);
             _buttonFlowPanel.Controls.Add(_controls.StopBtn);
-            _buttonFlowPanel.Controls.Add(_controls.AboutBtn);
             _buttonFlowPanel.Controls.Add(_controls.SettingsBtn);
+            _buttonFlowPanel.Controls.Add(_controls.AboutBtn);
             _buttonFlowPanel.Controls.Add(_controls.ExitBtn);
 
             // Create a panel for the right-aligned items
@@ -63,7 +63,7 @@ namespace EliteCargoMonitor.UI
             _bottomPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Bottom,
-                Height = AppConfiguration.ButtonPanelHeight,
+                Height = UIConstants.ButtonPanelHeight,
                 ColumnCount = 2,
                 RowCount = 1,
             };

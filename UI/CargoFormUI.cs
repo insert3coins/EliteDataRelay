@@ -101,11 +101,12 @@ namespace EliteCargoMonitor.UI
 
             // Basic form properties
             _form.Text = "Cargo Monitor – Stopped";
-            _form.Width = AppConfiguration.FormWidth;
-            _form.Height = AppConfiguration.FormHeight;
             _form.Padding = Padding.Empty;
             _baseTitle = _form.Text;
             UpdateFullTitleText();
+
+            // Set a minimum size to prevent the window from becoming too small to be useful.
+            _form.MinimumSize = new Size(AppConfiguration.FormWidth, AppConfiguration.FormHeight);
 
             // Set application icon from pre-loaded resource
             if (_appIcon != null) _form.Icon = _appIcon;
