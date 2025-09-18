@@ -18,6 +18,9 @@ namespace EliteCargoMonitor.UI
         public Button WatchingLabel { get; }
         public Button CargoHeaderLabel { get; }
         public Button CargoSizeLabel { get; }
+        public Button CommanderLabel { get; }
+        public Button ShipLabel { get; }
+        public Button BalanceLabel { get; }
         public ToolTip ToolTip { get; }
 
         public ControlFactory(FontManager fontManager)
@@ -126,6 +129,35 @@ namespace EliteCargoMonitor.UI
                 },
                 Margin = new Padding(0, 3, 0, 3),
             };
+
+            // Create info labels for commander, ship, and balance
+            CommanderLabel = CreateInfoLabel("CMDR: Unknown", fontManager.VerdanaFont);
+            ShipLabel = CreateInfoLabel("Ship: Unknown", fontManager.VerdanaFont);
+            BalanceLabel = CreateInfoLabel("Balance: Unknown", fontManager.VerdanaFont);
+
+        }
+
+        /// <summary>
+        /// Creates a styled, non-interactive button to be used as a label.
+        /// </summary>
+        private static Button CreateInfoLabel(string text, Font font)
+        {
+            return new Button
+            {
+                Text = text,
+                Font = font,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter,
+                FlatStyle = FlatStyle.Flat,
+                Enabled = true, // Keep enabled to preserve color
+                Cursor = Cursors.Default, // Make it look non-interactive
+                FlatAppearance = {
+                    BorderSize = 0,
+                    MouseDownBackColor = Color.Transparent,
+                    MouseOverBackColor = Color.Transparent
+                },
+                Margin = new Padding(5, 3, 5, 3),
+            };
         }
 
         private void Button_Paint(object? sender, PaintEventArgs e)
@@ -157,6 +189,9 @@ namespace EliteCargoMonitor.UI
             WatchingLabel.Dispose();
             CargoHeaderLabel.Dispose();
             CargoSizeLabel.Dispose();
+            CommanderLabel.Dispose();
+            ShipLabel.Dispose();
+            BalanceLabel.Dispose();
             ToolTip.Dispose();
         }
     }

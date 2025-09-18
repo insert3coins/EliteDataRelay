@@ -73,6 +73,25 @@ namespace EliteCargoMonitor.UI
         void UpdateLocation(string starSystem);
 
         /// <summary>
+        /// Updates the commander name display.
+        /// </summary>
+        /// <param name="commanderName">The commander's name.</param>
+        void UpdateCommanderName(string commanderName);
+
+        /// <summary>
+        /// Updates the ship info display.
+        /// </summary>
+        /// <param name="shipName">The ship's custom name.</param>
+        /// <param name="shipIdent">The ship's ID.</param>
+        void UpdateShipInfo(string shipName, string shipIdent);
+
+        /// <summary>
+        /// Updates the player's balance display.
+        /// </summary>
+        /// <param name="balance">The player's credit balance.</param>
+        void UpdateBalance(long balance);
+
+        /// <summary>
         /// Set the enabled state of the start and stop buttons
         /// </summary>
         /// <param name="startEnabled">Whether start button should be enabled</param>

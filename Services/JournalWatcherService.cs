@@ -23,6 +23,9 @@ namespace EliteCargoMonitor.Services
         private string? _lastStarSystem;
         private string? _lastCargoHash;
         private long _lastPosition;
+        private string? _lastCommanderName;
+        private string? _lastShipName;
+        private string? _lastShipIdent;
         private bool _isMonitoring;
 
         /// <summary>
@@ -39,6 +42,16 @@ namespace EliteCargoMonitor.Services
         /// Event raised when the player's location (StarSystem) changes.
         /// </summary>
         public event EventHandler<LocationChangedEventArgs>? LocationChanged;
+
+        /// <summary>
+        /// Event raised when the commander name is found.
+        /// </summary>
+        public event EventHandler<CommanderNameChangedEventArgs>? CommanderNameChanged;
+
+        /// <summary>
+        /// Event raised when the ship information changes.
+        /// </summary>
+        public event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
 
         /// <summary>
         /// Gets whether the monitoring service is currently active.
@@ -164,13 +177,55 @@ namespace EliteCargoMonitor.Services
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                     string? eventType = eventElement.GetString();
 
-                    if (eventType == "Loadout" && jsonDoc.RootElement.TryGetProperty("CargoCapacity", out _))
+                    if (eventType == "Loadout")
                     {
                         var loadoutEvent = JsonSerializer.Deserialize<LoadoutEvent>(line, options);
-                        if (loadoutEvent?.CargoCapacity > 0)
+                        if (loadoutEvent != null)
                         {
-                            Debug.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");
-                            CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
+                            if (loadoutEvent.CargoCapacity > 0)
+                            {
+                                Debug.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");
+                                CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
+                            }
+
+                            var customShipName = loadoutEvent.ShipName;
+                            var shipType = loadoutEvent.ShipLocalised;
+
+                            // Check and update ship info
+                            if (!string.IsNullOrEmpty(customShipName) && !string.IsNullOrEmpty(shipType) &&
+                                (customShipName != _lastShipName || shipType != _lastShipIdent))
+                            {
+                                _lastShipName = customShipName;
+                                _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
+                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {customShipName}, Type: {shipType}");
+                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
+                            }
+                        }
+                    }
+                    else if (eventType == "LoadGame")
+                    {
+                        var loadGameEvent = JsonSerializer.Deserialize<LoadGameEvent>(line, options);
+                        if (loadGameEvent == null) continue;
+
+                        // Check and update commander name
+                        if (!string.IsNullOrEmpty(loadGameEvent.Commander) && loadGameEvent.Commander != _lastCommanderName)
+                        {
+                            _lastCommanderName = loadGameEvent.Commander;
+                            Debug.WriteLine($"[JournalWatcherService] Found Commander Name: {_lastCommanderName}");
+                            CommanderNameChanged?.Invoke(this, new CommanderNameChangedEventArgs(_lastCommanderName));
+                        }
+
+                        var customShipName = loadGameEvent.ShipName;
+                        var shipType = loadGameEvent.ShipLocalised;
+
+                        // Check and update ship info
+                        if (!string.IsNullOrEmpty(customShipName) && !string.IsNullOrEmpty(shipType) &&
+                            (customShipName != _lastShipName || shipType != _lastShipIdent))
+                        {
+                            _lastShipName = customShipName;
+                            _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
+                            Debug.WriteLine($"[JournalWatcherService] Found Ship Info in LoadGame. Name: {customShipName}, Type: {shipType}");
+                            ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
                         }
                     }
                     else if (eventType == "Cargo")
@@ -261,5 +316,32 @@ namespace EliteCargoMonitor.Services
         public string StarSystem { get; }
 
         public LocationChangedEventArgs(string starSystem) => StarSystem = starSystem;
+    }
+
+    /// <summary>
+    /// Provides data for the CommanderNameChanged event.
+    /// </summary>
+    public class CommanderNameChangedEventArgs : EventArgs
+    {
+        public string CommanderName { get; }
+        public CommanderNameChangedEventArgs(string commanderName)
+        {
+            CommanderName = commanderName;
+        }
+    }
+
+    /// <summary>
+    /// Provides data for the ShipInfoChanged event.
+    /// </summary>
+    public class ShipInfoChangedEventArgs : EventArgs
+    {
+        public string ShipName { get; }
+        public string ShipIdent { get; }
+
+        public ShipInfoChangedEventArgs(string shipName, string shipIdent)
+        {
+            ShipName = shipName;
+            ShipIdent = shipIdent;
+        }
     }
 }

@@ -13,6 +13,8 @@ namespace EliteCargoMonitor.UI
         private readonly ControlFactory _controls;
         private TableLayoutPanel? _bottomPanel;
         private FlowLayoutPanel? _buttonFlowPanel;
+        private TableLayoutPanel? _infoPanel;
+        private Label? _separator;
         private FlowLayoutPanel? _rightPanel;
 
         public LayoutManager(Form form, ControlFactory controls)
@@ -70,8 +72,36 @@ namespace EliteCargoMonitor.UI
             _bottomPanel.Controls.Add(_buttonFlowPanel, 0, 0);
             _bottomPanel.Controls.Add(_rightPanel, 1, 0);
 
+            // Create a panel for the commander/ship/balance info
+            _infoPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 30,
+                ColumnCount = 3,
+                RowCount = 1,
+                Padding = new Padding(5, 0, 5, 0),
+            };
+            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+            _infoPanel.Controls.Add(_controls.CommanderLabel, 0, 0);
+            _infoPanel.Controls.Add(_controls.ShipLabel, 1, 0);
+            _infoPanel.Controls.Add(_controls.BalanceLabel, 2, 0);
+
+            // Create a separator line
+            _separator = new Label
+            {
+                Height = 2,
+                Dock = DockStyle.Bottom,
+                BorderStyle = BorderStyle.Fixed3D,
+                Margin = Padding.Empty,
+            };
+
             // Add controls to form
+            // Order matters for DockStyle.Bottom. Last one added is at the very bottom.
             _form.Controls.Add(_controls.ListView);
+            _form.Controls.Add(_infoPanel);
+            _form.Controls.Add(_separator);
             _form.Controls.Add(_bottomPanel);
         }
 
@@ -79,6 +109,8 @@ namespace EliteCargoMonitor.UI
         {
             _bottomPanel?.Dispose();
             _buttonFlowPanel?.Dispose();
+            _infoPanel?.Dispose();
+            _separator?.Dispose();
             _rightPanel?.Dispose();
         }
     }

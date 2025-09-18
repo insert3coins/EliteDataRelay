@@ -11,21 +11,22 @@ A lightweight Windows utility for players of Elite Dangerous. It monitors your i
 
 ## 📍 Overview
 
-This tool provides a simple way to keep an eye on your ship's cargo without having to tab into the game's right-hand panel. It reads the `Cargo.json` file that Elite Dangerous generates, along with player journals to determine total capacity. The output is displayed in a clean interface that includes a real-time cargo list, a visual meter for your cargo hold, and an indicator to show when monitoring is active. The data is also written to a `cargo.txt` file, which is perfect for adding a cargo display to your stream via OBS or other broadcasting software.
+This tool provides a simple way to keep an eye on your ship's cargo and status without having to tab into the game's right-hand panel. It reads the `Cargo.json`, `Status.json`, and player journal files to display your cargo, credit balance, CMDR name, and current ship. The output is displayed in a clean interface that includes a real-time cargo list, a visual meter for your cargo hold, and an indicator to show when monitoring is active. The data is also written to a `cargo.txt` file, which is perfect for adding a cargo display to your stream via OBS or other broadcasting software.
 
 ## 📸 Screenshot
 ![Screenshot](https://github.com/insert3coins/EliteCargoMonitor/blob/master/Images/Screenshot.png?raw=true)
 
 ## ✨ Features
 
--   **Real-time Monitoring**: Watches `Cargo.json` for any changes and updates instantly.
+-   **Real-time Cargo Monitoring**: Watches `Cargo.json` for any changes and updates instantly.
+-   **Live Player Status**: Displays your **CMDR name**, **current ship**, and real-time **credit balance**.
 -   **Cargo Capacity**: Reads player journal files to display your total cargo capacity (e.g., `128/256`).
--   **Simple UI**: A clean, no-fuss window displays your current cargo list.
+-   **Simple UI**: A clean, no-fuss window displays all your essential information at a glance.
 -   **Visual Cargo Meter**: A bar in the bottom-right corner visually represents how full your cargo hold is.
 -   **Active Status Indicator**: A subtle animation appears when monitoring is active, providing clear visual feedback.
 -   **Text File Output**: Exports cargo data to a configurable text file (default: `out/cargo.txt`) for easy integration with other tools (like OBS for streaming).
 -   **Audio Cues**: Plays sounds when monitoring starts and stops.
--   **Automatic Path Detection**: Automatically finds the default Elite Dangerous player data folder.
+-   **Automatic Path Detection**: Automatically finds the default Elite Dangerous player data folder for `Cargo.json`, `Status.json`, and journal files.
 -   **System Tray**: Minimizes to the system tray to run unobtrusively in the background.
 
 ## 🚀 Getting Started
@@ -111,6 +112,7 @@ You can specify the folder where the output file will be saved. By default, it i
 -   [x] Create a settings UI for easier configuration.
 -   [x] Allow customization of the `cargo.txt` output format.
 -   [x] Add a system tray icon for running in the background.
+-   [x] Display CMDR name, ship, and credit balance.
 -   [ ] Package the application with an installer.
 
 ## 🔰 Contributing

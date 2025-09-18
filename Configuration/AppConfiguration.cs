@@ -15,6 +15,7 @@ namespace EliteCargoMonitor.Configuration
         // --- Application constants and paths ---
         public static string CargoPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous", "Cargo.json");
         public static string JournalPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous");
+        public static string StatusJsonPath { get; } = Path.Combine(JournalPath, "Status.json");
         public static int FormWidth { get; } = 600;
         public static int FormHeight { get; } = 400;
         public static int ButtonHeight { get; } = 23;

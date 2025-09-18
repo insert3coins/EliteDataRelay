@@ -10,5 +10,7 @@ namespace EliteCargoMonitor.Services
         bool IsMonitoring { get; }
         string JournalDirectoryPath { get; }
         event EventHandler<LocationChangedEventArgs>? LocationChanged;
+        event EventHandler<CommanderNameChangedEventArgs>? CommanderNameChanged;
+        event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
     }
 }

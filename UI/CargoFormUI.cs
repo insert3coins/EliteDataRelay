@@ -285,6 +285,40 @@ namespace EliteCargoMonitor.UI
             UpdateFullTitleText();
         }
 
+        public void UpdateCommanderName(string commanderName)
+        {
+            if (_controlFactory?.CommanderLabel != null)
+            {
+                var cmdrText = $"CMDR: {commanderName}";
+                _controlFactory.CommanderLabel.Text = cmdrText;
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.CommanderLabel, cmdrText);
+            }
+        }
+
+        public void UpdateShipInfo(string shipName, string shipIdent)
+        {
+            if (_controlFactory?.ShipLabel != null)
+            {
+                // Display the short version (ship type)
+                var shipDisplayText = $"Ship: {shipIdent}";
+                _controlFactory.ShipLabel.Text = shipDisplayText;
+
+                // Set the tooltip to the full version (custom name and type)
+                var shipTooltipText = $"Ship: {shipName} ({shipIdent})";
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, shipTooltipText);
+            }
+        }
+
+        public void UpdateBalance(long balance)
+        {
+            if (_controlFactory?.BalanceLabel != null)
+            {
+                var balanceText = $"Balance: {balance:N0} CR";
+                _controlFactory.BalanceLabel.Text = balanceText;
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.BalanceLabel, balanceText);
+            }
+        }
+
         public void UpdateTitle(string title)
         {
             _baseTitle = title;
