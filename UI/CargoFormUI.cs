@@ -25,41 +25,6 @@ namespace EliteCargoMonitor.UI
 
         private string _baseTitle = "";
 
-        // Colors for button states to provide better visual feedback.
-        public static readonly Color DefaultButtonBackColor = Color.FromArgb(240, 240, 240);
-        public static readonly Color StartButtonActiveColor = Color.FromArgb(232, 245, 233); // A subtle light green
-        public static readonly Color StopButtonActiveColor = Color.FromArgb(252, 232, 232); // A subtle light red
-
-        // Ship designs, kept for potential future use.
-        private static readonly string[] ShipDesigns =
-        {
-            "[<=#=>] ", // Hauler
-            ">--=--< ", // Fighter
-            ">--^--< ", // Interceptor
-            "(#####) ", // Freighter
-            "<(-O-)> ", // Explorer
-            ">--o--< ", // Courier
-            " ~<o>~  ", // Alien Ship
-            ">-(*)-< ", // Heavy Fighter
-            " /_O_\\  ", // Shuttle
-            "<==*==> "  // Corvette
-        };
-        // Cargo storage sizes for bottom right of our ui
-        public static readonly string[] CargoSize = new[]
-        {
-            "▱▱▱▱▱▱▱▱▱▱",
-            "▰▱▱▱▱▱▱▱▱▱",
-            "▰▰▱▱▱▱▱▱▱▱",
-            "▰▰▰▱▱▱▱▱▱▱",
-            "▰▰▰▰▱▱▱▱▱▱",
-            "▰▰▰▰▰▱▱▱▱▱",
-            "▰▰▰▰▰▰▱▱▱▱",
-            "▰▰▰▰▰▰▰▱▱▱",
-            "▰▰▰▰▰▰▰▰▱▱",
-            "▰▰▰▰▰▰▰▰▰▱",
-            "▰▰▰▰▰▰▰▰▰▰",
-        };
-
         public event EventHandler? StartClicked;
 
         public event EventHandler? StopClicked;
@@ -271,11 +236,11 @@ namespace EliteCargoMonitor.UI
                 double percentage = (double)count / cargoCapacity.Value;
                 percentage = Math.Clamp(percentage, 0.0, 1.0);
 
-                index = (int)Math.Round(percentage * (CargoSize.Length - 1));
-                index = Math.Clamp(index, 0, CargoSize.Length - 1);
+                index = (int)Math.Round(percentage * (UIConstants.CargoSize.Length - 1));
+                index = Math.Clamp(index, 0, UIConstants.CargoSize.Length - 1);
             }
 
-            _controlFactory.CargoSizeLabel.Text = CargoSize[index];
+            _controlFactory.CargoSizeLabel.Text = UIConstants.CargoSize[index];
         }
 
         public void UpdateLocation(string starSystem)
@@ -332,14 +297,14 @@ namespace EliteCargoMonitor.UI
             {
                 _controlFactory.StartBtn.Enabled = startEnabled;
                 // Use a different background color to indicate this is the primary action.
-                _controlFactory.StartBtn.BackColor = startEnabled ? StartButtonActiveColor : DefaultButtonBackColor;
+                _controlFactory.StartBtn.BackColor = startEnabled ? UIConstants.StartButtonActiveColor : UIConstants.DefaultButtonBackColor;
             }
 
             if (_controlFactory.StopBtn != null)
             {
                 _controlFactory.StopBtn.Enabled = stopEnabled;
                 // Use a different background color to indicate this is the primary action.
-                _controlFactory.StopBtn.BackColor = stopEnabled ? StopButtonActiveColor : DefaultButtonBackColor;
+                _controlFactory.StopBtn.BackColor = stopEnabled ? UIConstants.StopButtonActiveColor : UIConstants.DefaultButtonBackColor;
             }
 
             // Also update tray menu items

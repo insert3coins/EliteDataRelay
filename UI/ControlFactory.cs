@@ -57,12 +57,12 @@ namespace EliteCargoMonitor.UI
                 btn.FlatStyle = FlatStyle.Flat;
                 btn.FlatAppearance.BorderSize = 0; // We'll draw our own border to keep it consistent
                 btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(229, 241, 251); // Light blue hover
-                btn.BackColor = CargoFormUI.DefaultButtonBackColor;
+                btn.BackColor = UIConstants.DefaultButtonBackColor;
                 btn.Paint += Button_Paint;
             }
 
             // Set the initial "active" color for the Start button to guide the user.
-            StartBtn.BackColor = CargoFormUI.StartButtonActiveColor;
+            StartBtn.BackColor = UIConstants.StartButtonActiveColor;
 
             // Create ToolTip and assign to buttons
             ToolTip = new ToolTip();
@@ -75,7 +75,7 @@ namespace EliteCargoMonitor.UI
             // Create a "label" for the cargo meter using a styled, disabled button for alignment.
             CargoSizeLabel = new Button
             {
-                Text = CargoFormUI.CargoSize[0],
+                Text = UIConstants.CargoSize[0],
                 Font = fontManager.ConsolasFont,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,

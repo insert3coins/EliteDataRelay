@@ -224,7 +224,7 @@ namespace EliteCargoMonitor.Services
                         {
                             _lastShipName = customShipName;
                             _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
-                            Debug.WriteLine($"[JournalWatcherService] Found Ship Info in LoadGame. Name: {customShipName}, Type: {shipType}");
+                            Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {customShipName}, Type: {shipType}");
                             ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
                         }
                     }
