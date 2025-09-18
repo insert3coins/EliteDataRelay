@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Provides data about commodities, such as their category, by reading from local data files.

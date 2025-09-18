@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Text.Json;
 
-namespace EliteCargoMonitor.Configuration
+namespace EliteDataRelay.Configuration
 {
     public static class AppConfiguration
     {
@@ -22,7 +22,7 @@ namespace EliteCargoMonitor.Configuration
         public static int ButtonHeight { get; } = 23;
         public static float DefaultFontSize { get; } = 9f;
         public static string ConsolasFontName { get; } = "Consolas";
-        public static string WelcomeMessage { get; } = "Welcome to Elite Cargo Monitor. Click Start to begin.";
+        public static string WelcomeMessage { get; } = "Welcome to Elite Data Relay. Click Start to begin.";
         public static int DebounceDelayMs { get; } = 250;
         public static int PollingIntervalMs { get; } = 1000;
         public static int FileSystemDelayMs { get; } = 50;
@@ -30,7 +30,7 @@ namespace EliteCargoMonitor.Configuration
         public static int ThreadRetryDelayMs { get; } = 100;
         public static int FileReadMaxAttempts { get; } = 5;
         public static int FileReadRetryDelayMs { get; } = 100;
-        public static string AboutInfo { get; } = $"Elite Cargo Monitor v{GetAppVersion()}";
+        public static string AboutInfo { get; } = $"Elite Data Relay v{GetAppVersion()}";
         public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
         public static string LicenseUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor/blob/main/LICENSE.txt";
 

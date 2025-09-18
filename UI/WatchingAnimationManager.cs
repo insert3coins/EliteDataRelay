@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Manages the "watching" animation on a UI control.

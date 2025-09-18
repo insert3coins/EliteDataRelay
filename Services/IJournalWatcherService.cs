@@ -1,6 +1,6 @@
 using System;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     public interface IJournalWatcherService : IDisposable
     {

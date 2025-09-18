@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36414.22 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteCargoMonitor", "EliteCargoMonitor.csproj", "{9272EA4C-D4C3-3737-1CCE-BFD12214C630}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EliteDataRelay", "EliteDataRelay.csproj", "{9272EA4C-D4C3-3737-1CCE-BFD12214C630}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

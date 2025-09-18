@@ -5,11 +5,11 @@ using System.Linq;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using EliteCargoMonitor.Services;
-using EliteCargoMonitor.Configuration;
-using EliteCargoMonitor.Models;
+using EliteDataRelay.Services;
+using EliteDataRelay.Configuration;
+using EliteDataRelay.Models;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     public class CargoFormUI : ICargoFormUI
     {

@@ -2,9 +2,9 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using EliteCargoMonitor.Configuration;
+using EliteDataRelay.Configuration;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Form for configuring application settings.

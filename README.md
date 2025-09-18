@@ -1,9 +1,9 @@
-# Elite Dangerous Cargo Monitor
+﻿# Elite Dangerous Data Relay
 
-![Elite Dangerous Cargo Monitor](https://img.shields.io/badge/Elite%20Dangerous-Cargo%20Monitor-orange?style=flat-square)
-[![GitHub License](https://img.shields.io/github/license/insert3coins/EliteCargoMonitor?style=flat-square)](https://github.com/insert3coins/EliteCargoMonitor/blob/main/LICENSE.txt)
-[![Last Commit](https://img.shields.io/github/last-commit/insert3coins/EliteCargoMonitor?style=flat-square)](https://github.com/insert3coins/EliteCargoMonitor/commits/main)
-[![Top Language](https://img.shields.io/github/languages/top/insert3coins/EliteCargoMonitor?style=flat-square)](https://github.com/insert3coins/EliteCargoMonitor)
+![Elite Dangerous Data Relay](https://img.shields.io/badge/Elite%20Dangerous-Data%20Relay-orange?style=flat-square)
+[![GitHub License](https://img.shields.io/github/license/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay/blob/main/LICENSE.txt)
+[![Last Commit](https://img.shields.io/github/last-commit/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay/commits/main)
+[![Top Language](https://img.shields.io/github/languages/top/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay)
 
 A lightweight Windows utility for players of Elite Dangerous. It monitors your in-game cargo in real-time, displaying the contents and total count in a simple interface and exporting the data to a text file for use with streaming overlays or other tools.
 
@@ -39,12 +39,12 @@ This tool provides a simple way to keep an eye on your ship's cargo and status w
 
 ### Installation
 
-The easiest way to use the Cargo Monitor is to download the latest release.
+The easiest way to use the Data Relay is to download the latest release.
 
 1.  Go to the **Releases** page.
 2.  Download the `.zip` file from the latest release.
 3.  Extract the contents to a folder of your choice.
-4.  Run `EliteCargoMonitor.exe`.
+4.  Run `EliteDataRelay.exe`.
 
 ### Building from Source
 
@@ -52,11 +52,11 @@ If you want to build the project yourself:
 
 1.  Clone the repository:
     ```sh
-    git clone https://github.com/insert3coins/EliteCargoMonitor.git
+    git clone https://github.com/insert3coins/EliteDataRelay.git
     ```
 2.  Navigate to the project directory:
     ```sh
-    cd EliteCargoMonitor
+    cd EliteDataRelay
     ```
 3.  Restore the .NET dependencies:
     ```sh
@@ -71,6 +71,7 @@ If you want to build the project yourself:
 
 1.  Launch Elite Dangerous.
 2.  Run `EliteCargoMonitor.exe`.
+2.  Run `EliteDataRelay.exe`.
 3.  Click **Start** to begin monitoring.
 4.  The application window will update whenever your cargo changes.
 5.  A file named `cargo.txt` (by default) will be created and updated in the configured output directory (by default, an `out` sub-folder). You can add this text file as a source in OBS.

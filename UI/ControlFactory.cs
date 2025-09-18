@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Creates and manages the UI controls for the main form.

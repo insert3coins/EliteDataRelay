@@ -2,9 +2,9 @@ using System;
 using System.Drawing;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
-using EliteCargoMonitor.Configuration;
+using EliteDataRelay.Configuration;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Manages loading and providing application-specific fonts.

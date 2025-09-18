@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace EliteCargoMonitor.Models
+namespace EliteDataRelay.Models
 {
     public class JournalEvent
     {

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Media;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service for managing application sound effects

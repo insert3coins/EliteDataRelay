@@ -1,6 +1,6 @@
 using System;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service interface for monitoring file system changes to the cargo file

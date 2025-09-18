@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Manages the application's system tray icon and context menu.

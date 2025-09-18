@@ -1,8 +1,8 @@
 using System;
 using System.Windows.Forms;
-using EliteCargoMonitor.Models;
+using EliteDataRelay.Models;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Interface for cargo form UI management

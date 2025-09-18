@@ -6,10 +6,10 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text;
 using System.Windows.Forms;
-using EliteCargoMonitor.Configuration;
-using EliteCargoMonitor.Models;
+using EliteDataRelay.Configuration;
+using EliteDataRelay.Models;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service for monitoring the Elite Dangerous journal for Loadout events to determine cargo capacity.

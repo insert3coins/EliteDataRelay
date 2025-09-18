@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
-using EliteCargoMonitor.Configuration;
+using EliteDataRelay.Configuration;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service for monitoring file system changes to the cargo file with debouncing and polling fallback

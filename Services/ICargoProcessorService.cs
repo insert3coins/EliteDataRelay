@@ -1,7 +1,7 @@
 using System;
-using EliteCargoMonitor.Models;
+using EliteDataRelay.Models;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service interface for processing cargo data from the Elite Dangerous cargo file

@@ -1,15 +1,15 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using EliteCargoMonitor.Configuration;
-using EliteCargoMonitor.Services;
-using EliteCargoMonitor.UI;
+using EliteDataRelay.Configuration;
+using EliteDataRelay.Services;
+using EliteDataRelay.UI;
 
-namespace EliteCargoMonitor
+namespace EliteDataRelay
 {
     public partial class CargoForm : Form
     {
@@ -288,7 +288,7 @@ namespace EliteCargoMonitor
             
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
-            _cargoFormUI.UpdateTitle("Cargo Monitor – Watching");
+            _cargoFormUI.UpdateTitle("Elite Data Relay – Watching");
 
             // Start journal monitoring to find capacity before the first cargo read
             _journalWatcherService.StartMonitoring();
@@ -307,7 +307,7 @@ namespace EliteCargoMonitor
         {
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: true, stopEnabled: false);
-            _cargoFormUI.UpdateTitle("Cargo Monitor – Stopped");
+            _cargoFormUI.UpdateTitle("Elite Data Relay – Stopped");
 
             // Stop file monitoring
             _fileMonitoringService.StopMonitoring();

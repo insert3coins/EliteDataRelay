@@ -1,8 +1,8 @@
 using System;
 using System.Windows.Forms;
-using EliteCargoMonitor.Configuration;
+using EliteDataRelay.Configuration;
 
-namespace EliteCargoMonitor
+namespace EliteDataRelay
 {
     internal static class Program
     {

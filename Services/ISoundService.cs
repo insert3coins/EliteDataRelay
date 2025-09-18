@@ -1,4 +1,4 @@
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service interface for managing application sound effects

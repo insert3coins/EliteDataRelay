@@ -2,11 +2,11 @@
  using System.Diagnostics;
  using System.IO;
  using System.Threading;
- using EliteCargoMonitor.Configuration;
- using EliteCargoMonitor.Models;
+ using EliteDataRelay.Configuration;
+ using EliteDataRelay.Models;
  using System.Text.Json;
  
- namespace EliteCargoMonitor.Services
+ namespace EliteDataRelay.Services
  {
      /// <summary>
      /// Service for monitoring Status.json for real-time player status like balance.

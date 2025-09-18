@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Collections.Generic;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Contains static UI constants like colors and design elements.

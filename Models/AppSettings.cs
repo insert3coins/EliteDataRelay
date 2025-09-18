@@ -1,4 +1,4 @@
-namespace EliteCargoMonitor.Models
+namespace EliteDataRelay.Models
 {
     /// <summary>
     /// Represents user-configurable settings that are persisted to settings.json.

@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using EliteCargoMonitor.Configuration;
+using EliteDataRelay.Configuration;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// A form to display application information, links, and disclaimers.
     public class AboutForm : Form
@@ -41,7 +41,7 @@ namespace EliteCargoMonitor.UI
                 // Load the icon resource and create a bitmap for the PictureBox
                 using (var iconStream = new MemoryStream(Properties.Resources.AppIcon))
                 {
-                    _formIcon = new Icon(iconStream, 64, 64);
+                    _formIcon = new Icon(iconStream, 256, 256);
                     picIcon.Image = _formIcon.ToBitmap();
                 }
             }

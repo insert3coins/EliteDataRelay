@@ -5,10 +5,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using EliteCargoMonitor.Configuration;
-using EliteCargoMonitor.Models;
+using EliteDataRelay.Configuration;
+using EliteDataRelay.Models;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service for processing cargo data from the Elite Dangerous cargo file

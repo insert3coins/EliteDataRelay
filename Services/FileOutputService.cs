@@ -2,10 +2,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using EliteCargoMonitor.Configuration;
-using EliteCargoMonitor.Models;
+using EliteDataRelay.Configuration;
+using EliteDataRelay.Models;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service for writing cargo data to output files

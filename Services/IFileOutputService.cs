@@ -1,6 +1,6 @@
-using EliteCargoMonitor.Models;
+using EliteDataRelay.Models;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Interface for writing cargo data to output files

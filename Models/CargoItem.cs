@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace EliteCargoMonitor.Models
+namespace EliteDataRelay.Models
 {
     /// <summary>
     /// Represents an individual cargo item in Elite Dangerous

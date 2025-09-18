@@ -1,6 +1,6 @@
 using System;
 
-namespace EliteCargoMonitor.Services
+namespace EliteDataRelay.Services
 {
     public class CargoCapacityEventArgs : EventArgs
     {

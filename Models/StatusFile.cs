@@ -1,6 +1,6 @@
  ﻿using System.Text.Json.Serialization;
  
- namespace EliteCargoMonitor.Models
+ namespace EliteDataRelay.Models
  {
      /// <summary>
      /// Represents the structure of the Status.json file.

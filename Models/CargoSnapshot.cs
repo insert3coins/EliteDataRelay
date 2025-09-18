@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace EliteCargoMonitor.Models
+namespace EliteDataRelay.Models
 {
     /// <summary>
     /// Represents a complete cargo inventory snapshot from Elite Dangerous

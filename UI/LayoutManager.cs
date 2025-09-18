@@ -1,8 +1,8 @@
 using System;
 using System.Windows.Forms;
-using EliteCargoMonitor.Configuration;
+using EliteDataRelay.Configuration;
 
-namespace EliteCargoMonitor.UI
+namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Manages the layout of controls on the main form.
