@@ -299,13 +299,11 @@ namespace EliteCargoMonitor.UI
         {
             if (_controlFactory?.ShipLabel != null)
             {
-                // Display the short version (ship type)
-                var shipDisplayText = $"Ship: {shipIdent}";
-                _controlFactory.ShipLabel.Text = shipDisplayText;
+                // Display the ship name and on our tool tip give the full version
+                _controlFactory.ShipLabel.Text = $"Ship: {shipIdent}";
 
-                // Set the tooltip to the full version (custom name and type)
-                var shipTooltipText = $"Ship: {shipName} ({shipIdent})";
-                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, shipTooltipText);
+                // Update the tooltip to match the full text
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Ship: {shipName} ({shipIdent})");
             }
         }
 

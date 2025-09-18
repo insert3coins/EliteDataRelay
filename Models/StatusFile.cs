@@ -14,6 +14,6 @@
          public string? Event { get; set; }
  
          [JsonPropertyName("Balance")]
-         public long Balance { get; set; }
+        public long? Balance { get; set; }
      }
  }

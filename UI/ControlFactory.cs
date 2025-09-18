@@ -135,6 +135,12 @@ namespace EliteCargoMonitor.UI
             ShipLabel = CreateInfoLabel("Ship: Unknown", fontManager.VerdanaFont);
             BalanceLabel = CreateInfoLabel("Balance: Unknown", fontManager.VerdanaFont);
 
+            // Configure properties for the flexible layout
+            ShipLabel.AutoSize = false;
+            ShipLabel.Dock = DockStyle.Fill;
+
+            CommanderLabel.TextAlign = ContentAlignment.MiddleLeft;
+            BalanceLabel.TextAlign = ContentAlignment.MiddleRight;
         }
 
         /// <summary>
@@ -146,7 +152,8 @@ namespace EliteCargoMonitor.UI
             {
                 Text = text,
                 Font = font,
-                Dock = DockStyle.Fill,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 TextAlign = ContentAlignment.MiddleCenter,
                 FlatStyle = FlatStyle.Flat,
                 Enabled = true, // Keep enabled to preserve color

@@ -81,9 +81,9 @@ namespace EliteCargoMonitor.UI
                 RowCount = 1,
                 Padding = new Padding(5, 0, 5, 0),
             };
-            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             _infoPanel.Controls.Add(_controls.CommanderLabel, 0, 0);
             _infoPanel.Controls.Add(_controls.ShipLabel, 1, 0);
             _infoPanel.Controls.Add(_controls.BalanceLabel, 2, 0);

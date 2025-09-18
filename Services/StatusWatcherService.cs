@@ -82,10 +82,11 @@
                          var json = File.ReadAllText(AppConfiguration.StatusJsonPath);
                          var status = JsonSerializer.Deserialize<StatusFile>(json);
  
-                         if (status != null && status.Balance != _lastKnownBalance)
+                        // Only update if the Balance property exists in the JSON and has changed.
+                        if (status?.Balance.HasValue == true && status.Balance.Value != _lastKnownBalance)
                          {
-                             _lastKnownBalance = status.Balance;
-                             BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(status.Balance));
+                            _lastKnownBalance = status.Balance.Value;
+                            BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(status.Balance.Value));
                          }
                          return; // Success
                      }
