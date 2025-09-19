@@ -22,6 +22,7 @@ namespace EliteDataRelay
         private readonly IFileOutputService _fileOutputService;
         private readonly IStatusWatcherService _statusWatcherService;
         private readonly ICargoFormUI _cargoFormUI;
+        private readonly IMaterialService _materialService;
         private readonly SessionTrackingService _sessionTrackingService;
 
         public CargoForm(
@@ -32,6 +33,7 @@ namespace EliteDataRelay
             IFileOutputService fileOutputService,
             ICargoFormUI cargoFormUI,
             IStatusWatcherService statusWatcherService,
+            IMaterialService materialService,
             SessionTrackingService sessionTrackingService)
         {
             _fileMonitoringService = fileMonitoringService ?? throw new ArgumentNullException(nameof(fileMonitoringService));
@@ -41,6 +43,7 @@ namespace EliteDataRelay
             _fileOutputService = fileOutputService ?? throw new ArgumentNullException(nameof(fileOutputService));
             _statusWatcherService = statusWatcherService ?? throw new ArgumentNullException(nameof(statusWatcherService));
             _cargoFormUI = cargoFormUI ?? throw new ArgumentNullException(nameof(cargoFormUI));
+            _materialService = materialService ?? throw new ArgumentNullException(nameof(materialService));
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
 
             InitializeComponent();
@@ -57,6 +60,7 @@ namespace EliteDataRelay
             _fileOutputService = new FileOutputService();
             _statusWatcherService = new StatusWatcherService();
             _cargoFormUI = new CargoFormUI();
+            _materialService = new MaterialService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService();
 
             InitializeComponent();
@@ -111,6 +115,7 @@ namespace EliteDataRelay
             _journalWatcherService.LocationChanged += OnLocationChanged;
             _statusWatcherService.BalanceChanged += OnBalanceChanged;
 
+            _materialService.MaterialsUpdated += OnMaterialsUpdated;
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             // Assumes JournalWatcherService is updated to provide these events
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
@@ -118,6 +123,15 @@ namespace EliteDataRelay
         }
 
         #region Monitoring Control
+
+        private void OnMaterialsUpdated(object? sender, EventArgs e)
+        {
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateMaterialList(_materialService);
+                _cargoFormUI.UpdateMaterialsOverlay(_materialService);
+            }));
+        }
 
         private void RepopulateOverlay()
         {
@@ -146,26 +160,23 @@ namespace EliteDataRelay
             // Re-populate the UI (and the new overlay) with the last known data.
             RepopulateOverlay();
 
-            // Start journal monitoring to find capacity before the first cargo read
-            _journalWatcherService.StartMonitoring();
-
-            // Start status monitoring for balance
-            _statusWatcherService.StartMonitoring();
-
-            // Process initial file snapshot
-            _cargoProcessorService.ProcessCargoFile();
-            
-            // Start file monitoring
-            _fileMonitoringService.StartMonitoring();
-
-            // Start the game process checker
-            _gameProcessCheckTimer?.Start();
-
-            // Start the session tracker
+            // Start services that subscribe to journal events first, so they don't miss the initial scan.
+            _materialService.Start();
             if (AppConfiguration.EnableSessionTracking)
             {
                 _sessionTrackingService.StartSession();
             }
+
+            // Now start the services that produce events.
+            _journalWatcherService.StartMonitoring(); // This will do an initial read of the whole journal.
+            _statusWatcherService.StartMonitoring();
+            _fileMonitoringService.StartMonitoring();
+
+            // Process initial file snapshot after starting monitoring
+            _cargoProcessorService.ProcessCargoFile();
+
+            // Start the game process checker
+            _gameProcessCheckTimer?.Start();
         }
 
         private void StopMonitoringInternal()
@@ -182,6 +193,9 @@ namespace EliteDataRelay
 
             // Stop status monitoring
             _statusWatcherService.StopMonitoring();
+
+            // Stop material service
+            _materialService.Stop();
 
             // Stop the game process checker
             _gameProcessCheckTimer?.Stop();
@@ -205,6 +219,7 @@ namespace EliteDataRelay
                 (_soundService as IDisposable)?.Dispose();
                 (_statusWatcherService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();
+                (_materialService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();
                 _sessionTrackingService.Dispose();

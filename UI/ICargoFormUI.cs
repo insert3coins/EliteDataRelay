@@ -1,13 +1,14 @@
 using System;
 using System.Windows.Forms;
 using EliteDataRelay.Models;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
     /// <summary>
     /// Interface for cargo form UI management
     /// </summary>
-    public partial interface ICargoFormUI : IDisposable
+    public interface ICargoFormUI : IDisposable
     {
         /// <summary>
         /// Event raised when the start button is clicked
@@ -64,6 +65,18 @@ namespace EliteDataRelay.UI
         /// </summary>
         /// <param name="snapshot">The cargo snapshot to display.</param>
         void UpdateCargoList(CargoSnapshot snapshot);
+
+        /// <summary>
+        /// Updates the material display with the current material list.
+        /// </summary>
+        /// <param name="materialService">The material service containing the data.</param>
+        void UpdateMaterialList(IMaterialService materialService);
+
+        /// <summary>
+        /// Updates the materials overlay with the current material list.
+        /// </summary>
+        /// <param name="materialService">The material service containing the data.</param>
+        void UpdateMaterialsOverlay(IMaterialService materialService);
 
         /// <summary>
         /// Update the form title.
@@ -123,10 +136,7 @@ namespace EliteDataRelay.UI
         /// </summary>
         /// <param name="visible">Whether the button should be visible.</param>
         void SetSessionButtonVisibility(bool visible);
-    }
 
-    public partial interface ICargoFormUI
-    {
         /// <summary>Updates the session data on the overlay.</summary>
         void UpdateSessionOverlay(long cargoCollected, long creditsEarned);
     }

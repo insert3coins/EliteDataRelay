@@ -18,6 +18,9 @@ namespace EliteDataRelay.Configuration
         public static bool EnableFileOutput { get; set; } = false;
         public static bool EnableLeftOverlay { get; set; } = false;
         public static bool EnableRightOverlay { get; set; } = false;
+        public static bool EnableMaterialsOverlay { get; set; } = false;
+        public static bool PinMaterialsMode { get; set; } = false;
+        public static List<string> PinnedMaterials { get; set; } = new();
         public static bool ShowSessionOnOverlay { get; set; } = false;
         public static bool EnableSessionTracking { get; set; } = false;
         public static bool AllowOverlayDrag { get; set; } = false;
@@ -32,6 +35,7 @@ namespace EliteDataRelay.Configuration
         // --- Overlay Position Settings ---
         public static Point LeftOverlayLocation { get; set; } = Point.Empty;
         public static Point RightOverlayLocation { get; set; } = Point.Empty;
+        public static Point MaterialsOverlayLocation { get; set; } = Point.Empty;
 
         // --- Overlay Appearance Settings ---
         public static string OverlayFontName { get; set; } = "Consolas";
@@ -92,6 +96,9 @@ namespace EliteDataRelay.Configuration
             public bool EnableFileOutput { get; set; } = AppConfiguration.EnableFileOutput;
             public bool EnableLeftOverlay { get; set; } = AppConfiguration.EnableLeftOverlay;
             public bool EnableRightOverlay { get; set; } = AppConfiguration.EnableRightOverlay;
+            public bool EnableMaterialsOverlay { get; set; } = AppConfiguration.EnableMaterialsOverlay;
+            public bool PinMaterialsMode { get; set; } = AppConfiguration.PinMaterialsMode;
+            public List<string> PinnedMaterials { get; set; } = AppConfiguration.PinnedMaterials;
             public bool ShowSessionOnOverlay { get; set; } = AppConfiguration.ShowSessionOnOverlay;
             public bool EnableSessionTracking { get; set; } = AppConfiguration.EnableSessionTracking;
             public bool AllowOverlayDrag { get; set; } = AppConfiguration.AllowOverlayDrag;
@@ -104,6 +111,7 @@ namespace EliteDataRelay.Configuration
             public Point WindowLocation { get; set; }
             public Point LeftOverlayLocation { get; set; }
             public Point RightOverlayLocation { get; set; }
+            public Point MaterialsOverlayLocation { get; set; }
             public string OverlayFontName { get; set; } = AppConfiguration.OverlayFontName;
             public float OverlayFontSize { get; set; } = AppConfiguration.OverlayFontSize;
             public int OverlayTextColorArgb { get; set; } = AppConfiguration.OverlayTextColor.ToArgb();
@@ -134,6 +142,9 @@ namespace EliteDataRelay.Configuration
                     EnableFileOutput = model.EnableFileOutput;
                     EnableLeftOverlay = model.EnableLeftOverlay;
                     EnableRightOverlay = model.EnableRightOverlay;
+                    EnableMaterialsOverlay = model.EnableMaterialsOverlay;
+                    PinMaterialsMode = model.PinMaterialsMode;
+                    PinnedMaterials = model.PinnedMaterials ?? new List<string>();
                     ShowSessionOnOverlay = model.ShowSessionOnOverlay;
                     EnableSessionTracking = model.EnableSessionTracking;
                     AllowOverlayDrag = model.AllowOverlayDrag;
@@ -145,6 +156,7 @@ namespace EliteDataRelay.Configuration
 
                     LeftOverlayLocation = model.LeftOverlayLocation;
                     RightOverlayLocation = model.RightOverlayLocation;
+                    MaterialsOverlayLocation = model.MaterialsOverlayLocation;
 
                     OverlayFontName = model.OverlayFontName;
                     OverlayFontSize = model.OverlayFontSize > 0 ? model.OverlayFontSize : 11F;
@@ -181,6 +193,9 @@ namespace EliteDataRelay.Configuration
                     EnableFileOutput = EnableFileOutput,
                     EnableLeftOverlay = EnableLeftOverlay,
                     EnableRightOverlay = EnableRightOverlay,
+                    EnableMaterialsOverlay = EnableMaterialsOverlay,
+                    PinMaterialsMode = PinMaterialsMode,
+                    PinnedMaterials = PinnedMaterials,
                     ShowSessionOnOverlay = ShowSessionOnOverlay,
                     EnableSessionTracking = EnableSessionTracking,
                     AllowOverlayDrag = AllowOverlayDrag,
@@ -193,6 +208,7 @@ namespace EliteDataRelay.Configuration
                     WindowLocation = WindowLocation,
                     LeftOverlayLocation = LeftOverlayLocation,
                     RightOverlayLocation = RightOverlayLocation,
+                    MaterialsOverlayLocation = MaterialsOverlayLocation,
                     OverlayFontName = OverlayFontName,
                     OverlayFontSize = OverlayFontSize,
                     OverlayTextColorArgb = OverlayTextColor.ToArgb(),

@@ -27,11 +27,13 @@ namespace EliteDataRelay.UI
             var generalTabPage = new TabPage("General");
             var overlayTabPage = new TabPage("Overlay");
             var hotkeysTabPage = new TabPage("Hotkeys");
+            var materialsTabPage = new TabPage("Materials");
 
             tabControl.TabPages.Add(generalTabPage);
             tabControl.TabPages.Add(overlayTabPage);
             tabControl.TabPages.Add(hotkeysTabPage);
-
+            tabControl.TabPages.Add(materialsTabPage);
+            
             #region General Tab
 
             // GroupBox
@@ -158,7 +160,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Overlay Functionality",
                 Location = new Point(12, 12),
-                Size = new Size(410, 155),
+                Size = new Size(410, 180),
             };
 
             // Enable Right Overlay CheckBox
@@ -170,10 +172,18 @@ namespace EliteDataRelay.UI
             };
             _chkEnableRightOverlay.CheckedChanged += OnEnableRightOverlayCheckedChanged;
 
+            // Enable Materials Overlay CheckBox
+            _chkEnableMaterialsOverlay = new CheckBox
+            {
+                Text = "Enable materials overlay",
+                Location = new Point(15, 70),
+                AutoSize = true
+            };
+
             _chkShowSessionOnOverlay = new CheckBox
             {
                 Text = "Show session stats on right overlay (Cargo)",
-                Location = new Point(15, 70),
+                Location = new Point(15, 95),
                 AutoSize = true
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
@@ -182,7 +192,7 @@ namespace EliteDataRelay.UI
             _chkAllowOverlayDrag = new CheckBox
             {
                 Text = "Allow overlays to be repositioned with the mouse",
-                Location = new Point(15, 95),
+                Location = new Point(15, 120),
                 AutoSize = true
             };
 
@@ -190,7 +200,7 @@ namespace EliteDataRelay.UI
             _btnResetOverlayPositions = new Button
             {
                 Text = "Reset Overlay Positions",
-                Location = new Point(15, 120),
+                Location = new Point(15, 145),
                 Size = new Size(150, 23)
             };
             _btnResetOverlayPositions.Click += OnResetPositionsClicked;
@@ -250,12 +260,13 @@ namespace EliteDataRelay.UI
             // Add functionality controls to the overlay settings group
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableMaterialsOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_chkAllowOverlayDrag);
             _grpOverlaySettings.Controls.Add(_btnResetOverlayPositions);
 
             // Font GroupBox
-            var grpFont = new GroupBox { Text = "Appearance: Font", Location = new Point(12, 177), Size = new Size(410, 80) };
+            var grpFont = new GroupBox { Text = "Appearance: Font", Location = new Point(12, 200), Size = new Size(410, 80) };
             var lblCurrentFontHeader = new Label { Text = "Current Font:", Location = new Point(15, 25), AutoSize = true };
             _lblCurrentFont = new Label { Text = "Consolas, 11pt", Font = new Font(this.Font, FontStyle.Bold), Location = new Point(100, 25), AutoSize = true };
             var btnChangeFont = new Button { Text = "Change Font...", Location = new Point(15, 45), Size = new Size(100, 23) };
@@ -265,7 +276,7 @@ namespace EliteDataRelay.UI
             grpFont.Controls.Add(btnChangeFont);
 
             // Colors GroupBox
-            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 267), Size = new Size(410, 150) };
+            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 290), Size = new Size(410, 150) };
             var lblTextColor = new Label { Text = "Text Color:", Location = new Point(15, 25), AutoSize = true };
             _pnlTextColor = new Panel { Location = new Point(130, 25), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
             var btnChangeTextColor = new Button { Text = "...", Location = new Point(160, 25), Size = new Size(23, 23) };
@@ -289,7 +300,7 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(_lblOpacityValue);
 
             // Reset Button
-            var btnResetAppearance = new Button { Text = "Reset Appearance to Defaults", Location = new Point(12, 427), Size = new Size(180, 23) };
+            var btnResetAppearance = new Button { Text = "Reset Appearance to Defaults", Location = new Point(12, 450), Size = new Size(180, 23) };
             btnResetAppearance.Click += OnResetAppearanceClicked;
 
             // Add controls to the Overlay tab
@@ -304,6 +315,38 @@ namespace EliteDataRelay.UI
 
             // Add controls to the Hotkeys tab
             hotkeysTabPage.Controls.Add(_grpHotkeys);
+            #endregion
+
+            #region Materials Tab
+
+            var grpPinning = new GroupBox
+            {
+                Text = "Material Pinning for Overlay",
+                Location = new Point(12, 12),
+                Size = new Size(440, 430),
+            };
+
+            _chkPinMaterialsMode = new CheckBox
+            {
+                Text = "Only show pinned materials on the overlay",
+                Location = new Point(15, 24),
+                AutoSize = true
+            };
+            _chkPinMaterialsMode.CheckedChanged += (s, e) =>
+            {
+                if (_clbPinnedMaterials != null) _clbPinnedMaterials.Enabled = _chkPinMaterialsMode.Checked;
+            };
+
+            _clbPinnedMaterials = new CheckedListBox
+            {
+                Location = new Point(15, 54),
+                Size = new Size(410, 360),
+                CheckOnClick = true,
+            };
+
+            grpPinning.Controls.AddRange(new Control[] { _chkPinMaterialsMode, _clbPinnedMaterials });
+            materialsTabPage.Controls.Add(grpPinning);
+
             #endregion
 
             // OK Button

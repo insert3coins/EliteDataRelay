@@ -1,7 +1,10 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 using System.Windows.Forms;
+using EliteDataRelay.Services;
 using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.UI
@@ -23,6 +26,7 @@ namespace EliteDataRelay.UI
         private Label _lblOutputFileName = null!;
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
+        private CheckBox _chkEnableMaterialsOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
         private GroupBox _grpSessionTracking = null!;
@@ -40,6 +44,8 @@ namespace EliteDataRelay.UI
         private Panel _pnlBackColor = null!;
         private TrackBar _trackBarOpacity = null!;
         private Label _lblOpacityValue = null!;
+        private CheckBox _chkPinMaterialsMode = null!;
+        private CheckedListBox _clbPinnedMaterials = null!;
 
         private Keys _startHotkey;
         private Keys _stopHotkey;
@@ -55,7 +61,19 @@ namespace EliteDataRelay.UI
         public SettingsForm()
         {
             InitializeComponent();
+            PopulateMaterialsList();
             LoadSettings();
+        }
+
+        private void PopulateMaterialsList()
+        {
+            var materials = MaterialDataService.GetAll();
+            _clbPinnedMaterials.Items.Clear();
+            foreach (var material in materials)
+            {
+                // Store the non-localised name in the item's tag for saving
+                _clbPinnedMaterials.Items.Add($"{material.LocalisedName} (G{material.Grade})", false);
+            }
         }
 
         private void LoadSettings()
@@ -68,6 +86,8 @@ namespace EliteDataRelay.UI
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableLeftOverlay;
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableRightOverlay;
+            _chkEnableMaterialsOverlay.Checked = AppConfiguration.EnableMaterialsOverlay;
+            _chkPinMaterialsMode.Checked = AppConfiguration.PinMaterialsMode;
             _chkAllowOverlayDrag.Checked = AppConfiguration.AllowOverlayDrag;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
@@ -78,6 +98,7 @@ namespace EliteDataRelay.UI
             _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
             OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
+            _clbPinnedMaterials.Enabled = _chkPinMaterialsMode.Checked;
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
 
             // Load overlay appearance settings
@@ -87,6 +108,18 @@ namespace EliteDataRelay.UI
             _overlayOpacity = AppConfiguration.OverlayOpacity;
 
             UpdateAppearanceControls();
+
+            // Check the pinned materials
+            var pinned = AppConfiguration.PinnedMaterials.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            var allMaterials = MaterialDataService.GetAll().ToList();
+            for (int i = 0; i < _clbPinnedMaterials.Items.Count; i++)
+            {
+                if (i < allMaterials.Count)
+                {
+                    var materialName = allMaterials[i].Name;
+                    _clbPinnedMaterials.SetItemChecked(i, pinned.Contains(materialName));
+                }
+            }
         }
 
         private void UpdateHotkey(string? tag, Keys key)
@@ -128,6 +161,8 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableLeftOverlay = _chkEnableLeftOverlay.Checked;
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
             AppConfiguration.EnableRightOverlay = _chkEnableRightOverlay.Checked;
+            AppConfiguration.EnableMaterialsOverlay = _chkEnableMaterialsOverlay.Checked;
+            AppConfiguration.PinMaterialsMode = _chkPinMaterialsMode.Checked;
             AppConfiguration.AllowOverlayDrag = _chkAllowOverlayDrag.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
@@ -135,6 +170,19 @@ namespace EliteDataRelay.UI
             AppConfiguration.ShowOverlayHotkey = _showOverlayHotkey;
             AppConfiguration.HideOverlayHotkey = _hideOverlayHotkey;
             AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
+
+            // Save pinned materials
+            var pinnedMaterials = new List<string>();
+            var allMaterials = MaterialDataService.GetAll().ToList();
+            for (int i = 0; i < _clbPinnedMaterials.CheckedItems.Count; i++)
+            {
+                int originalIndex = _clbPinnedMaterials.Items.IndexOf(_clbPinnedMaterials.CheckedItems[i]);
+                if (originalIndex >= 0 && originalIndex < allMaterials.Count)
+                {
+                    pinnedMaterials.Add(allMaterials[originalIndex].Name);
+                }
+            }
+            AppConfiguration.PinnedMaterials = pinnedMaterials;
 
             // Save appearance settings
             AppConfiguration.OverlayFontName = _overlayFont.Name;

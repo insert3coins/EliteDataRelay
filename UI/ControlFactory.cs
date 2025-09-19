@@ -10,6 +10,8 @@ namespace EliteDataRelay.UI
     public class ControlFactory : IDisposable
     {
         public ListView ListView { get; }
+        public TreeView MaterialTreeView { get; }
+        public TabControl TabControl { get; }
         public Button StartBtn { get; }
         public Button StopBtn { get; }
         public Button ExitBtn { get; }
@@ -26,6 +28,26 @@ namespace EliteDataRelay.UI
 
         public ControlFactory(FontManager fontManager)
         {
+            // Tab control to switch between Cargo and Materials
+            TabControl = new TabControl
+            {
+                Dock = DockStyle.Fill,
+                Font = fontManager.VerdanaFont,
+            };
+
+            var cargoPage = new TabPage("Cargo");
+            var materialsPage = new TabPage("Materials");
+
+            // Material TreeView
+            MaterialTreeView = new TreeView
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.None,
+                Font = fontManager.VerdanaFont,
+                BackColor = SystemColors.Window,
+                ForeColor = SystemColors.WindowText,
+            };
+
             // Main ListView to display cargo items
             ListView = new ListView
             {
@@ -43,6 +65,11 @@ namespace EliteDataRelay.UI
             ListView.Columns.Add("Commodity", 200, HorizontalAlignment.Left);
             ListView.Columns.Add("Count", 80, HorizontalAlignment.Center);
             ListView.Columns.Add("Category", -2, HorizontalAlignment.Center);
+
+            // Add controls to their respective tab pages
+            cargoPage.Controls.Add(ListView);
+            materialsPage.Controls.Add(MaterialTreeView);
+            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage });
 
             // Create control buttons
             StartBtn = new Button { Text = "Start", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
@@ -142,8 +169,6 @@ namespace EliteDataRelay.UI
             ShipLabel.AutoSize = false;
             ShipLabel.Dock = DockStyle.Fill;
 
-            CommanderLabel.TextAlign = ContentAlignment.MiddleLeft;
-            BalanceLabel.TextAlign = ContentAlignment.MiddleRight;
         }
 
         /// <summary>
@@ -191,6 +216,8 @@ namespace EliteDataRelay.UI
             SessionBtn.Paint -= Button_Paint;
             SettingsBtn.Paint -= Button_Paint;
 
+            TabControl.Dispose();
+            MaterialTreeView.Dispose();
             ListView.Dispose();
             StartBtn.Dispose();
             StopBtn.Dispose();

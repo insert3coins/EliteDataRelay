@@ -54,6 +54,27 @@ namespace EliteDataRelay.Services
         public event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
 
         /// <summary>
+        /// Event raised for a full materials list snapshot.
+        /// </summary>
+        public event EventHandler<MaterialsEventArgs>? MaterialsEvent;
+
+        /// <summary>
+        /// Event raised when a material is collected.
+        /// </summary>
+        public event EventHandler<MaterialCollectedEventArgs>? MaterialCollectedEvent;
+
+        /// <summary>
+        /// Event raised when a material is discarded.
+        /// </summary>
+        public event EventHandler<MaterialCollectedEventArgs>? MaterialDiscardedEvent;
+
+        /// <summary>
+        /// Event raised when materials are traded or used in crafting.
+        /// </summary>
+        public event EventHandler<MaterialTradeEventArgs>? MaterialTradeEvent;
+        public event EventHandler<EngineerCraftEventArgs>? EngineerCraftEvent;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;
@@ -243,6 +264,48 @@ namespace EliteDataRelay.Services
                                 CargoInventoryChanged?.Invoke(this, new CargoInventoryEventArgs(snapshot));
                             }
                         }
+                        else if (eventType == "Materials")
+                        {
+                            var materialsEvent = JsonSerializer.Deserialize<MaterialsEvent>(line, options);
+                            if (materialsEvent != null)
+                            {
+                                Debug.WriteLine($"[JournalWatcherService] Found Materials event.");
+                                MaterialsEvent?.Invoke(this, new MaterialsEventArgs(materialsEvent));
+                            }
+                        }
+                        else if (eventType == "MaterialCollected")
+                        {
+                            var collectedEvent = JsonSerializer.Deserialize<MaterialCollectedEvent>(line, options);
+                            if (collectedEvent != null)
+                            {
+                                Debug.WriteLine($"[JournalWatcherService] Found MaterialCollected event for {collectedEvent.Name}.");
+                                MaterialCollectedEvent?.Invoke(this, new MaterialCollectedEventArgs(collectedEvent));
+                            }
+                        }
+                        else if (eventType == "MaterialDiscarded")
+                        {
+                            var discardedEvent = JsonSerializer.Deserialize<MaterialCollectedEvent>(line, options);
+                            if (discardedEvent != null)
+                            {
+                                MaterialDiscardedEvent?.Invoke(this, new MaterialCollectedEventArgs(discardedEvent));
+                            }
+                        }
+                        else if (eventType == "MaterialTrade")
+                        {
+                            var tradeEvent = JsonSerializer.Deserialize<MaterialTradeEvent>(line, options);
+                            if (tradeEvent != null)
+                            {
+                                MaterialTradeEvent?.Invoke(this, new MaterialTradeEventArgs(tradeEvent));
+                            }
+                        }
+                        else if (eventType == "EngineerCraft")
+                        {
+                            var craftEvent = JsonSerializer.Deserialize<EngineerCraftEvent>(line, options);
+                            if (craftEvent != null)
+                            {
+                                EngineerCraftEvent?.Invoke(this, new EngineerCraftEventArgs(craftEvent));
+                            }
+                        }
                         else if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
                         {
                             if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement))
@@ -352,4 +415,32 @@ namespace EliteDataRelay.Services
             ShipIdent = shipIdent;
         }
     }
+
+    #region Material Event Args
+
+    public class MaterialsEventArgs : EventArgs
+    {
+        public MaterialsEvent EventData { get; }
+        public MaterialsEventArgs(MaterialsEvent eventData) => EventData = eventData;
+    }
+
+    public class MaterialCollectedEventArgs : EventArgs
+    {
+        public MaterialCollectedEvent EventData { get; }
+        public MaterialCollectedEventArgs(MaterialCollectedEvent eventData) => EventData = eventData;
+    }
+
+    public class MaterialTradeEventArgs : EventArgs
+    {
+        public MaterialTradeEvent EventData { get; }
+        public MaterialTradeEventArgs(MaterialTradeEvent eventData) => EventData = eventData;
+    }
+
+    public class EngineerCraftEventArgs : EventArgs
+    {
+        public EngineerCraftEvent EventData { get; }
+        public EngineerCraftEventArgs(EngineerCraftEvent eventData) => EventData = eventData;
+    }
+
+    #endregion
 }

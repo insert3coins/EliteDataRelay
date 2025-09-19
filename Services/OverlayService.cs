@@ -11,10 +11,12 @@ namespace EliteDataRelay.Services
     {
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
+        private OverlayForm? _materialsOverlay;
 
         public void Start()
         {
             Stop(); // Ensure any existing overlays are closed
+            var gameProcesses = System.Diagnostics.Process.GetProcessesByName("EliteDangerous64");
 
             if (AppConfiguration.EnableLeftOverlay)
             {
@@ -52,26 +54,47 @@ namespace EliteDataRelay.Services
                 }
                 _rightOverlayForm!.Show();
             }
+
+            if (AppConfiguration.EnableMaterialsOverlay)
+            {
+                _materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials);
+                _materialsOverlay.PositionChanged += OnOverlayPositionChanged;
+
+                if (AppConfiguration.MaterialsOverlayLocation != Point.Empty)
+                {
+                    _materialsOverlay.Location = AppConfiguration.MaterialsOverlayLocation;
+                }
+                else
+                {
+                    var screen = Screen.PrimaryScreen.WorkingArea;
+                    _materialsOverlay.Location = new Point(screen.Width - 280 - 320, (screen.Height / 2) - (500 / 2));
+                }
+                _materialsOverlay.Show();
+            }
         }
 
         public void Stop()
         {
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
+            _materialsOverlay?.Close();
             _leftOverlayForm = null;
             _rightOverlayForm = null;
+            _materialsOverlay = null;
         }
 
         public void Show()
         {
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
+            _materialsOverlay?.Show();
         }
 
         public void Hide()
         {
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
+            _materialsOverlay?.Hide();
         }
 
         private void OnOverlayPositionChanged(object? sender, Point newLocation)
@@ -84,42 +107,52 @@ namespace EliteDataRelay.Services
             {
                 AppConfiguration.RightOverlayLocation = newLocation;
             }
+            else if (sender == _materialsOverlay)
+            {
+                AppConfiguration.MaterialsOverlayLocation = newLocation;
+            }
             AppConfiguration.Save();
         }
 
         #region Data Update Methods
-        // These methods would update the UI controls on the specific overlay forms.
-        // Using BeginInvoke ensures thread safety, as data updates can come from background threads.
+        // These methods update the UI controls on the specific overlay forms.
+        // The OverlayForm itself handles thread safety with InvokeRequired checks.
 
-        public void UpdateCommander(string name) => _leftOverlayForm?.BeginInvoke(() =>
+        public void UpdateCommander(string name)
         {
-            _leftOverlayForm!.UpdateCommander($"CMDR: {name}");
-        });
+            _leftOverlayForm?.UpdateCommander($"CMDR: {name}");
+        }
 
-        public void UpdateShip(string ship) => _leftOverlayForm?.BeginInvoke(() =>
+        public void UpdateShip(string ship)
         {
-            _leftOverlayForm!.UpdateShip($"Ship: {ship}");
-        });
+            _leftOverlayForm?.UpdateShip($"Ship: {ship}");
+        }
 
-        public void UpdateBalance(long balance) => _leftOverlayForm?.BeginInvoke(() =>
+        public void UpdateBalance(long balance)
         {
-            _leftOverlayForm!.UpdateBalance($"Balance: {balance:N0} CR");
-        });
+            _leftOverlayForm?.UpdateBalance($"Balance: {balance:N0} CR");
+        }
 
-        public void UpdateCargo(int count, int? capacity) => _rightOverlayForm?.BeginInvoke(() =>
+        public void UpdateCargo(int count, int? capacity)
         {
             string headerText = capacity.HasValue ? $"Cargo: {count}/{capacity.Value}" : $"Cargo: {count}";
-            _rightOverlayForm!.UpdateCargo(headerText);
-        });
+            _rightOverlayForm?.UpdateCargo(headerText);
+        }
 
-        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm!.UpdateCargoList(snapshot.Inventory); });
+        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.UpdateCargoList(snapshot.Inventory);
 
-        public void UpdateCargoSize(string size) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm!.UpdateCargoSize(size); });
+        public void UpdateCargoSize(string size) => _rightOverlayForm?.UpdateCargoSize(size);
 
-        public void UpdateSessionOverlay(long cargo, long credits) => _rightOverlayForm?.BeginInvoke(() => {
-            _rightOverlayForm!.UpdateSessionCreditsEarned($"Session CR: {credits:N0}");
-            _rightOverlayForm!.UpdateSessionCargoCollected($"Session Cargo: {cargo}");
-        });
+        public void UpdateSessionOverlay(long cargo, long credits)
+        {
+            _rightOverlayForm?.UpdateSessionCreditsEarned($"Session CR: {credits:N0}");
+            _rightOverlayForm?.UpdateSessionCargoCollected($"Session Cargo: {cargo}");
+        }
+
+        public void UpdateMaterials(IMaterialService materialService)
+        {
+            _materialsOverlay?.UpdateMaterials(materialService);
+        }
 
         #endregion
 

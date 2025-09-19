@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Drawing.Text;
@@ -54,7 +55,10 @@ namespace EliteDataRelay.UI
             {
                 _watchingAnimationManager = new WatchingAnimationManager(_controlFactory.WatchingLabel);
             }
-            _layoutManager = new LayoutManager(_form, _controlFactory);
+
+            // The layout manager now adds the TabControl instead of the ListView directly.
+            // Assuming LayoutManager is adapted to add _controlFactory.TabControl to the form's main panel.
+            _layoutManager = new LayoutManager(_form, _controlFactory); 
 
             SetupFormProperties();
             _layoutManager.ApplyLayout();
@@ -232,6 +236,56 @@ namespace EliteDataRelay.UI
             _overlayService?.UpdateCargoList(snapshot);
         }
 
+        public void UpdateMaterialList(IMaterialService materialService)
+        {
+            if (_controlFactory == null) return;
+
+            var treeView = _controlFactory.MaterialTreeView;
+            treeView.BeginUpdate();
+            treeView.Nodes.Clear();
+
+            var rawNode = treeView.Nodes.Add("Raw");
+            var manufacturedNode = treeView.Nodes.Add("Manufactured");
+            var encodedNode = treeView.Nodes.Add("Encoded");
+
+            PopulateMaterialCategory(rawNode, materialService.RawMaterials);
+            PopulateMaterialCategory(manufacturedNode, materialService.ManufacturedMaterials);
+            PopulateMaterialCategory(encodedNode, materialService.EncodedMaterials);
+
+            rawNode.Expand();
+            manufacturedNode.Expand();
+            encodedNode.Expand();
+
+            treeView.EndUpdate();
+        }
+
+        public void UpdateMaterialsOverlay(IMaterialService materialService)
+        {
+            _overlayService?.UpdateMaterials(materialService);
+        }
+
+        private void PopulateMaterialCategory(TreeNode categoryNode, IReadOnlyDictionary<string, MaterialItem> materials)
+        {
+            if (!materials.Any())
+            {
+                categoryNode.Nodes.Add("None").ForeColor = SystemColors.GrayText;
+                return;
+            }
+
+            foreach (var material in materials.Values.OrderBy(m => m.Localised ?? m.Name))
+            {
+                string displayName = !string.IsNullOrEmpty(material.Localised) ? char.ToUpper(material.Localised[0]) + material.Localised.Substring(1) : material.Name;
+                int maxCount = MaterialDataService.GetMaxCount(material.Name);
+                string text = maxCount > 0 ? $"{displayName} ({material.Count} / {maxCount})" : $"{displayName} ({material.Count})";
+
+                var node = categoryNode.Nodes.Add(text);
+                if (maxCount > 0 && material.Count >= maxCount)
+                {
+                    node.ForeColor = Color.Orange; // Visual indicator for max capacity
+                }
+            }
+        }
+
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
             if (_controlFactory == null) return;
@@ -329,7 +383,7 @@ namespace EliteDataRelay.UI
                 {
                     _watchingAnimationManager.Start();
                     // Only start the overlay service if at least one of the overlays is enabled.
-                    if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay)
+                    if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay || AppConfiguration.EnableMaterialsOverlay)
                     {
                         _overlayService?.Start();
                     }
@@ -353,7 +407,7 @@ namespace EliteDataRelay.UI
         public void RefreshOverlay()
         {
             _overlayService?.Stop();
-            if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay)
+            if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay || AppConfiguration.EnableMaterialsOverlay)
             {
                 _overlayService?.Start();
             }

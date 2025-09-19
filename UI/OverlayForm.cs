@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using EliteDataRelay.Models;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -14,7 +15,8 @@ namespace EliteDataRelay.UI
         public enum OverlayPosition
         {
             Left,
-            Right
+            Right,
+            Materials
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -31,6 +33,12 @@ namespace EliteDataRelay.UI
         private Panel _cargoListPanel = null!;
         private Label _cargoSizeLabel = null!;
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
+
+        // New fields for the materials overlay
+        private IReadOnlyDictionary<string, MaterialItem> _rawMaterials = new Dictionary<string, MaterialItem>();
+        private IReadOnlyDictionary<string, MaterialItem> _manufacturedMaterials = new Dictionary<string, MaterialItem>();
+        private IReadOnlyDictionary<string, MaterialItem> _encodedMaterials = new Dictionary<string, MaterialItem>();
+        private Panel _materialsListPanel = null!;
 
         // Fonts are IDisposable, so we should keep references to them to dispose of them later.
         private readonly Font _labelFont;
@@ -88,7 +96,7 @@ namespace EliteDataRelay.UI
                 Controls.Add(_shipLabel);
                 Controls.Add(_balanceLabel);
             }
-            else // Right
+            else if (_position == OverlayPosition.Right)
             {
                 this.Size = new Size(280, 400);
 
@@ -164,6 +172,18 @@ namespace EliteDataRelay.UI
                 if (bottomPanel != null)
                     Controls.Add(bottomPanel); // Docks to bottom
                 Controls.Add(topPanel); // Docks to top
+            }
+            else // Materials
+            {
+                this.Size = new Size(280, 500);
+                _materialsListPanel = new Panel
+                {
+                    Dock = DockStyle.Fill,
+                    BackColor = this.BackColor,
+                    Font = _listFont
+                };
+                _materialsListPanel.Paint += OnMaterialsListPanelPaint;
+                Controls.Add(_materialsListPanel);
             }
 
             // Wire up dragging for the form and all its children, recursively.
@@ -256,6 +276,75 @@ namespace EliteDataRelay.UI
             }
         }
 
+        private void OnMaterialsListPanelPaint(object? sender, PaintEventArgs e)
+        {
+            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            using var textBrush = new SolidBrush(AppConfiguration.OverlayTextColor);
+            using var headerBrush = new SolidBrush(Color.FromArgb(255, 140, 0)); // Orange for headers
+            using var fullBrush = new SolidBrush(Color.Orange);
+
+            float y = 5.0f;
+
+            var rawToDraw = _rawMaterials;
+            var manufacturedToDraw = _manufacturedMaterials;
+            var encodedToDraw = _encodedMaterials;
+
+            if (AppConfiguration.PinMaterialsMode)
+            {
+                var pinned = AppConfiguration.PinnedMaterials.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+                rawToDraw = _rawMaterials.Where(kvp => pinned.Contains(kvp.Key))
+                                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                manufacturedToDraw = _manufacturedMaterials.Where(kvp => pinned.Contains(kvp.Key))
+                                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                encodedToDraw = _encodedMaterials.Where(kvp => pinned.Contains(kvp.Key))
+                                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+            }
+
+
+            y = DrawMaterialCategory(e, "Raw", rawToDraw, y, textBrush, headerBrush, fullBrush);
+            y += 10; // Add extra space between categories
+            y = DrawMaterialCategory(e, "Manufactured", manufacturedToDraw, y, textBrush, headerBrush, fullBrush);
+            y += 10;
+            y = DrawMaterialCategory(e, "Encoded", encodedToDraw, y, textBrush, headerBrush, fullBrush);
+        }
+
+        private float DrawMaterialCategory(PaintEventArgs e, string name, IReadOnlyDictionary<string, MaterialItem> materials, float y, Brush textBrush, Brush headerBrush, Brush fullBrush)
+        {
+            const float xName = 10.0f;
+            const float xCount = 200.0f;
+            float currentY = y;
+
+            // Draw category header
+            e.Graphics.DrawString(name, _labelFont, headerBrush, xName, currentY);
+            currentY += _labelFont.GetHeight(e.Graphics);
+
+            if (!materials.Any())
+            {
+                return currentY;
+            }
+
+            foreach (var material in materials.Values.OrderBy(m => m.Localised ?? m.Name))
+            {
+                string displayName = !string.IsNullOrEmpty(material.Localised) ? char.ToUpper(material.Localised[0]) + material.Localised.Substring(1) : material.Name;
+                int maxCount = MaterialDataService.GetMaxCount(material.Name);
+
+                var brush = textBrush;
+                if (maxCount > 0 && material.Count >= maxCount)
+                {
+                    brush = fullBrush; // Use highlight color for full materials
+                }
+
+                string countText = maxCount > 0 ? $"{material.Count} / {maxCount}" : material.Count.ToString();
+
+                e.Graphics.DrawString(displayName, _listFont, brush, xName, currentY);
+                e.Graphics.DrawString(countText, _listFont, brush, xCount, currentY);
+
+                currentY += _listFont.GetHeight(e.Graphics);
+            }
+
+            return currentY;
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -298,6 +387,21 @@ namespace EliteDataRelay.UI
 
             _cargoItems = inventory.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name).ToList();
             _cargoListPanel?.Invalidate();
+        }
+
+        public void UpdateMaterials(IMaterialService materialService)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateMaterials(materialService)));
+                return;
+            }
+
+            _rawMaterials = materialService.RawMaterials;
+            _manufacturedMaterials = materialService.ManufacturedMaterials;
+            _encodedMaterials = materialService.EncodedMaterials;
+
+            _materialsListPanel?.Invalidate();
         }
 
         private void UpdateLabel(Label label, string text)
