@@ -128,7 +128,7 @@ namespace EliteDataRelay.UI
             };
             _chkEnableSessionTracking = new CheckBox
             {
-                Text = "Enable session tracking (for cargo/hr, etc.)",
+                Text = "Enable session tracking (credits, cargo, etc.)",
                 Location = new Point(15, 20),
                 AutoSize = true
             };

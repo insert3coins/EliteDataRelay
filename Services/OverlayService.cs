@@ -93,32 +93,32 @@ namespace EliteDataRelay.Services
 
         public void UpdateCommander(string name) => _leftOverlayForm?.BeginInvoke(() =>
         {
-            _leftOverlayForm.UpdateCommander($"CMDR: {name}");
+            _leftOverlayForm!.UpdateCommander($"CMDR: {name}");
         });
 
         public void UpdateShip(string ship) => _leftOverlayForm?.BeginInvoke(() =>
         {
-            _leftOverlayForm.UpdateShip($"Ship: {ship}");
+            _leftOverlayForm!.UpdateShip($"Ship: {ship}");
         });
 
         public void UpdateBalance(long balance) => _leftOverlayForm?.BeginInvoke(() =>
         {
-            _leftOverlayForm.UpdateBalance($"Balance: {balance:N0} CR");
+            _leftOverlayForm!.UpdateBalance($"Balance: {balance:N0} CR");
         });
 
         public void UpdateCargo(int count, int? capacity) => _rightOverlayForm?.BeginInvoke(() =>
         {
             string headerText = capacity.HasValue ? $"Cargo: {count}/{capacity.Value}" : $"Cargo: {count}";
-            _rightOverlayForm.UpdateCargo(headerText);
+            _rightOverlayForm!.UpdateCargo(headerText);
         });
 
-        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm.UpdateCargoList(snapshot.Inventory); });
+        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm!.UpdateCargoList(snapshot.Inventory); });
 
-        public void UpdateCargoSize(string size) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm.UpdateCargoSize(size); });
+        public void UpdateCargoSize(string size) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm!.UpdateCargoSize(size); });
 
         public void UpdateSessionOverlay(long cargo, long credits) => _rightOverlayForm?.BeginInvoke(() => {
-            _rightOverlayForm.UpdateSessionCreditsEarned($"CR/hr: {credits:N0}");
-            _rightOverlayForm.UpdateSessionCargoCollected($"Cargo/hr: {cargo}");
+            _rightOverlayForm!.UpdateSessionCreditsEarned($"Session CR: {credits:N0}");
+            _rightOverlayForm!.UpdateSessionCargoCollected($"Session Cargo: {cargo}");
         });
 
         #endregion
