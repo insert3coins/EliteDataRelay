@@ -14,7 +14,7 @@ A lightweight Windows utility for players of Elite Dangerous. It monitors your i
 This tool provides a simple way to keep an eye on your ship's cargo and status without having to tab into the game's right-hand panel. It reads the `Cargo.json`, `Status.json`, and player journal files to display your cargo, credit balance, CMDR name, and current ship. The output is displayed in a clean interface that includes a real-time cargo list, a visual meter for your cargo hold, and an indicator to show when monitoring is active. The data is also written to a `cargo.txt` file, which is perfect for adding a cargo display to your stream via OBS or other broadcasting software.
 
 ## 📸 Screenshot
-![Screenshot](https://github.com/insert3coins/EliteCargoMonitor/blob/master/Images/Screenshot.png?raw=true)
+![Screenshot](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Screenshot.png)
 
 ## ✨ Features
 
