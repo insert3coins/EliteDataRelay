@@ -31,31 +31,26 @@ namespace EliteDataRelay.Services
             {
                 try
                 {
-                    if (!File.Exists(AppConfiguration.CargoPath)) return;
+                    if (!File.Exists(AppConfiguration.CargoPath))
+                    {
+                        return;
+                    }
 
                     // Open file with shared read-write to handle file locking
                     using var stream = new FileStream(AppConfiguration.CargoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    using var reader = new StreamReader(stream, Encoding.UTF8);
-                    string json = reader.ReadToEnd();
 
-                    // Guard against empty or partially written files
-                    var trimmed = json.Trim();
-                    if (string.IsNullOrWhiteSpace(trimmed))
+                    // An empty file is a common state when the game is about to write to it.
+                    // Treat it like a file lock and retry after a short delay. This is more
+                    // efficient than letting the JSON parser throw an exception.
+                    if (stream.Length == 0)
                     {
                         Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                         continue;
                     }
 
-                    // Quick sanity check – it must start with "{" or "["
-                    if (!trimmed.StartsWith("{") && !trimmed.StartsWith("["))
-                    {
-                        Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
-                        continue;
-                    }
-
-                    // Deserialize JSON to CargoSnapshot
+                    // Deserialize JSON directly from the stream for better performance.
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(json, options);
+                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(stream, options);
                     if (snapshot == null) return;
 
                     // Fingerprint guard – skip duplicate snapshots

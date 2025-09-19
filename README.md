@@ -19,10 +19,10 @@ A lightweight Windows utility that monitors your **Elite Dangerous** status and 
     * **Desktop UI**: A simple, clean window for at-a-glance information.
     * **In-Game Overlay**: A modern, two-panel overlay to see your status and cargo without leaving the game.
     * **Text File Output**: Export live data to a text file for use in streaming software like OBS.
+* **Global Hotkeys**: Control the app without leaving the game. Set keys to start/stop monitoring and show/hide the overlay.
 * **Highly Configurable**:
     * Independently toggle overlay panels (status and cargo).
     * Customize the text file format and output location.
-    * Set global hotkeys to start/stop monitoring and show/hide the overlay.
 * **Smart & Unobtrusive**:
     * Automatically detects the game's data folder.
     * Stops monitoring when the game closes.
