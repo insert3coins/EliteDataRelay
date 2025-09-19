@@ -14,6 +14,7 @@ namespace EliteDataRelay.UI
         public Button StopBtn { get; }
         public Button ExitBtn { get; }
         public Button AboutBtn { get; }
+        public Button SessionBtn { get; }
         public Button SettingsBtn { get; }
         public Button WatchingLabel { get; }
         public Button CargoHeaderLabel { get; }
@@ -48,10 +49,11 @@ namespace EliteDataRelay.UI
             StopBtn = new Button { Text = "Stop", Enabled = false, Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             ExitBtn = new Button { Text = "Exit", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             SettingsBtn = new Button { Text = "Settings", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
+            SessionBtn = new Button { Text = "Session", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             AboutBtn = new Button { Text = "About", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
 
             // Apply a modern, flat style to the buttons to make them "pop"
-            var buttonsToStyle = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, AboutBtn };
+            var buttonsToStyle = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn };
             foreach (var btn in buttonsToStyle)
             {
                 btn.FlatStyle = FlatStyle.Flat;
@@ -70,6 +72,7 @@ namespace EliteDataRelay.UI
             ToolTip.SetToolTip(StopBtn, "Stop monitoring for cargo changes");
             ToolTip.SetToolTip(ExitBtn, "Exit the application");
             ToolTip.SetToolTip(SettingsBtn, "Configure application settings");
+            ToolTip.SetToolTip(SessionBtn, "Show session summary statistics");
             ToolTip.SetToolTip(AboutBtn, "Show information about the application");
 
             // Create a "label" for the cargo meter using a styled, disabled button for alignment.
@@ -185,6 +188,7 @@ namespace EliteDataRelay.UI
             StopBtn.Paint -= Button_Paint;
             ExitBtn.Paint -= Button_Paint;
             AboutBtn.Paint -= Button_Paint;
+            SessionBtn.Paint -= Button_Paint;
             SettingsBtn.Paint -= Button_Paint;
 
             ListView.Dispose();
@@ -192,6 +196,7 @@ namespace EliteDataRelay.UI
             StopBtn.Dispose();
             ExitBtn.Dispose();
             AboutBtn.Dispose();
+            SessionBtn.Dispose();
             SettingsBtn.Dispose();
             WatchingLabel.Dispose();
             CargoHeaderLabel.Dispose();

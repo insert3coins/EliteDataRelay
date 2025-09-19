@@ -35,6 +35,11 @@ namespace EliteDataRelay.UI
         event EventHandler? SettingsClicked;
 
         /// <summary>
+        /// Event raised when the session button is clicked
+        /// </summary>
+        event EventHandler? SessionClicked;
+
+        /// <summary>
         /// Initialize the UI components and layout
         /// </summary>
         /// <param name="form">The main form to initialize</param>

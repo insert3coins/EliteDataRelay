@@ -38,6 +38,7 @@ namespace EliteDataRelay
         private readonly IFileOutputService _fileOutputService;
         private readonly IStatusWatcherService _statusWatcherService;
         private readonly ICargoFormUI _cargoFormUI;
+        private readonly SessionTrackingService _sessionTrackingService;
 
         public CargoForm(
             IFileMonitoringService fileMonitoringService,
@@ -46,7 +47,8 @@ namespace EliteDataRelay
             ISoundService soundService,
             IFileOutputService fileOutputService,
             ICargoFormUI cargoFormUI,
-            IStatusWatcherService statusWatcherService)
+            IStatusWatcherService statusWatcherService,
+            SessionTrackingService sessionTrackingService)
         {
             _fileMonitoringService = fileMonitoringService ?? throw new ArgumentNullException(nameof(fileMonitoringService));
             _cargoProcessorService = cargoProcessorService ?? throw new ArgumentNullException(nameof(cargoProcessorService));
@@ -55,6 +57,7 @@ namespace EliteDataRelay
             _fileOutputService = fileOutputService ?? throw new ArgumentNullException(nameof(fileOutputService));
             _statusWatcherService = statusWatcherService ?? throw new ArgumentNullException(nameof(statusWatcherService));
             _cargoFormUI = cargoFormUI ?? throw new ArgumentNullException(nameof(cargoFormUI));
+            _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
 
             InitializeComponent();
             SetupEventHandlers();
@@ -70,6 +73,7 @@ namespace EliteDataRelay
             _fileOutputService = new FileOutputService();
             _statusWatcherService = new StatusWatcherService();
             _cargoFormUI = new CargoFormUI();
+            _sessionTrackingService = new SessionTrackingService();
 
             InitializeComponent();
             SetupEventHandlers();
@@ -77,6 +81,7 @@ namespace EliteDataRelay
 
         private int? _cargoCapacity;
         private bool _isExiting;
+        private SessionSummaryForm? _sessionSummaryForm;
 
         // Cache for last known values to re-populate the overlay when it's restarted.
         private string? _lastCommanderName;
@@ -106,6 +111,7 @@ namespace EliteDataRelay
             _cargoFormUI.ExitClicked += OnExitClicked;
             _cargoFormUI.AboutClicked += OnAboutClicked;
             _cargoFormUI.SettingsClicked += OnSettingsClicked;
+            _cargoFormUI.SessionClicked += OnSessionClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer
@@ -287,17 +293,63 @@ namespace EliteDataRelay
             }
         }
 
-        /// Periodically checks if the game process is still running and stops monitoring if it's not.
+        private void OnSessionClicked(object? sender, EventArgs e)
+        {
+            // Lazily create the form if it doesn't exist or has been disposed.
+            if (_sessionSummaryForm == null || _sessionSummaryForm.IsDisposed)
+            {
+                _sessionSummaryForm = new SessionSummaryForm(_sessionTrackingService);
+            }
+            _sessionSummaryForm.Show();
+            _sessionSummaryForm.Activate();
+        }
+
+        // Periodically checks if the game process is still running and stops monitoring if it's not.
         private void OnGameProcessCheck(object? sender, EventArgs e)
         {
             if (!_fileMonitoringService.IsMonitoring) return;
 
-            var gameProcess = Process.GetProcessesByName("EliteDangerous64").FirstOrDefault();
-            if (gameProcess == null || gameProcess.MainWindowHandle == IntPtr.Zero)
+            var gameProcesses = Process.GetProcessesByName("EliteDangerous64");
+            var gameProcess = gameProcesses.FirstOrDefault();
+
+            try
             {
-                Debug.WriteLine("[CargoForm] Elite Dangerous process no longer found. Stopping monitoring automatically.");
-                // This will play the sound and update the UI state.
-                OnStopClicked(null, EventArgs.Empty);
+                bool shouldStop = false;
+                if (gameProcess == null)
+                {
+                    shouldStop = true;
+                }
+                else
+                {
+                    // This block safely checks properties of a process that might exit at any moment.
+                    try
+                    {
+                        // The HasExited property is more reliable, and checking MainWindowHandle ensures we stop if the window closes.
+                        if (gameProcess.HasExited || gameProcess.MainWindowHandle == IntPtr.Zero)
+                        {
+                            shouldStop = true;
+                        }
+                    }
+                    catch
+                    {
+                        // If accessing properties throws, the process has likely exited.
+                        shouldStop = true;
+                    }
+                }
+
+                if (shouldStop)
+                {
+                    Debug.WriteLine("[CargoForm] Elite Dangerous process no longer found. Stopping monitoring automatically.");
+                    OnStopClicked(null, EventArgs.Empty);
+                }
+            }
+            finally
+            {
+                // Dispose all process objects retrieved to release system resources.
+                foreach (var p in gameProcesses)
+                {
+                    p.Dispose();
+                }
             }
         }
 
@@ -314,6 +366,7 @@ namespace EliteDataRelay
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
             _lastCargoSnapshot = e.Snapshot;
+            _sessionTrackingService.OnCargoChanged(e.Snapshot);
             // --- File Output ---
             // If enabled in settings, write the snapshot to the output text file.
             if (AppConfiguration.EnableFileOutput)
@@ -407,6 +460,9 @@ namespace EliteDataRelay
 
             // Start the game process checker
             _gameProcessCheckTimer?.Start();
+
+            // Start the session tracker
+            _sessionTrackingService.StartSession();
         }
 
         private void StopMonitoringInternal()
@@ -426,6 +482,9 @@ namespace EliteDataRelay
 
             // Stop the game process checker
             _gameProcessCheckTimer?.Stop();
+
+            // Stop the session tracker
+            _sessionTrackingService.StopSession();
         }
 
         #endregion
@@ -501,6 +560,8 @@ namespace EliteDataRelay
                 (_statusWatcherService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
+                _sessionSummaryForm?.Dispose();
+                _sessionTrackingService.Dispose();
             }
             base.Dispose(disposing);
         }

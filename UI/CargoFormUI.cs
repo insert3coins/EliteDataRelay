@@ -36,6 +36,8 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SettingsClicked;
 
+        public event EventHandler? SessionClicked;
+
         public void InitializeUI(Form form)
         {
             _form = form ?? throw new ArgumentNullException(nameof(form));
@@ -122,6 +124,7 @@ namespace EliteDataRelay.UI
             _controlFactory.StopBtn.Click += (s, e) => StopClicked?.Invoke(s, e);
             _controlFactory.ExitBtn.Click += (s, e) => ExitClicked?.Invoke(s, e);
             _controlFactory.SettingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
+            _controlFactory.SessionBtn.Click += (s, e) => SessionClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
 
             // Tray icon event handlers
