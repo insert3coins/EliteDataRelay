@@ -31,8 +31,8 @@ namespace EliteDataRelay.Configuration
         public static int FileReadMaxAttempts { get; } = 5;
         public static int FileReadRetryDelayMs { get; } = 100;
         public static string AboutInfo { get; } = $"Elite Data Relay v{GetAppVersion()}";
-        public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor";
-        public static string LicenseUrl { get; } = "https://github.com/insert3coins/EliteCargoMonitor/blob/main/LICENSE.txt";
+        public static string AboutUrl { get; } = "https://github.com/insert3coins/EliteDataRelay";
+        public static string LicenseUrl { get; } = "https://github.com/insert3coins/EliteDataRelay/blob/main/LICENSE.txt";
 
         // --- Window and Sizing Constants ---
         public static int FormWidth { get; } = 600;
