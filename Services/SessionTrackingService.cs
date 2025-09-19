@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using EliteDataRelay.Configuration;
 using System.Timers;
 using EliteDataRelay.Models;
 
@@ -10,21 +11,13 @@ namespace EliteDataRelay.Services
         private readonly System.Timers.Timer _sessionTimer;
         private DateTime? _sessionStartTime;
         private CargoSnapshot? _previousCargoSnapshot;
+        private long? _lastBalance;
 
         public long TotalCargoCollected { get; private set; }
+
+        public long CreditsEarned { get; private set; }
+
         public TimeSpan SessionDuration => _sessionStartTime.HasValue ? DateTime.UtcNow - _sessionStartTime.Value : TimeSpan.Zero;
-        public double CargoPerHour
-        {
-            get
-            {
-                var durationHours = SessionDuration.TotalHours;
-                if (durationHours > 0)
-                {
-                    return TotalCargoCollected / durationHours;
-                }
-                return 0;
-            }
-        }
 
         public event EventHandler? SessionUpdated;
 
@@ -36,7 +29,13 @@ namespace EliteDataRelay.Services
 
         public void StartSession()
         {
-            Reset();
+            // Reset trackers for the current run
+            _previousCargoSnapshot = null;
+            _lastBalance = null;
+            TotalCargoCollected = 0;
+            CreditsEarned = 0;
+
+            // Start the clock for this run
             _sessionStartTime = DateTime.UtcNow;
             _sessionTimer.Start();
             SessionUpdated?.Invoke(this, EventArgs.Empty);
@@ -45,6 +44,10 @@ namespace EliteDataRelay.Services
         public void StopSession()
         {
             _sessionTimer.Stop();
+
+            // Clear the start time to stop the duration from increasing
+            _sessionStartTime = null;
+
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
@@ -82,15 +85,22 @@ namespace EliteDataRelay.Services
             _previousCargoSnapshot = newSnapshot;
         }
 
-        private void OnTimerElapsed(object? sender, ElapsedEventArgs e) => SessionUpdated?.Invoke(this, EventArgs.Empty);
-
-        private void Reset()
+        public void OnBalanceChanged(long newBalance)
         {
-            _sessionStartTime = null;
-            _previousCargoSnapshot = null;
-            TotalCargoCollected = 0;
-            _sessionTimer.Stop();
+            if (_sessionStartTime == null) return; // Session not started for this run
+
+            if (_lastBalance.HasValue)
+            {
+                long diff = newBalance - _lastBalance.Value;
+                CreditsEarned += diff;
+                SessionUpdated?.Invoke(this, EventArgs.Empty);
+            }
+
+            // Always update last balance for the current run
+            _lastBalance = newBalance;
         }
+
+        private void OnTimerElapsed(object? sender, ElapsedEventArgs e) => SessionUpdated?.Invoke(this, EventArgs.Empty);
 
         public void Dispose() => _sessionTimer?.Dispose();
     }

@@ -171,7 +171,6 @@ namespace EliteDataRelay.UI
                 Location = new Point(15, 20),
                 AutoSize = true
             };
-            _chkEnableLeftOverlay.CheckedChanged += OnEnableLeftOverlayCheckedChanged;
 
             // Enable Right Overlay CheckBox
             _chkEnableRightOverlay = new CheckBox
@@ -180,10 +179,11 @@ namespace EliteDataRelay.UI
                 Location = new Point(15, 45),
                 AutoSize = true
             };
+            _chkEnableRightOverlay.CheckedChanged += OnEnableRightOverlayCheckedChanged;
 
             _chkShowSessionOnOverlay = new CheckBox
             {
-                Text = "Show session stats on left overlay",
+                Text = "Show session stats on right overlay (Cargo)",
                 Location = new Point(15, 70),
                 AutoSize = true
             };
@@ -290,10 +290,10 @@ namespace EliteDataRelay.UI
             _lblPlaceholders.Enabled = enabled;
         }
 
-        private void OnEnableLeftOverlayCheckedChanged(object? sender, EventArgs e)
+        private void OnEnableRightOverlayCheckedChanged(object? sender, EventArgs e)
         {
-            _chkShowSessionOnOverlay.Enabled = _chkEnableLeftOverlay.Checked;
-            if (!_chkEnableLeftOverlay.Checked)
+            _chkShowSessionOnOverlay.Enabled = _chkEnableRightOverlay.Checked;
+            if (!_chkEnableRightOverlay.Checked)
             {
                 _chkShowSessionOnOverlay.Checked = false;
             }
@@ -301,11 +301,11 @@ namespace EliteDataRelay.UI
 
         private void OnShowSessionCheckedChanged(object? sender, EventArgs e)
         {
-            // This checkbox should only be enabled if the left overlay is also enabled.
-            // If the user checks this, we can assume they want the left overlay on.
-            if (_chkShowSessionOnOverlay.Checked && !_chkEnableLeftOverlay.Checked)
+            // This checkbox should only be enabled if the right overlay is also enabled.
+            // If the user checks this, we can assume they want the right overlay on.
+            if (_chkShowSessionOnOverlay.Checked && !_chkEnableRightOverlay.Checked)
             {
-                _chkEnableLeftOverlay.Checked = true;
+                _chkEnableRightOverlay.Checked = true;
             }
         }
 
@@ -339,7 +339,7 @@ namespace EliteDataRelay.UI
             UpdateHotkeyText();
             _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
-            OnEnableLeftOverlayCheckedChanged(null, EventArgs.Empty);
+            OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
         }
 

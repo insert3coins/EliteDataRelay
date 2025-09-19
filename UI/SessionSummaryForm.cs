@@ -19,7 +19,7 @@ namespace EliteDataRelay.UI
         private TableLayoutPanel _tlpStats = null!;
         private Label _lblDurationValue = null!;
         private Label _lblCargoCollectedValue = null!;
-        private Label _lblCargoPerHourValue = null!;
+        private Label _lblCreditsEarnedValue = null!;
         private readonly SessionTrackingService _sessionTracker;
 
         public SessionSummaryForm(SessionTrackingService sessionTracker)
@@ -38,7 +38,7 @@ namespace EliteDataRelay.UI
             this.FormBorderStyle = FormBorderStyle.None;
             this.StartPosition = FormStartPosition.CenterParent;
             this.ShowInTaskbar = false;
-            this.ClientSize = new Size(350, 180);
+            this.ClientSize = new Size(350, 155);
             this.DoubleBuffered = true;
 
             // Fonts
@@ -94,16 +94,16 @@ namespace EliteDataRelay.UI
             var lblCargoCollectedHeader = new Label { Text = "Cargo Collected:", Font = headerFont, ForeColor = Color.Silver, Anchor = AnchorStyles.Left, AutoSize = true };
             _lblCargoCollectedValue = new Label { Text = "0 units", Font = valueFont, ForeColor = Color.Orange, Anchor = AnchorStyles.Right, AutoSize = true };
 
-            var lblCargoPerHourHeader = new Label { Text = "Cargo Per Hour:", Font = headerFont, ForeColor = Color.Silver, Anchor = AnchorStyles.Left, AutoSize = true };
-            _lblCargoPerHourValue = new Label { Text = "0.0 units/hr", Font = valueFont, ForeColor = Color.Orange, Anchor = AnchorStyles.Right, AutoSize = true };
+            var lblCreditsEarnedHeader = new Label { Text = "Credits Earned:", Font = headerFont, ForeColor = Color.Silver, Anchor = AnchorStyles.Left, AutoSize = true };
+            _lblCreditsEarnedValue = new Label { Text = "0 CR", Font = valueFont, ForeColor = Color.Orange, Anchor = AnchorStyles.Right, AutoSize = true };
 
             // Add labels to TableLayoutPanel
             _tlpStats.Controls.Add(lblDurationHeader, 0, 0);
             _tlpStats.Controls.Add(_lblDurationValue, 1, 0);
             _tlpStats.Controls.Add(lblCargoCollectedHeader, 0, 1);
             _tlpStats.Controls.Add(_lblCargoCollectedValue, 1, 1);
-            _tlpStats.Controls.Add(lblCargoPerHourHeader, 0, 2);
-            _tlpStats.Controls.Add(_lblCargoPerHourValue, 1, 2);
+            _tlpStats.Controls.Add(lblCreditsEarnedHeader, 0, 2);
+            _tlpStats.Controls.Add(_lblCreditsEarnedValue, 1, 2);
 
             // Add controls to form
             this.Controls.Add(_tlpStats);
@@ -165,7 +165,7 @@ namespace EliteDataRelay.UI
         {
             _lblDurationValue.Text = $"{_sessionTracker.SessionDuration:hh\\:mm\\:ss}";
             _lblCargoCollectedValue.Text = $"{_sessionTracker.TotalCargoCollected} units";
-            _lblCargoPerHourValue.Text = $"{_sessionTracker.CargoPerHour:F1} units/hr";
+            _lblCreditsEarnedValue.Text = $"{_sessionTracker.CreditsEarned:N0} CR";
         }
 
         private void OnFormClosing(object? sender, FormClosingEventArgs e)

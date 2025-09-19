@@ -121,13 +121,14 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.UpdateCargoList(snapshot.Inventory);
         }
 
-        public void UpdateSessionOverlay(double cargoPerHour)
+        public void UpdateSessionOverlay(long cargoCollected, long creditsEarned)
         {
-            // The left overlay is responsible for displaying session stats.
+            // Session stats are now on the right overlay.
             // We format the string here before passing it to the form.
-            if (_leftOverlayForm != null)
+            if (_rightOverlayForm != null)
             {
-                _leftOverlayForm.UpdateSessionCargoPerHour($"Cargo/hr: {cargoPerHour:F1}");
+                _rightOverlayForm.UpdateSessionCargoCollected($"Cargo Run: {cargoCollected}");
+                _rightOverlayForm.UpdateSessionCreditsEarned($"Credits Run: {creditsEarned:N0}");
             }
         }
 

@@ -398,13 +398,11 @@ namespace EliteDataRelay.UI
             _iconStream?.Dispose();
         }
 
-        public void UpdateSessionOverlay(double cargoPerHour)
+        public void UpdateSessionOverlay(long cargoCollected, long creditsEarned)
         {
             // This assumes the OverlayService has a corresponding method
             // that will format the data and pass it to the overlay form.
-            // e.g., _overlayService.UpdateSessionOverlay(cargoPerHour) ->
-            //        _leftOverlay.UpdateSessionCargoPerHour($"Cargo/hr: {cargoPerHour:F1}");
-            _overlayService?.UpdateSessionOverlay(cargoPerHour);
+            _overlayService?.UpdateSessionOverlay(cargoCollected, creditsEarned);
         }
     }
 }

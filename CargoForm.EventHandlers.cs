@@ -57,6 +57,10 @@ namespace EliteDataRelay
         {
             _lastBalance = e.Balance;
             _cargoFormUI.UpdateBalance(e.Balance);
+            if (AppConfiguration.EnableSessionTracking)
+            {
+                _sessionTrackingService.OnBalanceChanged(e.Balance);
+            }
         }
 
         private void OnCommanderNameChanged(object? sender, CommanderNameChangedEventArgs e)
@@ -76,7 +80,7 @@ namespace EliteDataRelay
         {
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
             {
-                _cargoFormUI.UpdateSessionOverlay(_sessionTrackingService.CargoPerHour);
+                _cargoFormUI.UpdateSessionOverlay(_sessionTrackingService.TotalCargoCollected, _sessionTrackingService.CreditsEarned);
             }
         }
 

@@ -128,6 +128,6 @@ namespace EliteDataRelay.UI
     public partial interface ICargoFormUI
     {
         /// <summary>Updates the session data on the overlay.</summary>
-        void UpdateSessionOverlay(double cargoPerHour);
+        void UpdateSessionOverlay(long cargoCollected, long creditsEarned);
     }
 }

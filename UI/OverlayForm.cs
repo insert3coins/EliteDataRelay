@@ -32,7 +32,8 @@ namespace EliteDataRelay.UI
         private Label _shipLabel = null!;
         private Label _balanceLabel = null!;
         private Label _cargoLabel = null!;
-        private Label _sessionCargoPerHourLabel = null!;
+        private Label _sessionCargoCollectedLabel = null!;
+        private Label _sessionCreditsEarnedLabel = null!;
         private ListView _cargoListView = null!;
         private Label _cargoSizeLabel = null!;
 
@@ -95,13 +96,6 @@ namespace EliteDataRelay.UI
                 Controls.Add(_cmdrLabel);
                 Controls.Add(_shipLabel);
                 Controls.Add(_balanceLabel);
-
-                if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
-                {
-                    this.Size = new Size(280, 115); // Increase height
-                    _sessionCargoPerHourLabel = CreateOverlayLabel(new Point(10, 85), _labelFont);
-                    Controls.Add(_sessionCargoPerHourLabel);
-                }
             }
             else // Right
             {
@@ -109,9 +103,9 @@ namespace EliteDataRelay.UI
 
                 var topPanel = new FlowLayoutPanel
                 {
+                    Dock = DockStyle.Top,
+                    Height = 30,
                     FlowDirection = FlowDirection.LeftToRight,
-                    Location = new Point(0, 10),
-                    Size = new Size(this.Width, 30),
                     WrapContents = false,
                     BackColor = Color.Transparent
                 };
@@ -132,9 +126,7 @@ namespace EliteDataRelay.UI
                 // Create ListView for cargo items
                 _cargoListView = new ListView
                 {
-                    Location = new Point(0, topPanel.Bottom),
-                    // The height is set to fill the remaining space to prevent a 1px border artifact.
-                    Size = new Size(this.Width, this.Height - topPanel.Bottom),
+                    Dock = DockStyle.Fill,
                     View = View.Details,
                     // ListView does not support a truly transparent background.
                     // To blend in, we set its background to match the form's background.
@@ -150,10 +142,45 @@ namespace EliteDataRelay.UI
                 _cargoListView.Columns.Add("Commodity", -2, HorizontalAlignment.Left);
                 _cargoListView.Columns.Add("Count", 60, HorizontalAlignment.Left);
 
+                Panel? bottomPanel = null;
+                if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+                {
+                    bottomPanel = new Panel
+                    {
+                        Dock = DockStyle.Bottom,
+                        Height = 60, // Increased height to accommodate two stacked labels
+                        BackColor = Color.Transparent
+                    };
+
+                    var sessionFlowPanel = new FlowLayoutPanel {
+                        Dock = DockStyle.Fill,
+                        FlowDirection = FlowDirection.TopDown, // Stack controls vertically
+                        WrapContents = false,
+                        BackColor = Color.Transparent
+                    };
+
+                    _sessionCargoCollectedLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                    _sessionCargoCollectedLabel.Margin = new Padding(10, 2, 0, 0); // Smaller top margin for the second item
+                    _sessionCargoCollectedLabel.AutoSize = true;
+
+                    _sessionCreditsEarnedLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                    _sessionCreditsEarnedLabel.Margin = new Padding(10, 5, 0, 0); // Top margin for the first item
+                    _sessionCreditsEarnedLabel.AutoSize = true;
+
+                    // Add CR/hr first so it appears on top
+                    sessionFlowPanel.Controls.Add(_sessionCreditsEarnedLabel);
+                    sessionFlowPanel.Controls.Add(_sessionCargoCollectedLabel);
+                    bottomPanel.Controls.Add(sessionFlowPanel);
+                }
+
                 topPanel.Controls.Add(_cargoLabel);
                 topPanel.Controls.Add(_cargoSizeLabel);
-                Controls.Add(topPanel);
-                Controls.Add(_cargoListView);
+
+                // Add controls in reverse order for correct docking
+                Controls.Add(_cargoListView); // Fills remaining space
+                if (bottomPanel != null)
+                    Controls.Add(bottomPanel); // Docks to bottom
+                Controls.Add(topPanel); // Docks to top
             }
 
             // Now that the form is fully initialized and invisible, set opacity to 1 to show it.
@@ -176,12 +203,20 @@ namespace EliteDataRelay.UI
         public void UpdateBalance(string text) => UpdateLabel(_balanceLabel, text);
         public void UpdateCargo(string text) => UpdateLabel(_cargoLabel, text);
         public void UpdateCargoSize(string text) => UpdateLabel(_cargoSizeLabel, text);
-        public void UpdateSessionCargoPerHour(string text)
+        public void UpdateSessionCargoCollected(string text)
         {
             // Only update if the label was created
-            if (_sessionCargoPerHourLabel != null)
+            if (_sessionCargoCollectedLabel != null)
             {
-                UpdateLabel(_sessionCargoPerHourLabel, text);
+                UpdateLabel(_sessionCargoCollectedLabel, text);
+            }
+        }
+
+        public void UpdateSessionCreditsEarned(string text)
+        {
+            if (_sessionCreditsEarnedLabel != null)
+            {
+                UpdateLabel(_sessionCreditsEarnedLabel, text);
             }
         }
 
