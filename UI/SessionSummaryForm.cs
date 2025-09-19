@@ -1,15 +1,25 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
-    public class SessionSummaryForm : Form
+    public partial class SessionSummaryForm : Form
     {
-        private Label _lblDuration = null!;
-        private Label _lblCargoCollected = null!;
-        private Label _lblCargoPerHour = null!;
+        // Fields for making the borderless form draggable
+        private bool _isDragging;
+        private Point _dragStartPoint = Point.Empty;
+
+        // UI Controls
+        private Panel _pnlTitleBar = null!;
+        private Label _lblTitle = null!;
+        private Button _btnClose = null!;
+        private TableLayoutPanel _tlpStats = null!;
+        private Label _lblDurationValue = null!;
+        private Label _lblCargoCollectedValue = null!;
+        private Label _lblCargoPerHourValue = null!;
         private readonly SessionTrackingService _sessionTracker;
 
         public SessionSummaryForm(SessionTrackingService sessionTracker)
@@ -22,23 +32,119 @@ namespace EliteDataRelay.UI
 
         private void InitializeComponent()
         {
-            this.Text = "Session Summary";
-            this.ClientSize = new Size(300, 120);
-            this.FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            // Form Properties
+            this.BackColor = Color.FromArgb(30, 30, 30);
+            this.ForeColor = Color.Gainsboro;
+            this.FormBorderStyle = FormBorderStyle.None;
             this.StartPosition = FormStartPosition.CenterParent;
             this.ShowInTaskbar = false;
+            this.ClientSize = new Size(350, 180);
+            this.DoubleBuffered = true;
 
-            var font = new Font("Verdana", 10F);
+            // Fonts
+            var titleFont = new Font("Verdana", 10F, FontStyle.Bold);
+            var headerFont = new Font("Verdana", 10F, FontStyle.Regular);
+            var valueFont = new Font("Consolas", 11F, FontStyle.Bold);
 
-            _lblDuration = new Label { Location = new Point(15, 15), AutoSize = true, Font = font };
-            _lblCargoCollected = new Label { Location = new Point(15, 45), AutoSize = true, Font = font };
-            _lblCargoPerHour = new Label { Location = new Point(15, 75), AutoSize = true, Font = font };
+            // Custom Title Bar
+            _pnlTitleBar = new Panel { Dock = DockStyle.Top, Height = 30, BackColor = Color.FromArgb(45, 45, 48) };
+            _lblTitle = new Label { Text = "Session Summary", Font = titleFont, Location = new Point(10, 6), AutoSize = true };
+            _btnClose = new Button
+            {
+                Text = "X",
+                Font = new Font("Consolas", 9F, FontStyle.Bold),
+                ForeColor = Color.Gainsboro,
+                BackColor = _pnlTitleBar.BackColor,
+                Size = new Size(30, 30),
+                Dock = DockStyle.Right,
+                FlatStyle = FlatStyle.Flat,
+                FlatAppearance = { BorderSize = 0, MouseDownBackColor = Color.FromArgb(100, 100, 100), MouseOverBackColor = Color.FromArgb(63, 63, 70) }
+            };
+            _btnClose.Click += (s, e) => this.Close();
+            _pnlTitleBar.Controls.Add(_lblTitle);
+            _pnlTitleBar.Controls.Add(_btnClose);
 
-            this.Controls.Add(_lblDuration);
-            this.Controls.Add(_lblCargoCollected);
-            this.Controls.Add(_lblCargoPerHour);
+            // Add dragging events to title bar and label
+            _pnlTitleBar.MouseDown += TitleBar_MouseDown;
+            _pnlTitleBar.MouseUp += TitleBar_MouseUp;
+            _pnlTitleBar.MouseMove += TitleBar_MouseMove;
+            _lblTitle.MouseDown += TitleBar_MouseDown;
+            _lblTitle.MouseUp += TitleBar_MouseUp;
+            _lblTitle.MouseMove += TitleBar_MouseMove;
+
+            // Stats Layout Panel
+            _tlpStats = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(15),
+                ColumnCount = 2,
+                RowCount = 3
+            };
+            _tlpStats.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            _tlpStats.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            for (int i = 0; i < 3; i++)
+            {
+                _tlpStats.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            }
+
+            // Stat Labels
+            var lblDurationHeader = new Label { Text = "Duration:", Font = headerFont, ForeColor = Color.Silver, Anchor = AnchorStyles.Left, AutoSize = true };
+            _lblDurationValue = new Label { Text = "00:00:00", Font = valueFont, ForeColor = Color.Orange, Anchor = AnchorStyles.Right, AutoSize = true };
+
+            var lblCargoCollectedHeader = new Label { Text = "Cargo Collected:", Font = headerFont, ForeColor = Color.Silver, Anchor = AnchorStyles.Left, AutoSize = true };
+            _lblCargoCollectedValue = new Label { Text = "0 units", Font = valueFont, ForeColor = Color.Orange, Anchor = AnchorStyles.Right, AutoSize = true };
+
+            var lblCargoPerHourHeader = new Label { Text = "Cargo Per Hour:", Font = headerFont, ForeColor = Color.Silver, Anchor = AnchorStyles.Left, AutoSize = true };
+            _lblCargoPerHourValue = new Label { Text = "0.0 units/hr", Font = valueFont, ForeColor = Color.Orange, Anchor = AnchorStyles.Right, AutoSize = true };
+
+            // Add labels to TableLayoutPanel
+            _tlpStats.Controls.Add(lblDurationHeader, 0, 0);
+            _tlpStats.Controls.Add(_lblDurationValue, 1, 0);
+            _tlpStats.Controls.Add(lblCargoCollectedHeader, 0, 1);
+            _tlpStats.Controls.Add(_lblCargoCollectedValue, 1, 1);
+            _tlpStats.Controls.Add(lblCargoPerHourHeader, 0, 2);
+            _tlpStats.Controls.Add(_lblCargoPerHourValue, 1, 2);
+
+            // Add controls to form
+            this.Controls.Add(_tlpStats);
+            this.Controls.Add(_pnlTitleBar);
 
             UpdateLabels();
+        }
+
+        #region Draggable Form
+        private void TitleBar_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                _isDragging = true;
+                _dragStartPoint = new Point(e.X, e.Y);
+            }
+        }
+
+        private void TitleBar_MouseUp(object? sender, MouseEventArgs e)
+        {
+            _isDragging = false;
+        }
+
+        private void TitleBar_MouseMove(object? sender, MouseEventArgs e)
+        {
+            if (_isDragging)
+            {
+                Point p = PointToScreen(e.Location);
+                Location = new Point(p.X - this._dragStartPoint.X, p.Y - this._dragStartPoint.Y);
+            }
+        }
+        #endregion
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            // Draw a border to match the overlay aesthetic
+            using (var pen = new Pen(Color.FromArgb(100, 100, 100)))
+            {
+                e.Graphics.DrawRectangle(pen, 0, 0, this.ClientSize.Width - 1, this.ClientSize.Height - 1);
+            }
         }
 
         private void OnSessionUpdated(object? sender, EventArgs e)
@@ -57,9 +163,9 @@ namespace EliteDataRelay.UI
 
         private void UpdateLabels()
         {
-            _lblDuration.Text = $"Session Duration: {_sessionTracker.SessionDuration:hh\\:mm\\:ss}";
-            _lblCargoCollected.Text = $"Total Cargo Collected: {_sessionTracker.TotalCargoCollected} units";
-            _lblCargoPerHour.Text = $"Cargo Per Hour: {_sessionTracker.CargoPerHour:F1} units/hr";
+            _lblDurationValue.Text = $"{_sessionTracker.SessionDuration:hh\\:mm\\:ss}";
+            _lblCargoCollectedValue.Text = $"{_sessionTracker.TotalCargoCollected} units";
+            _lblCargoPerHourValue.Text = $"{_sessionTracker.CargoPerHour:F1} units/hr";
         }
 
         private void OnFormClosing(object? sender, FormClosingEventArgs e)
@@ -74,7 +180,11 @@ namespace EliteDataRelay.UI
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) { _sessionTracker.SessionUpdated -= OnSessionUpdated; }
+            if (disposing)
+            {
+                _sessionTracker.SessionUpdated -= OnSessionUpdated;
+                // The form will dispose of its child controls, so we don't need to do it manually.
+            }
             base.Dispose(disposing);
         }
     }

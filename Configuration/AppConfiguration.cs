@@ -7,20 +7,9 @@ using System.Text.Json;
 
 namespace EliteDataRelay.Configuration
 {
-    public enum OverlayVerticalAlignment
-    {
-        Top,
-        Middle,
-        Bottom
-    }
-
     public static class AppConfiguration
     {
         // --- Default values ---
-        public const OverlayVerticalAlignment DefaultOverlayVerticalAlignment = OverlayVerticalAlignment.Middle;
-        public const int DefaultOverlayVerticalOffset = 0;
-        public const int DefaultLeftOverlayHorizontalOffset = 10;
-        public const int DefaultRightOverlayHorizontalOffset = 0;
 
         // --- User-configurable settings (saved to settings.json) ---
         public static string OutputFileFormat { get; set; } = "{count_slash_capacity} | {items}";
@@ -29,13 +18,9 @@ namespace EliteDataRelay.Configuration
         public static bool EnableFileOutput { get; set; } = false;
         public static bool EnableLeftOverlay { get; set; } = false;
         public static bool EnableRightOverlay { get; set; } = false;
+        public static bool ShowSessionOnOverlay { get; set; } = false;
+        public static bool EnableSessionTracking { get; set; } = false;
         public static bool EnableHotkeys { get; set; } = false;
-
-        // --- Overlay Position Settings ---
-        public static OverlayVerticalAlignment OverlayVerticalAlignment { get; set; } = DefaultOverlayVerticalAlignment;
-        public static int OverlayVerticalOffset { get; set; } = DefaultOverlayVerticalOffset;
-        public static int LeftOverlayHorizontalOffset { get; set; } = DefaultLeftOverlayHorizontalOffset;
-        public static int RightOverlayHorizontalOffset { get; set; } = DefaultRightOverlayHorizontalOffset;
 
         // --- Hotkey settings ---
         public static Keys StartMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F9;
@@ -63,7 +48,7 @@ namespace EliteDataRelay.Configuration
         public static string LicenseUrl { get; } = "https://github.com/insert3coins/EliteDataRelay/blob/main/LICENSE.txt";
 
         // --- Window and Sizing Constants ---
-        public static int FormWidth { get; } = 600;
+        public static int FormWidth { get; } = 670;
         public static int FormHeight { get; } = 400;
         public static Size WindowSize { get; set; } = new Size(FormWidth, FormHeight);
         public static Point WindowLocation { get; set; } = Point.Empty;
@@ -95,11 +80,9 @@ namespace EliteDataRelay.Configuration
             public bool EnableFileOutput { get; set; } = AppConfiguration.EnableFileOutput;
             public bool EnableLeftOverlay { get; set; } = AppConfiguration.EnableLeftOverlay;
             public bool EnableRightOverlay { get; set; } = AppConfiguration.EnableRightOverlay;
+            public bool ShowSessionOnOverlay { get; set; } = AppConfiguration.ShowSessionOnOverlay;
+            public bool EnableSessionTracking { get; set; } = AppConfiguration.EnableSessionTracking;
             public bool EnableHotkeys { get; set; } = AppConfiguration.EnableHotkeys;
-            public OverlayVerticalAlignment OverlayVerticalAlignment { get; set; } = AppConfiguration.OverlayVerticalAlignment;
-            public int OverlayVerticalOffset { get; set; } = AppConfiguration.OverlayVerticalOffset;
-            public int LeftOverlayHorizontalOffset { get; set; } = AppConfiguration.LeftOverlayHorizontalOffset;
-            public int RightOverlayHorizontalOffset { get; set; } = AppConfiguration.RightOverlayHorizontalOffset;
             public Keys StartMonitoringHotkey { get; set; } = AppConfiguration.StartMonitoringHotkey;
             public Keys StopMonitoringHotkey { get; set; } = AppConfiguration.StopMonitoringHotkey;
             public Keys ShowOverlayHotkey { get; set; } = AppConfiguration.ShowOverlayHotkey;
@@ -131,11 +114,9 @@ namespace EliteDataRelay.Configuration
                     EnableFileOutput = model.EnableFileOutput;
                     EnableLeftOverlay = model.EnableLeftOverlay;
                     EnableRightOverlay = model.EnableRightOverlay;
+                    ShowSessionOnOverlay = model.ShowSessionOnOverlay;
+                    EnableSessionTracking = model.EnableSessionTracking;
                     EnableHotkeys = model.EnableHotkeys;
-                    OverlayVerticalAlignment = model.OverlayVerticalAlignment;
-                    OverlayVerticalOffset = model.OverlayVerticalOffset;
-                    LeftOverlayHorizontalOffset = model.LeftOverlayHorizontalOffset;
-                    RightOverlayHorizontalOffset = model.RightOverlayHorizontalOffset;
                     StartMonitoringHotkey = model.StartMonitoringHotkey;
                     StopMonitoringHotkey = model.StopMonitoringHotkey;
                     ShowOverlayHotkey = model.ShowOverlayHotkey;
@@ -170,11 +151,9 @@ namespace EliteDataRelay.Configuration
                     EnableFileOutput = EnableFileOutput,
                     EnableLeftOverlay = EnableLeftOverlay,
                     EnableRightOverlay = EnableRightOverlay,
+                    ShowSessionOnOverlay = ShowSessionOnOverlay,
+                    EnableSessionTracking = EnableSessionTracking,
                     EnableHotkeys = EnableHotkeys,
-                    OverlayVerticalAlignment = OverlayVerticalAlignment,
-                    OverlayVerticalOffset = OverlayVerticalOffset,
-                    LeftOverlayHorizontalOffset = LeftOverlayHorizontalOffset,
-                    RightOverlayHorizontalOffset = RightOverlayHorizontalOffset,
                     StartMonitoringHotkey = StartMonitoringHotkey,
                     StopMonitoringHotkey = StopMonitoringHotkey,
                     ShowOverlayHotkey = ShowOverlayHotkey,

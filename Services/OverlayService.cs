@@ -13,6 +13,10 @@ namespace EliteDataRelay.Services
     public class OverlayService : IDisposable
     {
         private const string GameProcessName = "EliteDangerous64";
+        private const int LeftHorizontalOffset = 10;
+        private const int RightHorizontalOffset = 0;
+        private const int VerticalOffset = 0;
+
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
 
@@ -36,9 +40,8 @@ namespace EliteDataRelay.Services
                 if (AppConfiguration.EnableLeftOverlay && (_leftOverlayForm == null || _leftOverlayForm.IsDisposed))
                 {
                     var newLeftOverlay = new OverlayForm(OverlayForm.OverlayPosition.Left);
-                    int overlayHeight = newLeftOverlay.Height;
-                    int yPos = CalculateYPosition(screenBounds, overlayHeight);
-                    newLeftOverlay.Location = new Point(screenBounds.Left + AppConfiguration.LeftOverlayHorizontalOffset, yPos);
+                    int yPos = screenBounds.Top + (screenBounds.Height - newLeftOverlay.Height) / 2 + VerticalOffset;
+                    newLeftOverlay.Location = new Point(screenBounds.Left + LeftHorizontalOffset, yPos);
                     _leftOverlayForm = newLeftOverlay;
                 }
 
@@ -46,10 +49,9 @@ namespace EliteDataRelay.Services
                 if (AppConfiguration.EnableRightOverlay && (_rightOverlayForm == null || _rightOverlayForm.IsDisposed))
                 {
                     var newRightOverlay = new OverlayForm(OverlayForm.OverlayPosition.Right);
-                    int overlayHeight = newRightOverlay.Height;
-                    int yPos = CalculateYPosition(screenBounds, overlayHeight);
+                    int yPos = screenBounds.Top + (screenBounds.Height - newRightOverlay.Height) / 2 + VerticalOffset;
                     newRightOverlay.Location = new Point(
-                        screenBounds.Right - newRightOverlay.Width - AppConfiguration.RightOverlayHorizontalOffset,
+                        screenBounds.Right - newRightOverlay.Width - RightHorizontalOffset,
                         yPos
                     );
                     _rightOverlayForm = newRightOverlay;
@@ -68,22 +70,6 @@ namespace EliteDataRelay.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"[OverlayService] Failed to start overlay: {ex.Message}");
-            }
-        }
-
-        private int CalculateYPosition(Rectangle screenBounds, int overlayHeight)
-        {
-            switch (AppConfiguration.OverlayVerticalAlignment)
-            {
-                case OverlayVerticalAlignment.Top:
-                    return screenBounds.Top + AppConfiguration.OverlayVerticalOffset;
-                case OverlayVerticalAlignment.Bottom:
-                    return screenBounds.Bottom - overlayHeight - AppConfiguration.OverlayVerticalOffset;
-                case OverlayVerticalAlignment.Middle:
-                default:
-                    return screenBounds.Top +
-                           (screenBounds.Height - overlayHeight) / 2 +
-                           AppConfiguration.OverlayVerticalOffset;
             }
         }
 
@@ -133,6 +119,16 @@ namespace EliteDataRelay.Services
         public void UpdateCargoList(CargoSnapshot snapshot)
         {
             _rightOverlayForm?.UpdateCargoList(snapshot.Inventory);
+        }
+
+        public void UpdateSessionOverlay(double cargoPerHour)
+        {
+            // The left overlay is responsible for displaying session stats.
+            // We format the string here before passing it to the form.
+            if (_leftOverlayForm != null)
+            {
+                _leftOverlayForm.UpdateSessionCargoPerHour($"Cargo/hr: {cargoPerHour:F1}");
+            }
         }
 
         public void Dispose()

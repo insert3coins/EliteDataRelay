@@ -369,6 +369,14 @@ namespace EliteDataRelay.UI
             _overlayService?.Hide();
         }
 
+        public void SetSessionButtonVisibility(bool visible)
+        {
+            if (_controlFactory?.SessionBtn != null)
+            {
+                _controlFactory.SessionBtn.Visible = visible;
+            }
+        }
+
         private void ShowForm()
         {
             if (_form == null) return;
@@ -388,6 +396,15 @@ namespace EliteDataRelay.UI
             _overlayService?.Dispose();
             _appIcon?.Dispose();
             _iconStream?.Dispose();
+        }
+
+        public void UpdateSessionOverlay(double cargoPerHour)
+        {
+            // This assumes the OverlayService has a corresponding method
+            // that will format the data and pass it to the overlay form.
+            // e.g., _overlayService.UpdateSessionOverlay(cargoPerHour) ->
+            //        _leftOverlay.UpdateSessionCargoPerHour($"Cargo/hr: {cargoPerHour:F1}");
+            _overlayService?.UpdateSessionOverlay(cargoPerHour);
         }
     }
 }

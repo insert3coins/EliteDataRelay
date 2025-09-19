@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EliteDataRelay.Configuration;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -31,6 +32,7 @@ namespace EliteDataRelay.UI
         private Label _shipLabel = null!;
         private Label _balanceLabel = null!;
         private Label _cargoLabel = null!;
+        private Label _sessionCargoPerHourLabel = null!;
         private ListView _cargoListView = null!;
         private Label _cargoSizeLabel = null!;
 
@@ -93,6 +95,13 @@ namespace EliteDataRelay.UI
                 Controls.Add(_cmdrLabel);
                 Controls.Add(_shipLabel);
                 Controls.Add(_balanceLabel);
+
+                if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+                {
+                    this.Size = new Size(280, 115); // Increase height
+                    _sessionCargoPerHourLabel = CreateOverlayLabel(new Point(10, 85), _labelFont);
+                    Controls.Add(_sessionCargoPerHourLabel);
+                }
             }
             else // Right
             {
@@ -167,6 +176,14 @@ namespace EliteDataRelay.UI
         public void UpdateBalance(string text) => UpdateLabel(_balanceLabel, text);
         public void UpdateCargo(string text) => UpdateLabel(_cargoLabel, text);
         public void UpdateCargoSize(string text) => UpdateLabel(_cargoSizeLabel, text);
+        public void UpdateSessionCargoPerHour(string text)
+        {
+            // Only update if the label was created
+            if (_sessionCargoPerHourLabel != null)
+            {
+                UpdateLabel(_sessionCargoPerHourLabel, text);
+            }
+        }
 
         public void UpdateCargoList(IEnumerable<CargoItem> inventory)
         {

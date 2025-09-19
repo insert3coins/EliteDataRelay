@@ -127,6 +127,7 @@ namespace EliteDataRelay
             _journalWatcherService.LocationChanged += OnLocationChanged;
             _statusWatcherService.BalanceChanged += OnBalanceChanged;
 
+            _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             // Assumes JournalWatcherService is updated to provide these events
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
@@ -140,6 +141,9 @@ namespace EliteDataRelay
             {
                 RegisterHotkeys();
             }
+
+            // Set initial visibility of session button based on settings
+            _cargoFormUI.SetSessionButtonVisibility(AppConfiguration.EnableSessionTracking);
 
             // Restore window size and location from settings
             if (AppConfiguration.WindowSize.Width > 0 && AppConfiguration.WindowSize.Height > 0)
@@ -291,6 +295,9 @@ namespace EliteDataRelay
                 _cargoFormUI.RefreshOverlay();
                 RepopulateOverlay();
             }
+
+            // Update Session button visibility
+            _cargoFormUI.SetSessionButtonVisibility(AppConfiguration.EnableSessionTracking);
         }
 
         private void OnSessionClicked(object? sender, EventArgs e)
@@ -355,69 +362,6 @@ namespace EliteDataRelay
 
         #endregion
 
-        #region Service Event Handlers
-
-        private void OnFileChanged(object? sender, EventArgs e)
-        {
-            // Delegate file processing to the cargo processor service
-            _cargoProcessorService.ProcessCargoFile();
-        }
-
-        private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
-        {
-            _lastCargoSnapshot = e.Snapshot;
-            _sessionTrackingService.OnCargoChanged(e.Snapshot);
-            // --- File Output ---
-            // If enabled in settings, write the snapshot to the output text file.
-            if (AppConfiguration.EnableFileOutput)
-            {
-                _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
-            }
-
-            int totalCount = e.Snapshot.Inventory.Sum(item => item.Count);
-
-            // Update the header label in the button panel
-            _cargoFormUI.UpdateCargoHeader(totalCount, _cargoCapacity);
-
-            // Update the main window display with the new list view
-            _cargoFormUI.UpdateCargoList(e.Snapshot);
-
-            // Update the visual cargo size indicator
-            _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
-        }
-
-        private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
-        {
-            _cargoCapacity = e.CargoCapacity;
-        }
-
-        private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-        {
-            _lastLocation = e.StarSystem;
-            _cargoFormUI.UpdateLocation(e.StarSystem);
-        }
-
-        private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
-        {
-            _lastBalance = e.Balance;
-            _cargoFormUI.UpdateBalance(e.Balance);
-        }
-
-        private void OnCommanderNameChanged(object? sender, CommanderNameChangedEventArgs e)
-        {
-            _lastCommanderName = e.CommanderName;
-            _cargoFormUI.UpdateCommanderName(e.CommanderName);
-        }
-
-        private void OnShipInfoChanged(object? sender, ShipInfoChangedEventArgs e)
-        {
-            _lastShipName = e.ShipName;
-            _lastShipIdent = e.ShipIdent;
-            _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent);
-        }
-
-        #endregion
-
         #region Monitoring Control
 
         private void RepopulateOverlay()
@@ -431,6 +375,7 @@ namespace EliteDataRelay
             {
                 _cargoFormUI.UpdateCargoList(_lastCargoSnapshot);
                 _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
+                _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
         }
 
@@ -462,7 +407,10 @@ namespace EliteDataRelay
             _gameProcessCheckTimer?.Start();
 
             // Start the session tracker
-            _sessionTrackingService.StartSession();
+            if (AppConfiguration.EnableSessionTracking)
+            {
+                _sessionTrackingService.StartSession();
+            }
         }
 
         private void StopMonitoringInternal()
@@ -484,7 +432,10 @@ namespace EliteDataRelay
             _gameProcessCheckTimer?.Stop();
 
             // Stop the session tracker
-            _sessionTrackingService.StopSession();
+            if (AppConfiguration.EnableSessionTracking)
+            {
+                _sessionTrackingService.StopSession();
+            }
         }
 
         #endregion

@@ -7,7 +7,7 @@ namespace EliteDataRelay.UI
     /// <summary>
     /// Interface for cargo form UI management
     /// </summary>
-    public interface ICargoFormUI : IDisposable
+    public partial interface ICargoFormUI : IDisposable
     {
         /// <summary>
         /// Event raised when the start button is clicked
@@ -117,5 +117,17 @@ namespace EliteDataRelay.UI
         /// Hides the overlay windows.
         /// </summary>
         void HideOverlays();
+
+        /// <summary>
+        /// Sets the visibility of the session button.
+        /// </summary>
+        /// <param name="visible">Whether the button should be visible.</param>
+        void SetSessionButtonVisibility(bool visible);
+    }
+
+    public partial interface ICargoFormUI
+    {
+        /// <summary>Updates the session data on the overlay.</summary>
+        void UpdateSessionOverlay(double cargoPerHour);
     }
 }

@@ -23,12 +23,10 @@ namespace EliteDataRelay.UI
         private Label _lblOutputFileName = null!;
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
-        private GroupBox _grpOverlaySettings = null!;
-        private GroupBox _grpOverlayPositioning = null!;
-        private ComboBox _cmbVerticalAlignment = null!;
-        private NumericUpDown _numVerticalOffset = null!;
-        private NumericUpDown _numLeftHorizontalOffset = null!;
-        private NumericUpDown _numRightHorizontalOffset = null!;
+        private GroupBox _grpOverlaySettings = null!;        
+        private CheckBox _chkShowSessionOnOverlay = null!;
+        private GroupBox _grpSessionTracking = null!;
+        private CheckBox _chkEnableSessionTracking = null!;
         private CheckBox _chkEnableHotkeys = null!;
         private GroupBox _grpHotkeys = null!;
         private TextBox _txtStartHotkey = null!;
@@ -51,7 +49,7 @@ namespace EliteDataRelay.UI
         {
             // Form Properties
             Text = "Settings";
-            ClientSize = new Size(464, 735);
+            ClientSize = new Size(464, 685);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -143,12 +141,27 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            // Session Tracking GroupBox
+            _grpSessionTracking = new GroupBox
+            {
+                Text = "Session Tracking",
+                Location = new Point(12, 316),
+                Size = new Size(440, 55),
+            };
+            _chkEnableSessionTracking = new CheckBox
+            {
+                Text = "Enable session tracking (for cargo/hr, etc.)",
+                Location = new Point(15, 20),
+                AutoSize = true
+            };
+            _grpSessionTracking.Controls.Add(_chkEnableSessionTracking);
+
             // Overlay GroupBox
             _grpOverlaySettings = new GroupBox
             {
                 Text = "In-Game Overlay",
-                Location = new Point(12, 316),
-                Size = new Size(440, 75),
+                Location = new Point(12, 377),
+                Size = new Size(440, 100),
             };
 
             // Enable Left Overlay CheckBox
@@ -158,6 +171,7 @@ namespace EliteDataRelay.UI
                 Location = new Point(15, 20),
                 AutoSize = true
             };
+            _chkEnableLeftOverlay.CheckedChanged += OnEnableLeftOverlayCheckedChanged;
 
             // Enable Right Overlay CheckBox
             _chkEnableRightOverlay = new CheckBox
@@ -167,45 +181,19 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
-            // Overlay Positioning GroupBox
-            _grpOverlayPositioning = new GroupBox
+            _chkShowSessionOnOverlay = new CheckBox
             {
-                Text = "Overlay Positioning",
-                Location = new Point(12, 397),
-                Size = new Size(440, 130),
+                Text = "Show session stats on left overlay",
+                Location = new Point(15, 70),
+                AutoSize = true
             };
-
-            var lblVerticalAlignment = new Label { Text = "Vertical Alignment:", Location = new Point(15, 25), AutoSize = true };
-            _cmbVerticalAlignment = new ComboBox { Location = new Point(140, 22), Size = new Size(120, 21), DropDownStyle = ComboBoxStyle.DropDownList };
-            _cmbVerticalAlignment.Items.AddRange(Enum.GetNames(typeof(OverlayVerticalAlignment)));
-
-            var lblVerticalOffset = new Label { Text = "Vertical Offset:", Location = new Point(280, 25), AutoSize = true };
-            _numVerticalOffset = new NumericUpDown { Location = new Point(370, 22), Size = new Size(55, 20), Minimum = -2000, Maximum = 2000 };
-
-            var lblLeftHorizontal = new Label { Text = "Left Panel Offset (from left edge):", Location = new Point(15, 50), AutoSize = true };
-            _numLeftHorizontalOffset = new NumericUpDown { Location = new Point(240, 47), Size = new Size(55, 20), Minimum = 0, Maximum = 2000 };
-
-            var lblRightHorizontal = new Label { Text = "Right Panel Offset (from right edge):", Location = new Point(15, 75), AutoSize = true };
-            _numRightHorizontalOffset = new NumericUpDown { Location = new Point(240, 72), Size = new Size(55, 20), Minimum = 0, Maximum = 2000 };
-
-            var btnResetPosition = new Button { Text = "Reset to Default", Location = new Point(310, 71), Size = new Size(115, 23) };
-            btnResetPosition.Click += OnResetPositionClicked;
-
-            _grpOverlayPositioning.Controls.Add(lblVerticalAlignment);
-            _grpOverlayPositioning.Controls.Add(_cmbVerticalAlignment);
-            _grpOverlayPositioning.Controls.Add(lblVerticalOffset);
-            _grpOverlayPositioning.Controls.Add(_numVerticalOffset);
-            _grpOverlayPositioning.Controls.Add(lblLeftHorizontal);
-            _grpOverlayPositioning.Controls.Add(_numLeftHorizontalOffset);
-            _grpOverlayPositioning.Controls.Add(lblRightHorizontal);
-            _grpOverlayPositioning.Controls.Add(_numRightHorizontalOffset);
-            _grpOverlayPositioning.Controls.Add(btnResetPosition);
+            _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
 
             // Hotkeys GroupBox
             _grpHotkeys = new GroupBox
             {
                 Text = "Hotkeys",
-                Location = new Point(12, 533),
+                Location = new Point(12, 483),
                 Size = new Size(440, 155),
             };
 
@@ -246,11 +234,11 @@ namespace EliteDataRelay.UI
             _grpHotkeys.Controls.Add(_txtHideOverlayHotkey);
 
             // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 699) };
+            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 650) };
             _btnOk.Click += (sender, e) => SaveSettings();
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 699) };
+            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 650) };
 
             // Add Controls
             _grpOutputFormat.Controls.Add(_chkEnableFileOutput);
@@ -265,8 +253,9 @@ namespace EliteDataRelay.UI
             Controls.Add(_grpOutputFormat);
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
+            _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
+            Controls.Add(_grpSessionTracking);
             Controls.Add(_grpOverlaySettings);
-            Controls.Add(_grpOverlayPositioning);
             Controls.Add(_grpHotkeys);
             Controls.Add(_btnOk);
             Controls.Add(_btnCancel);
@@ -301,6 +290,25 @@ namespace EliteDataRelay.UI
             _lblPlaceholders.Enabled = enabled;
         }
 
+        private void OnEnableLeftOverlayCheckedChanged(object? sender, EventArgs e)
+        {
+            _chkShowSessionOnOverlay.Enabled = _chkEnableLeftOverlay.Checked;
+            if (!_chkEnableLeftOverlay.Checked)
+            {
+                _chkShowSessionOnOverlay.Checked = false;
+            }
+        }
+
+        private void OnShowSessionCheckedChanged(object? sender, EventArgs e)
+        {
+            // This checkbox should only be enabled if the left overlay is also enabled.
+            // If the user checks this, we can assume they want the left overlay on.
+            if (_chkShowSessionOnOverlay.Checked && !_chkEnableLeftOverlay.Checked)
+            {
+                _chkEnableLeftOverlay.Checked = true;
+            }
+        }
+
         private void OnEnableHotkeysCheckedChanged(object? sender, EventArgs e)
         {
             bool enabled = _chkEnableHotkeys.Checked;
@@ -319,12 +327,10 @@ namespace EliteDataRelay.UI
             _chkEnableFileOutput.Checked = AppConfiguration.EnableFileOutput;
             _txtOutputFormat.Text = AppConfiguration.OutputFileFormat;
             _txtOutputFileName.Text = AppConfiguration.OutputFileName;
+            _chkEnableSessionTracking.Checked = AppConfiguration.EnableSessionTracking;
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableLeftOverlay;
+            _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableRightOverlay;
-            _cmbVerticalAlignment.SelectedItem = AppConfiguration.OverlayVerticalAlignment.ToString();
-            _numVerticalOffset.Value = AppConfiguration.OverlayVerticalOffset;
-            _numLeftHorizontalOffset.Value = AppConfiguration.LeftOverlayHorizontalOffset;
-            _numRightHorizontalOffset.Value = AppConfiguration.RightOverlayHorizontalOffset;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -333,6 +339,7 @@ namespace EliteDataRelay.UI
             UpdateHotkeyText();
             _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
+            OnEnableLeftOverlayCheckedChanged(null, EventArgs.Empty);
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
         }
 
@@ -359,14 +366,6 @@ namespace EliteDataRelay.UI
                     _txtOutputDirectory.Text = dialog.SelectedPath;
                 }
             }
-        }
-
-        private void OnResetPositionClicked(object? sender, EventArgs e)
-        {
-            _cmbVerticalAlignment.SelectedItem = AppConfiguration.DefaultOverlayVerticalAlignment.ToString();
-            _numVerticalOffset.Value = AppConfiguration.DefaultOverlayVerticalOffset;
-            _numLeftHorizontalOffset.Value = AppConfiguration.DefaultLeftOverlayHorizontalOffset;
-            _numRightHorizontalOffset.Value = AppConfiguration.DefaultRightOverlayHorizontalOffset;
         }
 
         private void OnHotkeyKeyDown(object? sender, KeyEventArgs e)
@@ -419,12 +418,10 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableFileOutput = _chkEnableFileOutput.Checked;
             AppConfiguration.OutputFileFormat = _txtOutputFormat.Text;
             AppConfiguration.OutputFileName = _txtOutputFileName.Text;
+            AppConfiguration.EnableSessionTracking = _chkEnableSessionTracking.Checked;
             AppConfiguration.EnableLeftOverlay = _chkEnableLeftOverlay.Checked;
+            AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
             AppConfiguration.EnableRightOverlay = _chkEnableRightOverlay.Checked;
-            AppConfiguration.OverlayVerticalAlignment = (OverlayVerticalAlignment)Enum.Parse(typeof(OverlayVerticalAlignment), _cmbVerticalAlignment.Text);
-            AppConfiguration.OverlayVerticalOffset = (int)_numVerticalOffset.Value;
-            AppConfiguration.LeftOverlayHorizontalOffset = (int)_numLeftHorizontalOffset.Value;
-            AppConfiguration.RightOverlayHorizontalOffset = (int)_numRightHorizontalOffset.Value;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;

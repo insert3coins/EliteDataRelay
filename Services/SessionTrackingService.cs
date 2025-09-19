@@ -65,7 +65,8 @@ namespace EliteDataRelay.Services
                     oldInventoryDict.TryGetValue(newItem.Name, out int oldCount);
                     int diff = newItem.Count - oldCount;
 
-                    if (diff > 0)
+                    // Only count items that are not limpets (internal name: "drones")
+                    if (diff > 0 && !newItem.Name.Equals("drones", StringComparison.OrdinalIgnoreCase))
                     {
                         collectedInThisChange += diff;
                     }
