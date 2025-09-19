@@ -3,6 +3,7 @@
  using System.IO;
  using System.Threading;
  using EliteDataRelay.Configuration;
+ using System.Windows.Forms;
  using EliteDataRelay.Models;
  using System.Text.Json;
  
@@ -85,8 +86,23 @@
                         // Only update if the Balance property exists in the JSON and has changed.
                         if (status?.Balance.HasValue == true && status.Balance.Value != _lastKnownBalance)
                          {
-                            _lastKnownBalance = status.Balance.Value;
-                            BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(status.Balance.Value));
+                             _lastKnownBalance = status.Balance.Value;
+                             var eventArgs = new BalanceChangedEventArgs(status.Balance.Value);
+ 
+                             // Because this is running on a background thread, we must invoke the event
+                             // on the UI thread to prevent cross-thread operation exceptions.
+                             if (Application.OpenForms.Count > 0)
+                             {
+                                 var mainForm = Application.OpenForms[0];
+                                 if (mainForm?.InvokeRequired == true)
+                                 {
+                                     mainForm.Invoke(new Action(() => BalanceChanged?.Invoke(this, eventArgs)));
+                                 }
+                                 else
+                                 {
+                                     BalanceChanged?.Invoke(this, eventArgs);
+                                 }
+                             }
                          }
                          return; // Success
                      }

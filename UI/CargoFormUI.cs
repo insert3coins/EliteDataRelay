@@ -247,6 +247,7 @@ namespace EliteDataRelay.UI
             }
 
             _controlFactory.CargoSizeLabel.Text = UIConstants.CargoSize[index];
+            _overlayService?.UpdateCargoSize(UIConstants.CargoSize[index]);
         }
 
         public void UpdateLocation(string starSystem)
@@ -324,8 +325,8 @@ namespace EliteDataRelay.UI
                 if (stopEnabled) // This means monitoring is now active
                 {
                     _watchingAnimationManager.Start();
-                    // Only start the overlay if it's enabled in settings.
-                    if (AppConfiguration.EnableOverlay)
+                    // Only start the overlay service if at least one of the overlays is enabled.
+                    if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay)
                     {
                         _overlayService?.Start();
                     }
@@ -333,9 +334,8 @@ namespace EliteDataRelay.UI
                 else // Monitoring is stopped
                 {
                     _watchingAnimationManager.Stop();
-                    // Always stop the overlay service to ensure it's hidden if the user
-                    // disabled it in settings while it was running.
-                    _overlayService?.Stop();
+                    // When monitoring stops, just hide the overlay. It will be destroyed on exit.
+                    _overlayService?.Hide();
                 }
             }
         }
@@ -345,6 +345,25 @@ namespace EliteDataRelay.UI
             if (_form == null) return;
 
             _form.Text = $"{_baseTitle} - Location: {_currentLocation}";
+        }
+
+        public void RefreshOverlay()
+        {
+            _overlayService?.Stop();
+            if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay)
+            {
+                _overlayService?.Start();
+            }
+        }
+
+        public void ShowOverlays()
+        {
+            _overlayService?.Show();
+        }
+
+        public void HideOverlays()
+        {
+            _overlayService?.Hide();
         }
 
         private void ShowForm()

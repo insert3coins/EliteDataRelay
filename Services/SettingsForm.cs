@@ -23,8 +23,20 @@ namespace EliteDataRelay.UI
         private GroupBox _grpOutputFormat = null!;
         private Label _lblOutputDirectory = null!;
         private Label _lblOutputFileName = null!;
-        private CheckBox _chkEnableOverlay = null!;
+        private CheckBox _chkEnableLeftOverlay = null!;
+        private CheckBox _chkEnableRightOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
+        private CheckBox _chkEnableHotkeys = null!;
+        private GroupBox _grpHotkeys = null!;
+        private TextBox _txtStartHotkey = null!;
+        private TextBox _txtStopHotkey = null!;
+        private TextBox _txtShowOverlayHotkey = null!;
+        private TextBox _txtHideOverlayHotkey = null!;
+
+        private Keys _startHotkey;
+        private Keys _stopHotkey;
+        private Keys _showOverlayHotkey;
+        private Keys _hideOverlayHotkey;
 
         public SettingsForm()
         {
@@ -35,8 +47,8 @@ namespace EliteDataRelay.UI
         private void InitializeComponent()
         {
             // Form Properties
-            this.Text = "Settings";
-            this.ClientSize = new Size(464, 415);
+            Text = "Settings";
+            ClientSize = new Size(464, 600);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -133,23 +145,75 @@ namespace EliteDataRelay.UI
             {
                 Text = "In-Game Overlay",
                 Location = new Point(12, 316),
-                Size = new Size(440, 50),
+                Size = new Size(440, 75),
             };
 
-            // Enable Overlay CheckBox
-            _chkEnableOverlay = new CheckBox
+            // Enable Left Overlay CheckBox
+            _chkEnableLeftOverlay = new CheckBox
             {
-                Text = "Enable in-game overlay",
+                Text = "Enable left overlay (CMDR, Ship, Balance)",
                 Location = new Point(15, 20),
                 AutoSize = true
             };
 
+            // Enable Right Overlay CheckBox
+            _chkEnableRightOverlay = new CheckBox
+            {
+                Text = "Enable right overlay (Cargo)",
+                Location = new Point(15, 45),
+                AutoSize = true
+            };
+
+            // Hotkeys GroupBox
+            _grpHotkeys = new GroupBox
+            {
+                Text = "Hotkeys",
+                Location = new Point(12, 397),
+                Size = new Size(440, 155),
+            };
+
+            // Enable Hotkeys CheckBox
+            _chkEnableHotkeys = new CheckBox
+            {
+                Text = "Enable global hotkeys",
+                Location = new Point(15, 20),
+                AutoSize = true
+            };
+            _chkEnableHotkeys.CheckedChanged += OnEnableHotkeysCheckedChanged;
+
+            // Hotkey Labels and TextBoxes
+            var lblStart = new Label { Text = "Start Monitoring:", Location = new Point(15, 50), AutoSize = true };
+            _txtStartHotkey = CreateHotkeyInput(new Point(140, 47));
+            _txtStartHotkey.Tag = "Start";
+
+            var lblStop = new Label { Text = "Stop Monitoring:", Location = new Point(15, 75), AutoSize = true };
+            _txtStopHotkey = CreateHotkeyInput(new Point(140, 72));
+            _txtStopHotkey.Tag = "Stop";
+
+            var lblShow = new Label { Text = "Show Overlay:", Location = new Point(15, 100), AutoSize = true };
+            _txtShowOverlayHotkey = CreateHotkeyInput(new Point(140, 97));
+            _txtShowOverlayHotkey.Tag = "Show";
+
+            var lblHide = new Label { Text = "Hide Overlay:", Location = new Point(15, 125), AutoSize = true };
+            _txtHideOverlayHotkey = CreateHotkeyInput(new Point(140, 122));
+            _txtHideOverlayHotkey.Tag = "Hide";
+
+            _grpHotkeys.Controls.Add(_chkEnableHotkeys);
+            _grpHotkeys.Controls.Add(lblStart);
+            _grpHotkeys.Controls.Add(_txtStartHotkey);
+            _grpHotkeys.Controls.Add(lblStop);
+            _grpHotkeys.Controls.Add(_txtStopHotkey);
+            _grpHotkeys.Controls.Add(lblShow);
+            _grpHotkeys.Controls.Add(_txtShowOverlayHotkey);
+            _grpHotkeys.Controls.Add(lblHide);
+            _grpHotkeys.Controls.Add(_txtHideOverlayHotkey);
+
             // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 378) };
+            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 563) };
             _btnOk.Click += (sender, e) => SaveSettings();
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 378) };
+            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 563) };
 
             // Add Controls
             _grpOutputFormat.Controls.Add(_chkEnableFileOutput);
@@ -162,12 +226,27 @@ namespace EliteDataRelay.UI
             _grpOutputFormat.Controls.Add(_txtOutputFileName);
             _grpOutputFormat.Controls.Add(_lblPlaceholders);
             Controls.Add(_grpOutputFormat);
-            _grpOverlaySettings.Controls.Add(_chkEnableOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             Controls.Add(_grpOverlaySettings);
+            Controls.Add(_grpHotkeys);
             Controls.Add(_btnOk);
             Controls.Add(_btnCancel);
             AcceptButton = _btnOk;
             CancelButton = _btnCancel;
+        }
+
+        private TextBox CreateHotkeyInput(Point location)
+        {
+            var txt = new TextBox
+            {
+                Location = location,
+                Size = new Size(285, 20),
+                ReadOnly = true,
+                Text = "None"
+            };
+            txt.KeyDown += OnHotkeyKeyDown;
+            return txt;
         }
 
         private void OnEnableOutputCheckedChanged(object? sender, EventArgs e)
@@ -184,15 +263,35 @@ namespace EliteDataRelay.UI
             _lblPlaceholders.Enabled = enabled;
         }
 
+        private void OnEnableHotkeysCheckedChanged(object? sender, EventArgs e)
+        {
+            bool enabled = _chkEnableHotkeys.Checked;
+            foreach (Control c in _grpHotkeys.Controls)
+            {
+                if (c != _chkEnableHotkeys)
+                {
+                    c.Enabled = enabled;
+                }
+            }
+        }
+
         private void LoadSettings()
         {
             // Assumes a new boolean property 'EnableFileOutput' in AppConfiguration
             _chkEnableFileOutput.Checked = AppConfiguration.EnableFileOutput;
             _txtOutputFormat.Text = AppConfiguration.OutputFileFormat;
             _txtOutputFileName.Text = AppConfiguration.OutputFileName;
-            _chkEnableOverlay.Checked = AppConfiguration.EnableOverlay;
+            _chkEnableLeftOverlay.Checked = AppConfiguration.EnableLeftOverlay;
+            _chkEnableRightOverlay.Checked = AppConfiguration.EnableRightOverlay;
+            _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
+            _startHotkey = AppConfiguration.StartMonitoringHotkey;
+            _stopHotkey = AppConfiguration.StopMonitoringHotkey;
+            _showOverlayHotkey = AppConfiguration.ShowOverlayHotkey;
+            _hideOverlayHotkey = AppConfiguration.HideOverlayHotkey;
+            UpdateHotkeyText();
             _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
+            OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
         }
 
         private void OnBrowseClicked(object? sender, EventArgs e)
@@ -220,13 +319,63 @@ namespace EliteDataRelay.UI
             }
         }
 
+        private void OnHotkeyKeyDown(object? sender, KeyEventArgs e)
+        {
+            e.SuppressKeyPress = true;
+            var txt = sender as TextBox;
+            if (txt == null) return;
+
+            // Clear hotkey on Delete or Backspace
+            if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back)
+            {
+                UpdateHotkey(txt.Tag as string, Keys.None);
+                UpdateHotkeyText();
+                return;
+            }
+
+            // Ignore modifier-only key presses
+            if (e.KeyCode == Keys.ControlKey || e.KeyCode == Keys.ShiftKey || e.KeyCode == Keys.Menu)
+            {
+                return;
+            }
+
+            UpdateHotkey(txt.Tag as string, e.KeyData);
+            UpdateHotkeyText();
+        }
+
+        private void UpdateHotkey(string? tag, Keys key)
+        {
+            switch (tag)
+            {
+                case "Start": _startHotkey = key; break;
+                case "Stop": _stopHotkey = key; break;
+                case "Show": _showOverlayHotkey = key; break;
+                case "Hide": _hideOverlayHotkey = key; break;
+            }
+        }
+
+        private void UpdateHotkeyText()
+        {
+            var converter = new KeysConverter();
+            _txtStartHotkey.Text = _startHotkey == Keys.None ? "None" : converter.ConvertToString(_startHotkey);
+            _txtStopHotkey.Text = _stopHotkey == Keys.None ? "None" : converter.ConvertToString(_stopHotkey);
+            _txtShowOverlayHotkey.Text = _showOverlayHotkey == Keys.None ? "None" : converter.ConvertToString(_showOverlayHotkey);
+            _txtHideOverlayHotkey.Text = _hideOverlayHotkey == Keys.None ? "None" : converter.ConvertToString(_hideOverlayHotkey);
+        }
+
         private void SaveSettings()
         {
             // --- Save all settings ---
             AppConfiguration.EnableFileOutput = _chkEnableFileOutput.Checked;
             AppConfiguration.OutputFileFormat = _txtOutputFormat.Text;
             AppConfiguration.OutputFileName = _txtOutputFileName.Text;
-            AppConfiguration.EnableOverlay = _chkEnableOverlay.Checked;
+            AppConfiguration.EnableLeftOverlay = _chkEnableLeftOverlay.Checked;
+            AppConfiguration.EnableRightOverlay = _chkEnableRightOverlay.Checked;
+            AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
+            AppConfiguration.StartMonitoringHotkey = _startHotkey;
+            AppConfiguration.StopMonitoringHotkey = _stopHotkey;
+            AppConfiguration.ShowOverlayHotkey = _showOverlayHotkey;
+            AppConfiguration.HideOverlayHotkey = _hideOverlayHotkey;
             AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
             AppConfiguration.Save();
         }

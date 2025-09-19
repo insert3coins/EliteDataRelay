@@ -32,6 +32,7 @@ namespace EliteDataRelay.UI
         private Label _balanceLabel = null!;
         private Label _cargoLabel = null!;
         private ListView _cargoListView = null!;
+        private Label _cargoSizeLabel = null!;
 
         // Fonts are IDisposable, so we should keep references to them to dispose of them later.
         private readonly Font _labelFont;
@@ -48,17 +49,17 @@ namespace EliteDataRelay.UI
             // Enable double buffering to reduce flicker and rendering artifacts. This is a standard
             // technique to prevent visual glitches like stray lines or bars on transparent forms.
             DoubleBuffered = true;
-            // Form properties for a borderless, transparent overlay
             FormBorderStyle = FormBorderStyle.None;
             Text = "Elite Data Relay Overlay";
             ShowInTaskbar = false;
             TopMost = true;
-            BackColor = Color.Magenta; // This color will be made transparent
-            TransparencyKey = Color.Magenta;
             StartPosition = FormStartPosition.Manual;
 
-            _labelFont = new Font("Verdana", 12, FontStyle.Bold);
-            _listFont = new Font("Verdana", 12);
+            // --- New design inspired by EDConstrDepot ---
+            this.BackColor = Color.FromArgb(30, 30, 30); // Dark background
+
+            _labelFont = new Font("Consolas", 11F, FontStyle.Bold);
+            _listFont = new Font("Consolas", 11F);
         }
 
         private Label CreateOverlayLabel(Point location, Font? font = null)
@@ -70,7 +71,7 @@ namespace EliteDataRelay.UI
                 Font = font ?? _labelFont,
                 ForeColor = Color.Orange, // High-visibility color for in-game
                 BackColor = Color.Transparent,
-                Text = "..."
+                Text = "" // Default to empty string 
             };
         }
 
@@ -84,10 +85,10 @@ namespace EliteDataRelay.UI
             if (_position == OverlayPosition.Left)
             {
                 // --- Left-aligned info ---
-                this.Size = new Size(300, 110);
+                this.Size = new Size(280, 85);
                 _cmdrLabel = CreateOverlayLabel(new Point(10, 10), _labelFont);
-                _shipLabel = CreateOverlayLabel(new Point(10, 40), _labelFont);
-                _balanceLabel = CreateOverlayLabel(new Point(10, 70), _labelFont);
+                _shipLabel = CreateOverlayLabel(new Point(10, 35), _labelFont);
+                _balanceLabel = CreateOverlayLabel(new Point(10, 60), _labelFont);
 
                 Controls.Add(_cmdrLabel);
                 Controls.Add(_shipLabel);
@@ -97,50 +98,75 @@ namespace EliteDataRelay.UI
             {
                 this.Size = new Size(280, 400);
 
+                var topPanel = new FlowLayoutPanel
+                {
+                    FlowDirection = FlowDirection.LeftToRight,
+                    Location = new Point(0, 10),
+                    Size = new Size(this.Width, 30),
+                    WrapContents = false,
+                    BackColor = Color.Transparent
+                };
+
                 _cargoLabel = new Label
                 {
-                    Location = new Point(0, 10),
-                    Size = new Size(this.Width, 25),
-                    AutoSize = false,
+                    AutoSize = true,
                     Font = _labelFont,
                     ForeColor = Color.Orange,
                     BackColor = Color.Transparent,
-                    Text = "...",
-                    TextAlign = ContentAlignment.MiddleRight,
-                    Padding = new Padding(0, 0, 10, 0) // Padding so text isn't against the very edge
+                    Text = "", // Default to empty string
+                    Margin = new Padding(10, 5, 0, 0)
                 };
+
+                _cargoSizeLabel = CreateOverlayLabel(new Point(0, 0), _listFont);
+                _cargoSizeLabel.Margin = new Padding(10, 5, 0, 0);
 
                 // Create ListView for cargo items
                 _cargoListView = new ListView
                 {
-                    Location = new Point(0, 40),
+                    Location = new Point(0, topPanel.Bottom),
                     // The height is set to fill the remaining space to prevent a 1px border artifact.
-                    Size = new Size(this.Width, 360),
+                    Size = new Size(this.Width, this.Height - topPanel.Bottom),
                     View = View.Details,
-                    BackColor = Color.Magenta,
+                    // ListView does not support a truly transparent background.
+                    // To blend in, we set its background to match the form's background.
+                    BackColor = this.BackColor,
                     ForeColor = Color.Orange,
                     Font = _listFont,
+                    GridLines = false,
                     BorderStyle = BorderStyle.None,
                     HeaderStyle = ColumnHeaderStyle.None,
                     FullRowSelect = false
                 };
-                _cargoListView.Columns.Add("", 0, HorizontalAlignment.Left);
-                _cargoListView.Columns.Add("Commodity", -2, HorizontalAlignment.Right);
-                _cargoListView.Columns.Add("Count", 60, HorizontalAlignment.Right);
+                // Define columns for a standard left-aligned list.
+                _cargoListView.Columns.Add("Commodity", -2, HorizontalAlignment.Left);
+                _cargoListView.Columns.Add("Count", 60, HorizontalAlignment.Left);
 
-                Controls.Add(_cargoLabel);
+                topPanel.Controls.Add(_cargoLabel);
+                topPanel.Controls.Add(_cargoSizeLabel);
+                Controls.Add(topPanel);
                 Controls.Add(_cargoListView);
             }
 
             // Now that the form is fully initialized and invisible, set opacity to 1 to show it.
             // This prevents the user from seeing any part of the form's construction.
-            this.Opacity = 1;
+            this.Opacity = 0.85;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            // Draw a border to match the new design aesthetic
+            using (var pen = new Pen(Color.FromArgb(100, 100, 100)))
+            {
+                e.Graphics.DrawRectangle(pen, 0, 0, this.ClientSize.Width - 1, this.ClientSize.Height - 1);
+            }
         }
 
         public void UpdateCommander(string text) => UpdateLabel(_cmdrLabel, text);
         public void UpdateShip(string text) => UpdateLabel(_shipLabel, text);
         public void UpdateBalance(string text) => UpdateLabel(_balanceLabel, text);
         public void UpdateCargo(string text) => UpdateLabel(_cargoLabel, text);
+        public void UpdateCargoSize(string text) => UpdateLabel(_cargoSizeLabel, text);
 
         public void UpdateCargoList(IEnumerable<CargoItem> inventory)
         {
@@ -162,7 +188,7 @@ namespace EliteDataRelay.UI
                     displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
                 }
 
-                var listViewItem = new ListViewItem(new[] { "", displayName, item.Count.ToString() });
+                var listViewItem = new ListViewItem(new[] { displayName, item.Count.ToString() });
                 _cargoListView.Items.Add(listViewItem);
             }
 
@@ -175,10 +201,8 @@ namespace EliteDataRelay.UI
             else { label.Text = text; }
         }
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+         // Clean up any resources being used.
+         // <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing) { _labelFont?.Dispose(); _listFont?.Dispose(); }

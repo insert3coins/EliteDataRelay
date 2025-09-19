@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -14,6 +15,21 @@ namespace EliteDataRelay
 {
     public partial class CargoForm : Form
     {
+        #region Hotkey P/Invoke
+
+        [DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        private const int HOTKEY_ID_START = 1;
+        private const int HOTKEY_ID_STOP = 2;
+        private const int HOTKEY_ID_SHOW = 3;
+        private const int HOTKEY_ID_HIDE = 4;
+
+        #endregion
+
         // Service dependencies
         private readonly IFileMonitoringService _fileMonitoringService;
         private readonly ICargoProcessorService _cargoProcessorService;
@@ -105,6 +121,11 @@ namespace EliteDataRelay
 
         private void CargoForm_Load(object? sender, EventArgs e)
         {
+            if (AppConfiguration.EnableHotkeys)
+            {
+                RegisterHotkeys();
+            }
+
             // Restore window size and location from settings
             if (AppConfiguration.WindowSize.Width > 0 && AppConfiguration.WindowSize.Height > 0)
             {
@@ -157,6 +178,11 @@ namespace EliteDataRelay
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
+            if (AppConfiguration.EnableHotkeys)
+            {
+                UnregisterHotkeys();
+            }
+
             // Save window state before closing.
             // Use RestoreBounds if the window is minimized or maximized.
             switch (this.WindowState)
@@ -226,7 +252,31 @@ namespace EliteDataRelay
         {
             using (var settingsForm = new SettingsForm())
             {
-                settingsForm.ShowDialog(this);
+                if (settingsForm.ShowDialog(this) == DialogResult.OK)
+                {
+                    ApplyLiveSettingsChanges();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Applies settings changes that need to take effect immediately,
+        /// such as hotkeys and overlay visibility.
+        /// </summary>
+        private void ApplyLiveSettingsChanges()
+        {
+            // Unregister any existing hotkeys before re-registering, to handle changes.
+            UnregisterHotkeys();
+            if (AppConfiguration.EnableHotkeys)
+            {
+                RegisterHotkeys();
+            }
+
+            // If monitoring is active, refresh the overlay to apply visibility changes.
+            if (_fileMonitoringService.IsMonitoring)
+            {
+                _cargoFormUI.RefreshOverlay();
+                RepopulateOverlay();
             }
         }
 
@@ -296,29 +346,9 @@ namespace EliteDataRelay
 
         #region Monitoring Control
 
-        private void StartMonitoring()
+        private void RepopulateOverlay()
         {
-            // As per your suggestion, check if the game is running before starting the overlay and other services.
-            var gameProcess = Process.GetProcessesByName("EliteDangerous64").FirstOrDefault();
-            if (gameProcess == null || gameProcess.MainWindowHandle == IntPtr.Zero)
-            {
-                MessageBox.Show(
-                    "Elite Dangerous process not found.\nPlease make sure the game is running before starting monitoring.",
-                    "Game Not Found",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return; // Stop if the game isn't running.
-            }
-
-            // Play start sound
-            _soundService.PlayStartSound();
-            
-            // Update UI state
-            _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
-            _cargoFormUI.UpdateTitle("Elite Data Relay – Watching");
-
             // Re-populate the UI (and the new overlay) with the last known data.
-            // The overlay is created inside SetButtonStates, so we can update it now.
             if (_lastCommanderName != null) _cargoFormUI.UpdateCommanderName(_lastCommanderName);
             if (_lastShipName != null && _lastShipIdent != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent);
             if (_lastBalance.HasValue) _cargoFormUI.UpdateBalance(_lastBalance.Value);
@@ -328,6 +358,19 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoList(_lastCargoSnapshot);
                 _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
             }
+        }
+
+        private void StartMonitoring()
+        {
+            // Play start sound
+            _soundService.PlayStartSound();
+            
+            // Update UI state
+            _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
+            _cargoFormUI.UpdateTitle("Elite Data Relay – Watching");
+
+            // Re-populate the UI (and the new overlay) with the last known data.
+            RepopulateOverlay();
 
             // Start journal monitoring to find capacity before the first cargo read
             _journalWatcherService.StartMonitoring();
@@ -356,6 +399,66 @@ namespace EliteDataRelay
 
             // Stop status monitoring
             _statusWatcherService.StopMonitoring();
+        }
+
+        #endregion
+
+        #region Hotkey Handling
+
+        private void RegisterHotkeys()
+        {
+            RegisterHotkey(HOTKEY_ID_START, AppConfiguration.StartMonitoringHotkey);
+            RegisterHotkey(HOTKEY_ID_STOP, AppConfiguration.StopMonitoringHotkey);
+            RegisterHotkey(HOTKEY_ID_SHOW, AppConfiguration.ShowOverlayHotkey);
+            RegisterHotkey(HOTKEY_ID_HIDE, AppConfiguration.HideOverlayHotkey);
+        }
+
+        private void UnregisterHotkeys()
+        {
+            UnregisterHotKey(this.Handle, HOTKEY_ID_START);
+            UnregisterHotKey(this.Handle, HOTKEY_ID_STOP);
+            UnregisterHotKey(this.Handle, HOTKEY_ID_SHOW);
+            UnregisterHotKey(this.Handle, HOTKEY_ID_HIDE);
+        }
+
+        private void RegisterHotkey(int id, Keys key)
+        {
+            if (key == Keys.None) return;
+
+            uint modifiers = 0;
+            if ((key & Keys.Alt) == Keys.Alt) modifiers |= 1;
+            if ((key & Keys.Control) == Keys.Control) modifiers |= 2;
+            if ((key & Keys.Shift) == Keys.Shift) modifiers |= 4;
+
+            Keys keyCode = key & ~Keys.Modifiers;
+
+            RegisterHotKey(this.Handle, id, modifiers, (uint)keyCode);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            const int WM_HOTKEY = 0x0312;
+            if (m.Msg == WM_HOTKEY)
+            {
+                int id = m.WParam.ToInt32();
+                switch (id)
+                {
+                    case HOTKEY_ID_START:
+                        if (!_fileMonitoringService.IsMonitoring) StartMonitoring();
+                        break;
+                    case HOTKEY_ID_STOP:
+                        if (_fileMonitoringService.IsMonitoring) OnStopClicked(null, EventArgs.Empty);
+                        break;
+                    case HOTKEY_ID_SHOW:
+                        _cargoFormUI.ShowOverlays();
+                        break;
+                    case HOTKEY_ID_HIDE:
+                        _cargoFormUI.HideOverlays();
+                        break;
+                }
+            }
         }
 
         #endregion

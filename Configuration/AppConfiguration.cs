@@ -14,7 +14,15 @@ namespace EliteDataRelay.Configuration
         public static string OutputFileName { get; set; } = "cargo.txt";
         public static string OutputDirectory { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "out");
         public static bool EnableFileOutput { get; set; } = false;
-        public static bool EnableOverlay { get; set; } = false;
+        public static bool EnableLeftOverlay { get; set; } = false;
+        public static bool EnableRightOverlay { get; set; } = false;
+        public static bool EnableHotkeys { get; set; } = false;
+
+        // --- Hotkey settings ---
+        public static Keys StartMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F9;
+        public static Keys StopMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F10;
+        public static Keys ShowOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F11;
+        public static Keys HideOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F12;
 
         // --- Application constants and paths ---
         public static string CargoPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous", "Cargo.json");
@@ -71,7 +79,13 @@ namespace EliteDataRelay.Configuration
             public string OutputFileName { get; set; } = AppConfiguration.OutputFileName;
             public string OutputDirectory { get; set; } = AppConfiguration.OutputDirectory;
             public bool EnableFileOutput { get; set; } = AppConfiguration.EnableFileOutput;
-            public bool EnableOverlay { get; set; } = AppConfiguration.EnableOverlay;
+            public bool EnableLeftOverlay { get; set; } = AppConfiguration.EnableLeftOverlay;
+            public bool EnableRightOverlay { get; set; } = AppConfiguration.EnableRightOverlay;
+            public bool EnableHotkeys { get; set; } = AppConfiguration.EnableHotkeys;
+            public Keys StartMonitoringHotkey { get; set; } = AppConfiguration.StartMonitoringHotkey;
+            public Keys StopMonitoringHotkey { get; set; } = AppConfiguration.StopMonitoringHotkey;
+            public Keys ShowOverlayHotkey { get; set; } = AppConfiguration.ShowOverlayHotkey;
+            public Keys HideOverlayHotkey { get; set; } = AppConfiguration.HideOverlayHotkey;
             public Size WindowSize { get; set; }
             public Point WindowLocation { get; set; }
             public FormWindowState WindowState { get; set; }
@@ -99,7 +113,13 @@ namespace EliteDataRelay.Configuration
                     OutputFileName = model.OutputFileName;
                     OutputDirectory = model.OutputDirectory;
                     EnableFileOutput = model.EnableFileOutput;
-                    EnableOverlay = model.EnableOverlay;
+                    EnableLeftOverlay = model.EnableLeftOverlay;
+                    EnableRightOverlay = model.EnableRightOverlay;
+                    EnableHotkeys = model.EnableHotkeys;
+                    StartMonitoringHotkey = model.StartMonitoringHotkey;
+                    StopMonitoringHotkey = model.StopMonitoringHotkey;
+                    ShowOverlayHotkey = model.ShowOverlayHotkey;
+                    HideOverlayHotkey = model.HideOverlayHotkey;
 
                     // Load window settings, with validation
                     if (model.WindowSize.Width >= 300 && model.WindowSize.Height >= 200) // Basic sanity check
@@ -130,7 +150,13 @@ namespace EliteDataRelay.Configuration
                     OutputFileName = OutputFileName,
                     OutputDirectory = OutputDirectory,
                     EnableFileOutput = EnableFileOutput,
-                    EnableOverlay = EnableOverlay,
+                    EnableLeftOverlay = EnableLeftOverlay,
+                    EnableRightOverlay = EnableRightOverlay,
+                    EnableHotkeys = EnableHotkeys,
+                    StartMonitoringHotkey = StartMonitoringHotkey,
+                    StopMonitoringHotkey = StopMonitoringHotkey,
+                    ShowOverlayHotkey = ShowOverlayHotkey,
+                    HideOverlayHotkey = HideOverlayHotkey,
                     WindowSize = WindowSize,
                     WindowLocation = WindowLocation,
                     WindowState = WindowState

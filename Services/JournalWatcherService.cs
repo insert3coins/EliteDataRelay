@@ -166,30 +166,59 @@ namespace EliteDataRelay.Services
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
-
-                    // A more robust way of checking events rather than string.Contains
-                    using var jsonDoc = JsonDocument.Parse(line);
-                    if (!jsonDoc.RootElement.TryGetProperty("event", out var eventElement))
+                    
+                    try
                     {
-                        continue;
-                    }
-
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    string? eventType = eventElement.GetString();
-
-                    if (eventType == "Loadout")
-                    {
-                        var loadoutEvent = JsonSerializer.Deserialize<LoadoutEvent>(line, options);
-                        if (loadoutEvent != null)
+                        // A more robust way of checking events rather than string.Contains
+                        using var jsonDoc = JsonDocument.Parse(line);
+                        if (!jsonDoc.RootElement.TryGetProperty("event", out var eventElement))
                         {
-                            if (loadoutEvent.CargoCapacity > 0)
+                            continue;
+                        }
+
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        string? eventType = eventElement.GetString();
+
+                        if (eventType == "Loadout")
+                        {
+                            var loadoutEvent = JsonSerializer.Deserialize<LoadoutEvent>(line, options);
+                            if (loadoutEvent != null)
                             {
-                                Debug.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");
-                                CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
+                                if (loadoutEvent.CargoCapacity > 0)
+                                {
+                                    Debug.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");
+                                    CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
+                                }
+
+                                var customShipName = loadoutEvent.ShipName;
+                                var shipType = loadoutEvent.ShipLocalised;
+
+                                // Check and update ship info
+                                if (!string.IsNullOrEmpty(customShipName) && !string.IsNullOrEmpty(shipType) &&
+                                    (customShipName != _lastShipName || shipType != _lastShipIdent))
+                                {
+                                    _lastShipName = customShipName;
+                                    _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
+                                    Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {customShipName}, Type: {shipType}");
+                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
+                                }
+                            }
+                        }
+                        else if (eventType == "LoadGame")
+                        {
+                            var loadGameEvent = JsonSerializer.Deserialize<LoadGameEvent>(line, options);
+                            if (loadGameEvent == null) continue;
+
+                            // Check and update ship info
+                            if (!string.IsNullOrEmpty(loadGameEvent.Commander) && loadGameEvent.Commander != _lastCommanderName)
+                            {
+                                _lastCommanderName = loadGameEvent.Commander;
+                                Debug.WriteLine($"[JournalWatcherService] Found Commander Name: {_lastCommanderName}");
+                                CommanderNameChanged?.Invoke(this, new CommanderNameChangedEventArgs(_lastCommanderName));
                             }
 
-                            var customShipName = loadoutEvent.ShipName;
-                            var shipType = loadoutEvent.ShipLocalised;
+                            var customShipName = loadGameEvent.ShipName;
+                            var shipType = loadGameEvent.ShipLocalised;
 
                             // Check and update ship info
                             if (!string.IsNullOrEmpty(customShipName) && !string.IsNullOrEmpty(shipType) &&
@@ -197,62 +226,41 @@ namespace EliteDataRelay.Services
                             {
                                 _lastShipName = customShipName;
                                 _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
-                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {customShipName}, Type: {shipType}");
+                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {customShipName}, Type: {shipType}");
                                 ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
                             }
                         }
-                    }
-                    else if (eventType == "LoadGame")
-                    {
-                        var loadGameEvent = JsonSerializer.Deserialize<LoadGameEvent>(line, options);
-                        if (loadGameEvent == null) continue;
-
-                        // Check and update commander name
-                        if (!string.IsNullOrEmpty(loadGameEvent.Commander) && loadGameEvent.Commander != _lastCommanderName)
+                        else if (eventType == "Cargo")
                         {
-                            _lastCommanderName = loadGameEvent.Commander;
-                            Debug.WriteLine($"[JournalWatcherService] Found Commander Name: {_lastCommanderName}");
-                            CommanderNameChanged?.Invoke(this, new CommanderNameChangedEventArgs(_lastCommanderName));
-                        }
-
-                        var customShipName = loadGameEvent.ShipName;
-                        var shipType = loadGameEvent.ShipLocalised;
-
-                        // Check and update ship info
-                        if (!string.IsNullOrEmpty(customShipName) && !string.IsNullOrEmpty(shipType) &&
-                            (customShipName != _lastShipName || shipType != _lastShipIdent))
-                        {
-                            _lastShipName = customShipName;
-                            _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
-                            Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {customShipName}, Type: {shipType}");
-                            ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
-                        }
-                    }
-                    else if (eventType == "Cargo")
-                    {
-                        var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(line, options);
-                        if (snapshot != null)
-                        {
-                            string hash = ComputeHash(snapshot);
-                            if (hash == _lastCargoHash) continue;
-
-                            _lastCargoHash = hash;
-                            Debug.WriteLine($"[JournalWatcherService] Found Cargo event. Inventory count: {snapshot.Count}");
-                            CargoInventoryChanged?.Invoke(this, new CargoInventoryEventArgs(snapshot));
-                        }
-                    }
-                    else if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
-                    {
-                        if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement))
-                        {
-                            var starSystem = starSystemElement.GetString();
-                            if (!string.IsNullOrEmpty(starSystem) && starSystem != _lastStarSystem)
+                            var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(line, options);
+                            if (snapshot != null)
                             {
-                                _lastStarSystem = starSystem;
-                                Debug.WriteLine($"[JournalWatcherService] Found Location event. StarSystem: {starSystem}");
-                                LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem));
+                                string hash = ComputeHash(snapshot);
+                                if (hash == _lastCargoHash) continue;
+
+                                _lastCargoHash = hash;
+                                Debug.WriteLine($"[JournalWatcherService] Found Cargo event. Inventory count: {snapshot.Count}");
+                                CargoInventoryChanged?.Invoke(this, new CargoInventoryEventArgs(snapshot));
                             }
                         }
+                        else if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
+                        {
+                            if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement))
+                            {
+                                var starSystem = starSystemElement.GetString();
+                                if (!string.IsNullOrEmpty(starSystem) && starSystem != _lastStarSystem)
+                                {
+                                    _lastStarSystem = starSystem;
+                                    Debug.WriteLine($"[JournalWatcherService] Found Location event. StarSystem: {starSystem}");
+                                    LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem));
+                                }
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        Debug.WriteLine($"[JournalWatcherService] Failed to parse journal line: {line}. Error: {ex.Message}");
+                        // Continue to the next line instead of breaking the loop.
                     }
                 }
                 _lastPosition = fs.Position;

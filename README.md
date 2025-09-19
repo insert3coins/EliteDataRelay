@@ -5,13 +5,13 @@
 [![Last Commit](https://img.shields.io/github/last-commit/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay/commits/main)
 [![Top Language](https://img.shields.io/github/languages/top/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay)
 
-A lightweight Windows utility for players of Elite Dangerous. It monitors your in-game cargo in real-time, displaying the contents and total count in a simple interface and exporting the data to a text file for use with streaming overlays or other tools.
+A lightweight Windows utility for players of Elite Dangerous. It monitors your in-game cargo and status in real-time, displaying the information in a clean UI, exporting it to a text file, and showing it via a customizable in-game overlay.
 
 ---
 
 ## 📍 Overview
 
-This tool provides a simple way to keep an eye on your ship's cargo and status without having to tab into the game's right-hand panel. It reads the `Cargo.json`, `Status.json`, and player journal files to display your cargo, credit balance, CMDR name, and current ship. The output is displayed in a clean interface that includes a real-time cargo list, a visual meter for your cargo hold, and an indicator to show when monitoring is active. The data is also written to a `cargo.txt` file, which is perfect for adding a cargo display to your stream via OBS or other broadcasting software.
+This tool provides a simple way to keep an eye on your ship's cargo and status without having to tab into the game's right-hand panel. It reads the `Cargo.json`, `Status.json`, and player journal files to display your cargo, credit balance, CMDR name, and current ship. This information is available in three ways: a clean desktop UI, a highly configurable text file output for streaming software, and a new in-game overlay.
 
 ## 📸 Screenshot
 ![Screenshot](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Screenshot.png)
@@ -19,12 +19,17 @@ This tool provides a simple way to keep an eye on your ship's cargo and status w
 ## ✨ Features
 
 -   **Real-time Cargo Monitoring**: Watches `Cargo.json` for any changes and updates instantly.
--   **Live Player Status**: Displays your **CMDR name**, **current ship**, and real-time **credit balance**.
+-   **Live Player Status**: Displays your **CMDR name**, **current ship ID**, and real-time **credit balance**.
 -   **Cargo Capacity**: Reads player journal files to display your total cargo capacity (e.g., `128/256`).
+-   **In-Game Overlay**: A redesigned, modern overlay displays your live status and cargo information.
+    -   **Two-Panel Design**: A left panel for CMDR/ship info and a right panel for cargo.
+    -   **Visual Cargo Meter**: The cargo overlay includes a visual bar to quickly see how full your hold is.
 -   **Simple UI**: A clean, no-fuss window displays all your essential information at a glance.
 -   **Visual Cargo Meter**: A bar in the bottom-right corner visually represents how full your cargo hold is.
+-   **Global Hotkeys**: Configure system-wide hotkeys to start/stop monitoring and show/hide the overlay without leaving the game.
 -   **Active Status Indicator**: A subtle animation appears when monitoring is active, providing clear visual feedback.
 -   **Text File Output**: Exports cargo data to a configurable text file (default: `out/cargo.txt`) for easy integration with other tools (like OBS for streaming).
+-   **Smart Start**: Silently checks if Elite Dangerous is running before showing the overlay, but allows other monitoring to start regardless.
 -   **Audio Cues**: Plays sounds when monitoring starts and stops.
 -   **Automatic Path Detection**: Automatically finds the default Elite Dangerous player data folder for `Cargo.json`, `Status.json`, and journal files.
 -   **System Tray**: Minimizes to the system tray to run unobtrusively in the background.
@@ -41,10 +46,29 @@ This tool provides a simple way to keep an eye on your ship's cargo and status w
 
 The easiest way to use the Data Relay is to download the latest release.
 
-1.  Go to the **Releases** page.
-2.  Download the `.zip` file from the latest release.
-3.  Extract the contents to a folder of your choice.
-4.  Run `EliteDataRelay.exe`.
+1.  Launch Elite Dangerous.
+2.  Run `EliteDataRelay.exe`.
+3.  Click **Start** to begin monitoring.
+4.  The application window and in-game overlay (if enabled) will update whenever your cargo or status changes.
+5.  A file named `cargo.txt` (by default) will be created and updated in the configured output directory (by default, an `out` sub-folder). You can add this text file as a source in OBS.
+6.  Click **Stop** to pause monitoring.
+7.  Minimize or close the window to send the application to the system tray. You can restore it by double-clicking the tray icon.
+
+### In-Game Overlay
+
+You can choose to enable the in-game overlay panels independently. By default, both are disabled.
+
+-   **Enable left overlay**: Toggles the display of your CMDR name, ship, and credit balance.
+-   **Enable right overlay**: Toggles the display of your cargo count and item list.
+
+### Hotkeys
+
+You can enable and configure global hotkeys to control the application while in-game. By default, hotkeys are disabled.
+
+-   **Start Monitoring**: Starts all monitoring services.
+-   **Stop Monitoring**: Stops all monitoring services.
+-   **Show Overlay**: Makes the overlay windows visible.
+-   **Hide Overlay**: Hides the overlay windows.
 
 ### Building from Source
 
@@ -72,7 +96,7 @@ If you want to build the project yourself:
 1.  Launch Elite Dangerous.
 2.  Run `EliteDataRelay.exe`.
 3.  Click **Start** to begin monitoring.
-4.  The application window will update whenever your cargo changes.
+4.  The application window and in-game overlay (if enabled) will update whenever your cargo or status changes.
 5.  A file named `cargo.txt` (by default) will be created and updated in the configured output directory (by default, an `out` sub-folder). You can add this text file as a source in OBS.
 6.  Click **Stop** to pause monitoring.
 7.  Minimize or close the window to send the application to the system tray. You can restore it by double-clicking the tray icon.
@@ -81,6 +105,15 @@ If you want to build the project yourself:
 ## ⚙️ Settings
 
 You can customize the application's behavior by clicking the **Settings** button.
+
+### In-Game Overlay
+
+You can choose to enable the in-game overlay panels independently. By default, both are disabled.
+
+-   **Enable left overlay**: Toggles the display of your CMDR name, ship, and credit balance.
+-   **Enable right overlay**: Toggles the display of your cargo count and item list.
+
+---
 
 ### Enable File Output
 
@@ -113,6 +146,8 @@ You can specify the folder where the output file will be saved. By default, it i
 -   [x] Allow customization of the `cargo.txt` output format.
 -   [x] Add a system tray icon for running in the background.
 -   [x] Display CMDR name, ship, and credit balance.
+-   [x] Add a configurable in-game overlay.
+-   [x] Add configurable global hotkeys for in-game control.
 -   [ ] Package the application with an installer.
 
 ## 🔰 Contributing

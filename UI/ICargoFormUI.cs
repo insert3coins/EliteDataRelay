@@ -97,5 +97,20 @@ namespace EliteDataRelay.UI
         /// <param name="startEnabled">Whether start button should be enabled</param>
         /// <param name="stopEnabled">Whether stop button should be enabled</param>
         void SetButtonStates(bool startEnabled, bool stopEnabled);
+
+        /// <summary>
+        /// Stops and starts the overlay service to apply new settings.
+        /// </summary>
+        void RefreshOverlay();
+
+        /// <summary>
+        /// Shows the overlay windows if they are hidden.
+        /// </summary>
+        void ShowOverlays();
+
+        /// <summary>
+        /// Hides the overlay windows.
+        /// </summary>
+        void HideOverlays();
     }
 }
