@@ -14,6 +14,7 @@ namespace EliteDataRelay.Configuration
         public static string OutputFileName { get; set; } = "cargo.txt";
         public static string OutputDirectory { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "out");
         public static bool EnableFileOutput { get; set; } = false;
+        public static bool EnableOverlay { get; set; } = false;
 
         // --- Application constants and paths ---
         public static string CargoPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous", "Cargo.json");
@@ -70,6 +71,7 @@ namespace EliteDataRelay.Configuration
             public string OutputFileName { get; set; } = AppConfiguration.OutputFileName;
             public string OutputDirectory { get; set; } = AppConfiguration.OutputDirectory;
             public bool EnableFileOutput { get; set; } = AppConfiguration.EnableFileOutput;
+            public bool EnableOverlay { get; set; } = AppConfiguration.EnableOverlay;
             public Size WindowSize { get; set; }
             public Point WindowLocation { get; set; }
             public FormWindowState WindowState { get; set; }
@@ -97,6 +99,7 @@ namespace EliteDataRelay.Configuration
                     OutputFileName = model.OutputFileName;
                     OutputDirectory = model.OutputDirectory;
                     EnableFileOutput = model.EnableFileOutput;
+                    EnableOverlay = model.EnableOverlay;
 
                     // Load window settings, with validation
                     if (model.WindowSize.Width >= 300 && model.WindowSize.Height >= 200) // Basic sanity check
@@ -127,6 +130,7 @@ namespace EliteDataRelay.Configuration
                     OutputFileName = OutputFileName,
                     OutputDirectory = OutputDirectory,
                     EnableFileOutput = EnableFileOutput,
+                    EnableOverlay = EnableOverlay,
                     WindowSize = WindowSize,
                     WindowLocation = WindowLocation,
                     WindowState = WindowState

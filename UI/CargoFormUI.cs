@@ -19,6 +19,7 @@ namespace EliteDataRelay.UI
         private TrayIconManager? _trayIconManager;
         private Icon? _appIcon;
         private LayoutManager? _layoutManager;
+        private OverlayService? _overlayService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";
@@ -45,6 +46,7 @@ namespace EliteDataRelay.UI
             _trayIconManager = new TrayIconManager(_appIcon);
             _fontManager = new FontManager();
             _controlFactory = new ControlFactory(_fontManager);
+            _overlayService = new OverlayService();
 
             if (_controlFactory.WatchingLabel != null)
             {
@@ -183,6 +185,7 @@ namespace EliteDataRelay.UI
                 ? $"Cargo: {currentCount}/{capacity.Value}"
                 : $"Cargo: {currentCount}";
             _controlFactory.CargoHeaderLabel.Text = headerText;
+            _overlayService?.UpdateCargo(currentCount, capacity);
         }
 
         public void UpdateCargoList(CargoSnapshot snapshot)
@@ -222,6 +225,8 @@ namespace EliteDataRelay.UI
                 AdjustMessageColumnLayout(); // Set columns for single message view
             }
             listView.EndUpdate();
+
+            _overlayService?.UpdateCargoList(snapshot);
         }
 
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
@@ -258,6 +263,7 @@ namespace EliteDataRelay.UI
                 var cmdrText = $"CMDR: {commanderName}";
                 _controlFactory.CommanderLabel.Text = cmdrText;
                 _controlFactory.ToolTip.SetToolTip(_controlFactory.CommanderLabel, cmdrText);
+                _overlayService?.UpdateCommander(commanderName);
             }
         }
 
@@ -270,6 +276,7 @@ namespace EliteDataRelay.UI
 
                 // Update the tooltip to match the full text
                 _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Ship: {shipName} ({shipIdent})");
+                _overlayService?.UpdateShip(shipIdent);
             }
         }
 
@@ -280,6 +287,7 @@ namespace EliteDataRelay.UI
                 var balanceText = $"Balance: {balance:N0} CR";
                 _controlFactory.BalanceLabel.Text = balanceText;
                 _controlFactory.ToolTip.SetToolTip(_controlFactory.BalanceLabel, balanceText);
+                _overlayService?.UpdateBalance(balance);
             }
         }
 
@@ -316,10 +324,18 @@ namespace EliteDataRelay.UI
                 if (stopEnabled) // This means monitoring is now active
                 {
                     _watchingAnimationManager.Start();
+                    // Only start the overlay if it's enabled in settings.
+                    if (AppConfiguration.EnableOverlay)
+                    {
+                        _overlayService?.Start();
+                    }
                 }
                 else // Monitoring is stopped
                 {
                     _watchingAnimationManager.Stop();
+                    // Always stop the overlay service to ensure it's hidden if the user
+                    // disabled it in settings while it was running.
+                    _overlayService?.Stop();
                 }
             }
         }
@@ -347,6 +363,7 @@ namespace EliteDataRelay.UI
             _layoutManager?.Dispose();
             _trayIconManager?.Dispose();
             _watchingAnimationManager?.Dispose();
+            _overlayService?.Dispose();
             _appIcon?.Dispose();
             _iconStream?.Dispose();
         }

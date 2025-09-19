@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Services;
 using EliteDataRelay.UI;
+using EliteDataRelay.Models;
 
 namespace EliteDataRelay
 {
@@ -60,6 +61,14 @@ namespace EliteDataRelay
 
         private int? _cargoCapacity;
         private bool _isExiting;
+
+        // Cache for last known values to re-populate the overlay when it's restarted.
+        private string? _lastCommanderName;
+        private string? _lastShipName;
+        private string? _lastShipIdent;
+        private long? _lastBalance;
+        private string? _lastLocation;
+        private CargoSnapshot? _lastCargoSnapshot;
 
         private void InitializeComponent()
         {
@@ -233,6 +242,7 @@ namespace EliteDataRelay
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
+            _lastCargoSnapshot = e.Snapshot;
             // --- File Output ---
             // If enabled in settings, write the snapshot to the output text file.
             if (AppConfiguration.EnableFileOutput)
@@ -259,21 +269,26 @@ namespace EliteDataRelay
 
         private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
+            _lastLocation = e.StarSystem;
             _cargoFormUI.UpdateLocation(e.StarSystem);
         }
 
         private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
         {
+            _lastBalance = e.Balance;
             _cargoFormUI.UpdateBalance(e.Balance);
         }
 
         private void OnCommanderNameChanged(object? sender, CommanderNameChangedEventArgs e)
         {
+            _lastCommanderName = e.CommanderName;
             _cargoFormUI.UpdateCommanderName(e.CommanderName);
         }
 
         private void OnShipInfoChanged(object? sender, ShipInfoChangedEventArgs e)
         {
+            _lastShipName = e.ShipName;
+            _lastShipIdent = e.ShipIdent;
             _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent);
         }
 
@@ -283,12 +298,36 @@ namespace EliteDataRelay
 
         private void StartMonitoring()
         {
+            // As per your suggestion, check if the game is running before starting the overlay and other services.
+            var gameProcess = Process.GetProcessesByName("EliteDangerous64").FirstOrDefault();
+            if (gameProcess == null || gameProcess.MainWindowHandle == IntPtr.Zero)
+            {
+                MessageBox.Show(
+                    "Elite Dangerous process not found.\nPlease make sure the game is running before starting monitoring.",
+                    "Game Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return; // Stop if the game isn't running.
+            }
+
             // Play start sound
             _soundService.PlayStartSound();
             
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
             _cargoFormUI.UpdateTitle("Elite Data Relay – Watching");
+
+            // Re-populate the UI (and the new overlay) with the last known data.
+            // The overlay is created inside SetButtonStates, so we can update it now.
+            if (_lastCommanderName != null) _cargoFormUI.UpdateCommanderName(_lastCommanderName);
+            if (_lastShipName != null && _lastShipIdent != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent);
+            if (_lastBalance.HasValue) _cargoFormUI.UpdateBalance(_lastBalance.Value);
+            if (_lastLocation != null) _cargoFormUI.UpdateLocation(_lastLocation);
+            if (_lastCargoSnapshot != null)
+            {
+                _cargoFormUI.UpdateCargoList(_lastCargoSnapshot);
+                _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
+            }
 
             // Start journal monitoring to find capacity before the first cargo read
             _journalWatcherService.StartMonitoring();

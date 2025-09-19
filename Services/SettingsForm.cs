@@ -23,6 +23,8 @@ namespace EliteDataRelay.UI
         private GroupBox _grpOutputFormat = null!;
         private Label _lblOutputDirectory = null!;
         private Label _lblOutputFileName = null!;
+        private CheckBox _chkEnableOverlay = null!;
+        private GroupBox _grpOverlaySettings = null!;
 
         public SettingsForm()
         {
@@ -33,8 +35,8 @@ namespace EliteDataRelay.UI
         private void InitializeComponent()
         {
             // Form Properties
-            Text = "Settings";
-            ClientSize = new Size(464, 349);
+            this.Text = "Settings";
+            this.ClientSize = new Size(464, 415);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -126,12 +128,28 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            // Overlay GroupBox
+            _grpOverlaySettings = new GroupBox
+            {
+                Text = "In-Game Overlay",
+                Location = new Point(12, 316),
+                Size = new Size(440, 50),
+            };
+
+            // Enable Overlay CheckBox
+            _chkEnableOverlay = new CheckBox
+            {
+                Text = "Enable in-game overlay",
+                Location = new Point(15, 20),
+                AutoSize = true
+            };
+
             // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 318) };
+            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 378) };
             _btnOk.Click += (sender, e) => SaveSettings();
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 318) };
+            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 378) };
 
             // Add Controls
             _grpOutputFormat.Controls.Add(_chkEnableFileOutput);
@@ -144,6 +162,8 @@ namespace EliteDataRelay.UI
             _grpOutputFormat.Controls.Add(_txtOutputFileName);
             _grpOutputFormat.Controls.Add(_lblPlaceholders);
             Controls.Add(_grpOutputFormat);
+            _grpOverlaySettings.Controls.Add(_chkEnableOverlay);
+            Controls.Add(_grpOverlaySettings);
             Controls.Add(_btnOk);
             Controls.Add(_btnCancel);
             AcceptButton = _btnOk;
@@ -170,6 +190,7 @@ namespace EliteDataRelay.UI
             _chkEnableFileOutput.Checked = AppConfiguration.EnableFileOutput;
             _txtOutputFormat.Text = AppConfiguration.OutputFileFormat;
             _txtOutputFileName.Text = AppConfiguration.OutputFileName;
+            _chkEnableOverlay.Checked = AppConfiguration.EnableOverlay;
             _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
         }
@@ -201,10 +222,11 @@ namespace EliteDataRelay.UI
 
         private void SaveSettings()
         {
-            AppConfiguration.EnableFileOutput = _chkEnableFileOutput.Checked;
             // --- Save all settings ---
+            AppConfiguration.EnableFileOutput = _chkEnableFileOutput.Checked;
             AppConfiguration.OutputFileFormat = _txtOutputFormat.Text;
             AppConfiguration.OutputFileName = _txtOutputFileName.Text;
+            AppConfiguration.EnableOverlay = _chkEnableOverlay.Checked;
             AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
             AppConfiguration.Save();
         }
