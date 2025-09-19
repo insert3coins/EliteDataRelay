@@ -1,9 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Windows.Forms; // Keep for Screen and fallback logic
+using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 using EliteDataRelay.UI;
@@ -12,65 +9,57 @@ namespace EliteDataRelay.Services
 {
     public class OverlayService : IDisposable
     {
-        private const string GameProcessName = "EliteDangerous64";
-        private const int LeftHorizontalOffset = 10;
-        private const int RightHorizontalOffset = 0;
-        private const int VerticalOffset = 0;
-
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
 
         public void Start()
         {
-            try
+            Stop(); // Ensure any existing overlays are closed
+
+            if (AppConfiguration.EnableLeftOverlay)
             {
-                // Check if the game is running before showing the overlay.
-                // If not, the other services can still run, but the overlay will not appear.
-                var gameProcess = Process.GetProcessesByName(GameProcessName).FirstOrDefault();
-                if (gameProcess == null || gameProcess.MainWindowHandle == IntPtr.Zero)
-                {
-                    Debug.WriteLine("[OverlayService] Elite Dangerous process not found. Overlay will not be shown.");
-                    return;
-                }
+                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Left);
+                _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
 
-                // Use the primary screen's bounds for positioning the overlays, as requested.
-                var screenBounds = Screen.PrimaryScreen.Bounds;
-
-                // Create the left overlay for CMDR/Ship/Balance info
-                if (AppConfiguration.EnableLeftOverlay && (_leftOverlayForm == null || _leftOverlayForm.IsDisposed))
+                if (AppConfiguration.LeftOverlayLocation != Point.Empty)
                 {
-                    var newLeftOverlay = new OverlayForm(OverlayForm.OverlayPosition.Left);
-                    int yPos = screenBounds.Top + (screenBounds.Height - newLeftOverlay.Height) / 2 + VerticalOffset;
-                    newLeftOverlay.Location = new Point(screenBounds.Left + LeftHorizontalOffset, yPos);
-                    _leftOverlayForm = newLeftOverlay;
+                    _leftOverlayForm.Location = AppConfiguration.LeftOverlayLocation;
                 }
-
-                // Create the right overlay for Cargo info
-                if (AppConfiguration.EnableRightOverlay && (_rightOverlayForm == null || _rightOverlayForm.IsDisposed))
+                else
                 {
-                    var newRightOverlay = new OverlayForm(OverlayForm.OverlayPosition.Right);
-                    int yPos = screenBounds.Top + (screenBounds.Height - newRightOverlay.Height) / 2 + VerticalOffset;
-                    newRightOverlay.Location = new Point(
-                        screenBounds.Right - newRightOverlay.Width - RightHorizontalOffset,
-                        yPos
-                    );
-                    _rightOverlayForm = newRightOverlay;
+                    var screen = Screen.PrimaryScreen.WorkingArea;
+                    const int leftOverlayHeight = 85; // Height is set in OverlayForm.OnLoad
+                    _leftOverlayForm.Location = new Point(20, (screen.Height / 2) - (leftOverlayHeight / 2));
                 }
-
-                if (AppConfiguration.EnableLeftOverlay && _leftOverlayForm != null && !_leftOverlayForm.IsDisposed)
-                {
-                    _leftOverlayForm.Show();
-                }
-                if (AppConfiguration.EnableRightOverlay && _rightOverlayForm != null && !_rightOverlayForm.IsDisposed)
-                {
-                    _rightOverlayForm.Show();
-                }
-                Debug.WriteLine("[OverlayService] Overlay started.");
+                _leftOverlayForm!.Show();
             }
-            catch (Exception ex)
+
+            if (AppConfiguration.EnableRightOverlay)
             {
-                Debug.WriteLine($"[OverlayService] Failed to start overlay: {ex.Message}");
+                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Right);
+                _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
+
+                if (AppConfiguration.RightOverlayLocation != Point.Empty)
+                {
+                    _rightOverlayForm.Location = AppConfiguration.RightOverlayLocation;
+                }
+                else
+                {
+                    var screen = Screen.PrimaryScreen.WorkingArea;
+                    const int rightOverlayWidth = 280; // Width is set in OverlayForm.OnLoad
+                    const int rightOverlayHeight = 400; // Height is set in OverlayForm.OnLoad
+                    _rightOverlayForm.Location = new Point(screen.Width - rightOverlayWidth - 20, (screen.Height / 2) - (rightOverlayHeight / 2));
+                }
+                _rightOverlayForm!.Show();
             }
+        }
+
+        public void Stop()
+        {
+            _leftOverlayForm?.Close();
+            _rightOverlayForm?.Close();
+            _leftOverlayForm = null;
+            _rightOverlayForm = null;
         }
 
         public void Show()
@@ -85,57 +74,58 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.Hide();
         }
 
-        public void Stop()
+        private void OnOverlayPositionChanged(object? sender, Point newLocation)
         {
-            if (_leftOverlayForm != null && !_leftOverlayForm.IsDisposed)
+            if (sender == _leftOverlayForm)
             {
-                _leftOverlayForm.Close();
-                _leftOverlayForm = null;
+                AppConfiguration.LeftOverlayLocation = newLocation;
             }
-            if (_rightOverlayForm != null && !_rightOverlayForm.IsDisposed)
+            else if (sender == _rightOverlayForm)
             {
-                _rightOverlayForm.Close();
-                _rightOverlayForm = null;
-                Debug.WriteLine("[OverlayService] Overlay stopped.");
+                AppConfiguration.RightOverlayLocation = newLocation;
             }
+            AppConfiguration.Save();
         }
 
-        public void UpdateCommander(string commanderName) => _leftOverlayForm?.UpdateCommander($"CMDR: {commanderName}");
-        public void UpdateShip(string shipName) => _leftOverlayForm?.UpdateShip($"Ship: {shipName}");
-        public void UpdateBalance(long balance) => _leftOverlayForm?.UpdateBalance($"Balance: {balance:N0} CR");
-        public void UpdateCargo(int count, int? capacity)
-        {
-            string cargoText = capacity.HasValue
-                ? $"Cargo: {count}/{capacity.Value}"
-                : $"Cargo: {count}";
-            _rightOverlayForm?.UpdateCargo(cargoText);
-        }
+        #region Data Update Methods
+        // These methods would update the UI controls on the specific overlay forms.
+        // Using BeginInvoke ensures thread safety, as data updates can come from background threads.
 
-        public void UpdateCargoSize(string cargoSizeText)
+        public void UpdateCommander(string name) => _leftOverlayForm?.BeginInvoke(() =>
         {
-            _rightOverlayForm?.UpdateCargoSize(cargoSizeText);
-        }
+            _leftOverlayForm.UpdateCommander($"CMDR: {name}");
+        });
 
-        public void UpdateCargoList(CargoSnapshot snapshot)
+        public void UpdateShip(string ship) => _leftOverlayForm?.BeginInvoke(() =>
         {
-            _rightOverlayForm?.UpdateCargoList(snapshot.Inventory);
-        }
+            _leftOverlayForm.UpdateShip($"Ship: {ship}");
+        });
 
-        public void UpdateSessionOverlay(long cargoCollected, long creditsEarned)
+        public void UpdateBalance(long balance) => _leftOverlayForm?.BeginInvoke(() =>
         {
-            // Session stats are now on the right overlay.
-            // We format the string here before passing it to the form.
-            if (_rightOverlayForm != null)
-            {
-                _rightOverlayForm.UpdateSessionCargoCollected($"Cargo Run: {cargoCollected}");
-                _rightOverlayForm.UpdateSessionCreditsEarned($"Credits Run: {creditsEarned:N0}");
-            }
-        }
+            _leftOverlayForm.UpdateBalance($"Balance: {balance:N0} CR");
+        });
+
+        public void UpdateCargo(int count, int? capacity) => _rightOverlayForm?.BeginInvoke(() =>
+        {
+            string headerText = capacity.HasValue ? $"Cargo: {count}/{capacity.Value}" : $"Cargo: {count}";
+            _rightOverlayForm.UpdateCargo(headerText);
+        });
+
+        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm.UpdateCargoList(snapshot.Inventory); });
+
+        public void UpdateCargoSize(string size) => _rightOverlayForm?.BeginInvoke(() => { _rightOverlayForm.UpdateCargoSize(size); });
+
+        public void UpdateSessionOverlay(long cargo, long credits) => _rightOverlayForm?.BeginInvoke(() => {
+            _rightOverlayForm.UpdateSessionCreditsEarned($"CR/hr: {credits:N0}");
+            _rightOverlayForm.UpdateSessionCargoCollected($"Cargo/hr: {cargo}");
+        });
+
+        #endregion
 
         public void Dispose()
         {
-            _leftOverlayForm?.Dispose();
-            _rightOverlayForm?.Dispose();
+            Stop();
         }
     }
 }

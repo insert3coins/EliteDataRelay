@@ -20,6 +20,7 @@ namespace EliteDataRelay.Configuration
         public static bool EnableRightOverlay { get; set; } = false;
         public static bool ShowSessionOnOverlay { get; set; } = false;
         public static bool EnableSessionTracking { get; set; } = false;
+        public static bool AllowOverlayDrag { get; set; } = false;
         public static bool EnableHotkeys { get; set; } = false;
 
         // --- Hotkey settings ---
@@ -27,6 +28,17 @@ namespace EliteDataRelay.Configuration
         public static Keys StopMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F10;
         public static Keys ShowOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F11;
         public static Keys HideOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F12;
+
+        // --- Overlay Position Settings ---
+        public static Point LeftOverlayLocation { get; set; } = Point.Empty;
+        public static Point RightOverlayLocation { get; set; } = Point.Empty;
+
+        // --- Overlay Appearance Settings ---
+        public static string OverlayFontName { get; set; } = "Consolas";
+        public static float OverlayFontSize { get; set; } = 11F;
+        public static Color OverlayTextColor { get; set; } = Color.Orange;
+        public static Color OverlayBackgroundColor { get; set; } = Color.FromArgb(30, 30, 30);
+        public static int OverlayOpacity { get; set; } = 85; // As a percentage
 
         // --- Application constants and paths ---
         public static string CargoPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Saved Games", "Frontier Developments", "Elite Dangerous", "Cargo.json");
@@ -82,6 +94,7 @@ namespace EliteDataRelay.Configuration
             public bool EnableRightOverlay { get; set; } = AppConfiguration.EnableRightOverlay;
             public bool ShowSessionOnOverlay { get; set; } = AppConfiguration.ShowSessionOnOverlay;
             public bool EnableSessionTracking { get; set; } = AppConfiguration.EnableSessionTracking;
+            public bool AllowOverlayDrag { get; set; } = AppConfiguration.AllowOverlayDrag;
             public bool EnableHotkeys { get; set; } = AppConfiguration.EnableHotkeys;
             public Keys StartMonitoringHotkey { get; set; } = AppConfiguration.StartMonitoringHotkey;
             public Keys StopMonitoringHotkey { get; set; } = AppConfiguration.StopMonitoringHotkey;
@@ -89,6 +102,13 @@ namespace EliteDataRelay.Configuration
             public Keys HideOverlayHotkey { get; set; } = AppConfiguration.HideOverlayHotkey;
             public Size WindowSize { get; set; }
             public Point WindowLocation { get; set; }
+            public Point LeftOverlayLocation { get; set; }
+            public Point RightOverlayLocation { get; set; }
+            public string OverlayFontName { get; set; } = AppConfiguration.OverlayFontName;
+            public float OverlayFontSize { get; set; } = AppConfiguration.OverlayFontSize;
+            public int OverlayTextColorArgb { get; set; } = AppConfiguration.OverlayTextColor.ToArgb();
+            public int OverlayBackgroundColorArgb { get; set; } = AppConfiguration.OverlayBackgroundColor.ToArgb();
+            public int OverlayOpacity { get; set; } = AppConfiguration.OverlayOpacity;
             public FormWindowState WindowState { get; set; }
         }
 
@@ -116,11 +136,21 @@ namespace EliteDataRelay.Configuration
                     EnableRightOverlay = model.EnableRightOverlay;
                     ShowSessionOnOverlay = model.ShowSessionOnOverlay;
                     EnableSessionTracking = model.EnableSessionTracking;
+                    AllowOverlayDrag = model.AllowOverlayDrag;
                     EnableHotkeys = model.EnableHotkeys;
                     StartMonitoringHotkey = model.StartMonitoringHotkey;
                     StopMonitoringHotkey = model.StopMonitoringHotkey;
                     ShowOverlayHotkey = model.ShowOverlayHotkey;
                     HideOverlayHotkey = model.HideOverlayHotkey;
+
+                    LeftOverlayLocation = model.LeftOverlayLocation;
+                    RightOverlayLocation = model.RightOverlayLocation;
+
+                    OverlayFontName = model.OverlayFontName;
+                    OverlayFontSize = model.OverlayFontSize > 0 ? model.OverlayFontSize : 11F;
+                    OverlayTextColor = Color.FromArgb(model.OverlayTextColorArgb);
+                    OverlayBackgroundColor = Color.FromArgb(model.OverlayBackgroundColorArgb);
+                    OverlayOpacity = Math.Clamp(model.OverlayOpacity, 0, 100);
 
                     // Load window settings, with validation
                     if (model.WindowSize.Width >= 300 && model.WindowSize.Height >= 200) // Basic sanity check
@@ -153,6 +183,7 @@ namespace EliteDataRelay.Configuration
                     EnableRightOverlay = EnableRightOverlay,
                     ShowSessionOnOverlay = ShowSessionOnOverlay,
                     EnableSessionTracking = EnableSessionTracking,
+                    AllowOverlayDrag = AllowOverlayDrag,
                     EnableHotkeys = EnableHotkeys,
                     StartMonitoringHotkey = StartMonitoringHotkey,
                     StopMonitoringHotkey = StopMonitoringHotkey,
@@ -160,6 +191,13 @@ namespace EliteDataRelay.Configuration
                     HideOverlayHotkey = HideOverlayHotkey,
                     WindowSize = WindowSize,
                     WindowLocation = WindowLocation,
+                    LeftOverlayLocation = LeftOverlayLocation,
+                    RightOverlayLocation = RightOverlayLocation,
+                    OverlayFontName = OverlayFontName,
+                    OverlayFontSize = OverlayFontSize,
+                    OverlayTextColorArgb = OverlayTextColor.ToArgb(),
+                    OverlayBackgroundColorArgb = OverlayBackgroundColor.ToArgb(),
+                    OverlayOpacity = OverlayOpacity,
                     WindowState = WindowState
                 };
 

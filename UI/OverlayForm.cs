@@ -17,16 +17,10 @@ namespace EliteDataRelay.UI
             Right
         }
 
-        // P/Invoke constants for making the form click-through
-        private const int GWL_EXSTYLE = -20;
-        private const int WS_EX_LAYERED = 0x80000;
-        private const int WS_EX_TRANSPARENT = 0x20;
-
-        [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hwnd, int index);
-
-        [DllImport("user32.dll")]
-        private static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
+        public event EventHandler<Point>? PositionChanged;
+        private bool _isDragging;
+        private Point _dragCursorStartPoint;
+        private Point _dragFormStartPoint;
 
         private Label _cmdrLabel = null!;
         private Label _shipLabel = null!;
@@ -34,8 +28,9 @@ namespace EliteDataRelay.UI
         private Label _cargoLabel = null!;
         private Label _sessionCargoCollectedLabel = null!;
         private Label _sessionCreditsEarnedLabel = null!;
-        private ListView _cargoListView = null!;
+        private Panel _cargoListPanel = null!;
         private Label _cargoSizeLabel = null!;
+        private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
 
         // Fonts are IDisposable, so we should keep references to them to dispose of them later.
         private readonly Font _labelFont;
@@ -58,13 +53,12 @@ namespace EliteDataRelay.UI
             TopMost = true;
             StartPosition = FormStartPosition.Manual;
 
-            // --- New design ---
-            this.BackColor = Color.FromArgb(30, 30, 30); // Dark background
+            // Apply appearance settings from configuration
+            this.BackColor = AppConfiguration.OverlayBackgroundColor;
 
-            _labelFont = new Font("Consolas", 11F, FontStyle.Bold);
-            _listFont = new Font("Consolas", 11F);
+            _labelFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize, FontStyle.Bold);
+            _listFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);
         }
-
         private Label CreateOverlayLabel(Point location, Font? font = null)
         {
             return new Label
@@ -72,7 +66,7 @@ namespace EliteDataRelay.UI
                 Location = location,
                 AutoSize = true,
                 Font = font ?? _labelFont,
-                ForeColor = Color.Orange, // High-visibility color for in-game
+                ForeColor = AppConfiguration.OverlayTextColor,
                 BackColor = Color.Transparent,
                 Text = "" // Default to empty string 
             };
@@ -81,9 +75,6 @@ namespace EliteDataRelay.UI
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            // Make the form click-through
-            int extendedStyle = GetWindowLong(Handle, GWL_EXSTYLE);
-            SetWindowLong(Handle, GWL_EXSTYLE, extendedStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT);
 
             if (_position == OverlayPosition.Left)
             {
@@ -114,7 +105,7 @@ namespace EliteDataRelay.UI
                 {
                     AutoSize = true,
                     Font = _labelFont,
-                    ForeColor = Color.Orange,
+                    ForeColor = AppConfiguration.OverlayTextColor,
                     BackColor = Color.Transparent,
                     Text = "", // Default to empty string
                     Margin = new Padding(10, 5, 0, 0)
@@ -123,24 +114,15 @@ namespace EliteDataRelay.UI
                 _cargoSizeLabel = CreateOverlayLabel(new Point(0, 0), _listFont);
                 _cargoSizeLabel.Margin = new Padding(10, 5, 0, 0);
 
-                // Create ListView for cargo items
-                _cargoListView = new ListView
+                // Create a Panel to custom-draw the cargo list. This is more reliable for
+                // dragging and gives us full control over the appearance.
+                _cargoListPanel = new Panel
                 {
                     Dock = DockStyle.Fill,
-                    View = View.Details,
-                    // ListView does not support a truly transparent background.
-                    // To blend in, we set its background to match the form's background.
                     BackColor = this.BackColor,
-                    ForeColor = Color.Orange,
-                    Font = _listFont,
-                    GridLines = false,
-                    BorderStyle = BorderStyle.None,
-                    HeaderStyle = ColumnHeaderStyle.None,
-                    FullRowSelect = false
+                    Font = _listFont
                 };
-                // Define columns for a standard left-aligned list.
-                _cargoListView.Columns.Add("Commodity", -2, HorizontalAlignment.Left);
-                _cargoListView.Columns.Add("Count", 60, HorizontalAlignment.Left);
+                _cargoListPanel.Paint += OnCargoListPanelPaint;
 
                 Panel? bottomPanel = null;
                 if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
@@ -176,16 +158,102 @@ namespace EliteDataRelay.UI
                 topPanel.Controls.Add(_cargoLabel);
                 topPanel.Controls.Add(_cargoSizeLabel);
 
-                // Add controls in reverse order for correct docking
-                Controls.Add(_cargoListView); // Fills remaining space
+                // Add docked controls. For docking to work correctly, the Fill-docked control
+                // must be added first to be at the bottom of the Z-order.
+                Controls.Add(_cargoListPanel); // Fills remaining space
                 if (bottomPanel != null)
                     Controls.Add(bottomPanel); // Docks to bottom
                 Controls.Add(topPanel); // Docks to top
             }
 
+            // Wire up dragging for the form and all its children, recursively.
+            AttachDragHandlers(this);
+
             // Now that the form is fully initialized and invisible, set opacity to 1 to show it.
             // This prevents the user from seeing any part of the form's construction.
-            this.Opacity = 0.85;
+            this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+        }
+
+        private void AttachDragHandlers(Control control)
+        {
+            control.MouseDown += OnOverlayMouseDown;
+            control.MouseMove += OnOverlayMouseMove;
+            control.MouseUp += OnOverlayMouseUp;
+            foreach (Control child in control.Controls)
+            {
+                AttachDragHandlers(child);
+            }
+        }
+
+        private void OnOverlayMouseDown(object? sender, MouseEventArgs e)
+        {
+            if (AppConfiguration.AllowOverlayDrag && e.Button == MouseButtons.Left)
+            {
+                _isDragging = true;
+                _dragCursorStartPoint = Cursor.Position;
+                _dragFormStartPoint = this.Location;
+                this.Cursor = Cursors.SizeAll;
+            }
+        }
+
+        private void OnOverlayMouseMove(object? sender, MouseEventArgs e)
+        {
+            if (_isDragging)
+            {
+                Point currentCursorPos = Cursor.Position;
+                int deltaX = currentCursorPos.X - _dragCursorStartPoint.X;
+                int deltaY = currentCursorPos.Y - _dragCursorStartPoint.Y;
+                this.Location = new Point(_dragFormStartPoint.X + deltaX, _dragFormStartPoint.Y + deltaY);
+            }
+        }
+
+        private void OnOverlayMouseUp(object? sender, MouseEventArgs e)
+        {
+            if (_isDragging)
+            {
+                _isDragging = false;
+                this.Cursor = Cursors.Default;
+                // Raise the event to notify the service to save the new position.
+                PositionChanged?.Invoke(this, this.Location);
+            }
+        }
+
+        private void OnCargoListPanelPaint(object? sender, PaintEventArgs e)
+        {
+            // Use higher quality text rendering for clarity in-game.
+            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            using (var textBrush = new SolidBrush(AppConfiguration.OverlayTextColor))
+            using (var grayBrush = new SolidBrush(SystemColors.GrayText))
+            {
+                float y = 5.0f;
+                const float xName = 10.0f;
+                const float xCount = 200.0f;
+
+                var itemsToDraw = _cargoItems.ToList();
+
+                if (!itemsToDraw.Any())
+                {
+                    e.Graphics.DrawString("Cargo hold is empty.", _listFont, grayBrush, xName, y);
+                    return;
+                }
+
+                foreach (var item in itemsToDraw)
+                {
+                    string displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
+                    if (!string.IsNullOrEmpty(displayName))
+                    {
+                        displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
+                    }
+
+                    if (displayName != null)
+                    {
+                        e.Graphics.DrawString(displayName, _listFont, textBrush, xName, y);
+                        e.Graphics.DrawString(item.Count.ToString(), _listFont, textBrush, xCount, y);
+                    }
+
+                    y += _listFont.GetHeight(e.Graphics);
+                }
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -228,23 +296,8 @@ namespace EliteDataRelay.UI
                 return;
             }
 
-            _cargoListView.BeginUpdate();
-            _cargoListView.Items.Clear();
-
-            var sortedInventory = inventory.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name);
-            foreach (var item in sortedInventory)
-            {
-                string displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
-                if (!string.IsNullOrEmpty(displayName))
-                {
-                    displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
-                }
-
-                var listViewItem = new ListViewItem(new[] { displayName, item.Count.ToString() });
-                _cargoListView.Items.Add(listViewItem);
-            }
-
-            _cargoListView.EndUpdate();
+            _cargoItems = inventory.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name).ToList();
+            _cargoListPanel?.Invalidate();
         }
 
         private void UpdateLabel(Label label, string text)
@@ -257,7 +310,11 @@ namespace EliteDataRelay.UI
          // <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing) { _labelFont?.Dispose(); _listFont?.Dispose(); }
+            if (disposing)
+            {
+                _labelFont?.Dispose();
+                _listFont?.Dispose();
+            }
             base.Dispose(disposing);
         }
     }

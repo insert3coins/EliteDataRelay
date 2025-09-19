@@ -6,8 +6,8 @@ using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.UI
 {
-    /// Form for configuring application settings.
-    public class SettingsForm : Form
+    // Form for configuring application settings.
+    public partial class SettingsForm : Form
     {
         private CheckBox _chkEnableFileOutput = null!;
         private TextBox _txtOutputFormat = null!;
@@ -23,7 +23,7 @@ namespace EliteDataRelay.UI
         private Label _lblOutputFileName = null!;
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
-        private GroupBox _grpOverlaySettings = null!;        
+        private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
         private GroupBox _grpSessionTracking = null!;
         private CheckBox _chkEnableSessionTracking = null!;
@@ -33,292 +33,29 @@ namespace EliteDataRelay.UI
         private TextBox _txtStopHotkey = null!;
         private TextBox _txtShowOverlayHotkey = null!;
         private TextBox _txtHideOverlayHotkey = null!;
+        private CheckBox _chkAllowOverlayDrag = null!;
+        private Button _btnResetOverlayPositions = null!;
+        private Label _lblCurrentFont = null!;
+        private Panel _pnlTextColor = null!;
+        private Panel _pnlBackColor = null!;
+        private TrackBar _trackBarOpacity = null!;
+        private Label _lblOpacityValue = null!;
 
         private Keys _startHotkey;
         private Keys _stopHotkey;
         private Keys _showOverlayHotkey;
         private Keys _hideOverlayHotkey;
 
+        // Temporary storage for appearance settings
+        private Font _overlayFont = null!;
+        private Color _overlayTextColor;
+        private Color _overlayBackColor;
+        private int _overlayOpacity;
+
         public SettingsForm()
         {
             InitializeComponent();
             LoadSettings();
-        }
-
-        private void InitializeComponent()
-        {
-            // Form Properties
-            Text = "Settings";
-            ClientSize = new Size(464, 685);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            StartPosition = FormStartPosition.CenterParent;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ShowInTaskbar = false;
-
-            // GroupBox
-            _grpOutputFormat = new GroupBox
-            {
-                Text = "Text File Output",
-                Location = new Point(12, 12),
-                Size = new Size(440, 298),
-            };
-
-            // Enable/Disable CheckBox
-            _chkEnableFileOutput = new CheckBox
-            {
-                Text = "Enable text file output",
-                Location = new Point(15, 24),
-                AutoSize = true
-            };
-            _chkEnableFileOutput.CheckedChanged += OnEnableOutputCheckedChanged;
-
-            // Description Label
-            _lblDescription = new Label
-            {
-                Text = "Customize the format for the cargo.txt output file:",
-                Location = new Point(15, 54),
-                AutoSize = true
-            };
-
-            // Format TextBox
-            _txtOutputFormat = new TextBox
-            {
-                Location = new Point(18, 70),
-                Size = new Size(407, 20)
-            };
-
-            // Output File Name Label
-            _lblOutputFileName = new Label
-            {
-                Text = "Output file name:",
-                Location = new Point(15, 100),
-                AutoSize = true
-            };
-
-            // Output File Name TextBox
-            _txtOutputFileName = new TextBox
-            {
-                Location = new Point(18, 116),
-                Size = new Size(407, 20)
-            };
-
-            // Output Directory Label
-            _lblOutputDirectory = new Label
-            {
-                Text = "Output directory:",
-                Location = new Point(15, 142),
-                AutoSize = true
-            };
-
-            // Output Directory TextBox
-            _txtOutputDirectory = new TextBox
-            {
-                Location = new Point(18, 158),
-                Size = new Size(326, 20)
-            };
-
-            // Browse Button
-            _btnBrowse = new Button
-            {
-                Text = "Browse...",
-                Location = new Point(350, 157),
-                Size = new Size(75, 22)
-            };
-            _btnBrowse.Click += OnBrowseClicked;
-
-            // Placeholders Label
-            _lblPlaceholders = new Label
-            {
-                Text = "Available placeholders:\n" +
-                       "{count} - Total number of items in cargo\n" +
-                       "{capacity} - Total cargo capacity (blank if unknown)\n" +
-                       "{count_slash_capacity} - e.g., \"128/256\" or just \"128\" if capacity is unknown\n" +
-                       "{items} - Single-line list of items, e.g., \"Gold (10) Silver (5)\"\n" +
-                       "{items_multiline} - Multi-line list of items\n" +
-                       "\\n - Newline character", // Note: Backslash needs to be escaped in C# string literal
-                Location = new Point(15, 188),
-                AutoSize = true
-            };
-
-            // Session Tracking GroupBox
-            _grpSessionTracking = new GroupBox
-            {
-                Text = "Session Tracking",
-                Location = new Point(12, 316),
-                Size = new Size(440, 55),
-            };
-            _chkEnableSessionTracking = new CheckBox
-            {
-                Text = "Enable session tracking (for cargo/hr, etc.)",
-                Location = new Point(15, 20),
-                AutoSize = true
-            };
-            _grpSessionTracking.Controls.Add(_chkEnableSessionTracking);
-
-            // Overlay GroupBox
-            _grpOverlaySettings = new GroupBox
-            {
-                Text = "In-Game Overlay",
-                Location = new Point(12, 377),
-                Size = new Size(440, 100),
-            };
-
-            // Enable Left Overlay CheckBox
-            _chkEnableLeftOverlay = new CheckBox
-            {
-                Text = "Enable left overlay (CMDR, Ship, Balance)",
-                Location = new Point(15, 20),
-                AutoSize = true
-            };
-
-            // Enable Right Overlay CheckBox
-            _chkEnableRightOverlay = new CheckBox
-            {
-                Text = "Enable right overlay (Cargo)",
-                Location = new Point(15, 45),
-                AutoSize = true
-            };
-            _chkEnableRightOverlay.CheckedChanged += OnEnableRightOverlayCheckedChanged;
-
-            _chkShowSessionOnOverlay = new CheckBox
-            {
-                Text = "Show session stats on right overlay (Cargo)",
-                Location = new Point(15, 70),
-                AutoSize = true
-            };
-            _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
-
-            // Hotkeys GroupBox
-            _grpHotkeys = new GroupBox
-            {
-                Text = "Hotkeys",
-                Location = new Point(12, 483),
-                Size = new Size(440, 155),
-            };
-
-            // Enable Hotkeys CheckBox
-            _chkEnableHotkeys = new CheckBox
-            {
-                Text = "Enable global hotkeys",
-                Location = new Point(15, 20),
-                AutoSize = true
-            };
-            _chkEnableHotkeys.CheckedChanged += OnEnableHotkeysCheckedChanged;
-
-            // Hotkey Labels and TextBoxes
-            var lblStart = new Label { Text = "Start Monitoring:", Location = new Point(15, 50), AutoSize = true };
-            _txtStartHotkey = CreateHotkeyInput(new Point(140, 47));
-            _txtStartHotkey.Tag = "Start";
-
-            var lblStop = new Label { Text = "Stop Monitoring:", Location = new Point(15, 75), AutoSize = true };
-            _txtStopHotkey = CreateHotkeyInput(new Point(140, 72));
-            _txtStopHotkey.Tag = "Stop";
-
-            var lblShow = new Label { Text = "Show Overlay:", Location = new Point(15, 100), AutoSize = true };
-            _txtShowOverlayHotkey = CreateHotkeyInput(new Point(140, 97));
-            _txtShowOverlayHotkey.Tag = "Show";
-
-            var lblHide = new Label { Text = "Hide Overlay:", Location = new Point(15, 125), AutoSize = true };
-            _txtHideOverlayHotkey = CreateHotkeyInput(new Point(140, 122));
-            _txtHideOverlayHotkey.Tag = "Hide";
-
-            _grpHotkeys.Controls.Add(_chkEnableHotkeys);
-            _grpHotkeys.Controls.Add(lblStart);
-            _grpHotkeys.Controls.Add(_txtStartHotkey);
-            _grpHotkeys.Controls.Add(lblStop);
-            _grpHotkeys.Controls.Add(_txtStopHotkey);
-            _grpHotkeys.Controls.Add(lblShow);
-            _grpHotkeys.Controls.Add(_txtShowOverlayHotkey);
-            _grpHotkeys.Controls.Add(lblHide);
-            _grpHotkeys.Controls.Add(_txtHideOverlayHotkey);
-
-            // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 650) };
-            _btnOk.Click += (sender, e) => SaveSettings();
-
-            // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 650) };
-
-            // Add Controls
-            _grpOutputFormat.Controls.Add(_chkEnableFileOutput);
-            _grpOutputFormat.Controls.Add(_lblDescription);
-            _grpOutputFormat.Controls.Add(_txtOutputFormat);
-            _grpOutputFormat.Controls.Add(_lblOutputDirectory);
-            _grpOutputFormat.Controls.Add(_txtOutputDirectory);
-            _grpOutputFormat.Controls.Add(_btnBrowse);
-            _grpOutputFormat.Controls.Add(_lblOutputFileName);
-            _grpOutputFormat.Controls.Add(_txtOutputFileName);
-            _grpOutputFormat.Controls.Add(_lblPlaceholders);
-            Controls.Add(_grpOutputFormat);
-            _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
-            _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
-            _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
-            Controls.Add(_grpSessionTracking);
-            Controls.Add(_grpOverlaySettings);
-            Controls.Add(_grpHotkeys);
-            Controls.Add(_btnOk);
-            Controls.Add(_btnCancel);
-            AcceptButton = _btnOk;
-            CancelButton = _btnCancel;
-        }
-
-        private TextBox CreateHotkeyInput(Point location)
-        {
-            var txt = new TextBox
-            {
-                Location = location,
-                Size = new Size(285, 20),
-                ReadOnly = true,
-                Text = "None"
-            };
-            txt.KeyDown += OnHotkeyKeyDown;
-            return txt;
-        }
-
-        private void OnEnableOutputCheckedChanged(object? sender, EventArgs e)
-        {
-            bool enabled = _chkEnableFileOutput.Checked;
-
-            _lblDescription.Enabled = enabled;
-            _txtOutputFormat.Enabled = enabled;
-            _lblOutputFileName.Enabled = enabled;
-            _txtOutputFileName.Enabled = enabled;
-            _lblOutputDirectory.Enabled = enabled;
-            _txtOutputDirectory.Enabled = enabled;
-            _btnBrowse.Enabled = enabled;
-            _lblPlaceholders.Enabled = enabled;
-        }
-
-        private void OnEnableRightOverlayCheckedChanged(object? sender, EventArgs e)
-        {
-            _chkShowSessionOnOverlay.Enabled = _chkEnableRightOverlay.Checked;
-            if (!_chkEnableRightOverlay.Checked)
-            {
-                _chkShowSessionOnOverlay.Checked = false;
-            }
-        }
-
-        private void OnShowSessionCheckedChanged(object? sender, EventArgs e)
-        {
-            // This checkbox should only be enabled if the right overlay is also enabled.
-            // If the user checks this, we can assume they want the right overlay on.
-            if (_chkShowSessionOnOverlay.Checked && !_chkEnableRightOverlay.Checked)
-            {
-                _chkEnableRightOverlay.Checked = true;
-            }
-        }
-
-        private void OnEnableHotkeysCheckedChanged(object? sender, EventArgs e)
-        {
-            bool enabled = _chkEnableHotkeys.Checked;
-            foreach (Control c in _grpHotkeys.Controls)
-            {
-                if (c != _chkEnableHotkeys)
-                {
-                    c.Enabled = enabled;
-                }
-            }
         }
 
         private void LoadSettings()
@@ -331,6 +68,7 @@ namespace EliteDataRelay.UI
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableLeftOverlay;
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableRightOverlay;
+            _chkAllowOverlayDrag.Checked = AppConfiguration.AllowOverlayDrag;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -341,55 +79,14 @@ namespace EliteDataRelay.UI
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
             OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
-        }
 
-        private void OnBrowseClicked(object? sender, EventArgs e)
-        {
-            using (var dialog = new FolderBrowserDialog())
-            {
-                dialog.Description = "Select an output directory";
-                dialog.ShowNewFolderButton = true;
+            // Load overlay appearance settings
+            _overlayFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);
+            _overlayTextColor = AppConfiguration.OverlayTextColor;
+            _overlayBackColor = AppConfiguration.OverlayBackgroundColor;
+            _overlayOpacity = AppConfiguration.OverlayOpacity;
 
-                // Set initial directory if the textbox has a valid path
-                if (!string.IsNullOrEmpty(_txtOutputDirectory.Text) && Directory.Exists(_txtOutputDirectory.Text))
-                {
-                    dialog.SelectedPath = _txtOutputDirectory.Text;
-                }
-                else
-                {
-                    // Fallback to the application's base directory
-                    dialog.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
-                }
-
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    _txtOutputDirectory.Text = dialog.SelectedPath;
-                }
-            }
-        }
-
-        private void OnHotkeyKeyDown(object? sender, KeyEventArgs e)
-        {
-            e.SuppressKeyPress = true;
-            var txt = sender as TextBox;
-            if (txt == null) return;
-
-            // Clear hotkey on Delete or Backspace
-            if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back)
-            {
-                UpdateHotkey(txt.Tag as string, Keys.None);
-                UpdateHotkeyText();
-                return;
-            }
-
-            // Ignore modifier-only key presses
-            if (e.KeyCode == Keys.ControlKey || e.KeyCode == Keys.ShiftKey || e.KeyCode == Keys.Menu)
-            {
-                return;
-            }
-
-            UpdateHotkey(txt.Tag as string, e.KeyData);
-            UpdateHotkeyText();
+            UpdateAppearanceControls();
         }
 
         private void UpdateHotkey(string? tag, Keys key)
@@ -412,6 +109,15 @@ namespace EliteDataRelay.UI
             _txtHideOverlayHotkey.Text = _hideOverlayHotkey == Keys.None ? "None" : converter.ConvertToString(_hideOverlayHotkey);
         }
 
+        private void UpdateAppearanceControls()
+        {
+            _lblCurrentFont.Text = $"{_overlayFont.Name}, {_overlayFont.SizeInPoints}pt";
+            _pnlTextColor.BackColor = _overlayTextColor;
+            _pnlBackColor.BackColor = _overlayBackColor;
+            _trackBarOpacity.Value = _overlayOpacity;
+            _lblOpacityValue.Text = $"{_overlayOpacity}%";
+        }
+
         private void SaveSettings()
         {
             // --- Save all settings ---
@@ -422,12 +128,21 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableLeftOverlay = _chkEnableLeftOverlay.Checked;
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
             AppConfiguration.EnableRightOverlay = _chkEnableRightOverlay.Checked;
+            AppConfiguration.AllowOverlayDrag = _chkAllowOverlayDrag.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
             AppConfiguration.ShowOverlayHotkey = _showOverlayHotkey;
             AppConfiguration.HideOverlayHotkey = _hideOverlayHotkey;
             AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
+
+            // Save appearance settings
+            AppConfiguration.OverlayFontName = _overlayFont.Name;
+            AppConfiguration.OverlayFontSize = _overlayFont.Size;
+            AppConfiguration.OverlayTextColor = _overlayTextColor;
+            AppConfiguration.OverlayBackgroundColor = _overlayBackColor;
+            AppConfiguration.OverlayOpacity = _overlayOpacity;
+
             AppConfiguration.Save();
         }
     }
