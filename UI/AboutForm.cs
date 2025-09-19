@@ -20,7 +20,7 @@ namespace EliteDataRelay.UI
         private void InitializeComponent()
         {
             // Form properties
-            Text = "About Elite Cargo Monitor";
+            Text = "About Elite Data Relay";
             ClientSize = new Size(450, 300);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;

@@ -14,7 +14,7 @@
     <Version>0.9.0</Version> <!-- This sets the product version and is used for file version. -->
     <Company>insert3coins</Company>
     <Product>Elite Data Relay</Product>
-    <Copyright>Copyright © 2025 insert3coins</Copyright>
+    <Copyright>Copyright © 2024 insert3coins</Copyright>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 

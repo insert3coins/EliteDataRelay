@@ -70,7 +70,7 @@ namespace EliteDataRelay.UI
             if (_form?.WindowState == FormWindowState.Minimized)
             {
                 _form.Hide();
-                _trayIconManager?.ShowBalloonTip(1000, "Elite Cargo Monitor", "Minimized to tray.", ToolTipIcon.Info);
+                _trayIconManager?.ShowBalloonTip(1000, "Elite Data Relay", "Minimized to tray.", ToolTipIcon.Info);
             }
             else if (_form?.WindowState == FormWindowState.Normal || _form?.WindowState == FormWindowState.Maximized)
             {
@@ -100,7 +100,7 @@ namespace EliteDataRelay.UI
             if (_form == null) return;
 
             // Basic form properties
-            _form.Text = "Cargo Monitor – Stopped";
+            _form.Text = "Elite Data Relay – Stopped";
             _form.Padding = Padding.Empty;
             _baseTitle = _form.Text;
             UpdateFullTitleText();

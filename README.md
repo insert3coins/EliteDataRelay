@@ -70,7 +70,6 @@ If you want to build the project yourself:
 ## 🤖 Usage
 
 1.  Launch Elite Dangerous.
-2.  Run `EliteCargoMonitor.exe`.
 2.  Run `EliteDataRelay.exe`.
 3.  Click **Start** to begin monitoring.
 4.  The application window will update whenever your cargo changes.
