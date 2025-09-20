@@ -15,49 +15,53 @@ namespace EliteDataRelay.UI
         public static readonly Color StopButtonActiveColor = Color.FromArgb(252, 232, 232); // A subtle light red
 
         // A map of ship internal names to their ASCII art representation.
+        // Reimagined designs, grouped by ship size.
         public static readonly Dictionary<string, string> ShipArtMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            // Small Ships
-            { "SideWinder", ">--o--<" },
-            { "Eagle", ">--=--<" },
-            { "Hauler", "[<=#=>]" },
-            { "Adder", "[<=#=>]" },
-            { "Imperial_Eagle", ">--^--<" },
-            { "Viper", ">-(*)-<" },
-            { "Viper_MkIV", ">-(*)-<" },
-            { "CobraMkIII", "<(-O-)>" },
-            { "CobraMkIV", "<(-O-)>" },
-            { "DiamondbackScout", "<(-O-)>" },
-            { "Dolphin", " ~<o>~ " },
+            // --- Small Ships (Reimagined) ---
+            { "SideWinder", ">-[O]-<" },
+            { "Eagle", ">--=>>" },
+            { "Hauler", "[O| >" },
+            { "Adder", "[<O>]" },
+            { "Imperial_Eagle", ">--{E}>" },
+            { "Viper", ">-(V)-<" },
+            { "Viper_MkIV", ">-(W)-<" },
+            { "CobraMkIII", "<(O)>" },
+            { "CobraMkIV", "<(=O=)>" },
+            { "DiamondbackScout", "<¤>" },
+            { "Dolphin", "~(_o_)~" },
+            { "Imperial_Courier", "~>i<~" },
+            { "Vulture", "(vVv)" },
 
-            // Medium Ships
-            { "DiamondbackXL", "<(-O-)>" },
-            { "Type6", "(#####)" },
-            { "Asp", "<(-O-)>" },
-            { "Asp_Scout", "<(-O-)>" },
-            { "Vulture", ">-(*)-<" },
-            { "Federal_Dropship", "/_O_\\" },
-            { "Federal_Assault_Ship", "/_O_\\" },
-            { "Federal_Gunship", "/_O_\\" },
-            { "Imperial_Courier", " ~<o>~ " },
-            { "Imperial_Clipper", " ~<o>~ " },
-            { "Krait_MkII", "<==*==>" },
-            { "Krait_Phantom", "<==*==>" },
-            { "Mamba", ">--^--<" },
-            { "Python", "(#####)" },
-            { "Orca", " ~<o>~ " },
-            { "Chieftain", "/_O_\\" },
-            { "Crusader", "/_O_\\" },
-            { "Challenger", "/_O_\\" },
+            // --- Medium Ships (Reimagined) ---
+            { "DiamondbackXL", "<¤===>" },
+            { "Keelback", "[<H>]" },
+            { "Type6", "[■]" },
+            { "Asp", "<( O )>" },
+            { "Asp_Scout", "<( o )>" },
+            { "Federal_Dropship", "[|-|]" },
+            { "Federal_Assault_Ship", "[|^|]" },
+            { "Federal_Gunship", "[|T|]" },
+            { "Imperial_Clipper", "~<==()=>~" },
+            { "Krait_MkII", "<|o|>" },
+            { "Krait_Phantom", "<|·|>" },
+            { "Mamba", ">->X<-<" },
+            { "FerDeLance", ">-(~)-<" },
+            { "Python", "([O])" },
+            { "Orca", "~<OOO>~" },
+            { "Chieftain", "</_^_\\>" },
+            { "Crusader", "</_v_\\>" },
+            { "Challenger", "</#=#\\>" },
 
-            // Large Ships
-            { "Type7", "(#####)" },
-            { "Type9", "(#####)" },
-            { "Type10", "(#####)" },
-            { "BelugaLiner", " ~<o>~ " },
-            { "Anaconda", "<==*==>" },
-            { "Federal_Corvette", "<==*==>" },
-            { "Imperial_Cutter", "<==*==>" },
+            // --- Large Ships (Reimagined) ---
+            { "Type7", "[[■]]" },
+            { "Type9", "([OO])" },
+            { "Type10", "([##])" },
+            { "PantherClipper", "<<<[OO]>>>" },
+            { "BelugaLiner", "~<OOOOO>~" },
+            { "Anaconda", "<===(O)====>" },
+            { "Federal_Corvette", "<<==(V)==>>" },
+            { "Imperial_Cutter", "~<===(O)===~>" },
         };
         // Cargo storage sizes for bottom right of our ui
         public static readonly string[] CargoSize = new[]
