@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay
 {
@@ -21,6 +22,9 @@ namespace EliteDataRelay
             {
                 RegisterHotkeys();
             }
+
+            // Asynchronously check for updates on startup without blocking the UI.
+            _ = UpdateCheckService.CheckForUpdatesAsync();
 
             // Restore window size and location from settings
             if (AppConfiguration.WindowSize.Width > 0 && AppConfiguration.WindowSize.Height > 0)
