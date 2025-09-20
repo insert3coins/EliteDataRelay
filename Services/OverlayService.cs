@@ -18,6 +18,20 @@ namespace EliteDataRelay.Services
             Stop(); // Ensure any existing overlays are closed
             var gameProcesses = System.Diagnostics.Process.GetProcessesByName("EliteDangerous64");
 
+            try
+            {
+                // Only show overlays if the game process is actually running.
+                if (!gameProcesses.Any())
+                {
+                    System.Diagnostics.Debug.WriteLine("[OverlayService] Elite Dangerous not running. Overlays will not be shown.");
+                    return;
+                }
+            }
+            finally
+            {
+                foreach (var p in gameProcesses) { p.Dispose(); }
+            }
+
             if (AppConfiguration.EnableLeftOverlay)
             {
                 var leftOverlay = new OverlayForm(OverlayForm.OverlayPosition.Left, AppConfiguration.AllowOverlayDrag);
