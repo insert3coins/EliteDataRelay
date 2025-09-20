@@ -179,10 +179,14 @@ namespace EliteDataRelay.UI
             var allMaterials = MaterialDataService.GetAll().ToList();
             for (int i = 0; i < _clbPinnedMaterials.CheckedItems.Count; i++)
             {
-                int originalIndex = _clbPinnedMaterials.Items.IndexOf(_clbPinnedMaterials.CheckedItems[i]);
-                if (originalIndex >= 0 && originalIndex < allMaterials.Count)
+                var checkedItem = _clbPinnedMaterials.CheckedItems[i];
+                if (checkedItem != null)
                 {
-                    pinnedMaterials.Add(allMaterials[originalIndex].Name);
+                    int originalIndex = _clbPinnedMaterials.Items.IndexOf(checkedItem);
+                    if (originalIndex >= 0 && originalIndex < allMaterials.Count)
+                    {
+                        pinnedMaterials.Add(allMaterials[originalIndex].Name);
+                    }
                 }
             }
             AppConfiguration.PinnedMaterials = pinnedMaterials;

@@ -20,49 +20,51 @@ namespace EliteDataRelay.Services
 
             if (AppConfiguration.EnableLeftOverlay)
             {
-                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Left, AppConfiguration.AllowOverlayDrag);
-                _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
+                var leftOverlay = new OverlayForm(OverlayForm.OverlayPosition.Left, AppConfiguration.AllowOverlayDrag);
+                leftOverlay.PositionChanged += OnOverlayPositionChanged;
 
                 if (AppConfiguration.LeftOverlayLocation != Point.Empty)
                 {
-                    _leftOverlayForm.Location = AppConfiguration.LeftOverlayLocation;
+                    leftOverlay.Location = AppConfiguration.LeftOverlayLocation;
                 }
                 else
                 {
                     var screen = Screen.PrimaryScreen.WorkingArea;
                     const int leftOverlayHeight = 85; // Height is set in OverlayForm.OnLoad
-                    _leftOverlayForm.Location = new Point(20, (screen.Height / 2) - (leftOverlayHeight / 2));
+                    leftOverlay.Location = new Point(20, (screen.Height / 2) - (leftOverlayHeight / 2));
                 }
-                _leftOverlayForm!.Show();
+                leftOverlay.Show();
+                _leftOverlayForm = leftOverlay;
             }
 
             if (AppConfiguration.EnableRightOverlay)
             {
-                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Right, AppConfiguration.AllowOverlayDrag);
-                _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
+                var rightOverlay = new OverlayForm(OverlayForm.OverlayPosition.Right, AppConfiguration.AllowOverlayDrag);
+                rightOverlay.PositionChanged += OnOverlayPositionChanged;
 
                 if (AppConfiguration.RightOverlayLocation != Point.Empty)
                 {
-                    _rightOverlayForm.Location = AppConfiguration.RightOverlayLocation;
+                    rightOverlay.Location = AppConfiguration.RightOverlayLocation;
                 }
                 else
                 {
                     var screen = Screen.PrimaryScreen.WorkingArea;
                     const int rightOverlayWidth = 280; // Width is set in OverlayForm.OnLoad
                     const int rightOverlayHeight = 400; // Height is set in OverlayForm.OnLoad
-                    _rightOverlayForm.Location = new Point(screen.Width - rightOverlayWidth - 20, (screen.Height / 2) - (rightOverlayHeight / 2));
+                    rightOverlay.Location = new Point(screen.Width - rightOverlayWidth - 20, (screen.Height / 2) - (rightOverlayHeight / 2));
                 }
-                _rightOverlayForm!.Show();
+                rightOverlay.Show();
+                _rightOverlayForm = rightOverlay;
             }
 
             if (AppConfiguration.EnableMaterialsOverlay)
             {
-                _materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials, AppConfiguration.AllowOverlayDrag);
-                _materialsOverlay.PositionChanged += OnOverlayPositionChanged;
+                var materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials, AppConfiguration.AllowOverlayDrag);
+                materialsOverlay.PositionChanged += OnOverlayPositionChanged;
 
                 if (AppConfiguration.MaterialsOverlayLocation != Point.Empty)
                 {
-                    _materialsOverlay.Location = AppConfiguration.MaterialsOverlayLocation;
+                    materialsOverlay.Location = AppConfiguration.MaterialsOverlayLocation;
                 }
                 else
                 {
@@ -74,9 +76,10 @@ namespace EliteDataRelay.Services
                     const int padding = 20;
 
                     int materialsX = screen.Width - rightOverlayWidth - padding - materialsOverlayWidth - padding;
-                    _materialsOverlay.Location = new Point(materialsX, (screen.Height / 2) - (materialsOverlayHeight / 2));
+                    materialsOverlay.Location = new Point(materialsX, (screen.Height / 2) - (materialsOverlayHeight / 2));
                 }
-                _materialsOverlay.Show();
+                materialsOverlay.Show();
+                _materialsOverlay = materialsOverlay;
             }
         }
 
