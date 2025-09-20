@@ -55,12 +55,13 @@ namespace EliteDataRelay
         // such as hotkeys and overlay visibility.
         private void ApplyLiveSettingsChanges()
         {
-            // Also update the button states to reflect any changes (like enabling session tracking).
+            // Update button states and monitoring visuals to reflect any changes.
             // This is done first to ensure services like the overlay are started if needed.
             _cargoFormUI.SetButtonStates(
                 startEnabled: !_fileMonitoringService.IsMonitoring,
                 stopEnabled: _fileMonitoringService.IsMonitoring
             );
+            _cargoFormUI.UpdateMonitoringVisuals(_fileMonitoringService.IsMonitoring);
 
             // Unregister any existing hotkeys before re-registering, to handle changes.
             UnregisterHotkeys();

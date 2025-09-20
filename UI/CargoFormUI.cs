@@ -177,7 +177,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.Save();
 
             // If we are in "pinned only" view, unchecking an item should make it disappear.
-            if (_controlFactory != null && _controlFactory.PinMaterialsCheckBox.Checked)
+            if (_controlFactory?.PinMaterialsCheckBox.Checked == true && _materialServiceCache != null)
             {
                 UpdateMaterialList(_materialServiceCache);
             }
@@ -497,27 +497,6 @@ namespace EliteDataRelay.UI
                 _controlFactory.SessionBtn.Enabled = stopEnabled && AppConfiguration.EnableSessionTracking;
             }
 
-            // Also update tray menu items
-            _trayIconManager?.SetMonitoringState(startEnabled, stopEnabled);
-            // Control the animation
-            if (_watchingAnimationManager != null)
-            {
-                if (stopEnabled) // This means monitoring is now active
-                {
-                    _watchingAnimationManager.Start();
-                    // Only start the overlay service if at least one of the overlays is enabled.
-                    if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay || AppConfiguration.EnableMaterialsOverlay)
-                    {
-                        _overlayService?.Start();
-                    }
-                }
-                else // Monitoring is stopped
-                {
-                    _watchingAnimationManager.Stop();
-                    // When monitoring stops, just hide the overlay. It will be destroyed on exit.
-                    _overlayService?.Hide();
-                }
-            }
         }
 
         private void UpdateFullTitleText()
@@ -525,6 +504,29 @@ namespace EliteDataRelay.UI
             if (_form == null) return;
 
             _form.Text = $"{_baseTitle} - Location: {_currentLocation}";
+        }
+
+        public void UpdateMonitoringVisuals(bool isMonitoring)
+        {
+            _trayIconManager?.SetMonitoringState(startEnabled: !isMonitoring, stopEnabled: isMonitoring);
+
+            if (_watchingAnimationManager == null) return;
+
+            if (isMonitoring)
+            {
+                _watchingAnimationManager.Start();
+                // Only start the overlay service if at least one of the overlays is enabled.
+                if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay || AppConfiguration.EnableMaterialsOverlay)
+                {
+                    _overlayService?.Start();
+                }
+            }
+            else // Monitoring is stopped
+            {
+                _watchingAnimationManager.Stop();
+                // When monitoring stops, just hide the overlay. It will be destroyed on exit.
+                _overlayService?.Hide();
+            }
         }
 
         public void RefreshOverlay()

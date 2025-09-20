@@ -117,6 +117,12 @@ namespace EliteDataRelay.UI
         void SetButtonStates(bool startEnabled, bool stopEnabled);
 
         /// <summary>
+        /// Updates non-button UI elements to reflect the monitoring state.
+        /// </summary>
+        /// <param name="isMonitoring">Whether monitoring is active.</param>
+        void UpdateMonitoringVisuals(bool isMonitoring);
+
+        /// <summary>
         /// Stops and starts the overlay service to apply new settings.
         /// </summary>
         void RefreshOverlay();
