@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -162,6 +162,12 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
             if (_lastMaterialServiceCache != null) _cargoFormUI.UpdateMaterialsOverlay(_lastMaterialServiceCache);
+
+            // Also repopulate session data if tracking is active and shown on the overlay.
+            if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+            {
+                _cargoFormUI.UpdateSessionOverlay(_sessionTrackingService.TotalCargoCollected, _sessionTrackingService.CreditsEarned);
+            }
         }
 
         private void StartMonitoring()

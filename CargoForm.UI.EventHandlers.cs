@@ -65,6 +65,17 @@ namespace EliteDataRelay
             // If monitoring is active, refresh the overlay to apply visibility changes.
             if (_fileMonitoringService.IsMonitoring)
             {
+                // Handle session tracking state change. If the user just enabled it,
+                // we need to start the service. If they disabled it, we stop it.
+                if (AppConfiguration.EnableSessionTracking)
+                {
+                    _sessionTrackingService.StartSession();
+                }
+                else
+                {
+                    _sessionTrackingService.StopSession();
+                }
+
                 _cargoFormUI.RefreshOverlay();
                 // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
                 // windows have fully processed their creation messages and are ready to be
