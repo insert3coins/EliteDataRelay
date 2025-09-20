@@ -447,6 +447,12 @@ namespace EliteDataRelay.UI
 
             if (!materials.Any())
             {
+                using (var grayBrush = new SolidBrush(SystemColors.GrayText))
+                {
+                    // Add an indented "None" to indicate an empty category.
+                    e.Graphics.DrawString("   - None -", _listFont, grayBrush, xName, currentY);
+                }
+                currentY += _listFont.GetHeight(e.Graphics);
                 return currentY;
             }
 

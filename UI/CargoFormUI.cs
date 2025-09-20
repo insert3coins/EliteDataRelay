@@ -325,9 +325,38 @@ namespace EliteDataRelay.UI
             }
             else
             {
-                PopulateMaterialCategory(rawNode, materialService.RawMaterials);
-                PopulateMaterialCategory(manufacturedNode, materialService.ManufacturedMaterials);
-                PopulateMaterialCategory(encodedNode, materialService.EncodedMaterials);
+                // We want to show all materials the player has, PLUS any materials that are pinned but have a count of 0.
+                // This ensures that a user can always see (and un-pin) a pinned material from this view.
+                var allMaterialDefinitions = MaterialDataService.GetAll().ToDictionary(m => m.Name, m => m, StringComparer.InvariantCultureIgnoreCase);
+
+                // Create mutable copies of the player's current materials to augment them.
+                var rawWithPinned = new Dictionary<string, MaterialItem>(materialService.RawMaterials, StringComparer.InvariantCultureIgnoreCase);
+                var manufacturedWithPinned = new Dictionary<string, MaterialItem>(materialService.ManufacturedMaterials, StringComparer.InvariantCultureIgnoreCase);
+                var encodedWithPinned = new Dictionary<string, MaterialItem>(materialService.EncodedMaterials, StringComparer.InvariantCultureIgnoreCase);
+
+                foreach (var pinnedMaterialName in AppConfiguration.PinnedMaterials)
+                {
+                    // If the pinned material is not already in one of the lists (which means its count is > 0),
+                    // then we need to add it with a count of 0 so it's visible.
+                    if (!rawWithPinned.ContainsKey(pinnedMaterialName) &&
+                        !manufacturedWithPinned.ContainsKey(pinnedMaterialName) &&
+                        !encodedWithPinned.ContainsKey(pinnedMaterialName))
+                    {
+                        if (allMaterialDefinitions.TryGetValue(pinnedMaterialName, out var def))
+                        {
+                            var zeroCountItem = new MaterialItem { Name = def.Name, Localised = def.LocalisedName, Count = 0 };
+                            switch (def.Category.ToLowerInvariant())
+                            {
+                                case "raw": rawWithPinned[def.Name] = zeroCountItem; break;
+                                case "manufactured": manufacturedWithPinned[def.Name] = zeroCountItem; break;
+                                case "encoded": encodedWithPinned[def.Name] = zeroCountItem; break;
+                            }
+                        }
+                    }
+                }
+                PopulateMaterialCategory(rawNode, rawWithPinned);
+                PopulateMaterialCategory(manufacturedNode, manufacturedWithPinned);
+                PopulateMaterialCategory(encodedNode, encodedWithPinned);
             }
 
             rawNode.Expand();

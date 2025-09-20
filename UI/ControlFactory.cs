@@ -81,8 +81,10 @@ namespace EliteDataRelay.UI
 
             // Add controls to their respective tab pages
             cargoPage.Controls.Add(ListView);
-            materialsPanel.Controls.Add(PinMaterialsCheckBox); // Add checkbox first (docks to top)
-            materialsPanel.Controls.Add(MaterialTreeView); // Then add treeview (fills remaining space)
+            // Add the fill-docked control first to place it at the back of the Z-order.
+            materialsPanel.Controls.Add(MaterialTreeView);
+            // Add other docked controls. They will be placed on top and will claim their space.
+            materialsPanel.Controls.Add(PinMaterialsCheckBox);
             materialsPage.Controls.Add(materialsPanel);
             TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage });
 
