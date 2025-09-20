@@ -160,7 +160,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Overlay Functionality",
                 Location = new Point(12, 12),
-                Size = new Size(410, 180),
+                Size = new Size(410, 155),
             };
 
             // Enable Right Overlay CheckBox
@@ -188,19 +188,11 @@ namespace EliteDataRelay.UI
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
 
-            // Allow Overlay Drag CheckBox
-            _chkAllowOverlayDrag = new CheckBox
-            {
-                Text = "Allow overlays to be repositioned with the mouse",
-                Location = new Point(15, 120),
-                AutoSize = true
-            };
-
             // Reposition Overlays Button
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(185, 145),
+                Location = new Point(15, 120),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -262,7 +254,6 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableMaterialsOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
-            _grpOverlaySettings.Controls.Add(_chkAllowOverlayDrag);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 
             // Font GroupBox

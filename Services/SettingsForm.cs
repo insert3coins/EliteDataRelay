@@ -37,7 +37,6 @@ namespace EliteDataRelay.UI
         private TextBox _txtStopHotkey = null!;
         private TextBox _txtShowOverlayHotkey = null!;
         private TextBox _txtHideOverlayHotkey = null!;
-        private CheckBox _chkAllowOverlayDrag = null!;
         private Button _btnResetOverlaySettings = null!;
         private Button _btnRepositionOverlays = null!;
         private Label _lblCurrentFont = null!;
@@ -104,7 +103,6 @@ namespace EliteDataRelay.UI
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableRightOverlay;
             _chkEnableMaterialsOverlay.Checked = AppConfiguration.EnableMaterialsOverlay;
             _chkPinMaterialsMode.Checked = AppConfiguration.PinMaterialsMode;
-            _chkAllowOverlayDrag.Checked = AppConfiguration.AllowOverlayDrag;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -188,7 +186,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableRightOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableMaterialsOverlay = _chkEnableMaterialsOverlay.Checked;
             AppConfiguration.PinMaterialsMode = _chkPinMaterialsMode.Checked;
-            AppConfiguration.AllowOverlayDrag = _chkAllowOverlayDrag.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
@@ -225,13 +222,9 @@ namespace EliteDataRelay.UI
 
         private void OnRepositionOverlaysClicked(object? sender, EventArgs e)
         {
-            // Store the original state of the checkbox so we can restore it later.
-            bool originalDragState = _chkAllowOverlayDrag.Checked;
-
             // Temporarily enable dragging so the user can move the overlays.
             AppConfiguration.AllowOverlayDrag = true;
-            _chkAllowOverlayDrag.Enabled = false; // Prevent user from changing it during reposition.
-
+            
             // Raise the event now to apply the temporary draggable state to the overlays.
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
 
@@ -241,10 +234,8 @@ namespace EliteDataRelay.UI
             var repositionDialog = new RepositionDialog();
             repositionDialog.FormClosed += (s, args) =>
             {
-                // Restore the original dragging state when the dialog is closed.
-                AppConfiguration.AllowOverlayDrag = originalDragState;
-                _chkAllowOverlayDrag.Enabled = true; // Re-enable the checkbox.
-
+                // Disable dragging when the repositioning dialog is closed.
+                AppConfiguration.AllowOverlayDrag = false;
                 // Raise an event to tell the main form to apply this live change.
                 LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
 
