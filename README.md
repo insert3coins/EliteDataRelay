@@ -6,8 +6,7 @@
 [![Last Commit](https://img.shields.io/github/last-commit/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay/commits/main)
 [![Top Language](https://img.shields.io/github/languages/top/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay)
 
-A lightweight Windows utility that monitors your **Elite Dangerous** status and cargo in real-time. It displays the info via a clean UI, a customizable in-game overlay, and a text file output perfect for streaming.
-A lightweight Windows utility for players of Elite Dangerous. It monitors your in-game cargo and status in real-time, displaying the information in a clean UI, exporting it to a text file, and showing it via a customizable in-game overlay.
+A lightweight Windows utility for Elite Dangerous that monitors your in-game status, cargo, and materials in real-time. It displays the information via a clean UI, customizable in-game overlays, and a text file output perfect for streaming.
 
 ---
 
@@ -195,8 +194,7 @@ You can specify the folder where the output file will be saved. By default, it i
 -   [x] Configurable global hotkeys.
 -   [x] Add a configurable in-game overlay.
 -   [x] Add configurable global hotkeys for in-game control.
--   [ ] Package the application with an installer.
--   [x] Package the application with an installer.
+-   [ ] Blueprint tracking?
 
 ---
 
