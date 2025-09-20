@@ -16,6 +16,7 @@ namespace EliteDataRelay.Services
 
         public static async Task CheckForUpdatesAsync()
         {
+            Debug.WriteLine("[UpdateCheckService] Checking for updates...");
             try
             {
                 using var client = new HttpClient();
@@ -42,6 +43,7 @@ namespace EliteDataRelay.Services
                     {
                         NotifyUserOfUpdate(latestVersion.ToString(), release.HtmlUrl);
                     }
+                    Debug.WriteLine("[UpdateCheckService] Update check completed successfully.");
                 }
             }
             catch (Exception ex)
