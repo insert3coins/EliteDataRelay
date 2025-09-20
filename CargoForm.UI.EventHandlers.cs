@@ -55,6 +55,13 @@ namespace EliteDataRelay
         // such as hotkeys and overlay visibility.
         private void ApplyLiveSettingsChanges()
         {
+            // Also update the button states to reflect any changes (like enabling session tracking).
+            // This is done first to ensure services like the overlay are started if needed.
+            _cargoFormUI.SetButtonStates(
+                startEnabled: !_fileMonitoringService.IsMonitoring,
+                stopEnabled: _fileMonitoringService.IsMonitoring
+            );
+
             // Unregister any existing hotkeys before re-registering, to handle changes.
             UnregisterHotkeys();
             if (AppConfiguration.EnableHotkeys)
@@ -77,18 +84,12 @@ namespace EliteDataRelay
                 }
 
                 _cargoFormUI.RefreshOverlay();
+                _cargoFormUI.ShowOverlays(); // Ensure overlays are visible after refresh
                 // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
                 // windows have fully processed their creation messages and are ready to be
                 // updated before we try to send them data, preventing a race condition.
                 this.BeginInvoke(new Action(RepopulateOverlay));
             }
-
-            // Also update the button states to reflect any changes (like enabling session tracking).
-            // The `IsMonitoring` flag tells us what the correct state should be.
-            _cargoFormUI.SetButtonStates(
-                startEnabled: !_fileMonitoringService.IsMonitoring,
-                stopEnabled: _fileMonitoringService.IsMonitoring
-            );
         }
 
         private void OnSessionClicked(object? sender, EventArgs e)
