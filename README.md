@@ -8,6 +8,7 @@
 A lightweight Windows utility that monitors your **Elite Dangerous** status and cargo in real-time. It displays the info via a clean UI, a customizable in-game overlay, and a text file output perfect for streaming.
 
 ![Screenshot](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Screenshot.png)
+![ScreenshotMaterials](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Screenshots.png)
 ![GameOverLay](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/GameOverlay.png)
 
 ---
