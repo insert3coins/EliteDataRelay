@@ -61,12 +61,27 @@ namespace EliteDataRelay.UI
             // technique to prevent visual glitches like stray lines or bars on transparent forms.
             DoubleBuffered = true;
             FormBorderStyle = FormBorderStyle.None;
-            Text = "Elite Data Relay Overlay";
             ShowInTaskbar = false;
             TopMost = true;
             StartPosition = FormStartPosition.Manual;
 
-            // Apply appearance settings from configuration
+            switch (_position)
+            {
+                case OverlayPosition.Left:
+                    this.Text = "Elite Data Relay: Info";
+                    break;
+                case OverlayPosition.Right:
+                    this.Text = "Elite Data Relay: Cargo";
+                    break;
+                case OverlayPosition.Materials:
+                    this.Text = "Elite Data Relay: Materials";
+                    break;
+                default:
+                    this.Text = "Elite Data Relay Overlay";
+                    break;
+            }
+
+            // Apply appearance settings from configuration for semi-transparent background.
             this.BackColor = AppConfiguration.OverlayBackgroundColor;
 
             _labelFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize, FontStyle.Bold);
