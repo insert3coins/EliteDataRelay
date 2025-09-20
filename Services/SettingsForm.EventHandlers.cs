@@ -8,27 +8,6 @@ namespace EliteDataRelay.UI
 {
     public partial class SettingsForm
     {
-        private void OnResetPositionsClicked(object? sender, EventArgs e)
-        {
-            var result = MessageBox.Show(
-                "This will reset the overlay positions to their defaults. The change will be applied when you next start monitoring.\n\nAre you sure?",
-                "Confirm Reset",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (result == DialogResult.Yes)
-            {
-                AppConfiguration.LeftOverlayLocation = Point.Empty;
-                AppConfiguration.RightOverlayLocation = Point.Empty;
-                // The settings will be saved when the user clicks OK.
-                MessageBox.Show(
-                    "Overlay positions have been reset. Click OK to save this change.",
-                    "Positions Reset",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-            }
-        }
-
         private void OnChangeFontClicked(object? sender, EventArgs e)
         {
             using (var fontDialog = new FontDialog())
@@ -78,13 +57,31 @@ namespace EliteDataRelay.UI
             UpdateAppearanceControls();
         }
 
-        private void OnResetAppearanceClicked(object? sender, EventArgs e)
+        private void OnResetOverlaySettingsClicked(object? sender, EventArgs e)
         {
+            // Set temporary fields to defaults for the UI
             _overlayFont = new Font("Consolas", 11F);
             _overlayTextColor = Color.Orange;
             _overlayBackColor = Color.FromArgb(30, 30, 30);
             _overlayOpacity = 85;
             UpdateAppearanceControls();
+
+            // Also update the static configuration directly to apply the changes live.
+            AppConfiguration.OverlayFontName = _overlayFont.Name;
+            AppConfiguration.OverlayFontSize = _overlayFont.Size;
+            AppConfiguration.OverlayTextColor = _overlayTextColor;
+            AppConfiguration.OverlayBackgroundColor = _overlayBackColor;
+            AppConfiguration.OverlayOpacity = _overlayOpacity;
+
+            // Also reset overlay positions
+            AppConfiguration.LeftOverlayLocation = Point.Empty;
+            AppConfiguration.RightOverlayLocation = Point.Empty;
+            AppConfiguration.MaterialsOverlayLocation = Point.Empty;
+
+            // Raise the event to trigger a refresh of the live overlays.
+            LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
+
+            MessageBox.Show(this, "All overlay settings (appearance and position) have been reset to defaults.\n\nClick OK to save this change, or Cancel to revert.", "Overlay Settings Reset", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void OnEnableOutputCheckedChanged(object? sender, EventArgs e)

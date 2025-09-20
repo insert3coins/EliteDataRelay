@@ -10,7 +10,7 @@ namespace EliteDataRelay.UI
         {
             // Form Properties
             Text = "Settings";
-            ClientSize = new Size(464, 535);
+            ClientSize = new Size(464, 565);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -196,15 +196,6 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
-            // Reset Overlay Positions Button
-            _btnResetOverlayPositions = new Button
-            {
-                Text = "Reset Overlay Positions",
-                Location = new Point(15, 145),
-                Size = new Size(160, 23)
-            };
-            _btnResetOverlayPositions.Click += OnResetPositionsClicked;
-
             // Reposition Overlays Button
             _btnRepositionOverlays = new Button
             {
@@ -272,7 +263,6 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableMaterialsOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_chkAllowOverlayDrag);
-            _grpOverlaySettings.Controls.Add(_btnResetOverlayPositions);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 
             // Font GroupBox
@@ -286,7 +276,7 @@ namespace EliteDataRelay.UI
             grpFont.Controls.Add(btnChangeFont);
 
             // Colors GroupBox
-            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 290), Size = new Size(410, 150) };
+            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 290), Size = new Size(410, 140) };
             var lblTextColor = new Label { Text = "Text Color:", Location = new Point(15, 25), AutoSize = true };
             _pnlTextColor = new Panel { Location = new Point(130, 25), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
             var btnChangeTextColor = new Button { Text = "...", Location = new Point(160, 25), Size = new Size(23, 23) };
@@ -310,14 +300,14 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(_lblOpacityValue);
 
             // Reset Button
-            var btnResetAppearance = new Button { Text = "Reset Appearance to Defaults", Location = new Point(12, 450), Size = new Size(180, 23) };
-            btnResetAppearance.Click += OnResetAppearanceClicked;
+            _btnResetOverlaySettings = new Button { Text = "Reset All Overlay Settings", Location = new Point(12, 435), Size = new Size(180, 23) };
+            _btnResetOverlaySettings.Click += OnResetOverlaySettingsClicked;
 
             // Add controls to the Overlay tab
             overlayTabPage.Controls.Add(_grpOverlaySettings);
             overlayTabPage.Controls.Add(grpFont);
             overlayTabPage.Controls.Add(grpColors);
-            overlayTabPage.Controls.Add(btnResetAppearance);
+            overlayTabPage.Controls.Add(_btnResetOverlaySettings);
 
             #endregion
 
@@ -360,11 +350,11 @@ namespace EliteDataRelay.UI
             #endregion
 
             // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 500) };
+            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 530) };
             _btnOk.Click += (sender, e) => SaveSettings();
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 500) };
+            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 530) };
 
             // Add Controls
             Controls.Add(tabControl);

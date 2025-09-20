@@ -38,7 +38,7 @@ namespace EliteDataRelay.UI
         private TextBox _txtShowOverlayHotkey = null!;
         private TextBox _txtHideOverlayHotkey = null!;
         private CheckBox _chkAllowOverlayDrag = null!;
-        private Button _btnResetOverlayPositions = null!;
+        private Button _btnResetOverlaySettings = null!;
         private Button _btnRepositionOverlays = null!;
         private Label _lblCurrentFont = null!;
         private Panel _pnlTextColor = null!;
@@ -59,11 +59,24 @@ namespace EliteDataRelay.UI
         private Color _overlayBackColor;
         private int _overlayOpacity;
 
+        // Cache for original settings to allow for cancellation of live changes
+        private Font _originalOverlayFont = null!;
+        private Color _originalOverlayTextColor;
+        private Color _originalOverlayBackColor;
+        private int _originalOverlayOpacity;
+        private Point _originalLeftOverlayLocation;
+        private Point _originalRightOverlayLocation;
+        private Point _originalMaterialsOverlayLocation;
+
         public event EventHandler? LiveSettingsChanged;
 
         public SettingsForm()
         {
             InitializeComponent();
+
+            // When the form is closing, check if the user cancelled. If so, revert any live changes.
+            this.FormClosing += SettingsForm_FormClosing;
+
             PopulateMaterialsList();
             LoadSettings();
         }
@@ -109,6 +122,15 @@ namespace EliteDataRelay.UI
             _overlayTextColor = AppConfiguration.OverlayTextColor;
             _overlayBackColor = AppConfiguration.OverlayBackgroundColor;
             _overlayOpacity = AppConfiguration.OverlayOpacity;
+
+            // Store original values for cancellation
+            _originalOverlayFont = (Font)_overlayFont.Clone();
+            _originalOverlayTextColor = _overlayTextColor;
+            _originalOverlayBackColor = _overlayBackColor;
+            _originalOverlayOpacity = _overlayOpacity;
+            _originalLeftOverlayLocation = AppConfiguration.LeftOverlayLocation;
+            _originalRightOverlayLocation = AppConfiguration.RightOverlayLocation;
+            _originalMaterialsOverlayLocation = AppConfiguration.MaterialsOverlayLocation;
 
             UpdateAppearanceControls();
 
@@ -235,6 +257,31 @@ namespace EliteDataRelay.UI
                 }
             };
             repositionDialog.Show(this.Owner); // Show non-modally
+        }
+    }
+
+    public partial class SettingsForm
+    {
+        private void SettingsForm_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (this.DialogResult == DialogResult.Cancel)
+            {
+                RevertLiveChanges();
+            }
+        }
+        private void RevertLiveChanges()
+        {
+            AppConfiguration.OverlayFontName = _originalOverlayFont.Name;
+            AppConfiguration.OverlayFontSize = _originalOverlayFont.Size;
+            AppConfiguration.OverlayTextColor = _originalOverlayTextColor;
+            AppConfiguration.OverlayBackgroundColor = _originalOverlayBackColor;
+            AppConfiguration.OverlayOpacity = _originalOverlayOpacity;
+
+            AppConfiguration.LeftOverlayLocation = _originalLeftOverlayLocation;
+            AppConfiguration.RightOverlayLocation = _originalRightOverlayLocation;
+            AppConfiguration.MaterialsOverlayLocation = _originalMaterialsOverlayLocation;
+
+            LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }
