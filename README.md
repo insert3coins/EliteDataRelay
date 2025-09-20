@@ -15,14 +15,16 @@ A lightweight Windows utility that monitors your **Elite Dangerous** status and 
 ## ✨ Core Features
 
 * **Live Data Tracking**: View your CMDR name, ship, credit balance, and cargo count as they change.
+* **Material Tracking**: Keep an eye on your Raw, Manufactured, and Encoded materials with a dedicated UI tab and a new, optional overlay.
 * **Multiple Views**:
     * **Desktop UI**: A simple, clean window for at-a-glance information.
-    * **In-Game Overlay**: A modern, two-panel overlay to see your status and cargo without leaving the game.
+    * **In-Game Overlay**: Customizable overlays to see your status, cargo, and materials without leaving the game.
     * **Text File Output**: Export live data to a text file for use in streaming software like OBS.
 * **Global Hotkeys**: Control the app without leaving the game. Set keys to start/stop monitoring and show/hide the overlay.
 * **Session Tracking**: Automatically track credits earned and cargo collected during your play session.
 * **Highly Configurable**:
-    * Independently toggle overlay panels (status and cargo).
+    * Independently toggle overlay panels (status, cargo, and materials).
+    * Pin specific materials to a watchlist from the main UI or the settings window.
     * Customize the text file format and output location.
 * **Smart & Unobtrusive**:
     * Automatically detects the game's data folder.

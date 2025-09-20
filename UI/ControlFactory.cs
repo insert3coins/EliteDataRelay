@@ -11,6 +11,7 @@ namespace EliteDataRelay.UI
     {
         public ListView ListView { get; }
         public TreeView MaterialTreeView { get; }
+        public CheckBox PinMaterialsCheckBox { get; }
         public TabControl TabControl { get; }
         public Button StartBtn { get; }
         public Button StopBtn { get; }
@@ -46,6 +47,7 @@ namespace EliteDataRelay.UI
                 Font = fontManager.VerdanaFont,
                 BackColor = SystemColors.Window,
                 ForeColor = SystemColors.WindowText,
+                CheckBoxes = true,
             };
 
             // Main ListView to display cargo items
@@ -66,9 +68,22 @@ namespace EliteDataRelay.UI
             ListView.Columns.Add("Count", 80, HorizontalAlignment.Center);
             ListView.Columns.Add("Category", -2, HorizontalAlignment.Center);
 
+            // Create a container panel for the materials tab to hold the checkbox and treeview
+            var materialsPanel = new Panel { Dock = DockStyle.Fill };
+
+            // Checkbox to toggle pinned materials view
+            PinMaterialsCheckBox = new CheckBox
+            {
+                Text = "Show Pinned Materials Only",
+                Dock = DockStyle.Top,
+                Padding = new Padding(3)
+            };
+
             // Add controls to their respective tab pages
             cargoPage.Controls.Add(ListView);
-            materialsPage.Controls.Add(MaterialTreeView);
+            materialsPanel.Controls.Add(PinMaterialsCheckBox); // Add checkbox first (docks to top)
+            materialsPanel.Controls.Add(MaterialTreeView); // Then add treeview (fills remaining space)
+            materialsPage.Controls.Add(materialsPanel);
             TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage });
 
             // Create control buttons
@@ -218,6 +233,7 @@ namespace EliteDataRelay.UI
 
             TabControl.Dispose();
             MaterialTreeView.Dispose();
+            PinMaterialsCheckBox.Dispose();
             ListView.Dispose();
             StartBtn.Dispose();
             StopBtn.Dispose();

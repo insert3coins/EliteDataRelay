@@ -24,6 +24,7 @@ namespace EliteDataRelay.UI
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";
+        private IMaterialService? _materialServiceCache;
 
         private string _baseTitle = "";
 
@@ -130,6 +131,8 @@ namespace EliteDataRelay.UI
             _controlFactory.SettingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
             _controlFactory.SessionBtn.Click += (s, e) => SessionClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
+            _controlFactory.PinMaterialsCheckBox.CheckedChanged += OnPinMaterialsCheckBoxChanged;
+            _controlFactory.MaterialTreeView.AfterCheck += OnMaterialNodeChecked;
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -142,6 +145,43 @@ namespace EliteDataRelay.UI
         }
 
         private void OnShowApplication(object? sender, EventArgs e) => ShowForm();
+
+        private void OnPinMaterialsCheckBoxChanged(object? sender, EventArgs e)
+        {
+            // If the user changes the pin setting, refresh the list using the cached data.
+            if (_materialServiceCache != null)
+            {
+                UpdateMaterialList(_materialServiceCache);
+            }
+        }
+
+        private void OnMaterialNodeChecked(object? sender, TreeViewEventArgs e)
+        {
+            if (e.Node?.Tag is not string materialName || e.Action == TreeViewAction.Unknown)
+            {
+                return;
+            }
+
+            var pinnedMaterials = AppConfiguration.PinnedMaterials.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+
+            if (e.Node.Checked)
+            {
+                pinnedMaterials.Add(materialName);
+            }
+            else
+            {
+                pinnedMaterials.Remove(materialName);
+            }
+
+            AppConfiguration.PinnedMaterials = pinnedMaterials.ToList();
+            AppConfiguration.Save();
+
+            // If we are in "pinned only" view, unchecking an item should make it disappear.
+            if (_controlFactory != null && _controlFactory.PinMaterialsCheckBox.Checked)
+            {
+                UpdateMaterialList(_materialServiceCache);
+            }
+        }
         
         private void DisplayWelcomeMessage()
         {
@@ -238,9 +278,14 @@ namespace EliteDataRelay.UI
 
         public void UpdateMaterialList(IMaterialService materialService)
         {
+            _materialServiceCache = materialService; // Cache the latest service instance
+
             if (_controlFactory == null) return;
 
             var treeView = _controlFactory.MaterialTreeView;
+            // Unhook the event handler while we programmatically update the checked states to prevent it from firing.
+            treeView.AfterCheck -= OnMaterialNodeChecked;
+
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
 
@@ -248,24 +293,63 @@ namespace EliteDataRelay.UI
             var manufacturedNode = treeView.Nodes.Add("Manufactured");
             var encodedNode = treeView.Nodes.Add("Encoded");
 
-            PopulateMaterialCategory(rawNode, materialService.RawMaterials);
-            PopulateMaterialCategory(manufacturedNode, materialService.ManufacturedMaterials);
-            PopulateMaterialCategory(encodedNode, materialService.EncodedMaterials);
+            if (_controlFactory.PinMaterialsCheckBox.Checked)
+            {
+                var pinnedRaw = new Dictionary<string, MaterialItem>(StringComparer.InvariantCultureIgnoreCase);
+                var pinnedManufactured = new Dictionary<string, MaterialItem>(StringComparer.InvariantCultureIgnoreCase);
+                var pinnedEncoded = new Dictionary<string, MaterialItem>(StringComparer.InvariantCultureIgnoreCase);
+
+                var allMaterialDefinitions = MaterialDataService.GetAll().ToDictionary(m => m.Name, m => m, StringComparer.InvariantCultureIgnoreCase);
+
+                foreach (var pinnedMaterialName in AppConfiguration.PinnedMaterials)
+                {
+                    if (allMaterialDefinitions.TryGetValue(pinnedMaterialName, out var def))
+                    {
+                        materialService.RawMaterials.TryGetValue(pinnedMaterialName, out var existingRaw);
+                        materialService.ManufacturedMaterials.TryGetValue(pinnedMaterialName, out var existingManufactured);
+                        materialService.EncodedMaterials.TryGetValue(pinnedMaterialName, out var existingEncoded);
+
+                        var itemToShow = existingRaw ?? existingManufactured ?? existingEncoded ?? new MaterialItem { Name = def.Name, Localised = def.LocalisedName, Count = 0 };
+
+                        switch (def.Category.ToLowerInvariant())
+                        {
+                            case "raw": pinnedRaw[def.Name] = itemToShow; break;
+                            case "manufactured": pinnedManufactured[def.Name] = itemToShow; break;
+                            case "encoded": pinnedEncoded[def.Name] = itemToShow; break;
+                        }
+                    }
+                }
+                PopulateMaterialCategory(rawNode, pinnedRaw);
+                PopulateMaterialCategory(manufacturedNode, pinnedManufactured);
+                PopulateMaterialCategory(encodedNode, pinnedEncoded);
+            }
+            else
+            {
+                PopulateMaterialCategory(rawNode, materialService.RawMaterials);
+                PopulateMaterialCategory(manufacturedNode, materialService.ManufacturedMaterials);
+                PopulateMaterialCategory(encodedNode, materialService.EncodedMaterials);
+            }
 
             rawNode.Expand();
             manufacturedNode.Expand();
             encodedNode.Expand();
 
             treeView.EndUpdate();
+
+            // Re-hook the event handler.
+            treeView.AfterCheck += OnMaterialNodeChecked;
         }
 
         public void UpdateMaterialsOverlay(IMaterialService materialService)
         {
+            _materialServiceCache = materialService; // Also cache here for overlay refreshes
             _overlayService?.UpdateMaterials(materialService);
         }
 
         private void PopulateMaterialCategory(TreeNode categoryNode, IReadOnlyDictionary<string, MaterialItem> materials)
         {
+            var pinned = AppConfiguration.PinnedMaterials.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+
             if (!materials.Any())
             {
                 categoryNode.Nodes.Add("None").ForeColor = SystemColors.GrayText;
@@ -279,6 +363,9 @@ namespace EliteDataRelay.UI
                 string text = maxCount > 0 ? $"{displayName} ({material.Count} / {maxCount})" : $"{displayName} ({material.Count})";
 
                 var node = categoryNode.Nodes.Add(text);
+                node.Tag = material.Name;
+                node.Checked = pinned.Contains(material.Name);
+
                 if (maxCount > 0 && material.Count >= maxCount)
                 {
                     node.ForeColor = Color.Orange; // Visual indicator for max capacity
