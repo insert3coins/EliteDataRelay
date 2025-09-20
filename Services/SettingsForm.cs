@@ -39,6 +39,7 @@ namespace EliteDataRelay.UI
         private TextBox _txtHideOverlayHotkey = null!;
         private CheckBox _chkAllowOverlayDrag = null!;
         private Button _btnResetOverlayPositions = null!;
+        private Button _btnRepositionOverlays = null!;
         private Label _lblCurrentFont = null!;
         private Panel _pnlTextColor = null!;
         private Panel _pnlBackColor = null!;
@@ -57,6 +58,8 @@ namespace EliteDataRelay.UI
         private Color _overlayTextColor;
         private Color _overlayBackColor;
         private int _overlayOpacity;
+
+        public event EventHandler? LiveSettingsChanged;
 
         public SettingsForm()
         {
@@ -192,6 +195,42 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayOpacity = _overlayOpacity;
 
             AppConfiguration.Save();
+        }
+
+        private void OnRepositionOverlaysClicked(object? sender, EventArgs e)
+        {
+            // Store the original state of the checkbox so we can restore it later.
+            bool originalDragState = _chkAllowOverlayDrag.Checked;
+
+            // Temporarily enable dragging so the user can move the overlays.
+            AppConfiguration.AllowOverlayDrag = true;
+            _chkAllowOverlayDrag.Enabled = false; // Prevent user from changing it during reposition.
+
+            // Raise the event now to apply the temporary draggable state to the overlays.
+            LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
+
+            this.Hide();
+
+            // Show a small, non-modal dialog to allow interaction with the overlays.
+            var repositionDialog = new RepositionDialog();
+            repositionDialog.FormClosed += (s, args) =>
+            {
+                // Restore the original dragging state when the dialog is closed.
+                AppConfiguration.AllowOverlayDrag = originalDragState;
+                _chkAllowOverlayDrag.Enabled = true; // Re-enable the checkbox.
+
+                // Raise an event to tell the main form to apply this live change.
+                LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
+
+                // Check if the form has been disposed, which can happen if the main application is closed
+                // while the reposition dialog is open.
+                if (!this.IsDisposed)
+                {
+                    this.Show();
+                    this.Activate();
+                }
+            };
+            repositionDialog.Show(this.Owner); // Show non-modally
         }
     }
 }

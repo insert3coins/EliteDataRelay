@@ -201,9 +201,18 @@ namespace EliteDataRelay.UI
             {
                 Text = "Reset Overlay Positions",
                 Location = new Point(15, 145),
-                Size = new Size(150, 23)
+                Size = new Size(160, 23)
             };
             _btnResetOverlayPositions.Click += OnResetPositionsClicked;
+
+            // Reposition Overlays Button
+            _btnRepositionOverlays = new Button
+            {
+                Text = "Reposition Overlays",
+                Location = new Point(185, 145),
+                Size = new Size(160, 23)
+            };
+            _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
 
             // Enable Hotkeys CheckBox
             _chkEnableHotkeys = new CheckBox
@@ -264,6 +273,7 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_chkAllowOverlayDrag);
             _grpOverlaySettings.Controls.Add(_btnResetOverlayPositions);
+            _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 
             // Font GroupBox
             var grpFont = new GroupBox { Text = "Appearance: Font", Location = new Point(12, 200), Size = new Size(410, 80) };

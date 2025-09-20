@@ -19,10 +19,6 @@ namespace EliteDataRelay
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
             _lastCargoSnapshot = e.Snapshot;
-            if (AppConfiguration.EnableSessionTracking)
-            {
-                _sessionTrackingService.OnCargoChanged(e.Snapshot);
-            }
             // --- File Output ---
             // If enabled in settings, write the snapshot to the output text file.
             if (AppConfiguration.EnableFileOutput)
@@ -57,10 +53,6 @@ namespace EliteDataRelay
         {
             _lastBalance = e.Balance;
             _cargoFormUI.UpdateBalance(e.Balance);
-            if (AppConfiguration.EnableSessionTracking)
-            {
-                _sessionTrackingService.OnBalanceChanged(e.Balance);
-            }
         }
 
         private void OnCommanderNameChanged(object? sender, CommanderNameChangedEventArgs e)
@@ -75,15 +67,6 @@ namespace EliteDataRelay
             _lastShipIdent = e.ShipIdent;
             _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent);
         }
-
-        private void OnSessionUpdated(object? sender, EventArgs e)
-        {
-            if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
-            {
-                _cargoFormUI.UpdateSessionOverlay(_sessionTrackingService.TotalCargoCollected, _sessionTrackingService.CreditsEarned);
-            }
-        }
-
         #endregion
     }
 }

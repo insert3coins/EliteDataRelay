@@ -41,6 +41,9 @@ namespace EliteDataRelay
         {
             using (var settingsForm = new SettingsForm())
             {
+                // Subscribe to the event that fires when a live setting (like repositioning) is changed.
+                settingsForm.LiveSettingsChanged += (s, a) => ApplyLiveSettingsChanges();
+
                 if (settingsForm.ShowDialog(this) == DialogResult.OK)
                 {
                     ApplyLiveSettingsChanges();
@@ -63,11 +66,18 @@ namespace EliteDataRelay
             if (_fileMonitoringService.IsMonitoring)
             {
                 _cargoFormUI.RefreshOverlay();
-                RepopulateOverlay();
+                // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
+                // windows have fully processed their creation messages and are ready to be
+                // updated before we try to send them data, preventing a race condition.
+                this.BeginInvoke(new Action(RepopulateOverlay));
             }
 
-            // Update Session button visibility
-            _cargoFormUI.SetSessionButtonVisibility(AppConfiguration.EnableSessionTracking);
+            // Also update the button states to reflect any changes (like enabling session tracking).
+            // The `IsMonitoring` flag tells us what the correct state should be.
+            _cargoFormUI.SetButtonStates(
+                startEnabled: !_fileMonitoringService.IsMonitoring,
+                stopEnabled: _fileMonitoringService.IsMonitoring
+            );
         }
 
         private void OnSessionClicked(object? sender, EventArgs e)

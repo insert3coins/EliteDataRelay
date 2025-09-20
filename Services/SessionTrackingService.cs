@@ -1,107 +1,104 @@
 using System;
-using System.Linq;
-using EliteDataRelay.Configuration;
-using System.Timers;
+using System.Windows.Forms;
 using EliteDataRelay.Models;
 
 namespace EliteDataRelay.Services
 {
     public class SessionTrackingService : IDisposable
     {
-        private readonly System.Timers.Timer _sessionTimer;
-        private DateTime? _sessionStartTime;
-        private CargoSnapshot? _previousCargoSnapshot;
-        private long? _lastBalance;
+        private readonly ICargoProcessorService _cargoProcessor;
+        private readonly IStatusWatcherService _statusWatcher;
+        private readonly System.Windows.Forms.Timer _timer;
 
-        public long TotalCargoCollected { get; private set; }
+        private long _startingBalance;
+        private int _previousCargoCount;
+        private DateTime _sessionStartTime;
+        private bool _sessionActive;
 
         public long CreditsEarned { get; private set; }
-
-        public TimeSpan SessionDuration => _sessionStartTime.HasValue ? DateTime.UtcNow - _sessionStartTime.Value : TimeSpan.Zero;
+        public long TotalCargoCollected { get; private set; }
+        public TimeSpan SessionDuration { get; private set; }
 
         public event EventHandler? SessionUpdated;
 
-        public SessionTrackingService()
+        public SessionTrackingService(ICargoProcessorService cargoProcessor, IStatusWatcherService statusWatcher)
         {
-            _sessionTimer = new System.Timers.Timer(1000); // Update duration every second
-            _sessionTimer.Elapsed += OnTimerElapsed;
+            _cargoProcessor = cargoProcessor ?? throw new ArgumentNullException(nameof(cargoProcessor));
+            _statusWatcher = statusWatcher ?? throw new ArgumentNullException(nameof(statusWatcher));
+            _timer = new System.Windows.Forms.Timer { Interval = 1000 };
+            _timer.Tick += OnTimerTick;
         }
 
         public void StartSession()
         {
-            // Reset trackers for the current run
-            _previousCargoSnapshot = null;
-            _lastBalance = null;
-            TotalCargoCollected = 0;
-            CreditsEarned = 0;
+            if (_sessionActive) return;
 
-            // Start the clock for this run
+            // Reset stats
+            CreditsEarned = 0;
+            TotalCargoCollected = 0;
+            SessionDuration = TimeSpan.Zero;
+            _startingBalance = -1;
+            _previousCargoCount = -1;
             _sessionStartTime = DateTime.UtcNow;
-            _sessionTimer.Start();
+            _sessionActive = true;
+
+            // Subscribe to events
+            _cargoProcessor.CargoProcessed += OnCargoProcessed;
+            _statusWatcher.BalanceChanged += OnBalanceChanged;
+            _timer.Start();
+
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void StopSession()
         {
-            _sessionTimer.Stop();
+            if (!_sessionActive) return;
 
-            // Clear the start time to stop the duration from increasing
-            _sessionStartTime = null;
+            // Unsubscribe to prevent memory leaks
+            _cargoProcessor.CargoProcessed -= OnCargoProcessed;
+            _statusWatcher.BalanceChanged -= OnBalanceChanged;
+            _timer.Stop();
+            _sessionActive = false;
+        }
 
+        private void OnTimerTick(object? sender, EventArgs e)
+        {
+            SessionDuration = DateTime.UtcNow - _sessionStartTime;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        public void OnCargoChanged(CargoSnapshot newSnapshot)
+        private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
         {
-            if (_sessionStartTime == null) return; // Session not started
-
-            if (_previousCargoSnapshot != null)
+            if (_startingBalance == -1)
             {
-                long collectedInThisChange = 0;
-
-                // Create a dictionary for quick lookups of old inventory
-                var oldInventoryDict = _previousCargoSnapshot.Inventory
-                    .ToDictionary(i => i.Name, i => i.Count);
-
-                foreach (var newItem in newSnapshot.Inventory)
-                {
-                    oldInventoryDict.TryGetValue(newItem.Name, out int oldCount);
-                    int diff = newItem.Count - oldCount;
-
-                    // Only count items that are not limpets (internal name: "drones")
-                    if (diff > 0 && !newItem.Name.Equals("drones", StringComparison.OrdinalIgnoreCase))
-                    {
-                        collectedInThisChange += diff;
-                    }
-                }
-
-                if (collectedInThisChange > 0)
-                {
-                    TotalCargoCollected += collectedInThisChange;
-                    SessionUpdated?.Invoke(this, EventArgs.Empty);
-                }
+                _startingBalance = e.Balance;
             }
 
-            _previousCargoSnapshot = newSnapshot;
+            CreditsEarned = e.Balance - _startingBalance;
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        public void OnBalanceChanged(long newBalance)
+        private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
-            if (_sessionStartTime == null) return; // Session not started for this run
-
-            if (_lastBalance.HasValue)
+            var currentCargoCount = e.Snapshot.Count;
+            if (_previousCargoCount == -1)
             {
-                long diff = newBalance - _lastBalance.Value;
-                CreditsEarned += diff;
-                SessionUpdated?.Invoke(this, EventArgs.Empty);
+                _previousCargoCount = currentCargoCount;
             }
 
-            // Always update last balance for the current run
-            _lastBalance = newBalance;
+            if (currentCargoCount > _previousCargoCount)
+            {
+                TotalCargoCollected += (currentCargoCount - _previousCargoCount);
+            }
+
+            _previousCargoCount = currentCargoCount;
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnTimerElapsed(object? sender, ElapsedEventArgs e) => SessionUpdated?.Invoke(this, EventArgs.Empty);
-
-        public void Dispose() => _sessionTimer?.Dispose();
+        public void Dispose()
+        {
+            StopSession();
+            _timer.Dispose();
+        }
     }
 }

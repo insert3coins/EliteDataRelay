@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -61,7 +61,7 @@ namespace EliteDataRelay
             _statusWatcherService = new StatusWatcherService();
             _cargoFormUI = new CargoFormUI();
             _materialService = new MaterialService(_journalWatcherService);
-            _sessionTrackingService = new SessionTrackingService();
+            _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _statusWatcherService);
 
             InitializeComponent();
             SetupEventHandlers();
@@ -78,6 +78,7 @@ namespace EliteDataRelay
         private long? _lastBalance;
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
+        private IMaterialService? _lastMaterialServiceCache;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 
@@ -122,10 +123,24 @@ namespace EliteDataRelay
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
         }
 
+        private void OnSessionUpdated(object? sender, EventArgs e)
+        {
+            if (sender is not SessionTrackingService tracker) return;
+ 
+            if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+            {
+                Invoke(new Action(() =>
+                {
+                    _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
+                }));
+            }
+        }
+
         #region Monitoring Control
 
         private void OnMaterialsUpdated(object? sender, EventArgs e)
         {
+            _lastMaterialServiceCache = _materialService;
             Invoke(new Action(() =>
             {
                 _cargoFormUI.UpdateMaterialList(_materialService);
@@ -146,6 +161,7 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
+            if (_lastMaterialServiceCache != null) _cargoFormUI.UpdateMaterialsOverlay(_lastMaterialServiceCache);
         }
 
         private void StartMonitoring()

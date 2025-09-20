@@ -13,13 +13,14 @@ namespace EliteDataRelay
 
         private void CargoForm_Load(object? sender, EventArgs e)
         {
+            // Force overlay dragging to be disabled on every application start.
+            // This ensures a predictable, non-draggable default state, regardless of saved settings.
+            AppConfiguration.AllowOverlayDrag = false;
+
             if (AppConfiguration.EnableHotkeys)
             {
                 RegisterHotkeys();
             }
-
-            // Set initial visibility of session button based on settings
-            _cargoFormUI.SetSessionButtonVisibility(AppConfiguration.EnableSessionTracking);
 
             // Restore window size and location from settings
             if (AppConfiguration.WindowSize.Width > 0 && AppConfiguration.WindowSize.Height > 0)
@@ -73,6 +74,10 @@ namespace EliteDataRelay
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
+            // Force overlay dragging to be disabled on every application start.
+            // This ensures a predictable, non-draggable default state, regardless of saved settings.
+            AppConfiguration.AllowOverlayDrag = false;
+
             if (AppConfiguration.EnableHotkeys)
             {
                 UnregisterHotkeys();

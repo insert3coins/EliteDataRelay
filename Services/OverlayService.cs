@@ -20,7 +20,7 @@ namespace EliteDataRelay.Services
 
             if (AppConfiguration.EnableLeftOverlay)
             {
-                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Left);
+                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Left, AppConfiguration.AllowOverlayDrag);
                 _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
 
                 if (AppConfiguration.LeftOverlayLocation != Point.Empty)
@@ -38,7 +38,7 @@ namespace EliteDataRelay.Services
 
             if (AppConfiguration.EnableRightOverlay)
             {
-                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Right);
+                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Right, AppConfiguration.AllowOverlayDrag);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
 
                 if (AppConfiguration.RightOverlayLocation != Point.Empty)
@@ -57,7 +57,7 @@ namespace EliteDataRelay.Services
 
             if (AppConfiguration.EnableMaterialsOverlay)
             {
-                _materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials);
+                _materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials, AppConfiguration.AllowOverlayDrag);
                 _materialsOverlay.PositionChanged += OnOverlayPositionChanged;
 
                 if (AppConfiguration.MaterialsOverlayLocation != Point.Empty)
@@ -67,7 +67,14 @@ namespace EliteDataRelay.Services
                 else
                 {
                     var screen = Screen.PrimaryScreen.WorkingArea;
-                    _materialsOverlay.Location = new Point(screen.Width - 280 - 320, (screen.Height / 2) - (500 / 2));
+                    // Position to the left of the cargo overlay's default spot to avoid overlap.
+                    const int rightOverlayWidth = 280;
+                    const int materialsOverlayWidth = 340; // Width is set in OverlayForm.OnLoad
+                    const int materialsOverlayHeight = 500; // Height is set in OverlayForm.OnLoad
+                    const int padding = 20;
+
+                    int materialsX = screen.Width - rightOverlayWidth - padding - materialsOverlayWidth - padding;
+                    _materialsOverlay.Location = new Point(materialsX, (screen.Height / 2) - (materialsOverlayHeight / 2));
                 }
                 _materialsOverlay.Show();
             }

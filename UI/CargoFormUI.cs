@@ -374,6 +374,13 @@ namespace EliteDataRelay.UI
                 _controlFactory.StopBtn.BackColor = stopEnabled ? UIConstants.StopButtonActiveColor : UIConstants.DefaultButtonBackColor;
             }
 
+            // The Session button should always be visible, but only enabled when monitoring is
+            // active and the feature is enabled in settings.
+            if (_controlFactory.SessionBtn != null)
+            {
+                _controlFactory.SessionBtn.Enabled = stopEnabled && AppConfiguration.EnableSessionTracking;
+            }
+
             // Also update tray menu items
             _trayIconManager?.SetMonitoringState(startEnabled, stopEnabled);
             // Control the animation
@@ -421,14 +428,6 @@ namespace EliteDataRelay.UI
         public void HideOverlays()
         {
             _overlayService?.Hide();
-        }
-
-        public void SetSessionButtonVisibility(bool visible)
-        {
-            if (_controlFactory?.SessionBtn != null)
-            {
-                _controlFactory.SessionBtn.Visible = visible;
-            }
         }
 
         private void ShowForm()

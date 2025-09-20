@@ -135,8 +135,7 @@ namespace EliteDataRelay.UI
         /// Sets the visibility of the session button.
         /// </summary>
         /// <param name="visible">Whether the button should be visible.</param>
-        void SetSessionButtonVisibility(bool visible);
-
+        // This method is now obsolete. The button's enabled state is handled by SetButtonStates.
         /// <summary>Updates the session data on the overlay.</summary>
         void UpdateSessionOverlay(long cargoCollected, long creditsEarned);
     }

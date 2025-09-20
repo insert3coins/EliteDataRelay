@@ -20,6 +20,7 @@ A lightweight Windows utility that monitors your **Elite Dangerous** status and 
     * **In-Game Overlay**: A modern, two-panel overlay to see your status and cargo without leaving the game.
     * **Text File Output**: Export live data to a text file for use in streaming software like OBS.
 * **Global Hotkeys**: Control the app without leaving the game. Set keys to start/stop monitoring and show/hide the overlay.
+* **Session Tracking**: Automatically track credits earned and cargo collected during your play session.
 * **Highly Configurable**:
     * Independently toggle overlay panels (status and cargo).
     * Customize the text file format and output location.
