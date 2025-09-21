@@ -43,12 +43,6 @@ namespace EliteDataRelay
             _cargoCapacity = e.CargoCapacity;
         }
 
-        private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-        {
-            _lastLocation = e.StarSystem;
-            _cargoFormUI.UpdateLocation(e.StarSystem);
-        }
-
         private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
         {
             _lastBalance = e.Balance;

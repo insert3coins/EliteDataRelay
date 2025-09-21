@@ -1,49 +1,59 @@
-using EliteDataRelay.Configuration;
-using EliteDataRelay.Services;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Windows.Forms;
+using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.UI
 {
     public partial class CargoFormUI
     {
-        private void OnShowApplication(object? sender, EventArgs e) => ShowForm();
-
         private void OnPinMaterialsCheckBoxChanged(object? sender, EventArgs e)
         {
-            // If the user changes the pin setting, refresh the list using the cached data.
-            if (_materialServiceCache != null)
-            {
-                UpdateMaterialList(_materialServiceCache);
-            }
+            if (_controlFactory == null || _materialServiceCache == null) return;
+
+            _controlFactory.MaterialTreeView.Enabled = !_controlFactory.PinMaterialsCheckBox.Checked;
+            AppConfiguration.PinMaterialsMode = _controlFactory.PinMaterialsCheckBox.Checked;
+            AppConfiguration.Save();
+
+            // Refresh the material list to apply the new filter.
+            UpdateMaterialList(_materialServiceCache);
+            _overlayService?.UpdateMaterials(_materialServiceCache);
         }
 
         private void OnMaterialNodeChecked(object? sender, TreeViewEventArgs e)
         {
-            if (e.Node?.Tag is not string materialName || e.Action == TreeViewAction.Unknown)
+            // This event can fire when we programmatically clear and repopulate the tree.
+            // The e.Node can be null in some edge cases.
+            if (e.Node == null || e.Action == TreeViewAction.Unknown) return;
+
+            // We only care about user-initiated checks/unchecks.
+            if (e.Action != TreeViewAction.ByMouse && e.Action != TreeViewAction.ByKeyboard) return;
+
+            var pinnedMaterials = new List<string>();
+            var treeView = _controlFactory?.MaterialTreeView;
+            if (treeView == null) return;
+
+            // Iterate through all nodes to build the complete list of pinned materials.
+            foreach (TreeNode categoryNode in treeView.Nodes)
             {
-                return;
+                foreach (TreeNode materialNode in categoryNode.Nodes)
+                {
+                    if (materialNode.Checked && materialNode.Tag is string materialName)
+                    {
+                        pinnedMaterials.Add(materialName);
+                    }
+                }
             }
 
-            var pinnedMaterials = AppConfiguration.PinnedMaterials.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            // Convert the List<string> to a HashSet<string> to fix the type mismatch error.
+            AppConfiguration.PinnedMaterials = new HashSet<string>(pinnedMaterials);
 
-            if (e.Node.Checked)
-            {
-                pinnedMaterials.Add(materialName);
-            }
-            else
-            {
-                pinnedMaterials.Remove(materialName);
-            }
-
-            AppConfiguration.PinnedMaterials = pinnedMaterials.ToList();
-            AppConfiguration.Save();
-
-            // If we are in "pinned only" view, unchecking an item should make it disappear.
-            if (_controlFactory?.PinMaterialsCheckBox.Checked == true && _materialServiceCache != null)
+            if (_controlFactory == null) return;
+            // If the "Show Pinned" checkbox is checked, we need to refresh the list to reflect the change.
+            if (_controlFactory.PinMaterialsCheckBox.Checked && _materialServiceCache != null)
             {
                 UpdateMaterialList(_materialServiceCache);
+                _overlayService?.UpdateMaterials(_materialServiceCache);
             }
         }
     }

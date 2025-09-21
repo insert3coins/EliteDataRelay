@@ -60,9 +60,9 @@ namespace EliteDataRelay.UI
         private void OnResetOverlaySettingsClicked(object? sender, EventArgs e)
         {
             // Set temporary fields to defaults for the UI
-            _overlayFont = new Font("Consolas", 11F);
+            _overlayFont = new Font("Eurostile", 10F);
             _overlayTextColor = Color.Orange;
-            _overlayBackColor = Color.FromArgb(30, 30, 30);
+            _overlayBackColor = Color.FromArgb(200, 0, 0, 0);
             _overlayOpacity = 85;
             UpdateAppearanceControls();
 

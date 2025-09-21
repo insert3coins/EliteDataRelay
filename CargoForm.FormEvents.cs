@@ -54,26 +54,8 @@ namespace EliteDataRelay
                 this.WindowState = FormWindowState.Normal;
             }
 
-            // Check if cargo file exists on startup
-            if (!File.Exists(AppConfiguration.CargoPath))
-            {
-                MessageBox.Show(
-                    $"Cargo.json not found.\nMake sure Elite Dangerous is running\nand the file is at:\n{AppConfiguration.CargoPath}",
-                    "File not found",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
-            }
-
-            // Check if journal directory exists
-            if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
-            {
-                MessageBox.Show(
-                    $"Journal directory not found.\nJournal watcher will be disabled.\nPath: {_journalWatcherService.JournalDirectoryPath}",
-                    "Directory not found",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-            }
+            // Start the visited systems service on load to populate the star map by default.
+            _visitedSystemsService.Start();
         }
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)

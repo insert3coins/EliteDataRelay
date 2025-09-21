@@ -12,6 +12,8 @@ namespace EliteDataRelay.UI
         public ListView ListView { get; }
         public TreeView MaterialTreeView { get; }
         public CheckBox PinMaterialsCheckBox { get; }
+        public StarMapPanel StarMapPanel { get; }
+        public Button ScanJournalsButton { get; }
         public TabControl TabControl { get; }
         public Button StartBtn { get; }
         public Button StopBtn { get; }
@@ -38,6 +40,7 @@ namespace EliteDataRelay.UI
 
             var cargoPage = new TabPage("Cargo");
             var materialsPage = new TabPage("Materials");
+            var starMapPage = new TabPage("Star Map");
 
             // Material TreeView
             MaterialTreeView = new TreeView
@@ -86,7 +89,24 @@ namespace EliteDataRelay.UI
             // Add other docked controls. They will be placed on top and will claim their space.
             materialsPanel.Controls.Add(PinMaterialsCheckBox);
             materialsPage.Controls.Add(materialsPanel);
-            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage });
+
+            // Create a container panel for the star map tab
+            var starMapContainer = new Panel { Dock = DockStyle.Fill };
+            StarMapPanel = new StarMapPanel(); // The custom panel will fill
+            ScanJournalsButton = new Button
+            {
+                Text = "Scan All Journals for Systems",
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                Padding = new Padding(3),
+                Font = fontManager.VerdanaFont
+            };
+
+            starMapContainer.Controls.Add(StarMapPanel);
+            starMapContainer.Controls.Add(ScanJournalsButton);
+            starMapPage.Controls.Add(starMapContainer);
+
+            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage, starMapPage });
 
             // Create control buttons
             StartBtn = new Button { Text = "Start", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
@@ -235,6 +255,8 @@ namespace EliteDataRelay.UI
 
             TabControl.Dispose();
             MaterialTreeView.Dispose();
+            StarMapPanel.Dispose();
+            ScanJournalsButton.Dispose();
             PinMaterialsCheckBox.Dispose();
             ListView.Dispose();
             StartBtn.Dispose();

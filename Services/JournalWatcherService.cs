@@ -331,11 +331,16 @@ namespace EliteDataRelay.Services
                             if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement))
                             {
                                 var starSystem = starSystemElement.GetString();
-                                if (!string.IsNullOrEmpty(starSystem) && starSystem != _lastStarSystem)
+                                if (jsonDoc.RootElement.TryGetProperty("StarPos", out var starPosElement) &&
+                                    starPosElement.ValueKind == JsonValueKind.Array)
                                 {
-                                    _lastStarSystem = starSystem;
-                                    Debug.WriteLine($"[JournalWatcherService] Found Location event. StarSystem: {starSystem}");
-                                    LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem));
+                                    var starPos = starPosElement.EnumerateArray().Select(e => e.GetDouble()).ToArray();
+                                    if (!string.IsNullOrEmpty(starSystem) && starSystem != _lastStarSystem)
+                                    {
+                                        _lastStarSystem = starSystem;
+                                        Debug.WriteLine($"[JournalWatcherService] Found Location event. StarSystem: {starSystem}");
+                                        LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem, starPos));
+                                    }
                                 }
                             }
                         }
@@ -424,8 +429,13 @@ namespace EliteDataRelay.Services
         /// Gets the current star system.
         /// </summary>
         public string StarSystem { get; }
+        public double[] StarPos { get; }
 
-        public LocationChangedEventArgs(string starSystem) => StarSystem = starSystem;
+        public LocationChangedEventArgs(string starSystem, double[] starPos)
+        {
+            StarSystem = starSystem;
+            StarPos = starPos;
+        }
     }
 
     /// <summary>

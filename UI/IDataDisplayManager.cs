@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 
@@ -8,6 +10,8 @@ namespace EliteDataRelay.UI
     /// </summary>
     public interface IDataDisplayManager
     {
+        event EventHandler? ScanJournalsClicked;
+
         /// <summary>
         /// Update the UI with new cargo data
         /// </summary>
@@ -65,5 +69,18 @@ namespace EliteDataRelay.UI
         /// </summary>
         /// <param name="balance">The player's credit balance.</param>
         void UpdateBalance(long balance);
+
+        /// <summary>
+        /// Updates the star map display with visited systems.
+        /// </summary>
+        /// <param name="systems">A list of visited systems.</param>
+        /// <param name="currentSystem">The name of the current system to highlight.</param>
+        void UpdateStarMap(IReadOnlyList<StarSystem> systems, string currentSystem);
+
+        /// <summary>
+        /// Centers the star map view on a specific system.
+        /// </summary>
+        /// <param name="systemName">The name of the system to center on.</param>
+        void CenterStarMapOnSystem(string systemName);
     }
 }

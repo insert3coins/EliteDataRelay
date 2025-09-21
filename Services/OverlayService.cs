@@ -29,7 +29,10 @@ namespace EliteDataRelay.Services
             }
             finally
             {
-                foreach (var p in gameProcesses!) { p.Dispose(); }
+                if (gameProcesses != null)
+                {
+                    foreach (var p in gameProcesses) { p.Dispose(); }
+                }
             }
 
             var screen = Screen.PrimaryScreen.WorkingArea;

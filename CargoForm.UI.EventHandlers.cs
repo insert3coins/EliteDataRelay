@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
@@ -13,6 +14,27 @@ namespace EliteDataRelay
 
         private void OnStartClicked(object? sender, EventArgs e)
         {
+            // Check for required files/paths before starting.
+            if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
+            {
+                MessageBox.Show(
+                    $"Journal directory not found. Cannot start monitoring.\nPlease check the path in Settings.\n\nPath: {_journalWatcherService.JournalDirectoryPath}",
+                    "Directory Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!File.Exists(AppConfiguration.CargoPath))
+            {
+                MessageBox.Show(
+                    $"Cargo.json not found. Cannot start monitoring.\n\nMake sure Elite Dangerous is running and you are logged into the game.\nThe file is usually created when you enter your ship.\n\nExpected Path: {AppConfiguration.CargoPath}",
+                    "File Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             StartMonitoring();
         }
 

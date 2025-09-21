@@ -110,7 +110,7 @@ namespace EliteDataRelay.UI
             UpdateFullTitleText();
 
             // Set a minimum size to prevent the window from becoming too small to be useful.
-            _form.MinimumSize = new Size(AppConfiguration.FormWidth, AppConfiguration.FormHeight);
+            _form.MinimumSize = new Size(AppConfiguration.WindowSize.Width, AppConfiguration.WindowSize.Height);
 
             // Set application icon from pre-loaded resource
             if (_appIcon != null) _form.Icon = _appIcon;
@@ -129,6 +129,8 @@ namespace EliteDataRelay.UI
             _controlFactory.PinMaterialsCheckBox.CheckedChanged += OnPinMaterialsCheckBoxChanged;
             _controlFactory.MaterialTreeView.AfterCheck += OnMaterialNodeChecked;
 
+            InitializeStarMap(); // From partial class CargoFormUI.StarMap.cs
+
             // Tray icon event handlers
             if (_trayIconManager != null)
             {
@@ -137,6 +139,11 @@ namespace EliteDataRelay.UI
                 _trayIconManager.StopClicked += (s, e) => StopClicked?.Invoke(s, e);
                 _trayIconManager.ExitClicked += (s, e) => ExitClicked?.Invoke(s, e);
             }
+        }
+
+        private void OnShowApplication(object? sender, EventArgs e)
+        {
+            ShowForm();
         }
 
         private void ShowForm()

@@ -208,7 +208,7 @@ namespace EliteDataRelay.UI
                     }
                 }
             }
-            AppConfiguration.PinnedMaterials = pinnedMaterials;
+            AppConfiguration.PinnedMaterials = new HashSet<string>(pinnedMaterials);
 
             // Save appearance settings
             AppConfiguration.OverlayFontName = _overlayFont.Name;

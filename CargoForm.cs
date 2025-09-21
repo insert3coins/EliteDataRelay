@@ -23,6 +23,7 @@ namespace EliteDataRelay
         private readonly IStatusWatcherService _statusWatcherService;
         private readonly ICargoFormUI _cargoFormUI;
         private readonly IMaterialService _materialService;
+        private readonly IVisitedSystemsService _visitedSystemsService;
         private readonly SessionTrackingService _sessionTrackingService;
 
         public CargoForm(
@@ -33,6 +34,7 @@ namespace EliteDataRelay
             IFileOutputService fileOutputService,
             ICargoFormUI cargoFormUI,
             IStatusWatcherService statusWatcherService,
+            IVisitedSystemsService visitedSystemsService,
             IMaterialService materialService,
             SessionTrackingService sessionTrackingService)
         {
@@ -44,6 +46,7 @@ namespace EliteDataRelay
             _statusWatcherService = statusWatcherService ?? throw new ArgumentNullException(nameof(statusWatcherService));
             _cargoFormUI = cargoFormUI ?? throw new ArgumentNullException(nameof(cargoFormUI));
             _materialService = materialService ?? throw new ArgumentNullException(nameof(materialService));
+            _visitedSystemsService = visitedSystemsService ?? throw new ArgumentNullException(nameof(visitedSystemsService));
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
 
             InitializeComponent();
@@ -61,6 +64,7 @@ namespace EliteDataRelay
             _statusWatcherService = new StatusWatcherService();
             _cargoFormUI = new CargoFormUI();
             _materialService = new MaterialService(_journalWatcherService);
+            _visitedSystemsService = new VisitedSystemsService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _statusWatcherService);
 
             InitializeComponent();
@@ -80,6 +84,7 @@ namespace EliteDataRelay
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
         private IMaterialService? _lastMaterialServiceCache;
+        private IReadOnlyList<StarSystem>? _lastVisitedSystems;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 
@@ -102,6 +107,7 @@ namespace EliteDataRelay
             _cargoFormUI.AboutClicked += OnAboutClicked;
             _cargoFormUI.SettingsClicked += OnSettingsClicked;
             _cargoFormUI.SessionClicked += OnSessionClicked;
+            _cargoFormUI.ScanJournalsClicked += OnScanJournalsClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer
@@ -117,6 +123,8 @@ namespace EliteDataRelay
             _journalWatcherService.LocationChanged += OnLocationChanged;
             _statusWatcherService.BalanceChanged += OnBalanceChanged;
 
+            _visitedSystemsService.JournalScanCompleted += OnJournalScanCompleted;
+            _visitedSystemsService.SystemsUpdated += OnSystemsUpdated;
             _materialService.MaterialsUpdated += OnMaterialsUpdated;
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             // Assumes JournalWatcherService is updated to provide these events
@@ -136,6 +144,60 @@ namespace EliteDataRelay
                 }));
             }
         }
+
+        private void OnSystemsUpdated(object? sender, EventArgs e)
+        {
+            _lastVisitedSystems = _visitedSystemsService.VisitedSystems;
+            Invoke(new Action(() =>
+            {
+            if (_lastVisitedSystems != null)
+                {
+                _cargoFormUI.UpdateStarMap(_lastVisitedSystems, _lastLocation ?? string.Empty);
+                }
+            }));
+        }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _lastLocation = e.StarSystem;
+        Invoke(new Action(() =>
+        {
+            _cargoFormUI.UpdateLocation(_lastLocation);
+            if (_lastVisitedSystems != null)
+            {
+                _cargoFormUI.UpdateStarMap(_lastVisitedSystems, _lastLocation);
+                // When the location changes, center the map on the new system.
+                _cargoFormUI.CenterStarMapOnSystem(_lastLocation);
+            }
+        }));
+    }
+
+        private void OnJournalScanCompleted(object? sender, JournalScanCompletedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                if (e.Success)
+                {
+                    MessageBox.Show(this,
+                        $"Journal scan complete.\n\nFiles Scanned: {e.FilesScanned}\nNew Systems Found: {e.NewSystemsFound}",
+                        "Scan Complete",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(this,
+                        $"The journal scan failed.\n\nError: {e.ErrorMessage}",
+                        "Scan Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+            }));
+        }
+
+        private async void OnScanJournalsClicked(object? sender, EventArgs e) =>
+            await _visitedSystemsService.ScanAllJournalsAsync();
 
         #region Monitoring Control
 
@@ -163,6 +225,10 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
             if (_lastMaterialServiceCache != null) _cargoFormUI.UpdateMaterialsOverlay(_lastMaterialServiceCache);
+            if (_lastVisitedSystems != null && _lastLocation != null)
+            {
+                _cargoFormUI.UpdateStarMap(_lastVisitedSystems, _lastLocation);
+            }
 
             // Also repopulate session data if tracking is active and shown on the overlay.
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
@@ -245,6 +311,8 @@ namespace EliteDataRelay
                 (_statusWatcherService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();
                 (_materialService as IDisposable)?.Dispose();
+                _visitedSystemsService.JournalScanCompleted -= OnJournalScanCompleted;
+                (_visitedSystemsService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();
                 _sessionTrackingService.Dispose();
