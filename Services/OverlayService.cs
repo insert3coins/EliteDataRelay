@@ -35,7 +35,14 @@ namespace EliteDataRelay.Services
                 }
             }
 
-            var screen = Screen.PrimaryScreen.WorkingArea;
+            var primaryScreen = Screen.PrimaryScreen;
+            if (primaryScreen == null)
+            {
+                System.Diagnostics.Debug.WriteLine("[OverlayService] No primary screen detected. Overlays will not be shown.");
+                return;
+            }
+
+            var screen = primaryScreen.WorkingArea;
             const int screenEdgePadding = 20;
             const int overlaySpacing = 10; // Space between overlays
 

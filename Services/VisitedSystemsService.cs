@@ -242,7 +242,8 @@ namespace EliteDataRelay.Services
 
                                                 if (scanEvent != null && !string.IsNullOrEmpty(systemName))
                                                 {
-                                                    tempBodies.Add((systemName, scanEvent, starPos));
+                                                    // Use the null-forgiving operator to assure the compiler that scanEvent is not null here.
+                                                    tempBodies.Add((systemName, scanEvent!, starPos));
                                                     if (starPos != null && !_systems.ContainsKey(systemName) && !tempSystems.ContainsKey(systemName))
                                                     {
                                                         tempSystems[systemName] = new StarSystem { Name = systemName, X = starPos[0], Y = starPos[1], Z = starPos[2] };

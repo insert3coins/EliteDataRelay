@@ -39,6 +39,9 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.9" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
     <PackageReference Include="System.Text.Json" Version="9.0.9" />
+    <!-- This package provides the native SQLite library (e.g., sqlite3.dll) that Microsoft.Data.Sqlite needs to function.
+         Explicitly adding it ensures the native dependency is correctly bundled, especially for single-file publishing. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
   </ItemGroup>
 
   <ItemGroup>
