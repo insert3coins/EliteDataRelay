@@ -1,8 +1,10 @@
-using System.Drawing;
-using System.Globalization;
-using System.Linq;
-using System.Windows.Forms;
 using EliteDataRelay.Models;
+using EliteDataRelay.Services;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
 {
@@ -12,87 +14,139 @@ namespace EliteDataRelay.UI
         {
             if (_controlFactory == null) return;
 
-            // Update ship icon and basic info
-            _controlFactory.ShipIconPictureBox.Image = ShipIconService.GetShipIcon(loadout.Ship);
-            _controlFactory.ShipNameLabel.Text = loadout.ShipName;
-            _controlFactory.ShipIdentLabel.Text = loadout.ShipIdent;
-
-            // Update modules tree
             var treeView = _controlFactory.ShipModulesTreeView;
+
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
 
-            var hardpointNode = treeView.Nodes.Add("Hardpoints");
+            if (loadout?.Modules == null || !loadout.Modules.Any())
+            {
+                treeView.Nodes.Add("No loadout data available.").ForeColor = SystemColors.GrayText;
+                treeView.EndUpdate();
+                return;
+            }
+
+            // Create category nodes
+            var hardpointsNode = treeView.Nodes.Add("Hardpoints");
             var utilityNode = treeView.Nodes.Add("Utility Mounts");
             var coreNode = treeView.Nodes.Add("Core Internals");
             var optionalNode = treeView.Nodes.Add("Optional Internals");
-            var otherNode = treeView.Nodes.Add("Other");
 
-            var modulesBySlot = loadout.Modules.GroupBy(m => GetSlotCategory(m.Slot)).ToDictionary(g => g.Key, g => g.ToList());
+            // Group modules by slot type using a more efficient and readable GroupBy
+            var groupedModules = loadout.Modules.GroupBy(m =>
+            {
+                if (m.Slot.Contains("Hardpoint", StringComparison.OrdinalIgnoreCase)) return "Hardpoints";
+                if (m.Slot.Contains("Utility", StringComparison.OrdinalIgnoreCase)) return "Utility";
+                if (m.Slot.StartsWith("Slot", StringComparison.OrdinalIgnoreCase)) return "Optional";
+                return "Core";
+            });
 
-            PopulateModuleCategory(hardpointNode, modulesBySlot.GetValueOrDefault("Hardpoint"));
-            PopulateModuleCategory(utilityNode, modulesBySlot.GetValueOrDefault("Utility"));
-            PopulateModuleCategory(coreNode, modulesBySlot.GetValueOrDefault("Core"));
-            PopulateModuleCategory(optionalNode, modulesBySlot.GetValueOrDefault("Optional"));
-            PopulateModuleCategory(otherNode, modulesBySlot.GetValueOrDefault("Other"));
+            foreach (var group in groupedModules)
+            {
+                var sortedModules = group.OrderBy(m => m.Slot);
+                switch (group.Key)
+                {
+                    case "Hardpoints":
+                        PopulateModuleCategory(hardpointsNode, sortedModules);
+                        break;
+                    case "Utility":
+                        PopulateModuleCategory(utilityNode, sortedModules);
+                        break;
+                    case "Core":
+                        PopulateModuleCategory(coreNode, sortedModules);
+                        break;
+                    case "Optional":
+                        PopulateModuleCategory(optionalNode, sortedModules);
+                        break;
+                }
+            }
 
-            hardpointNode.Expand();
+            // Expand all categories
+            hardpointsNode.Expand();
             utilityNode.Expand();
             coreNode.Expand();
             optionalNode.Expand();
-            otherNode.Expand();
 
             treeView.EndUpdate();
         }
 
-        private string GetSlotCategory(string slotName)
+        private void PopulateModuleCategory(TreeNode categoryNode, IEnumerable<ShipModule> modules)
         {
-            if (slotName.Contains("Hardpoint")) return "Hardpoint";
-            if (slotName.Contains("Utility")) return "Utility";
-            if (IsCoreSlot(slotName)) return "Core";
-            if (slotName.StartsWith("Slot")) return "Optional";
-            return "Other";
-        }
-
-        private bool IsCoreSlot(string slotName)
-        {
-            var coreSlots = new[] { "PowerPlant", "MainEngines", "FrameShiftDrive", "LifeSupport", "PowerDistributor", "Radar", "FuelTank" };
-            return coreSlots.Any(s => slotName.Contains(s));
-        }
-
-        private void PopulateModuleCategory(TreeNode categoryNode, System.Collections.Generic.List<ShipModule>? modules)
-        {
-            if (modules == null || !modules.Any())
+            if (!modules.Any())
             {
                 categoryNode.Nodes.Add("Empty").ForeColor = SystemColors.GrayText;
                 return;
             }
 
-            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-
-            foreach (var module in modules.OrderBy(m => m.Slot))
+            foreach (var module in modules)
             {
-                var moduleNode = categoryNode.Nodes.Add($"{module.Slot}: {textInfo.ToTitleCase(module.Item.Replace("_", " ").ToLowerInvariant())}");
-                if (!module.IsOn)
-                {
-                    moduleNode.ForeColor = Color.Gray;
-                }
+                string moduleName = ItemNameService.TranslateModuleName(module.Item);
+                string displayText = $"{module.Slot}: {moduleName}";
 
+                // Append a summary of the engineering to the main display text for better visibility.
                 if (module.Engineering != null)
                 {
-                    moduleNode.ForeColor = Color.DodgerBlue;
-                    var engineeringNode = moduleNode.Nodes.Add($"Engineering: {module.Engineering.BlueprintName} (G{module.Engineering.Level})");
-                    engineeringNode.ForeColor = Color.DodgerBlue;
+                    var engineeringSummary = new List<string>();
+                    string blueprintName = ItemNameService.TranslateBlueprintName(module.Engineering.BlueprintName);
+                    engineeringSummary.Add($"{blueprintName} G{module.Engineering.Level}");
 
-                    foreach (var modifier in module.Engineering.Modifiers)
+                    if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffectLocalised))
                     {
-                        string change = modifier.Value > modifier.OriginalValue ? "▲" : "▼";
-                        Color changeColor = (modifier.Value > modifier.OriginalValue) ^ (modifier.LessIsGood == 1) ? Color.Green : Color.Red;
+                        engineeringSummary.Add(module.Engineering.ExperimentalEffectLocalised);
+                    }
 
-                        var modNode = engineeringNode.Nodes.Add($"{modifier.Label}: {modifier.Value:F2} ({change})");
-                        modNode.ForeColor = changeColor;
+                    displayText += $" ({string.Join(", ", engineeringSummary)})";
+                }
+                var node = categoryNode.Nodes.Add(displayText);
+
+                // Add Engineering details as expandable child nodes
+                if (module.Engineering != null)
+                {
+                    string blueprintName = ItemNameService.TranslateBlueprintName(module.Engineering.BlueprintName);
+                    node.Nodes.Add($"Blueprint: {blueprintName} G{module.Engineering.Level}").ForeColor = SystemColors.GrayText;
+                    node.Nodes.Add($"Engineer: {module.Engineering.Engineer}").ForeColor = SystemColors.GrayText;
+                    if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffectLocalised))
+                    {
+                        node.Nodes.Add($"Effect: {module.Engineering.ExperimentalEffectLocalised}").ForeColor = SystemColors.GrayText;
+                    }
+
+                    node.Nodes.Add($"Quality: {module.Engineering.Quality:P1}").ForeColor = SystemColors.GrayText;
+                    node.Nodes.Add($"Integrity: {module.Health:P1}").ForeColor = SystemColors.GrayText;
+
+                    if (module.Engineering.Modifiers.Any())
+                    {
+                        var modsNode = node.Nodes.Add("Modifications");
+                        modsNode.ForeColor = SystemColors.GrayText;
+
+                        foreach (var mod in module.Engineering.Modifiers)
+                        {
+                            bool isGood = (mod.Value > mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value < mod.OriginalValue && mod.LessIsGood == 1);
+                            bool isBad = (mod.Value < mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value > mod.OriginalValue && mod.LessIsGood == 1);
+
+                            string indicator = "";
+                            Color modColor = SystemColors.ControlText;
+
+                            if (isGood) { indicator = " ▲"; modColor = Color.FromArgb(0, 150, 0); } // Dark Green
+                            if (isBad) { indicator = " ▼"; modColor = Color.FromArgb(192, 0, 0); } // Dark Red
+
+                            var modNode = modsNode.Nodes.Add($"{mod.Label}: {mod.Value:N2}{indicator}");
+                            modNode.ForeColor = modColor;
+                        }
                     }
                 }
+                else
+                {
+                    // For non-engineered modules, still show the integrity.
+                    node.Nodes.Add($"Integrity: {module.Health:P1}").ForeColor = SystemColors.GrayText;
+                }
+
+                // Add a basic tooltip with non-engineering info.
+                var tooltip = new StringBuilder();
+                tooltip.AppendLine($"Slot: {module.Slot}");
+                tooltip.AppendLine($"Item: {module.Item}");
+                tooltip.AppendLine($"Powered: {(module.IsOn ? "On" : "Off")}");
+                tooltip.AppendLine($"Priority: {module.Priority}");
+                node.ToolTipText = tooltip.ToString();
             }
         }
     }

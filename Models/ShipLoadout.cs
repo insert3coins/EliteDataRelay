@@ -38,14 +38,23 @@ namespace EliteDataRelay.Models
         [JsonPropertyName("Health")]
         public double Health { get; set; }
 
+        [JsonPropertyName("Value")]
+        public long Value { get; set; }
+
         [JsonPropertyName("Engineering")]
-        public ModuleEngineering? Engineering { get; set; }
+        public Engineering? Engineering { get; set; }
     }
 
-    public class ModuleEngineering
+    public class Engineering
     {
         [JsonPropertyName("Engineer")]
         public string Engineer { get; set; } = string.Empty;
+
+        [JsonPropertyName("EngineerID")]
+        public long EngineerID { get; set; }
+
+        [JsonPropertyName("BlueprintID")]
+        public long BlueprintID { get; set; }
 
         [JsonPropertyName("BlueprintName")]
         public string BlueprintName { get; set; } = string.Empty;
@@ -56,11 +65,17 @@ namespace EliteDataRelay.Models
         [JsonPropertyName("Quality")]
         public double Quality { get; set; }
 
+        [JsonPropertyName("ExperimentalEffect")]
+        public string? ExperimentalEffect { get; set; }
+
+        [JsonPropertyName("ExperimentalEffect_Localised")]
+        public string? ExperimentalEffectLocalised { get; set; }
+
         [JsonPropertyName("Modifiers")]
-        public List<EngineeringModifier> Modifiers { get; set; } = new List<EngineeringModifier>();
+        public List<Modifier> Modifiers { get; set; } = new List<Modifier>();
     }
 
-    public class EngineeringModifier
+    public class Modifier
     {
         [JsonPropertyName("Label")]
         public string Label { get; set; } = string.Empty;

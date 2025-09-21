@@ -66,15 +66,14 @@ namespace EliteDataRelay.UI
             { "viper_mkiv", "Viper Mk IV" },
             { "vulture", "Vulture" },
         };
-
         private static readonly string _shipIconPath;
         private static readonly Dictionary<string, Image> _iconCache = new Dictionary<string, Image>(StringComparer.OrdinalIgnoreCase);
 
         static ShipIconService()
         {
-            // Determine the path to the ship icons directory relative to the executable.
-            var exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            _shipIconPath = Path.Combine(exePath ?? "", "Images", "Ships");
+            // Use AppContext.BaseDirectory for compatibility with single-file deployment,
+            // as Assembly.Location can be empty.
+            _shipIconPath = Path.Combine(AppContext.BaseDirectory, "Images", "Ships");
         }
 
         public static Image? GetShipIcon(string shipName)
@@ -99,7 +98,7 @@ namespace EliteDataRelay.UI
                 return cachedIcon;
             }
 
-            // Attempt to load the icon from the file system first.
+            // Attempt to load the icon from the file system.
             string filePath = Path.Combine(_shipIconPath, fileSystemName + ".png");
             System.Diagnostics.Debug.WriteLine($"[ShipIconService] Attempting to load from file system: '{filePath}'");
 
@@ -120,31 +119,14 @@ namespace EliteDataRelay.UI
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[ShipIconService] Error loading ship icon from '{filePath}': {ex.Message}");
-                    // Fall through to try embedded resources.
                 }
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"[ShipIconService] File not found. Falling back to embedded resources.");
+                System.Diagnostics.Debug.WriteLine($"[ShipIconService] File not found: '{filePath}'");
             }
 
-            // Fallback to embedded resources if the file is not found on disk.
-            // Resource names are typically valid C# identifiers (e.g., Cobra_Mk_III, not "Cobra Mk III").
-            // We need to convert the file system name to a resource-friendly name.
-            string resourceName = fileSystemName.Replace(" ", "_").Replace("-", "_");
-            System.Diagnostics.Debug.WriteLine($"[ShipIconService] Attempting to load from embedded resource: '{resourceName}'");
-
-            var resourceImage = (Image?)Properties.Resources.ResourceManager.GetObject(resourceName);
-            if (resourceImage != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ShipIconService] Success. Loaded from embedded resource.");
-                _iconCache[fileSystemName] = resourceImage; // Cache the resource image too.
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"[ShipIconService] Failed to load icon from all sources.");
-            }
-            return resourceImage;
+            return null;
         }
     }
 }
