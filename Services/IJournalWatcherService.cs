@@ -8,6 +8,7 @@ namespace EliteDataRelay.Services
         event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
         event EventHandler<LocationChangedEventArgs>? LocationChanged;
         event EventHandler<CommanderNameChangedEventArgs>? CommanderNameChanged;
+        event EventHandler<LoadoutChangedEventArgs>? LoadoutChanged;
         event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
 
         // Material Events

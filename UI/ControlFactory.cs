@@ -13,6 +13,10 @@ namespace EliteDataRelay.UI
         public TreeView MaterialTreeView { get; }
         public CheckBox PinMaterialsCheckBox { get; }
         public StarMapPanel StarMapPanel { get; }
+        public PictureBox ShipIconPictureBox { get; }
+        public Label ShipNameLabel { get; }
+        public Label ShipIdentLabel { get; }
+        public TreeView ShipModulesTreeView { get; }
         public TextBox StarMapSearchBox { get; }
         public Button StarMapSearchButton { get; }
         public ProgressBar StarMapScanProgress { get; }
@@ -46,6 +50,7 @@ namespace EliteDataRelay.UI
             var cargoPage = new TabPage("Cargo");
             var materialsPage = new TabPage("Materials");
             var starMapPage = new TabPage("Star Map");
+            var shipPage = new TabPage("Ship");
 
             // Material TreeView
             MaterialTreeView = new TreeView
@@ -163,7 +168,46 @@ namespace EliteDataRelay.UI
             starMapContainer.Controls.Add(starMapButtonPanel);
             starMapPage.Controls.Add(starMapContainer);
 
-            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage, starMapPage });
+            // --- Ship Tab Controls ---
+            var shipPanel = new Panel { Dock = DockStyle.Fill };
+            var shipInfoPanel = new Panel { Dock = DockStyle.Top, Height = 150 };
+
+            ShipIconPictureBox = new PictureBox
+            {
+                Location = new Point(10, 10),
+                Size = new Size(128, 128),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            ShipNameLabel = new Label
+            {
+                Location = new Point(150, 20),
+                Font = new Font(fontManager.VerdanaFont.FontFamily, 12f, FontStyle.Bold),
+                AutoSize = true
+            };
+
+            ShipIdentLabel = new Label
+            {
+                Location = new Point(150, 50),
+                Font = fontManager.VerdanaFont,
+                AutoSize = true
+            };
+
+            ShipModulesTreeView = new TreeView
+            {
+                Dock = DockStyle.Fill,
+                Font = fontManager.VerdanaFont
+            };
+
+            shipInfoPanel.Controls.Add(ShipIconPictureBox);
+            shipInfoPanel.Controls.Add(ShipNameLabel);
+            shipInfoPanel.Controls.Add(ShipIdentLabel);
+            shipPanel.Controls.Add(ShipModulesTreeView); // Add fill control first
+            shipPanel.Controls.Add(shipInfoPanel);
+            shipPage.Controls.Add(shipPanel);
+
+            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage, starMapPage, shipPage });
 
             // Create control buttons
             StartBtn = new Button { Text = "Start", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
@@ -313,6 +357,10 @@ namespace EliteDataRelay.UI
             TabControl.Dispose();
             MaterialTreeView.Dispose();
             StarMapPanel.Dispose();
+            ShipIconPictureBox.Dispose();
+            ShipNameLabel.Dispose();
+            ShipIdentLabel.Dispose();
+            ShipModulesTreeView.Dispose();
             StarMapSearchBox.Dispose();
             StarMapSearchButton.Dispose();
             StarMapScanProgress.Dispose();

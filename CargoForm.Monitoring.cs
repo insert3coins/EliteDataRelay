@@ -10,7 +10,7 @@ namespace EliteDataRelay
         {
             // Re-populate the UI (and the new overlay) with the last known data.
             if (_lastCommanderName != null) _cargoFormUI.UpdateCommanderName(_lastCommanderName);
-            if (_lastShipName != null && _lastShipIdent != null && _lastShipType != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent, _lastShipType);
+            if (_lastShipName != null && _lastShipIdent != null && _lastShipType != null && _lastInternalShipName != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName);
             if (_lastBalance.HasValue) _cargoFormUI.UpdateBalance(_lastBalance.Value);
             if (_lastLocation != null) _cargoFormUI.UpdateLocation(_lastLocation);
             if (_lastCargoSnapshot != null)
@@ -47,6 +47,7 @@ namespace EliteDataRelay
 
             // Start services that subscribe to journal events first, so they don't miss the initial scan.
             _materialService.Start();
+            _shipLoadoutService.Start();
             if (AppConfiguration.EnableSessionTracking)
             {
                 _sessionTrackingService.StartSession();
@@ -82,6 +83,9 @@ namespace EliteDataRelay
 
             // Stop material service
             _materialService.Stop();
+
+            // Stop ship loadout service
+            _shipLoadoutService.Stop();
 
             // Stop the game process checker
             _gameProcessCheckTimer?.Stop();

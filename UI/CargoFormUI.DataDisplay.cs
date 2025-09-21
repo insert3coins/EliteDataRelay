@@ -222,17 +222,41 @@ namespace EliteDataRelay.UI
             }
         }
 
-        public void UpdateShipInfo(string shipName, string shipIdent, string shipType)
+        public void UpdateShipInfo(string shipName, string shipIdent, string shipType, string internalShipName)
         {
-            if (_controlFactory?.ShipLabel != null)
-            {
-                // Display the ship type on the main label.
-                _controlFactory.ShipLabel.Text = $"Ship: {shipType}";
+            if (_controlFactory == null) return;
 
-                // Update the tooltip to show the user-defined name and ident.
+            // Update the main UI button in the bottom panel
+            if (_controlFactory.ShipLabel != null)
+            {
+                _controlFactory.ShipLabel.Text = $"Ship: {shipType}";
                 _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Name: {shipName} ({shipIdent})");
-                _overlayService?.UpdateShip(shipName, shipIdent, shipType);
             }
+
+            // Update the dedicated controls on the "Ship" tab
+            if (_controlFactory.ShipIconPictureBox != null)
+            {
+                _controlFactory.ShipIconPictureBox.Image = ShipIconService.GetShipIcon(internalShipName);
+            }
+
+            if (_controlFactory.ShipNameLabel != null)
+            {
+                // Display the ship type (e.g., "Krait Mk II") and the user-defined name if it's set.
+                string nameLabel = shipType;
+                if (!string.IsNullOrEmpty(shipName) && shipName != "N/A" && !shipName.Equals(shipType, StringComparison.OrdinalIgnoreCase))
+                {
+                    nameLabel = $"{shipType} \"{shipName}\"";
+                }
+                _controlFactory.ShipNameLabel.Text = nameLabel;
+            }
+
+            if (_controlFactory.ShipIdentLabel != null)
+            {
+                _controlFactory.ShipIdentLabel.Text = $"ID: {shipIdent}";
+            }
+
+            // The overlay does not show the image, so no change to this call is needed.
+            _overlayService?.UpdateShip(shipName, shipIdent, shipType);
         }
 
         public void UpdateBalance(long balance)

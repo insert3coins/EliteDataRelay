@@ -61,7 +61,18 @@ namespace EliteDataRelay
             _lastShipName = e.ShipName;
             _lastShipIdent = e.ShipIdent;
             _lastShipType = e.ShipType;
-            _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType);
+            // Assuming ShipInfoChangedEventArgs now includes the internal ship name from the journal.
+            _lastInternalShipName = e.InternalShipName;
+            _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName);
+        }
+
+        private void OnShipLoadoutUpdated(object? sender, EventArgs e)
+        {
+            var loadout = _shipLoadoutService.CurrentLoadout;
+            if (loadout != null)
+            {
+                Invoke(new Action(() => _cargoFormUI.UpdateShipLoadout(loadout)));
+            }
         }
 
         private void OnMaterialsUpdated(object? sender, EventArgs e)

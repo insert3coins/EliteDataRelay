@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -26,6 +26,7 @@ namespace EliteDataRelay
         private readonly IMaterialService _materialService;
         private readonly IVisitedSystemsService _visitedSystemsService;
         private readonly SessionTrackingService _sessionTrackingService;
+        private readonly IShipLoadoutService _shipLoadoutService;
 
         public CargoForm(
             IFileMonitoringService fileMonitoringService,
@@ -37,7 +38,8 @@ namespace EliteDataRelay
             IStatusWatcherService statusWatcherService,
             IVisitedSystemsService visitedSystemsService,
             IMaterialService materialService,
-            SessionTrackingService sessionTrackingService)
+            SessionTrackingService sessionTrackingService,
+            IShipLoadoutService shipLoadoutService)
         {
             _fileMonitoringService = fileMonitoringService ?? throw new ArgumentNullException(nameof(fileMonitoringService));
             _cargoProcessorService = cargoProcessorService ?? throw new ArgumentNullException(nameof(cargoProcessorService));
@@ -49,6 +51,7 @@ namespace EliteDataRelay
             _materialService = materialService ?? throw new ArgumentNullException(nameof(materialService));
             _visitedSystemsService = visitedSystemsService ?? throw new ArgumentNullException(nameof(visitedSystemsService));
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
+            _shipLoadoutService = shipLoadoutService ?? throw new ArgumentNullException(nameof(shipLoadoutService));
 
             InitializeComponent();
             SetupEventHandlers();
@@ -67,6 +70,7 @@ namespace EliteDataRelay
             _materialService = new MaterialService(_journalWatcherService);
             _visitedSystemsService = new VisitedSystemsService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _statusWatcherService);
+            _shipLoadoutService = new ShipLoadoutService(_journalWatcherService);
 
             InitializeComponent();
             SetupEventHandlers();
@@ -81,6 +85,7 @@ namespace EliteDataRelay
         private string? _lastShipName;
         private string? _lastShipType;
         private string? _lastShipIdent;
+        private string? _lastInternalShipName;
         private long? _lastBalance;
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
@@ -129,6 +134,7 @@ namespace EliteDataRelay
             _visitedSystemsService.JournalScanProgressed += OnJournalScanProgressed;
             _visitedSystemsService.SystemsUpdated += OnSystemsUpdated;
             _materialService.MaterialsUpdated += OnMaterialsUpdated;
+            _shipLoadoutService.ShipLoadoutUpdated += OnShipLoadoutUpdated;
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             // Assumes JournalWatcherService is updated to provide these events
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
@@ -149,6 +155,7 @@ namespace EliteDataRelay
                 _visitedSystemsService.JournalScanCompleted -= OnJournalScanCompleted;
                 _visitedSystemsService.JournalScanProgressed -= OnJournalScanProgressed;
                 (_visitedSystemsService as IDisposable)?.Dispose();
+                (_shipLoadoutService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();
                 _sessionTrackingService.Dispose();

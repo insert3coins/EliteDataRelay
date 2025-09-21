@@ -63,13 +63,20 @@ namespace EliteDataRelay.UI
         /// <param name="shipName">The ship's custom name.</param>
         /// <param name="shipIdent">The ship's ID.</param>
         /// <param name="shipType">The ship's type/model.</param>
-        void UpdateShipInfo(string shipName, string shipIdent, string shipType);
+        /// <param name="internalShipName">The ship's internal (journal) name.</param>
+        void UpdateShipInfo(string shipName, string shipIdent, string shipType, string internalShipName);
 
         /// <summary>
         /// Updates the player's balance display.
         /// </summary>
         /// <param name="balance">The player's credit balance.</param>
         void UpdateBalance(long balance);
+
+        /// <summary>
+        /// Updates the ship tab with the current loadout.
+        /// </summary>
+        /// <param name="loadout">The full ship loadout data.</param>
+        void UpdateShipLoadout(ShipLoadout loadout);
 
         /// <summary>
         /// Updates the star map display with visited systems.

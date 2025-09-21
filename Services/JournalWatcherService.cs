@@ -51,6 +51,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<CommanderNameChangedEventArgs>? CommanderNameChanged;
 
         /// <summary>
+        /// Event raised when a full ship loadout is available.
+        /// </summary>
+        public event EventHandler<LoadoutChangedEventArgs>? LoadoutChanged;
+
+        /// <summary>
         /// Event raised when the ship information changes.
         /// </summary>
         public event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
@@ -209,7 +214,7 @@ namespace EliteDataRelay.Services
 
                         if (eventType == "Loadout")
                         {
-                            var loadoutEvent = JsonSerializer.Deserialize<LoadoutEvent>(line, options);
+                            var loadoutEvent = JsonSerializer.Deserialize<ShipLoadout>(line, options);
                             if (loadoutEvent != null)
                             {
                                 if (loadoutEvent.CargoCapacity > 0)
@@ -217,6 +222,9 @@ namespace EliteDataRelay.Services
                                     Debug.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");
                                     CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
                                 }
+
+                                // Raise the full loadout event for the new Ship tab
+                                LoadoutChanged?.Invoke(this, new LoadoutChangedEventArgs(loadoutEvent));
 
                                 string? shipType;
                                 if (!string.IsNullOrEmpty(_swappedShipType))
@@ -241,7 +249,7 @@ namespace EliteDataRelay.Services
                                     _lastShipIdent = shipIdent;
                                     _lastShipType = shipType;
                                     Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
-                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown"));
+                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", loadoutEvent.Ship));
                                 }
                             }
                         }
@@ -258,10 +266,12 @@ namespace EliteDataRelay.Services
                                 CommanderNameChanged?.Invoke(this, new CommanderNameChangedEventArgs(_lastCommanderName));
                             }
 
+                            // Get the internal ship name first, as it's not in the strongly-typed model.
+                            string? internalShipName = jsonDoc.RootElement.TryGetProperty("Ship", out var shipProp) ? shipProp.GetString() : null;
+
                             // Get the ship type, fallback to the non-localised name if needed.
                             var shipType = !string.IsNullOrEmpty(loadGameEvent.ShipLocalised) ? loadGameEvent.ShipLocalised
-                                // The model is missing the 'Ship' property, so we get it from the raw JSON.
-                                : Capitalize(jsonDoc.RootElement.TryGetProperty("Ship", out var shipProp) ? shipProp.GetString() : null);
+                                : Capitalize(internalShipName);
                             var shipName = loadGameEvent.ShipName;
                             var shipIdent = loadGameEvent.ShipIdent;
 
@@ -273,7 +283,7 @@ namespace EliteDataRelay.Services
                                 _lastShipIdent = shipIdent;
                                 _lastShipType = shipType;
                                 Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
-                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType));
+                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", internalShipName ?? "unknown"));
                             }
                         }
                         else if (eventType == "Cargo")
@@ -479,12 +489,23 @@ namespace EliteDataRelay.Services
         public string ShipName { get; }
         public string ShipIdent { get; }
         public string ShipType { get; }
+        public string InternalShipName { get; }
 
-        public ShipInfoChangedEventArgs(string shipName, string shipIdent, string shipType)
+        public ShipInfoChangedEventArgs(string shipName, string shipIdent, string shipType, string internalShipName)
         {
             ShipName = shipName;
             ShipIdent = shipIdent;
             ShipType = shipType;
+            InternalShipName = internalShipName;
+        }
+    }
+
+    public class LoadoutChangedEventArgs : EventArgs
+    {
+        public ShipLoadout Loadout { get; }
+        public LoadoutChangedEventArgs(ShipLoadout loadout)
+        {
+            Loadout = loadout;
         }
     }
 
