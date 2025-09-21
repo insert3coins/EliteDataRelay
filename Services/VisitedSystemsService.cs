@@ -140,11 +140,11 @@ namespace EliteDataRelay.Services
                 {
                     BodyName = scanData.BodyName,
                     StarType = scanData.StarType,
-                    PlanetClass = scanData.PlanetClass,
-                    WasDiscovered = scanData.WasDiscovered,
-                    WasMapped = scanData.WasMapped,
-                    Landable = scanData.Landable ?? false,
-                    TerraformState = scanData.TerraformState
+                    PlanetClass = scanData.PlanetClass ?? string.Empty,
+                    WasDiscovered = scanData.WasDiscovered.GetValueOrDefault(),
+                    WasMapped = scanData.WasMapped.GetValueOrDefault(),
+                    Landable = scanData.Landable.GetValueOrDefault(),
+                    TerraformState = scanData.TerraformState ?? string.Empty
                 };
                 system.Bodies.Add(newBody);
 

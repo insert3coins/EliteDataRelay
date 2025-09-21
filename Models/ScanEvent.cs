@@ -14,10 +14,10 @@ namespace EliteDataRelay.Models
         public string? PlanetClass { get; set; }
 
         [JsonPropertyName("WasDiscovered")]
-        public bool WasDiscovered { get; set; }
+        public bool? WasDiscovered { get; set; }
 
         [JsonPropertyName("WasMapped")]
-        public bool WasMapped { get; set; }
+        public bool? WasMapped { get; set; }
 
         [JsonPropertyName("TerraformState")]
         public string? TerraformState { get; set; }

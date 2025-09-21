@@ -161,24 +161,6 @@ namespace EliteDataRelay.UI
             Invalidate();
         }
 
-        private void GenerateBackgroundStars(int count)
-        {
-            var rand = new Random();
-            // A large cube around the bubble, centered on Sol (0,0,0)
-            int range = 40000;
-
-            for (int i = 0; i < count; i++)
-            {
-                _backgroundStars.Add(new BackgroundStar
-                {
-                    X = (float)(rand.NextDouble() * 2 - 1) * range,
-                    Y = (float)(rand.NextDouble() * 2 - 1) * range,
-                    Z = (float)(rand.NextDouble() * 2 - 1) * range,
-                    Brush = _backgroundBrushes[rand.Next(_backgroundBrushes.Length)]
-                });
-            }
-        }
-
         private void OnPulseTimerTick(object? sender, EventArgs e)
         {
             _pulseState = !_pulseState;
@@ -232,6 +214,24 @@ namespace EliteDataRelay.UI
             float panelCenterY = this.Height / 2f;
 
             _panOffset = new PointF(panelCenterX - (rotatedX * _zoom), panelCenterY - (rotatedY * _zoom));
+        }
+
+        private void GenerateBackgroundStars(int count)
+        {
+            var rand = new Random();
+            // A large cube around the bubble, centered on Sol (0,0,0)
+            int range = 40000;
+
+            for (int i = 0; i < count; i++)
+            {
+                _backgroundStars.Add(new BackgroundStar
+                {
+                    X = (float)(rand.NextDouble() * 2 - 1) * range,
+                    Y = (float)(rand.NextDouble() * 2 - 1) * range,
+                    Z = (float)(rand.NextDouble() * 2 - 1) * range,
+                    Brush = _backgroundBrushes[rand.Next(_backgroundBrushes.Length)]
+                });
+            }
         }
 
         protected override void Dispose(bool disposing)
