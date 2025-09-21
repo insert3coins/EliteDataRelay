@@ -6,6 +6,7 @@ namespace EliteDataRelay.UI
 {
     public partial class StarMapPanel
     {
+        private string? _hoveredSystemName;
         private bool _isPanning; // Left mouse button
         private bool _isRotating; // Right mouse button
 
@@ -70,6 +71,10 @@ namespace EliteDataRelay.UI
                 _lastMousePosition = e.Location;
                 Invalidate();
             }
+            else // Not rotating or panning, so check for hover
+            {
+                HitTestSystems(e.Location);
+            }
         }
 
         private void OnMapMouseWheel(object? sender, MouseEventArgs e)
@@ -91,6 +96,49 @@ namespace EliteDataRelay.UI
             _panOffset.Y = mousePos.Y - (mousePos.Y - _panOffset.Y) * (_zoom / oldZoom);
 
             Invalidate();
+        }
+
+        private void OnMapMouseLeave(object? sender, EventArgs e)
+        {
+            // Clear the tooltip when the mouse leaves the panel
+            if (_hoveredSystemName != null)
+            {
+                _hoveredSystemName = null;
+                _toolTip.SetToolTip(this, string.Empty);
+            }
+        }
+
+        private void HitTestSystems(Point mouseLocation)
+        {
+            string? foundSystemName = null;
+            // Iterate backwards so we hit the one on top (drawn last) first.
+            for (int i = _lastDrawableSystems.Count - 1; i >= 0; i--)
+            {
+                var ds = _lastDrawableSystems[i];
+
+                // Calculate the system's position on the screen
+                float screenX = ds.RotatedX * _zoom + _panOffset.X;
+                float screenY = ds.RotatedY * _zoom + _panOffset.Y;
+
+                // Use a small radius for hit-testing
+                const float hitRadius = 5f;
+                var dx = mouseLocation.X - screenX;
+                var dy = mouseLocation.Y - screenY;
+
+                if ((dx * dx + dy * dy) < (hitRadius * hitRadius))
+                {
+                    foundSystemName = ds.System.Name;
+                    break; // Found the topmost system
+                }
+            }
+
+            // If the hovered system has changed, update the tooltip
+            if (foundSystemName != _hoveredSystemName)
+            {
+                _hoveredSystemName = foundSystemName;
+                _toolTip.SetToolTip(this, _hoveredSystemName);
+                Invalidate(); // Redraw to show/hide the new label
+            }
         }
     }
 }

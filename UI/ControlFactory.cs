@@ -13,6 +13,8 @@ namespace EliteDataRelay.UI
         public TreeView MaterialTreeView { get; }
         public CheckBox PinMaterialsCheckBox { get; }
         public StarMapPanel StarMapPanel { get; }
+        public TextBox StarMapSearchBox { get; }
+        public Button StarMapSearchButton { get; }
         public Button ResetStarMapViewButton { get; }
         public Button ScanJournalsButton { get; }
         public TabControl TabControl { get; }
@@ -103,6 +105,22 @@ namespace EliteDataRelay.UI
                 Padding = new Padding(3)
             };
 
+            StarMapSearchBox = new TextBox
+            {
+                Width = 150,
+                Font = fontManager.VerdanaFont,
+                Margin = new Padding(3),
+                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+                AutoCompleteSource = AutoCompleteSource.CustomSource
+            };
+
+            StarMapSearchButton = new Button
+            {
+                Text = "Find",
+                AutoSize = true,
+                Font = fontManager.VerdanaFont
+            };
+
             ScanJournalsButton = new Button
             {
                 Text = "Scan All Journals",
@@ -117,6 +135,9 @@ namespace EliteDataRelay.UI
                 Font = fontManager.VerdanaFont
             };
 
+            starMapButtonPanel.Controls.Add(new Label { Text = "Search:", AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = fontManager.VerdanaFont });
+            starMapButtonPanel.Controls.Add(StarMapSearchBox);
+            starMapButtonPanel.Controls.Add(StarMapSearchButton);
             starMapButtonPanel.Controls.Add(ScanJournalsButton);
             starMapButtonPanel.Controls.Add(ResetStarMapViewButton);
 
@@ -274,6 +295,8 @@ namespace EliteDataRelay.UI
             TabControl.Dispose();
             MaterialTreeView.Dispose();
             StarMapPanel.Dispose();
+            StarMapSearchBox.Dispose();
+            StarMapSearchButton.Dispose();
             ResetStarMapViewButton.Dispose();
             ScanJournalsButton.Dispose();
             PinMaterialsCheckBox.Dispose();

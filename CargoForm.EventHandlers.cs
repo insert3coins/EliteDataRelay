@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
@@ -61,6 +62,80 @@ namespace EliteDataRelay
             _lastShipIdent = e.ShipIdent;
             _lastShipType = e.ShipType;
             _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType);
+        }
+
+        private void OnMaterialsUpdated(object? sender, EventArgs e)
+        {
+            _lastMaterialServiceCache = _materialService;
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateMaterialList(_materialService);
+                _cargoFormUI.UpdateMaterialsOverlay(_materialService);
+            }));
+        }
+
+        private void OnSessionUpdated(object? sender, EventArgs e)
+        {
+            if (sender is not SessionTrackingService tracker) return;
+
+            if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+            {
+                Invoke(new Action(() =>
+                {
+                    _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
+                }));
+            }
+        }
+
+        private void OnSystemsUpdated(object? sender, EventArgs e)
+        {
+            _lastVisitedSystems = _visitedSystemsService.VisitedSystems;
+            Invoke(new Action(() =>
+            {
+                if (_lastVisitedSystems != null)
+                {
+                    _cargoFormUI.UpdateStarMap(_lastVisitedSystems, _lastLocation ?? string.Empty);
+                    _cargoFormUI.UpdateStarMapAutocomplete(_lastVisitedSystems);
+                }
+            }));
+        }
+
+        private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        {
+            _lastLocation = e.StarSystem;
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateLocation(_lastLocation);
+                if (_lastVisitedSystems != null)
+                {
+                    // Set the current system and center the map in a single operation to prevent redraw artifacts.
+                    _cargoFormUI.SetAndCenterStarMapOnSystem(_lastLocation);
+                }
+            }));
+        }
+
+        private void OnJournalScanCompleted(object? sender, JournalScanCompletedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                if (e.Success)
+                {
+                    MessageBox.Show(this,
+                        $"Journal scan complete.\n\nFiles Scanned: {e.FilesScanned}\nNew Systems Found: {e.NewSystemsFound}",
+                        "Scan Complete",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(this,
+                        $"The journal scan failed.\n\nError: {e.ErrorMessage}",
+                        "Scan Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+            }));
         }
         #endregion
     }

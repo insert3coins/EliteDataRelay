@@ -8,6 +8,8 @@ namespace EliteDataRelay.UI
 {
     public partial class StarMapPanel
     {
+        private List<DrawableSystem> _lastDrawableSystems = new List<DrawableSystem>();
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -68,6 +70,7 @@ namespace EliteDataRelay.UI
             // Sort systems from back to front to handle occlusion correctly
             drawableBgStars.Sort((a, b) => a.RotatedZ.CompareTo(b.RotatedZ));
             drawableSystems.Sort((a, b) => a.RotatedZ.CompareTo(b.RotatedZ));
+            _lastDrawableSystems = drawableSystems;
 
             // Apply pan and zoom
             g.TranslateTransform(_panOffset.X, _panOffset.Y);
@@ -109,6 +112,7 @@ namespace EliteDataRelay.UI
             foreach (var ds in drawableSystems)
             {
                 bool isCurrent = ds.System.Name.Equals(_currentSystem, StringComparison.InvariantCultureIgnoreCase);
+                bool isSearched = ds.System.Name.Equals(_searchedSystem, StringComparison.InvariantCultureIgnoreCase);
 
                 // --- Draw line to galactic plane ---
                 // Use a less prominent color for the line
@@ -120,19 +124,25 @@ namespace EliteDataRelay.UI
                 {
                     brush = _currentSystemBrush;
                 }
+                else if (isSearched)
+                {
+                    // Use the pulse state to alternate between the highlight and normal color
+                    brush = _pulseState ? _searchedSystemBrush : _systemBrush;
+                }
                 else
                 {
                     // Use a different color for systems below the galactic plane (Y < 0)
                     brush = ds.System.Y < 0 ? _systemBelowPlaneBrush : _systemBrush;
                 }
 
-                float dotSize = isCurrent ? 6f / _zoom : 3f / _zoom;
+                float dotSize = (isCurrent || isSearched) ? 6f / _zoom : 3f / _zoom;
 
                 // --- Draw the star dot ---
                 g.FillEllipse(brush, ds.RotatedX - dotSize / 2, ds.RotatedY - dotSize / 2, dotSize, dotSize);
 
-                // --- Draw labels if zoomed in enough or it's the current system ---
-                if (_zoom > 1.0f || isCurrent)
+                // --- Draw labels for the current system and the hovered system ---
+                bool isHovered = !string.IsNullOrEmpty(_hoveredSystemName) && ds.System.Name.Equals(_hoveredSystemName, StringComparison.InvariantCultureIgnoreCase);
+                if (isCurrent || isHovered)
                 {
                     var labelSize = g.MeasureString(ds.System.Name, _labelFont);
                     var padding = new SizeF(4, 2);

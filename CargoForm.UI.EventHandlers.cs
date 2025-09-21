@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -56,6 +57,37 @@ namespace EliteDataRelay
             using (var aboutForm = new AboutForm())
             {
                 aboutForm.ShowDialog(this);
+            }
+        }
+
+        private async void OnScanJournalsClicked(object? sender, EventArgs e) =>
+            await _visitedSystemsService.ScanAllJournalsAsync();
+
+        private void OnSearchSystemClicked(object? sender, string systemName)
+        {
+            // If the search string is empty, just clear the highlight.
+            if (string.IsNullOrEmpty(systemName))
+            {
+                _cargoFormUI.HighlightSearchedSystem(null);
+                return;
+            }
+
+            // Check if the system exists in our list of visited systems
+            var systemExists = _lastVisitedSystems?.Any(s => s.Name.Equals(systemName, StringComparison.InvariantCultureIgnoreCase)) ?? false;
+
+            if (systemExists)
+            {
+                _cargoFormUI.CenterStarMapOnSystem(systemName);
+                _cargoFormUI.HighlightSearchedSystem(systemName);
+            }
+            else
+            {
+                MessageBox.Show(this,
+                    $"System '{systemName}' not found in your visited systems list. Try scanning all journals.",
+                    "System Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                _cargoFormUI.HighlightSearchedSystem(null); // Clear any previous highlight
             }
         }
 

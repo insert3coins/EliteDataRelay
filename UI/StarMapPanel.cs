@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 using EliteDataRelay.Models;
 
 namespace EliteDataRelay.UI
@@ -13,6 +14,7 @@ namespace EliteDataRelay.UI
     {
         private List<StarSystem> _systems = new List<StarSystem>();
         private string _currentSystem = string.Empty;
+        private string? _searchedSystem;
         private float _zoom = 0.1f;
         private PointF _panOffset = PointF.Empty;
         private Point _lastMousePosition;
@@ -28,10 +30,14 @@ namespace EliteDataRelay.UI
         private readonly Brush _systemBrush = new SolidBrush(Color.White);
         private readonly Brush _systemBelowPlaneBrush = new SolidBrush(Color.LightGray);
         private readonly Brush _currentSystemBrush = new SolidBrush(Color.Cyan);
+        private readonly Brush _searchedSystemBrush = new SolidBrush(Color.Yellow);
         private readonly Pen _currentSystemPen = new Pen(Color.Cyan, 2);
         private readonly Pen _planeLinePen = new Pen(Color.FromArgb(50, 255, 255, 255), 1);
         private readonly Font _labelFont;
         private readonly Brush _labelBackgroundBrush = new SolidBrush(Color.FromArgb(180, 0, 0, 0));
+        private readonly ToolTip _toolTip;
+        private readonly Timer _pulseTimer;
+        private bool _pulseState;
 
         public StarMapPanel()
         {
@@ -52,6 +58,10 @@ namespace EliteDataRelay.UI
             MouseUp += OnMapMouseUp;
             MouseMove += OnMapMouseMove;
             MouseWheel += OnMapMouseWheel;
+            MouseLeave += OnMapMouseLeave;
+            _toolTip = new ToolTip();
+            _pulseTimer = new Timer { Interval = 500 };
+            _pulseTimer.Tick += OnPulseTimerTick;
             this.Resize += (s, e) => this.Invalidate(); // Redraw on resize
         }
 
@@ -68,6 +78,21 @@ namespace EliteDataRelay.UI
             _panOffset = new PointF(this.Width / 2f, this.Height / 2f);
             _rotationX = 0.5f;
             _rotationY = 0.0f;
+            Invalidate();
+        }
+
+        public void HighlightSystem(string? systemName)
+        {
+            _searchedSystem = systemName;
+            if (!string.IsNullOrEmpty(_searchedSystem))
+            {
+                _pulseState = true; // Ensure it starts in the 'on' state
+                _pulseTimer.Start();
+            }
+            else
+            {
+                _pulseTimer.Stop();
+            }
             Invalidate();
         }
 
@@ -89,12 +114,34 @@ namespace EliteDataRelay.UI
             }
         }
 
+        private void OnPulseTimerTick(object? sender, EventArgs e)
+        {
+            _pulseState = !_pulseState;
+            Invalidate(); // Trigger a repaint to show the new pulse state
+        }
+
+        public void SetAndCenterOnSystem(string systemName)
+        {
+            _currentSystem = systemName;
+            CenterOnSystemInternal(systemName);
+            Invalidate();
+        }
+
         public void CenterOnSystem(string systemName)
+        {
+            CenterOnSystemInternal(systemName);
+            Invalidate();
+        }
+
+        private void CenterOnSystemInternal(string systemName)
         {
             if (string.IsNullOrEmpty(systemName) || !_systems.Any()) return;
 
             var systemToCenter = _systems.FirstOrDefault(s => s.Name.Equals(systemName, StringComparison.InvariantCultureIgnoreCase));
             if (systemToCenter == null) return;
+
+            // Set a default zoom level to make the centered system clearly visible.
+            _zoom = 1.5f;
 
             // We want the system's rotated coordinates to be at the center of the panel.
             // The panel's center is (Width / 2, Height / 2).
@@ -120,7 +167,6 @@ namespace EliteDataRelay.UI
             float panelCenterY = this.Height / 2f;
 
             _panOffset = new PointF(panelCenterX - (rotatedX * _zoom), panelCenterY - (rotatedY * _zoom));
-            Invalidate();
         }
 
         protected override void Dispose(bool disposing)
@@ -132,11 +178,14 @@ namespace EliteDataRelay.UI
                 _currentSystemPen.Dispose();
                 _planeLinePen.Dispose();
                 _systemBelowPlaneBrush.Dispose();
+                _searchedSystemBrush.Dispose();
                 foreach (var brush in _backgroundBrushes)
                 {
                     brush.Dispose();
                 }
                 _labelBackgroundBrush.Dispose();
+                _pulseTimer.Dispose();
+                _toolTip.Dispose();
                 _labelFont.Dispose();
             }
             base.Dispose(disposing);

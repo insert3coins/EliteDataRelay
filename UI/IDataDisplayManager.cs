@@ -11,6 +11,7 @@ namespace EliteDataRelay.UI
     public interface IDataDisplayManager
     {
         event EventHandler? ScanJournalsClicked;
+        event EventHandler<string>? SearchSystemClicked;
 
         /// <summary>
         /// Update the UI with new cargo data
@@ -82,5 +83,23 @@ namespace EliteDataRelay.UI
         /// </summary>
         /// <param name="systemName">The name of the system to center on.</param>
         void CenterStarMapOnSystem(string systemName);
+
+        /// <summary>
+        /// Sets the current system and centers the star map view on it.
+        /// </summary>
+        /// <param name="systemName">The name of the system to set and center on.</param>
+        void SetAndCenterStarMapOnSystem(string systemName);
+
+        /// <summary>
+        /// Highlights a specific system on the star map.
+        /// </summary>
+        /// <param name="systemName">The name of the system to highlight, or null to clear.</param>
+        void HighlightSearchedSystem(string? systemName);
+
+        /// <summary>
+        /// Updates the autocomplete source for the star map search box.
+        /// </summary>
+        /// <param name="systems">A list of visited systems.</param>
+        void UpdateStarMapAutocomplete(IReadOnlyList<StarSystem> systems);
     }
 }
