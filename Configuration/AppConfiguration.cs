@@ -110,11 +110,6 @@ namespace EliteDataRelay.Configuration
         public static int ThreadMaxRetries { get => _settings.ThreadMaxRetries; set => _settings.ThreadMaxRetries = value; }
         public static int ThreadRetryDelayMs { get => _settings.ThreadRetryDelayMs; set => _settings.ThreadRetryDelayMs = value; }
 
-        // About/Info Settings
-        public static string AboutInfo => _settings.AboutInfo;
-        public static string AboutUrl => _settings.AboutUrl;
-        public static string LicenseUrl => _settings.LicenseUrl;
-
         // Font Settings
         public static string ConsolasFontName => _settings.ConsolasFontName;
         public static float DefaultFontSize => _settings.DefaultFontSize;
@@ -226,8 +221,8 @@ namespace EliteDataRelay.Configuration
             public string WelcomeMessage { get; set; } = "Click 'Start' to begin monitoring.";
             public HashSet<string> PinnedMaterials { get; set; } = new HashSet<string>();
             public int OverlayBackgroundColorArgb { get; set; } = Color.FromArgb(200, 0, 0, 0).ToArgb();
-            public string OverlayFontName { get; set; } = "Eurostile";
-            public float OverlayFontSize { get; set; } = 10f;
+            public string OverlayFontName { get; set; } = "Consolas";
+            public float OverlayFontSize { get; set; } = 11f;
             public int OverlayOpacity { get; set; } = 85;
             public bool PinMaterialsMode { get; set; } = false;
             public bool EnableHotkeys { get; set; } = true;
@@ -256,9 +251,6 @@ namespace EliteDataRelay.Configuration
             public int FileSystemDelayMs { get; set; } = 500;
             public int ThreadMaxRetries { get; set; } = 5;
             public int ThreadRetryDelayMs { get; set; } = 100;
-            public string AboutInfo { get; set; } = "Elite Data Relay provides real-time cargo and material tracking.";
-            public string AboutUrl { get; set; } = "https://github.com/your-repo";
-            public string LicenseUrl { get; set; } = "https://github.com/your-repo/blob/main/LICENSE.txt";
             public string ConsolasFontName { get; set; } = "Consolas";
             public float DefaultFontSize { get; set; } = 10f;
         }

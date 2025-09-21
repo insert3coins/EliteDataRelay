@@ -13,6 +13,7 @@ namespace EliteDataRelay.UI
             if (_controlFactory != null)
             {
                 _controlFactory.ScanJournalsButton.Click += (s, e) => ScanJournalsClicked?.Invoke(this, EventArgs.Empty);
+                _controlFactory.ResetStarMapViewButton.Click += (s, e) => _controlFactory.StarMapPanel.ResetView();
             }
         }
 

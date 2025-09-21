@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.UI
 {
@@ -11,6 +10,10 @@ namespace EliteDataRelay.UI
     public class AboutForm : Form
     {
         private Icon? _formIcon;
+
+        private const string ABOUT_INFO = "Elite Data Relay provides real-time cargo and material tracking.";
+        private const string ABOUT_URL = "https://github.com/insert3coins/EliteDataRelay";
+        private const string LICENSE_URL = "https://github.com/insert3coins/EliteDataRelay/blob/main/LICENSE.txt";
 
         public AboutForm()
         {
@@ -53,7 +56,7 @@ namespace EliteDataRelay.UI
             // App Name Label
             var lblAppName = new Label
             {
-                Text = AppConfiguration.AboutInfo,
+                Text = ABOUT_INFO,
                 Font = new Font(Font.FontFamily, 12, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(90, 20)
@@ -69,11 +72,11 @@ namespace EliteDataRelay.UI
 
             // Project Link
             var linkProject = new LinkLabel { Text = "Project GitHub Page", AutoSize = true, Location = new Point(12, 90) };
-            linkProject.LinkClicked += (s, e) => OpenUrl(AppConfiguration.AboutUrl);
+            linkProject.LinkClicked += (s, e) => OpenUrl(ABOUT_URL);
 
             // License Link
             var linkLicense = new LinkLabel { Text = "View License (GPL-3.0)", AutoSize = true, Location = new Point(150, 90) };
-            linkLicense.LinkClicked += (s, e) => OpenUrl(AppConfiguration.LicenseUrl);
+            linkLicense.LinkClicked += (s, e) => OpenUrl(LICENSE_URL);
 
             // Disclaimer TextBox
             var txtDisclaimer = new TextBox

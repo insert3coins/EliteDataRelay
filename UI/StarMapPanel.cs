@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -8,22 +9,40 @@ using EliteDataRelay.Models;
 
 namespace EliteDataRelay.UI
 {
-    public class StarMapPanel : Panel
+    public partial class StarMapPanel : Panel
     {
         private List<StarSystem> _systems = new List<StarSystem>();
         private string _currentSystem = string.Empty;
         private float _zoom = 0.1f;
         private PointF _panOffset = PointF.Empty;
         private Point _lastMousePosition;
-        private bool _isPanning;
+
+        private class BackgroundStar
+        {
+            public float X, Y, Z;
+            public Brush Brush = null!;
+        }
+        private readonly List<BackgroundStar> _backgroundStars = new List<BackgroundStar>();
+        private readonly Brush[] _backgroundBrushes;
 
         private readonly Brush _systemBrush = new SolidBrush(Color.White);
+        private readonly Brush _systemBelowPlaneBrush = new SolidBrush(Color.LightGray);
         private readonly Brush _currentSystemBrush = new SolidBrush(Color.Cyan);
         private readonly Pen _currentSystemPen = new Pen(Color.Cyan, 2);
-        private readonly Font _labelFont = new Font("Verdana", 8);
+        private readonly Pen _planeLinePen = new Pen(Color.FromArgb(50, 255, 255, 255), 1);
+        private readonly Font _labelFont;
+        private readonly Brush _labelBackgroundBrush = new SolidBrush(Color.FromArgb(180, 0, 0, 0));
 
         public StarMapPanel()
         {
+            _labelFont = new Font("Consolas", 7.5f);
+            _backgroundBrushes = new Brush[]
+            {
+                new SolidBrush(Color.FromArgb(60, 60, 60)),
+                new SolidBrush(Color.FromArgb(100, 100, 100)),
+                new SolidBrush(Color.FromArgb(140, 140, 140)),
+            };
+            GenerateBackgroundStars(5000);
             DoubleBuffered = true;
             BackColor = Color.Black;
             Dock = DockStyle.Fill;
@@ -33,6 +52,7 @@ namespace EliteDataRelay.UI
             MouseUp += OnMapMouseUp;
             MouseMove += OnMapMouseMove;
             MouseWheel += OnMapMouseWheel;
+            this.Resize += (s, e) => this.Invalidate(); // Redraw on resize
         }
 
         public void SetSystems(IReadOnlyList<StarSystem> systems, string currentSystem)
@@ -42,6 +62,33 @@ namespace EliteDataRelay.UI
             Invalidate();
         }
 
+        public void ResetView()
+        {
+            _zoom = 0.1f;
+            _panOffset = new PointF(this.Width / 2f, this.Height / 2f);
+            _rotationX = 0.5f;
+            _rotationY = 0.0f;
+            Invalidate();
+        }
+
+        private void GenerateBackgroundStars(int count)
+        {
+            var rand = new Random();
+            // A large cube around the bubble, centered on Sol (0,0,0)
+            int range = 40000;
+
+            for (int i = 0; i < count; i++)
+            {
+                _backgroundStars.Add(new BackgroundStar
+                {
+                    X = (float)(rand.NextDouble() * 2 - 1) * range,
+                    Y = (float)(rand.NextDouble() * 2 - 1) * range,
+                    Z = (float)(rand.NextDouble() * 2 - 1) * range,
+                    Brush = _backgroundBrushes[rand.Next(_backgroundBrushes.Length)]
+                });
+            }
+        }
+
         public void CenterOnSystem(string systemName)
         {
             if (string.IsNullOrEmpty(systemName) || !_systems.Any()) return;
@@ -49,107 +96,31 @@ namespace EliteDataRelay.UI
             var systemToCenter = _systems.FirstOrDefault(s => s.Name.Equals(systemName, StringComparison.InvariantCultureIgnoreCase));
             if (systemToCenter == null) return;
 
-            // We want the system's coordinates to be at the center of the panel.
+            // We want the system's rotated coordinates to be at the center of the panel.
             // The panel's center is (Width / 2, Height / 2).
-            // The final screen position of a point is (worldX * zoom + panX, worldY * zoom + panY).
+            // The final screen position of a point is (rotatedX * zoom + panX, rotatedY * zoom + panY).
             // So, we solve for panX and panY:
-            // panX = panelCenterX - worldX * zoom
-            // panY = panelCenterY - worldY * zoom
+            // panX = panelCenterX - rotatedX * zoom
+            // panY = panelCenterY - rotatedY * zoom
+
+            // First, we need to get the rotated coordinates of the target system.
+            float cosX = (float)Math.Cos(_rotationX);
+            float sinX = (float)Math.Sin(_rotationX);
+            float cosY = (float)Math.Cos(_rotationY);
+            float sinY = (float)Math.Sin(_rotationY);
+
+            double tempX_star = systemToCenter.X * cosY + systemToCenter.Z * sinY;
+            double tempZ_star = -systemToCenter.X * sinY + systemToCenter.Z * cosY;
+            double rotatedY_star = systemToCenter.Y * cosX - tempZ_star * sinX;
+
+            float rotatedX = (float)tempX_star;
+            float rotatedY = (float)rotatedY_star;
+
             float panelCenterX = this.Width / 2f;
             float panelCenterY = this.Height / 2f;
 
-            _panOffset = new PointF(panelCenterX - ((float)systemToCenter.X * _zoom), panelCenterY - ((float)systemToCenter.Z * _zoom));
+            _panOffset = new PointF(panelCenterX - (rotatedX * _zoom), panelCenterY - (rotatedY * _zoom));
             Invalidate();
-        }
-
-        private void OnMapMouseDown(object? sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                _isPanning = true;
-                _lastMousePosition = e.Location;
-                Cursor = Cursors.SizeAll;
-            }
-        }
-
-        private void OnMapMouseUp(object? sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                _isPanning = false;
-                Cursor = Cursors.Default;
-            }
-        }
-
-        private void OnMapMouseMove(object? sender, MouseEventArgs e)
-        {
-            if (_isPanning)
-            {
-                float dx = e.X - _lastMousePosition.X;
-                float dy = e.Y - _lastMousePosition.Y;
-                _panOffset.X += dx;
-                _panOffset.Y += dy;
-                _lastMousePosition = e.Location;
-                Invalidate();
-            }
-        }
-
-        private void OnMapMouseWheel(object? sender, MouseEventArgs e)
-        {
-            float oldZoom = _zoom;
-            if (e.Delta > 0)
-            {
-                _zoom *= 1.25f;
-            }
-            else
-            {
-                _zoom /= 1.25f;
-            }
-            _zoom = Math.Clamp(_zoom, 0.005f, 50f);
-
-            // Zoom towards the mouse cursor
-            PointF mousePos = e.Location;
-            _panOffset.X = mousePos.X - (mousePos.X - _panOffset.X) * (_zoom / oldZoom);
-            _panOffset.Y = mousePos.Y - (mousePos.Y - _panOffset.Y) * (_zoom / oldZoom);
-
-            Invalidate();
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // Apply pan and zoom
-            g.TranslateTransform(_panOffset.X, _panOffset.Y);
-            g.ScaleTransform(_zoom, _zoom);
-            
-            // Draw systems
-            foreach (var system in _systems)
-            {
-                // Projecting X,Z coordinates to the 2D plane
-                float screenX = (float)system.X;
-                float screenY = (float)system.Z;
-
-                bool isCurrent = system.Name.Equals(_currentSystem, StringComparison.InvariantCultureIgnoreCase);
-                var brush = isCurrent ? _currentSystemBrush : _systemBrush;
-                float dotSize = isCurrent ? 6f / _zoom : 3f / _zoom;
-
-                g.FillEllipse(brush, screenX - dotSize / 2, screenY - dotSize / 2, dotSize, dotSize);
-
-                // Draw labels if zoomed in enough
-                if (_zoom > 1.5f || isCurrent)
-                {
-                    g.DrawString(system.Name, _labelFont, brush, screenX + dotSize, screenY);
-                }
-
-                if (isCurrent)
-                {
-                    float circleSize = 20f / _zoom;
-                    g.DrawEllipse(_currentSystemPen, screenX - circleSize / 2, screenY - circleSize / 2, circleSize, circleSize);
-                }
-            }
         }
 
         protected override void Dispose(bool disposing)
@@ -159,6 +130,13 @@ namespace EliteDataRelay.UI
                 _systemBrush.Dispose();
                 _currentSystemBrush.Dispose();
                 _currentSystemPen.Dispose();
+                _planeLinePen.Dispose();
+                _systemBelowPlaneBrush.Dispose();
+                foreach (var brush in _backgroundBrushes)
+                {
+                    brush.Dispose();
+                }
+                _labelBackgroundBrush.Dispose();
                 _labelFont.Dispose();
             }
             base.Dispose(disposing);

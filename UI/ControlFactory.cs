@@ -13,6 +13,7 @@ namespace EliteDataRelay.UI
         public TreeView MaterialTreeView { get; }
         public CheckBox PinMaterialsCheckBox { get; }
         public StarMapPanel StarMapPanel { get; }
+        public Button ResetStarMapViewButton { get; }
         public Button ScanJournalsButton { get; }
         public TabControl TabControl { get; }
         public Button StartBtn { get; }
@@ -92,18 +93,35 @@ namespace EliteDataRelay.UI
 
             // Create a container panel for the star map tab
             var starMapContainer = new Panel { Dock = DockStyle.Fill };
-            StarMapPanel = new StarMapPanel(); // The custom panel will fill
-            ScanJournalsButton = new Button
+            StarMapPanel = new StarMapPanel();
+
+            var starMapButtonPanel = new FlowLayoutPanel
             {
-                Text = "Scan All Journals for Systems",
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                Padding = new Padding(3),
+                FlowDirection = FlowDirection.LeftToRight,
+                Padding = new Padding(3)
+            };
+
+            ScanJournalsButton = new Button
+            {
+                Text = "Scan All Journals",
+                AutoSize = true,
                 Font = fontManager.VerdanaFont
             };
 
-            starMapContainer.Controls.Add(StarMapPanel);
-            starMapContainer.Controls.Add(ScanJournalsButton);
+            ResetStarMapViewButton = new Button
+            {
+                Text = "Reset View",
+                AutoSize = true,
+                Font = fontManager.VerdanaFont
+            };
+
+            starMapButtonPanel.Controls.Add(ScanJournalsButton);
+            starMapButtonPanel.Controls.Add(ResetStarMapViewButton);
+
+            starMapContainer.Controls.Add(StarMapPanel); // Add fill-docked control first
+            starMapContainer.Controls.Add(starMapButtonPanel);
             starMapPage.Controls.Add(starMapContainer);
 
             TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage, starMapPage });
@@ -256,6 +274,7 @@ namespace EliteDataRelay.UI
             TabControl.Dispose();
             MaterialTreeView.Dispose();
             StarMapPanel.Dispose();
+            ResetStarMapViewButton.Dispose();
             ScanJournalsButton.Dispose();
             PinMaterialsCheckBox.Dispose();
             ListView.Dispose();
