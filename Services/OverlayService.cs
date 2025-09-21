@@ -181,9 +181,9 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.UpdateCommander($"CMDR: {name}");
         }
 
-        public void UpdateShip(string ship)
+        public void UpdateShip(string shipName, string shipIdent)
         {
-            _leftOverlayForm?.UpdateShip($"Ship: {ship}");
+            _leftOverlayForm?.UpdateShip($"Ship: {shipName}");
         }
 
         public void UpdateBalance(long balance)

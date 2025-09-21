@@ -211,17 +211,19 @@ namespace EliteDataRelay.Services
                                     CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
                                 }
 
-                                var customShipName = loadoutEvent.ShipName;
-                                var shipType = loadoutEvent.ShipLocalised;
+                                var shipName = loadoutEvent.ShipName;
+                                // The Loadout event contains the user-defined ship name and ident.
+                                // It does not contain ShipLocalised, which was causing this to fail.
+                                var shipIdent = loadoutEvent.ShipIdent;
 
                                 // Check and update ship info
-                                if (!string.IsNullOrEmpty(customShipName) && !string.IsNullOrEmpty(shipType) &&
-                                    (customShipName != _lastShipName || shipType != _lastShipIdent))
+                                if (!string.IsNullOrEmpty(shipName) &&
+                                    (shipName != _lastShipName || shipIdent != _lastShipIdent))
                                 {
-                                    _lastShipName = customShipName;
-                                    _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
-                                    Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {customShipName}, Type: {shipType}");
-                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
+                                    _lastShipName = shipName;
+                                    _lastShipIdent = shipIdent;
+                                    Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {shipName}, Ident: {shipIdent}");
+                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName, shipIdent));
                                 }
                             }
                         }
@@ -238,17 +240,18 @@ namespace EliteDataRelay.Services
                                 CommanderNameChanged?.Invoke(this, new CommanderNameChangedEventArgs(_lastCommanderName));
                             }
 
-                            var customShipName = loadGameEvent.ShipName;
-                            var shipType = loadGameEvent.ShipLocalised;
+                            var shipName = loadGameEvent.ShipName;
+                            // Use ShipIdent for consistency with the Loadout event.
+                            var shipIdent = loadGameEvent.ShipIdent;
 
                             // Check and update ship info
-                            if (!string.IsNullOrEmpty(customShipName) && !string.IsNullOrEmpty(shipType) &&
-                                (customShipName != _lastShipName || shipType != _lastShipIdent))
+                            if (!string.IsNullOrEmpty(shipName) &&
+                                (shipName != _lastShipName || shipIdent != _lastShipIdent))
                             {
-                                _lastShipName = customShipName;
-                                _lastShipIdent = shipType; // Note: Using this field to pass the ship type to the UI
-                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {customShipName}, Type: {shipType}");
-                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(customShipName, shipType));
+                                _lastShipName = shipName;
+                                _lastShipIdent = shipIdent;
+                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {shipName}, Ident: {shipIdent}");
+                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName, shipIdent));
                             }
                         }
                         else if (eventType == "Cargo")

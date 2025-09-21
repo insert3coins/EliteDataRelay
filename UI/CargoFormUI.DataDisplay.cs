@@ -226,12 +226,12 @@ namespace EliteDataRelay.UI
         {
             if (_controlFactory?.ShipLabel != null)
             {
-                // Display the ship name and on our tool tip give the full version
-                _controlFactory.ShipLabel.Text = $"Ship: {shipIdent}";
+                // Display the ship name, and on our tool tip, give the full version including the ident.
+                _controlFactory.ShipLabel.Text = $"Ship: {shipName}";
 
                 // Update the tooltip to match the full text
                 _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Ship: {shipName} ({shipIdent})");
-                _overlayService?.UpdateShip(shipIdent);
+                _overlayService?.UpdateShip(shipName, shipIdent);
             }
         }
 
