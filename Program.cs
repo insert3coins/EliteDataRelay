@@ -22,12 +22,9 @@ namespace EliteDataRelay
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
 
-            // Configure and run the main form using a dependency container
-            // to ensure all services are correctly instantiated and passed to the form.
-            var container = new DependencyContainer();
-            var mainForm = container.CreateMainForm();
-
-            Application.Run(mainForm);
+            // Create and run the main form. The form itself is now responsible
+            // for creating and managing its own services.
+            Application.Run(new CargoForm());
         }
 
         private static void HandleUnhandledException(Exception? ex)

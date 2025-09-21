@@ -2,214 +2,85 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.Services
 {
     /// <summary>
-    /// Service for monitoring file system changes to the cargo file with debouncing and polling fallback
+    /// Monitors a specific file for changes using the efficient FileSystemWatcher.
+    /// This provides near-instant notifications of file modifications.
     /// </summary>
-    public class FileMonitoringService : IFileMonitoringService, IDisposable
+    public class FileMonitoringService : IFileMonitoringService
     {
         private FileSystemWatcher? _watcher;
-        private readonly System.Windows.Forms.Timer _debounceTimer;
-        private readonly System.Windows.Forms.Timer _pollTimer;
-        private DateTime _lastWriteTimeUtc;
-        private long _lastSize;
+        private readonly string _filePath;
+        private readonly string _fileDir;
+        private readonly string _fileName;
         private bool _isMonitoring;
+        private System.Threading.Timer? _debounceTimer;
+        private readonly object _lock = new object();
 
-        /// <summary>
-        /// Event raised when the cargo file has changed and debounce period has elapsed
-        /// </summary>
         public event EventHandler? FileChanged;
 
-        /// <summary>
-        /// Gets whether the monitoring service is currently active
-        /// </summary>
         public bool IsMonitoring => _isMonitoring;
 
         public FileMonitoringService()
         {
-            // Initialize debounce timer
-            _debounceTimer = new System.Windows.Forms.Timer
-            {
-                Interval = AppConfiguration.DebounceDelayMs
-            };
-            _debounceTimer.Tick += DebounceTimer_Tick;
-
-            // Initialize polling timer
-            _pollTimer = new System.Windows.Forms.Timer
-            {
-                Interval = AppConfiguration.PollingIntervalMs
-            };
-            _pollTimer.Tick += PollTimer_Tick;
+            _filePath = AppConfiguration.CargoPath;
+            _fileDir = Path.GetDirectoryName(_filePath) ?? "";
+            _fileName = Path.GetFileName(_filePath);
         }
 
-        /// <summary>
-        /// Start monitoring the cargo file for changes
-        /// </summary>
         public void StartMonitoring()
         {
-            if (_isMonitoring) return;
+            if (_isMonitoring || string.IsNullOrEmpty(_fileDir) || !Directory.Exists(_fileDir))
+            {
+                return;
+            }
 
-            InitializeFileSystemWatcher();
-            StartPollingFallback();
+            _watcher = new FileSystemWatcher(_fileDir)
+            {
+                Filter = _fileName,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size, // Watch for content changes
+                EnableRaisingEvents = true
+            };
+
+            _watcher.Changed += OnFileChangeEvent;
+            _watcher.Created += OnFileChangeEvent; // Handle if the file is created while watching
+
             _isMonitoring = true;
-
-            Debug.WriteLine("[FileMonitoringService] Started monitoring");
+            Debug.WriteLine($"[FileMonitoringService] Started monitoring {_filePath}");
         }
 
-        /// <summary>
-        /// Stop monitoring the cargo file
-        /// </summary>
         public void StopMonitoring()
         {
             if (!_isMonitoring) return;
 
-            _watcher?.Dispose();
-            _watcher = null;
-            _debounceTimer.Stop();
-            _pollTimer.Stop();
-            _isMonitoring = false;
+            lock (_lock)
+            {
+                _watcher?.Dispose();
+                _watcher = null;
+                _debounceTimer?.Dispose();
+                _debounceTimer = null;
+            }
 
+            _isMonitoring = false;
             Debug.WriteLine("[FileMonitoringService] Stopped monitoring");
         }
 
-        private void InitializeFileSystemWatcher()
+        private void OnFileChangeEvent(object sender, FileSystemEventArgs e)
         {
-            var watchDir = Path.GetDirectoryName(AppConfiguration.CargoPath);
-            if (string.IsNullOrEmpty(watchDir)) return;
-
-            _watcher = new FileSystemWatcher(watchDir)
+            // Debounce the event to handle multiple rapid triggers for a single save.
+            lock (_lock)
             {
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size,
-                IncludeSubdirectories = false,
-                EnableRaisingEvents = true
-            };
-
-            _watcher.Created += OnCargoChanged;
-            _watcher.Changed += OnCargoChanged;
-            _watcher.Renamed += OnCargoChanged;
-            _watcher.Deleted += OnCargoChanged;
-            _watcher.Error += OnWatcherError;
-
-            Debug.WriteLine($"[FileMonitoringService] FileSystemWatcher monitoring: {watchDir}");
-        }
-
-        private void OnCargoChanged(object? sender, FileSystemEventArgs e)
-        {
-            Debug.WriteLine($"[FileMonitoringService] Watcher event: {e.ChangeType} – {e.FullPath}");
-            
-            if (!IsCargoFile(e.Name)) return;
-
-            // Reset debounce timer
-            _debounceTimer.Stop();
-            _debounceTimer.Start();
-        }
-
-        private void DebounceTimer_Tick(object? sender, EventArgs e)
-        {
-            _debounceTimer.Stop();
-
-            // Give the file system a little breathing room before we try to read
-            Thread.Sleep(AppConfiguration.FileSystemDelayMs);
-
-            // Use polling thread with retries to handle file locking
-            new Thread(() =>
-            {
-                for (int attempt = 0; attempt < AppConfiguration.ThreadMaxRetries; attempt++)
-                {
-                    try
-                    {
-                        // Trigger the file changed event on the UI thread
-                        if (FileChanged != null)
-                        {
-                            // We need to invoke on the UI thread if we have a form context
-                            if (System.Windows.Forms.Application.OpenForms.Count > 0)
-                            {
-                                var mainForm = System.Windows.Forms.Application.OpenForms[0];
-                                if (mainForm?.InvokeRequired == true)
-                                {
-                                    mainForm.Invoke(new EventHandler((s, args) => FileChanged?.Invoke(this, EventArgs.Empty)), sender, e);
-                                }
-                                else
-                                {
-                                    FileChanged?.Invoke(this, EventArgs.Empty);
-                                }
-                            }
-                            else
-                            {
-                                FileChanged?.Invoke(this, EventArgs.Empty);
-                            }
-                        }
-                        break; // Success - exit retry loop
-                    }
-                    catch (IOException)
-                    {
-                        // File still locked - wait before retrying
-                        Thread.Sleep(AppConfiguration.ThreadRetryDelayMs);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"[FileMonitoringService] Debounce thread error: {ex}");
-                        break; // Unexpected error - stop retrying
-                    }
-                }
-            }).Start();
-        }
-
-        private void StartPollingFallback()
-        {
-            if (!File.Exists(AppConfiguration.CargoPath)) return;
-
-            _lastWriteTimeUtc = File.GetLastWriteTimeUtc(AppConfiguration.CargoPath);
-            _lastSize = new FileInfo(AppConfiguration.CargoPath).Length;
-            _pollTimer.Start();
-
-            Debug.WriteLine("[FileMonitoringService] Polling fallback started");
-        }
-
-        private void PollTimer_Tick(object? sender, EventArgs e)
-        {
-            try
-            {
-                if (!File.Exists(AppConfiguration.CargoPath)) return;
-
-                var nowWrite = File.GetLastWriteTimeUtc(AppConfiguration.CargoPath);
-                var nowSize = new FileInfo(AppConfiguration.CargoPath).Length;
-
-                if (nowWrite != _lastWriteTimeUtc || nowSize != _lastSize)
-                {
-                    _lastWriteTimeUtc = nowWrite;
-                    _lastSize = nowSize;
-                    
-                    Debug.WriteLine("[FileMonitoringService] Polling detected change");
-                    FileChanged?.Invoke(this, EventArgs.Empty);
-                }
+                _debounceTimer?.Change(250, Timeout.Infinite); // Reset the timer
+                _debounceTimer ??= new System.Threading.Timer(_ => FileChanged?.Invoke(this, EventArgs.Empty), null, 250, Timeout.Infinite);
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[FileMonitoringService] Polling error: {ex}");
-            }
-        }
-
-        private bool IsCargoFile(string? fileName)
-        {
-            if (string.IsNullOrEmpty(fileName)) return false;
-            return string.Equals(fileName, Path.GetFileName(AppConfiguration.CargoPath), StringComparison.OrdinalIgnoreCase);
-        }
-
-        private void OnWatcherError(object? sender, ErrorEventArgs e)
-        {
-            Debug.WriteLine($"[FileMonitoringService] Watcher error: {e.GetException()}");
         }
 
         public void Dispose()
         {
             StopMonitoring();
-            _debounceTimer?.Dispose();
-            _pollTimer?.Dispose();
         }
     }
 }

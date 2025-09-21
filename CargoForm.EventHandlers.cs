@@ -19,60 +19,72 @@ namespace EliteDataRelay
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
-            _lastCargoSnapshot = e.Snapshot;
-            // --- File Output ---
-            // If enabled in settings, write the snapshot to the output text file.
-            if (AppConfiguration.EnableFileOutput)
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
             {
-                _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
-            }
+                _lastCargoSnapshot = e.Snapshot;
+                // --- File Output ---
+                if (AppConfiguration.EnableFileOutput)
+                {
+                    _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+                }
 
-            int totalCount = e.Snapshot.Inventory.Sum(item => item.Count);
+                int totalCount = e.Snapshot.Inventory.Sum(item => item.Count);
 
-            // Update the header label in the button panel
-            _cargoFormUI.UpdateCargoHeader(totalCount, _cargoCapacity);
+                // Update the header label in the button panel
+                _cargoFormUI.UpdateCargoHeader(totalCount, _cargoCapacity);
 
-            // Update the main window display with the new list view
-            _cargoFormUI.UpdateCargoList(e.Snapshot);
+                // Update the main window display with the new list view
+                _cargoFormUI.UpdateCargoList(e.Snapshot);
 
-            // Update the visual cargo size indicator
-            _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
+                // Update the visual cargo size indicator
+                _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
+            }));
         }
 
         private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
         {
+            // This is a simple integer assignment, which is atomic and thread-safe.
             _cargoCapacity = e.CargoCapacity;
         }
 
         private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
         {
-            _lastBalance = e.Balance;
-            _cargoFormUI.UpdateBalance(e.Balance);
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastBalance = e.Balance;
+                _cargoFormUI.UpdateBalance(e.Balance);
+            }));
         }
 
         private void OnCommanderNameChanged(object? sender, CommanderNameChangedEventArgs e)
         {
-            _lastCommanderName = e.CommanderName;
-            _cargoFormUI.UpdateCommanderName(e.CommanderName);
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastCommanderName = e.CommanderName;
+                _cargoFormUI.UpdateCommanderName(e.CommanderName);
+            }));
         }
 
         private void OnShipInfoChanged(object? sender, ShipInfoChangedEventArgs e)
         {
-            _lastShipName = e.ShipName;
-            _lastShipIdent = e.ShipIdent;
-            _lastShipType = e.ShipType;
-            // Assuming ShipInfoChangedEventArgs now includes the internal ship name from the journal.
-            _lastInternalShipName = e.InternalShipName;
-            _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName);
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastShipName = e.ShipName;
+                _lastShipIdent = e.ShipIdent;
+                _lastShipType = e.ShipType;
+                _lastInternalShipName = e.InternalShipName;
+                _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName);
+            }));
         }
 
-        private void OnShipLoadoutUpdated(object? sender, EventArgs e)
+        private void OnLoadoutChanged(object? sender, LoadoutChangedEventArgs e)
         {
-            var loadout = _shipLoadoutService.CurrentLoadout;
-            if (loadout != null)
-            {
-                Invoke(new Action(() => _cargoFormUI.UpdateShipLoadout(loadout)));
-            }
+            // The event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() => _cargoFormUI.UpdateShipLoadout(e.Loadout)));
         }
 
         private void OnMaterialsUpdated(object? sender, EventArgs e)

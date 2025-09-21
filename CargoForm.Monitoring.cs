@@ -47,7 +47,6 @@ namespace EliteDataRelay
 
             // Start services that subscribe to journal events first, so they don't miss the initial scan.
             _materialService.Start();
-            _shipLoadoutService.Start();
             if (AppConfiguration.EnableSessionTracking)
             {
                 _sessionTrackingService.StartSession();
@@ -83,9 +82,6 @@ namespace EliteDataRelay
 
             // Stop material service
             _materialService.Stop();
-
-            // Stop ship loadout service
-            _shipLoadoutService.Stop();
 
             // Stop the game process checker
             _gameProcessCheckTimer?.Stop();

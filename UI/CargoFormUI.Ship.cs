@@ -16,6 +16,9 @@ namespace EliteDataRelay.UI
 
             var treeView = _controlFactory.ShipModulesTreeView;
 
+            // Store the path of the top-most visible node to prevent the view from scrolling on update.
+            string? topNodePath = treeView.TopNode?.FullPath;
+
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
 
@@ -66,6 +69,16 @@ namespace EliteDataRelay.UI
             utilityNode.Expand();
             coreNode.Expand();
             optionalNode.Expand();
+
+            // Restore the previous scroll position by finding the node that was at the top.
+            if (topNodePath != null)
+            {
+                var nodeToRestore = FindNodeByFullPath(treeView.Nodes, topNodePath);
+                if (nodeToRestore != null)
+                {
+                    treeView.TopNode = nodeToRestore;
+                }
+            }
 
             treeView.EndUpdate();
         }
@@ -148,6 +161,23 @@ namespace EliteDataRelay.UI
                 tooltip.AppendLine($"Priority: {module.Priority}");
                 node.ToolTipText = tooltip.ToString();
             }
+        }
+
+        private TreeNode? FindNodeByFullPath(TreeNodeCollection nodes, string path)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                if (node.FullPath.Equals(path, StringComparison.OrdinalIgnoreCase))
+                {
+                    return node;
+                }
+                TreeNode? foundNode = FindNodeByFullPath(node.Nodes, path);
+                if (foundNode != null)
+                {
+                    return foundNode;
+                }
+            }
+            return null;
         }
     }
 }

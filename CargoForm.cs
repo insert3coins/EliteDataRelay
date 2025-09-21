@@ -26,40 +26,12 @@ namespace EliteDataRelay
         private readonly IMaterialService _materialService;
         private readonly IVisitedSystemsService _visitedSystemsService;
         private readonly SessionTrackingService _sessionTrackingService;
-        private readonly IShipLoadoutService _shipLoadoutService;
-
-        public CargoForm(
-            IFileMonitoringService fileMonitoringService,
-            ICargoProcessorService cargoProcessorService,
-            IJournalWatcherService journalWatcherService,
-            ISoundService soundService,
-            IFileOutputService fileOutputService,
-            ICargoFormUI cargoFormUI,
-            IStatusWatcherService statusWatcherService,
-            IVisitedSystemsService visitedSystemsService,
-            IMaterialService materialService,
-            SessionTrackingService sessionTrackingService,
-            IShipLoadoutService shipLoadoutService)
-        {
-            _fileMonitoringService = fileMonitoringService ?? throw new ArgumentNullException(nameof(fileMonitoringService));
-            _cargoProcessorService = cargoProcessorService ?? throw new ArgumentNullException(nameof(cargoProcessorService));
-            _journalWatcherService = journalWatcherService ?? throw new ArgumentNullException(nameof(journalWatcherService));
-            _soundService = soundService ?? throw new ArgumentNullException(nameof(soundService));
-            _fileOutputService = fileOutputService ?? throw new ArgumentNullException(nameof(fileOutputService));
-            _statusWatcherService = statusWatcherService ?? throw new ArgumentNullException(nameof(statusWatcherService));
-            _cargoFormUI = cargoFormUI ?? throw new ArgumentNullException(nameof(cargoFormUI));
-            _materialService = materialService ?? throw new ArgumentNullException(nameof(materialService));
-            _visitedSystemsService = visitedSystemsService ?? throw new ArgumentNullException(nameof(visitedSystemsService));
-            _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
-            _shipLoadoutService = shipLoadoutService ?? throw new ArgumentNullException(nameof(shipLoadoutService));
-
-            InitializeComponent();
-            SetupEventHandlers();
-        }
 
         public CargoForm()
         {
-            // Create default service instances for design-time and simple usage
+            // Create all service instances. This form now owns its dependencies,
+            // simplifying the application's object graph and ensuring only one
+            // set of services exists.
             _fileMonitoringService = new FileMonitoringService();
             _cargoProcessorService = new CargoProcessorService();
             _journalWatcherService = new JournalWatcherService();
@@ -70,7 +42,6 @@ namespace EliteDataRelay
             _materialService = new MaterialService(_journalWatcherService);
             _visitedSystemsService = new VisitedSystemsService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _statusWatcherService);
-            _shipLoadoutService = new ShipLoadoutService(_journalWatcherService);
 
             InitializeComponent();
             SetupEventHandlers();
@@ -133,12 +104,12 @@ namespace EliteDataRelay
             _visitedSystemsService.JournalScanCompleted += OnJournalScanCompleted;
             _visitedSystemsService.JournalScanProgressed += OnJournalScanProgressed;
             _visitedSystemsService.SystemsUpdated += OnSystemsUpdated;
-            _materialService.MaterialsUpdated += OnMaterialsUpdated;
-            _shipLoadoutService.ShipLoadoutUpdated += OnShipLoadoutUpdated;
+            _materialService.MaterialsUpdated += OnMaterialsUpdated;            
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             // Assumes JournalWatcherService is updated to provide these events
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
+            _journalWatcherService.LoadoutChanged += OnLoadoutChanged;
         }
 
         protected override void Dispose(bool disposing)
@@ -155,7 +126,6 @@ namespace EliteDataRelay
                 _visitedSystemsService.JournalScanCompleted -= OnJournalScanCompleted;
                 _visitedSystemsService.JournalScanProgressed -= OnJournalScanProgressed;
                 (_visitedSystemsService as IDisposable)?.Dispose();
-                (_shipLoadoutService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();
                 _sessionTrackingService.Dispose();

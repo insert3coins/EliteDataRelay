@@ -17,8 +17,7 @@ namespace EliteDataRelay.Services
     public class JournalWatcherService : IJournalWatcherService, IDisposable
     {
         private readonly string _journalDir;
-        private FileSystemWatcher? _watcher;
-        private readonly System.Windows.Forms.Timer _pollTimer;
+        private System.Threading.Timer? _pollTimer;
         private string? _currentJournalFile;
         private string? _lastStarSystem;
         private string? _lastCargoHash;
@@ -27,7 +26,6 @@ namespace EliteDataRelay.Services
         private string? _lastShipName;
         private string? _lastShipIdent;
         private string? _lastShipType;
-        private string? _swappedShipType;
         private bool _isMonitoring;
 
         /// <summary>
@@ -99,66 +97,47 @@ namespace EliteDataRelay.Services
         public JournalWatcherService()
         {
             _journalDir = AppConfiguration.JournalPath;
-
-            _pollTimer = new System.Windows.Forms.Timer
-            {
-                Interval = AppConfiguration.PollingIntervalMs
-            };
-            _pollTimer.Tick += PollTimer_Tick;
+            // Use a threading timer for background polling to avoid blocking the UI thread.
+            _pollTimer = new System.Threading.Timer(PollTimer_Tick, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         public void StartMonitoring()
         {
             if (_isMonitoring || string.IsNullOrEmpty(_journalDir) || !Directory.Exists(_journalDir)) return;
 
-            InitializeFileSystemWatcher();
-            SwitchToLatestJournal();
-            _pollTimer.Start();
+            // Reset state and do an initial poll immediately to get the current state.
+            // The timer will then continue at the configured interval.
+            ResetState();
+            PollTimer_Tick(null);
+
+            _pollTimer?.Change(AppConfiguration.PollingIntervalMs, AppConfiguration.PollingIntervalMs); // Start polling after an initial delay.
             _isMonitoring = true;
             Debug.WriteLine("[JournalWatcherService] Started monitoring");
+        }
+
+        private void ResetState()
+        {
+            _currentJournalFile = null;
+            _lastPosition = 0;
+            _lastStarSystem = null;
+            _lastCargoHash = null;
+            _lastCommanderName = null;
+            _lastShipName = null;
+            _lastShipIdent = null;
+            _lastShipType = null;
+            Debug.WriteLine("[JournalWatcherService] Service state has been reset.");
         }
 
         public void StopMonitoring()
         {
             if (!_isMonitoring) return;
 
-            _watcher?.Dispose();
-            _watcher = null;
-            _pollTimer.Stop();
+            _pollTimer?.Change(Timeout.Infinite, Timeout.Infinite); // Stop the timer.
             _isMonitoring = false;
             Debug.WriteLine("[JournalWatcherService] Stopped monitoring");
-        }
 
-        private void InitializeFileSystemWatcher()
-        {
-            _watcher = new FileSystemWatcher(_journalDir)
-            {
-                Filter = "Journal.*.log",
-                NotifyFilter = NotifyFilters.FileName,
-                IncludeSubdirectories = false,
-                EnableRaisingEvents = true
-            };
-            _watcher.Created += OnJournalFileCreated;
+            ResetState();
         }
-
-        private void OnJournalFileCreated(object sender, FileSystemEventArgs e)
-        {
-            Debug.WriteLine($"[JournalWatcherService] New journal file detected: {e.Name}");
-            SwitchToLatestJournal();
-        }
-
-        private void SwitchToLatestJournal()
-        {
-            var latestJournal = FindLatestJournalFile();
-            if (latestJournal != null && latestJournal != _currentJournalFile)
-            {
-                _currentJournalFile = latestJournal;
-                _lastPosition = 0; // Reset position for new file
-                Debug.WriteLine($"[JournalWatcherService] Switched to journal file: {_currentJournalFile}");
-                ProcessNewJournalEntries(); // Process the whole file to find the last known cargo capacity
-            }
-        }
-
         private string? FindLatestJournalFile()
         {
             try
@@ -174,18 +153,28 @@ namespace EliteDataRelay.Services
             }
         }
 
-        private void PollTimer_Tick(object? sender, EventArgs e)
+        private void PollTimer_Tick(object? state)
         {
             ProcessNewJournalEntries();
         }
 
         private void ProcessNewJournalEntries()
         {
+            // On each poll, first check if there's a newer journal file than the one we're watching.
+            var latestJournal = FindLatestJournalFile();
+            if (latestJournal != null && latestJournal != _currentJournalFile)
+            {
+                Debug.WriteLine($"[JournalWatcherService] New journal file detected: {Path.GetFileName(latestJournal)}. Switching.");
+                _currentJournalFile = latestJournal;
+                _lastPosition = 0; // Reset position for the new file.
+            }
+
+            // If we have no file to watch, there's nothing to do.
             if (_currentJournalFile == null || !File.Exists(_currentJournalFile))
             {
-                SwitchToLatestJournal();
                 return;
             }
+
 
             try
             {
@@ -226,31 +215,9 @@ namespace EliteDataRelay.Services
                                 // Raise the full loadout event for the new Ship tab
                                 LoadoutChanged?.Invoke(this, new LoadoutChangedEventArgs(loadoutEvent));
 
-                                string? shipType;
-                                if (!string.IsNullOrEmpty(_swappedShipType))
-                                {
-                                    // A ship swap just occurred. Use the cached localized name.
-                                    shipType = _swappedShipType;
-                                    _swappedShipType = null; // Consume the cached value
-                                }
-                                else
-                                {
-                                    // This Loadout is for a module change or other event. The ship type is unchanged.
-                                    shipType = _lastShipType;
-                                }
-                                var shipName = loadoutEvent.ShipName;
-                                var shipIdent = loadoutEvent.ShipIdent;
-
-                                // Check and update ship info
-                                if (!string.IsNullOrEmpty(shipType) &&
-                                    (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType))
-                                {
-                                    _lastShipName = shipName;
-                                    _lastShipIdent = shipIdent;
-                                    _lastShipType = shipType;
-                                    Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
-                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", loadoutEvent.Ship));
-                                }
+                                // The Loadout event is the source of truth for the ship's current state.
+                                // We use the last known ship type as Loadout doesn't include a localized name.
+                                UpdateShipInformation(loadoutEvent.ShipName, loadoutEvent.ShipIdent, _lastShipType, loadoutEvent.Ship);
                             }
                         }
                         else if (eventType == "LoadGame")
@@ -274,17 +241,7 @@ namespace EliteDataRelay.Services
                                 : Capitalize(internalShipName);
                             var shipName = loadGameEvent.ShipName;
                             var shipIdent = loadGameEvent.ShipIdent;
-
-                            // Check and update ship info
-                            if (!string.IsNullOrEmpty(shipType) &&
-                                (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType))
-                            {
-                                _lastShipName = shipName;
-                                _lastShipIdent = shipIdent;
-                                _lastShipType = shipType;
-                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
-                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", internalShipName ?? "unknown"));
-                            }
+                            UpdateShipInformation(shipName, shipIdent, shipType, internalShipName);
                         }
                         else if (eventType == "Cargo")
                         {
@@ -364,10 +321,17 @@ namespace EliteDataRelay.Services
                             var swapEvent = JsonSerializer.Deserialize<ShipyardSwapEvent>(line, options);
                             if (swapEvent != null)
                             {
-                                // Cache the localized ship name. The next Loadout event will use it.
-                                _swappedShipType = !string.IsNullOrEmpty(swapEvent.ShipTypeLocalised) ? swapEvent.ShipTypeLocalised : Capitalize(swapEvent.ShipType);
-                                Debug.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. Caching ship type: {_swappedShipType}");
+                                // A ship swap provides the new localized name. The subsequent Loadout event will provide the rest.
+                                var newShipType = !string.IsNullOrEmpty(swapEvent.ShipTypeLocalised) ? swapEvent.ShipTypeLocalised : Capitalize(swapEvent.ShipType);
+                                _lastShipType = newShipType; // Update our cached ship type immediately.
+                                Debug.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. New ship type: {newShipType}");
                             }
+                        }
+                        else if (eventType == "ModuleSell" || eventType == "ModuleBuy" || eventType == "ModuleStore" || eventType == "ModuleRetrieve" || eventType == "ModuleSwap")
+                        {
+                            // These events indicate a loadout change. The subsequent 'Loadout' event is the source of truth.
+                            // We don't need to take action here, but acknowledging the event is useful for debugging.
+                            Debug.WriteLine($"[JournalWatcherService] Detected module change event: {eventType}. Awaiting next Loadout.");
                         }
                         else if (eventType == "Scan")
                         {
@@ -400,6 +364,20 @@ namespace EliteDataRelay.Services
             }
         }
 
+        private void UpdateShipInformation(string? shipName, string? shipIdent, string? shipType, string? internalShipName)
+        {
+            // Only raise an update event if something has actually changed.
+            if (!string.IsNullOrEmpty(shipType) &&
+                (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType))
+            {
+                _lastShipName = shipName;
+                _lastShipIdent = shipIdent;
+                _lastShipType = shipType;
+                Debug.WriteLine($"[JournalWatcherService] Ship Info Updated. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
+                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", internalShipName ?? "unknown"));
+            }
+        }
+
         private string? Capitalize(string? s)
         {
             if (string.IsNullOrEmpty(s))
@@ -413,7 +391,6 @@ namespace EliteDataRelay.Services
         {
             StopMonitoring();
             _pollTimer?.Dispose();
-            _watcher?.Dispose();
         }
 
         /// <summary>
