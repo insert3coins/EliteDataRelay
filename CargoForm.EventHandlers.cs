@@ -29,10 +29,8 @@ namespace EliteDataRelay
                     _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
                 }
 
-                int totalCount = e.Snapshot.Inventory.Sum(item => item.Count);
-
                 // Update the header label in the button panel
-                _cargoFormUI.UpdateCargoHeader(totalCount, _cargoCapacity);
+                _cargoFormUI.UpdateCargoHeader(e.Snapshot.Count, _cargoCapacity);
 
                 // Update the main window display with the new list view
                 _cargoFormUI.UpdateCargoList(e.Snapshot);
@@ -44,8 +42,24 @@ namespace EliteDataRelay
 
         private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
         {
-            // This is a simple integer assignment, which is atomic and thread-safe.
+            // This event can be raised from a background thread.
             _cargoCapacity = e.CargoCapacity;
+
+            // After updating capacity, we must invoke on the UI thread to update the display.
+            // This ensures the UI reflects the new capacity immediately.
+            Invoke(new Action(() =>
+            {
+                if (_lastCargoSnapshot != null)
+                {
+                    _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
+                    _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
+                }
+                else
+                {
+                    // If we don't have cargo data yet, just update the header with 0 count.
+                    _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
+                }
+            }));
         }
 
         private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
@@ -84,7 +98,20 @@ namespace EliteDataRelay
         private void OnLoadoutChanged(object? sender, LoadoutChangedEventArgs e)
         {
             // The event is raised from a background thread, so we must invoke on the UI thread.
-            Invoke(new Action(() => _cargoFormUI.UpdateShipLoadout(e.Loadout)));
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateShipLoadout(e.Loadout);
+
+                // The Loadout event is a primary source for cargo capacity.
+                _cargoCapacity = e.Loadout.CargoCapacity;
+
+                // After updating capacity, re-update any UI elements that depend on it.
+                if (_lastCargoSnapshot != null)
+                {
+                    _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
+                    _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
+                }
+            }));
         }
 
         private void OnMaterialsUpdated(object? sender, EventArgs e)
