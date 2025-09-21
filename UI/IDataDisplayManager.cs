@@ -57,7 +57,8 @@ namespace EliteDataRelay.UI
         /// </summary>
         /// <param name="shipName">The ship's custom name.</param>
         /// <param name="shipIdent">The ship's ID.</param>
-        void UpdateShipInfo(string shipName, string shipIdent);
+        /// <param name="shipType">The ship's type/model.</param>
+        void UpdateShipInfo(string shipName, string shipIdent, string shipType);
 
         /// <summary>
         /// Updates the player's balance display.

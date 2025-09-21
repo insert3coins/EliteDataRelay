@@ -222,16 +222,16 @@ namespace EliteDataRelay.UI
             }
         }
 
-        public void UpdateShipInfo(string shipName, string shipIdent)
+        public void UpdateShipInfo(string shipName, string shipIdent, string shipType)
         {
             if (_controlFactory?.ShipLabel != null)
             {
-                // Display the ship name, and on our tool tip, give the full version including the ident.
-                _controlFactory.ShipLabel.Text = $"Ship: {shipName}";
+                // Display the ship type on the main label.
+                _controlFactory.ShipLabel.Text = $"Ship: {shipType}";
 
-                // Update the tooltip to match the full text
-                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Ship: {shipName} ({shipIdent})");
-                _overlayService?.UpdateShip(shipName, shipIdent);
+                // Update the tooltip to show the user-defined name and ident.
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Name: {shipName} ({shipIdent})");
+                _overlayService?.UpdateShip(shipName, shipIdent, shipType);
             }
         }
 

@@ -65,7 +65,8 @@ namespace EliteDataRelay
         {
             _lastShipName = e.ShipName;
             _lastShipIdent = e.ShipIdent;
-            _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent);
+            _lastShipType = e.ShipType;
+            _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType);
         }
         #endregion
     }

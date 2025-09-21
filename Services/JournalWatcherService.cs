@@ -26,6 +26,8 @@ namespace EliteDataRelay.Services
         private string? _lastCommanderName;
         private string? _lastShipName;
         private string? _lastShipIdent;
+        private string? _lastShipType;
+        private string? _swappedShipType;
         private bool _isMonitoring;
 
         /// <summary>
@@ -211,19 +213,30 @@ namespace EliteDataRelay.Services
                                     CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
                                 }
 
+                                string? shipType;
+                                if (!string.IsNullOrEmpty(_swappedShipType))
+                                {
+                                    // A ship swap just occurred. Use the cached localized name.
+                                    shipType = _swappedShipType;
+                                    _swappedShipType = null; // Consume the cached value
+                                }
+                                else
+                                {
+                                    // This Loadout is for a module change or other event. The ship type is unchanged.
+                                    shipType = _lastShipType;
+                                }
                                 var shipName = loadoutEvent.ShipName;
-                                // The Loadout event contains the user-defined ship name and ident.
-                                // It does not contain ShipLocalised, which was causing this to fail.
                                 var shipIdent = loadoutEvent.ShipIdent;
 
                                 // Check and update ship info
-                                if (!string.IsNullOrEmpty(shipName) &&
-                                    (shipName != _lastShipName || shipIdent != _lastShipIdent))
+                                if (!string.IsNullOrEmpty(shipType) &&
+                                    (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType))
                                 {
                                     _lastShipName = shipName;
                                     _lastShipIdent = shipIdent;
-                                    Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {shipName}, Ident: {shipIdent}");
-                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName, shipIdent));
+                                    _lastShipType = shipType;
+                                    Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Loadout. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
+                                    ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown"));
                                 }
                             }
                         }
@@ -240,18 +253,22 @@ namespace EliteDataRelay.Services
                                 CommanderNameChanged?.Invoke(this, new CommanderNameChangedEventArgs(_lastCommanderName));
                             }
 
+                            // Get the ship type, fallback to the non-localised name if needed.
+                            var shipType = !string.IsNullOrEmpty(loadGameEvent.ShipLocalised) ? loadGameEvent.ShipLocalised
+                                // The model is missing the 'Ship' property, so we get it from the raw JSON.
+                                : Capitalize(jsonDoc.RootElement.TryGetProperty("Ship", out var shipProp) ? shipProp.GetString() : null);
                             var shipName = loadGameEvent.ShipName;
-                            // Use ShipIdent for consistency with the Loadout event.
                             var shipIdent = loadGameEvent.ShipIdent;
 
                             // Check and update ship info
-                            if (!string.IsNullOrEmpty(shipName) &&
-                                (shipName != _lastShipName || shipIdent != _lastShipIdent))
+                            if (!string.IsNullOrEmpty(shipType) &&
+                                (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType))
                             {
                                 _lastShipName = shipName;
                                 _lastShipIdent = shipIdent;
-                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {shipName}, Ident: {shipIdent}");
-                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName, shipIdent));
+                                _lastShipType = shipType;
+                                Debug.WriteLine($"[JournalWatcherService] Found Ship Info in Game. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
+                                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType));
                             }
                         }
                         else if (eventType == "Cargo")
@@ -322,6 +339,16 @@ namespace EliteDataRelay.Services
                                 }
                             }
                         }
+                        else if (eventType == "ShipyardSwap")
+                        {
+                            var swapEvent = JsonSerializer.Deserialize<ShipyardSwapEvent>(line, options);
+                            if (swapEvent != null)
+                            {
+                                // Cache the localized ship name. The next Loadout event will use it.
+                                _swappedShipType = !string.IsNullOrEmpty(swapEvent.ShipTypeLocalised) ? swapEvent.ShipTypeLocalised : Capitalize(swapEvent.ShipType);
+                                Debug.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. Caching ship type: {_swappedShipType}");
+                            }
+                        }
                     }
                     catch (JsonException ex)
                     {
@@ -335,6 +362,15 @@ namespace EliteDataRelay.Services
             {
                 Debug.WriteLine($"[JournalWatcherService] Error polling journal file: {ex}");
             }
+        }
+
+        private string? Capitalize(string? s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return s;
+            }
+            return char.ToUpperInvariant(s[0]) + s.Substring(1);
         }
 
         public void Dispose()
@@ -411,11 +447,13 @@ namespace EliteDataRelay.Services
     {
         public string ShipName { get; }
         public string ShipIdent { get; }
+        public string ShipType { get; }
 
-        public ShipInfoChangedEventArgs(string shipName, string shipIdent)
+        public ShipInfoChangedEventArgs(string shipName, string shipIdent, string shipType)
         {
             ShipName = shipName;
             ShipIdent = shipIdent;
+            ShipType = shipType;
         }
     }
 

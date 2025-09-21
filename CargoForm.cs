@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -74,6 +74,7 @@ namespace EliteDataRelay
         // Cache for last known values to re-populate the overlay when it's restarted.
         private string? _lastCommanderName;
         private string? _lastShipName;
+        private string? _lastShipType;
         private string? _lastShipIdent;
         private long? _lastBalance;
         private string? _lastLocation;
@@ -152,7 +153,7 @@ namespace EliteDataRelay
         {
             // Re-populate the UI (and the new overlay) with the last known data.
             if (_lastCommanderName != null) _cargoFormUI.UpdateCommanderName(_lastCommanderName);
-            if (_lastShipName != null && _lastShipIdent != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent);
+            if (_lastShipName != null && _lastShipIdent != null && _lastShipType != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent, _lastShipType);
             if (_lastBalance.HasValue) _cargoFormUI.UpdateBalance(_lastBalance.Value);
             if (_lastLocation != null) _cargoFormUI.UpdateLocation(_lastLocation);
             if (_lastCargoSnapshot != null)

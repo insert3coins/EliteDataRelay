@@ -38,4 +38,13 @@ namespace EliteDataRelay.Models
         [JsonPropertyName("ShipIdent")]
         public string? ShipIdent { get; set; }
     }
+
+    public class ShipyardSwapEvent : JournalEvent
+    {
+        [JsonPropertyName("ShipType")]
+        public string? ShipType { get; set; }
+
+        [JsonPropertyName("ShipType_Localised")]
+        public string? ShipTypeLocalised { get; set; }
+    }
 }
