@@ -105,7 +105,7 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.Right)
             {
-                this.Size = new Size(280, 400);
+                this.Size = new Size(280, 600);
 
                 var topPanel = new FlowLayoutPanel
                 {

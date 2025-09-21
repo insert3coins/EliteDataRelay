@@ -1,6 +1,9 @@
 using System;
 using System.Drawing;
+using System.Threading.Tasks;
+using System.Linq;
 using System.Windows.Forms;
+using EliteDataRelay.Models;
 
 namespace EliteDataRelay.UI
 {
@@ -9,6 +12,7 @@ namespace EliteDataRelay.UI
         private string? _hoveredSystemName;
         private bool _isPanning; // Left mouse button
         private bool _isRotating; // Right mouse button
+        private bool _isMouseOverInfoCard;
 
         // Rotation angles for the 3D view
         private float _rotationX = 0.5f; // Pitch
@@ -98,19 +102,31 @@ namespace EliteDataRelay.UI
             Invalidate();
         }
 
-        private void OnMapMouseLeave(object? sender, EventArgs e)
+        private async void OnMapMouseLeave(object? sender, EventArgs e)
         {
-            // Clear the tooltip when the mouse leaves the panel
+            // Add a short delay before hiding the card. This gives the user time
+            // to move their mouse onto the info card to use its scrollbar.
+            await Task.Delay(300);
+
+            // If the mouse has moved onto the info card itself, don't hide it.
+            if (_isMouseOverInfoCard)
+            {
+                return;
+            }
+
+            // Otherwise, clear the hover state and hide the card.
             if (_hoveredSystemName != null)
             {
                 _hoveredSystemName = null;
-                _toolTip.SetToolTip(this, string.Empty);
+                _systemInfoCard.Visible = false;
+                Invalidate(); // Redraw to hide the label
             }
         }
 
         private void HitTestSystems(Point mouseLocation)
         {
             string? foundSystemName = null;
+            StarSystem? foundSystem = null;
             // Iterate backwards so we hit the one on top (drawn last) first.
             for (int i = _lastDrawableSystems.Count - 1; i >= 0; i--)
             {
@@ -128,17 +144,123 @@ namespace EliteDataRelay.UI
                 if ((dx * dx + dy * dy) < (hitRadius * hitRadius))
                 {
                     foundSystemName = ds.System.Name;
+                    foundSystem = ds.System;
                     break; // Found the topmost system
                 }
             }
 
-            // If the hovered system has changed, update the tooltip
+            // If the hovered system has changed, trigger a redraw
             if (foundSystemName != _hoveredSystemName)
             {
                 _hoveredSystemName = foundSystemName;
-                _toolTip.SetToolTip(this, _hoveredSystemName);
-                Invalidate(); // Redraw to show/hide the new label
+                Invalidate(); // Redraw to show/hide the new label on the map
+
+                if (foundSystem != null)
+                {
+                    // Rebuild the info card content only when the hovered system changes.
+                    RebuildSystemInfoCard(foundSystem);
+                }
             }
+
+            if (foundSystem != null)
+            {
+                // Update the card's position on every mouse move.
+                PositionSystemInfoCard(mouseLocation);
+                _systemInfoCard.Visible = true;
+            }
+            else
+            {
+                _systemInfoCard.Visible = false;
+            }
+        }
+
+        private void RebuildSystemInfoCard(StarSystem system)
+        {
+            // Wire up events to track if the mouse is over the info card.
+            // This prevents it from hiding when the user tries to scroll.
+            _systemInfoCard.MouseEnter -= OnInfoCardMouseEnter;
+            _systemInfoCard.MouseLeave -= OnInfoCardMouseLeave;
+            _systemInfoCard.MouseEnter += OnInfoCardMouseEnter;
+            _systemInfoCard.MouseLeave += OnInfoCardMouseLeave;
+
+            _systemInfoCard.SuspendLayout();
+            _systemInfoCard.Controls.Clear();
+
+            var layout = new TableLayoutPanel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Location = Point.Empty,
+                ColumnCount = 1,
+            };
+
+            var titleLabel = new Label { Text = system.Name, Font = _infoTitleFont, ForeColor = Color.White, AutoSize = true, Margin = new Padding(0, 0, 0, 5) };
+            layout.Controls.Add(titleLabel);
+
+            if (system.Bodies.Any())
+            {
+                var bodyCountLabel = new Label { Text = $"{system.Bodies.Count} bodies discovered", Font = _labelFont, ForeColor = Color.Gray, AutoSize = true, Margin = new Padding(0, 0, 0, 8) };
+                layout.Controls.Add(bodyCountLabel);
+
+                foreach (var body in system.Bodies.OrderBy(b => b.BodyName))
+                {
+                    string bodyType = body.PlanetClass ?? body.StarType ?? "Unknown Body";
+                    string attributes = "";
+                    if (body.TerraformState == "Terraformable") attributes += "[T] ";
+                    if (body.Landable) attributes += "[L] ";
+                    if (body.WasMapped) attributes += "[M] ";
+
+                    var bodyLabel = new Label { Text = $"• {body.BodyName}: {bodyType} {attributes.Trim()}", Font = _labelFont, ForeColor = Color.LightGray, AutoSize = true };
+                    layout.Controls.Add(bodyLabel);
+                }
+            }
+            else
+            {
+                var noDataLabel = new Label { Text = "No exploration data available.", Font = _labelFont, ForeColor = Color.Gray, AutoSize = true };
+                layout.Controls.Add(noDataLabel);
+            }
+
+            _systemInfoCard.Controls.Add(layout);
+
+            // Because the parent panel has AutoScroll=true, its AutoSize property is disabled.
+            // We must manually calculate and set its size based on the content.
+            var preferredSize = layout.GetPreferredSize(Size.Empty);
+
+            // Calculate the maximum allowable size for the card, ensuring it's smaller than the map panel itself.
+            int maxWidth = Math.Min(this.Width - 40, _systemInfoCard.MaximumSize.Width);
+            int maxHeight = Math.Min(this.Height - 40, _systemInfoCard.MaximumSize.Height);
+
+            // Add padding and a little extra width for the scrollbar to prevent text wrapping.
+            int newWidth = Math.Min(preferredSize.Width + _systemInfoCard.Padding.Horizontal + 25, maxWidth);
+            int newHeight = Math.Min(preferredSize.Height + _systemInfoCard.Padding.Vertical, maxHeight);
+
+            _systemInfoCard.Size = new Size(newWidth, newHeight);
+            _systemInfoCard.ResumeLayout(true);
+        }
+
+        private void OnInfoCardMouseEnter(object? sender, EventArgs e)
+        {
+            _isMouseOverInfoCard = true;
+        }
+
+        private void OnInfoCardMouseLeave(object? sender, EventArgs e)
+        {
+            _isMouseOverInfoCard = false;
+            OnMapMouseLeave(sender, e); // Trigger the hide logic now
+        }
+
+        private void PositionSystemInfoCard(Point mouseLocation)
+        {
+            // Position the card centered horizontally and always below the mouse cursor.
+            int x = mouseLocation.X - (_systemInfoCard.Width / 2);
+            int y = mouseLocation.Y + 20; // A small offset to avoid covering the cursor
+
+            // Clamp the horizontal position to prevent the card from going too far off-screen,
+            // while always keeping it below the cursor.
+            x = Math.Max(5, x);
+            x = Math.Min(x, this.Width - _systemInfoCard.Width - 5);
+
+            _systemInfoCard.Location = new Point(x, y);
         }
     }
 }

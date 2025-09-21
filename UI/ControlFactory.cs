@@ -15,6 +15,8 @@ namespace EliteDataRelay.UI
         public StarMapPanel StarMapPanel { get; }
         public TextBox StarMapSearchBox { get; }
         public Button StarMapSearchButton { get; }
+        public ProgressBar StarMapScanProgress { get; }
+        public Label StarMapScanLabel { get; }
         public Button ResetStarMapViewButton { get; }
         public Button ScanJournalsButton { get; }
         public TabControl TabControl { get; }
@@ -141,7 +143,23 @@ namespace EliteDataRelay.UI
             starMapButtonPanel.Controls.Add(ScanJournalsButton);
             starMapButtonPanel.Controls.Add(ResetStarMapViewButton);
 
+            var progressPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                Visible = false, // Initially hidden
+                FlowDirection = FlowDirection.LeftToRight,
+                Padding = new Padding(3)
+            };
+
+            StarMapScanLabel = new Label { Text = "Scanning...", AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = fontManager.VerdanaFont };
+            StarMapScanProgress = new ProgressBar { Width = 200, Style = ProgressBarStyle.Continuous, Margin = new Padding(3, 3, 3, 3) };
+
+            progressPanel.Controls.Add(StarMapScanLabel);
+            progressPanel.Controls.Add(StarMapScanProgress);
+
             starMapContainer.Controls.Add(StarMapPanel); // Add fill-docked control first
+            starMapContainer.Controls.Add(progressPanel);
             starMapContainer.Controls.Add(starMapButtonPanel);
             starMapPage.Controls.Add(starMapContainer);
 
@@ -297,6 +315,8 @@ namespace EliteDataRelay.UI
             StarMapPanel.Dispose();
             StarMapSearchBox.Dispose();
             StarMapSearchButton.Dispose();
+            StarMapScanProgress.Dispose();
+            StarMapScanLabel.Dispose();
             ResetStarMapViewButton.Dispose();
             ScanJournalsButton.Dispose();
             PinMaterialsCheckBox.Dispose();

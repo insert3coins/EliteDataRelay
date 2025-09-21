@@ -101,5 +101,18 @@ namespace EliteDataRelay.UI
         /// </summary>
         /// <param name="systems">A list of visited systems.</param>
         void UpdateStarMapAutocomplete(IReadOnlyList<StarSystem> systems);
+
+        /// <summary>
+        /// Shows or hides the journal scan progress bar.
+        /// </summary>
+        /// <param name="visible">True to show, false to hide.</param>
+        void ShowScanProgress(bool visible);
+
+        /// <summary>
+        /// Updates the journal scan progress bar and label.
+        /// </summary>
+        /// <param name="percentage">The progress percentage (0-100).</param>
+        /// <param name="message">The status message to display.</param>
+        void UpdateScanProgress(int percentage, string message);
     }
 }

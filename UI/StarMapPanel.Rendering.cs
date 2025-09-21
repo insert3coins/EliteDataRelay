@@ -140,9 +140,9 @@ namespace EliteDataRelay.UI
                 // --- Draw the star dot ---
                 g.FillEllipse(brush, ds.RotatedX - dotSize / 2, ds.RotatedY - dotSize / 2, dotSize, dotSize);
 
-                // --- Draw labels for the current system and the hovered system ---
+                // --- Draw labels for the current, searched, and hovered systems ---
                 bool isHovered = !string.IsNullOrEmpty(_hoveredSystemName) && ds.System.Name.Equals(_hoveredSystemName, StringComparison.InvariantCultureIgnoreCase);
-                if (isCurrent || isHovered)
+                if (isCurrent || isSearched || isHovered)
                 {
                     var labelSize = g.MeasureString(ds.System.Name, _labelFont);
                     var padding = new SizeF(4, 2);

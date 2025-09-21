@@ -77,6 +77,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<EngineerCraftEventArgs>? EngineerCraftEvent;
 
         /// <summary>
+        /// Event raised when a celestial body is scanned.
+        /// </summary>
+        public event EventHandler<ScanEventArgs>? ScanEvent;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;
@@ -354,6 +359,22 @@ namespace EliteDataRelay.Services
                                 Debug.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. Caching ship type: {_swappedShipType}");
                             }
                         }
+                        else if (eventType == "Scan")
+                        {
+                            // The Scan event contains the system name, so we can pass it directly.
+                            if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var systemElement) &&
+                                systemElement.GetString() is string starSystem)
+                            {
+                                double[]? starPos = null;
+                                if (jsonDoc.RootElement.TryGetProperty("StarPos", out var starPosElement) && starPosElement.ValueKind == JsonValueKind.Array)
+                                {
+                                    starPos = starPosElement.EnumerateArray().Select(e => e.GetDouble()).ToArray();
+                                }
+
+                                var scanEvent = JsonSerializer.Deserialize<ScanEvent>(line, options);
+                                if (scanEvent != null) ScanEvent?.Invoke(this, new ScanEventArgs(starSystem, scanEvent, starPos));
+                            }
+                        }
                     }
                     catch (JsonException ex)
                     {
@@ -494,4 +515,18 @@ namespace EliteDataRelay.Services
     }
 
     #endregion
+
+    public class ScanEventArgs : EventArgs
+    {
+        public string StarSystem { get; }
+        public ScanEvent ScanData { get; }
+        public double[]? StarPos { get; }
+
+        public ScanEventArgs(string starSystem, ScanEvent scanData, double[]? starPos)
+        {
+            StarSystem = starSystem;
+            ScanData = scanData;
+            StarPos = starPos;
+        }
+    }
 }

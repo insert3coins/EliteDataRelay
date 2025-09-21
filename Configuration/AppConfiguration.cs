@@ -222,7 +222,7 @@ namespace EliteDataRelay.Configuration
             public HashSet<string> PinnedMaterials { get; set; } = new HashSet<string>();
             public int OverlayBackgroundColorArgb { get; set; } = Color.FromArgb(200, 0, 0, 0).ToArgb();
             public string OverlayFontName { get; set; } = "Consolas";
-            public float OverlayFontSize { get; set; } = 11f;
+            public float OverlayFontSize { get; set; } = 12f;
             public int OverlayOpacity { get; set; } = 85;
             public bool PinMaterialsMode { get; set; } = false;
             public bool EnableHotkeys { get; set; } = true;

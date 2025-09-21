@@ -60,8 +60,13 @@ namespace EliteDataRelay
             }
         }
 
-        private async void OnScanJournalsClicked(object? sender, EventArgs e) =>
+        private async void OnScanJournalsClicked(object? sender, EventArgs e)
+        {
+            _cargoFormUI.ShowScanProgress(true);
+            _cargoFormUI.UpdateScanProgress(0, "Starting scan...");
             await _visitedSystemsService.ScanAllJournalsAsync();
+            _cargoFormUI.ShowScanProgress(false);
+        }
 
         private void OnSearchSystemClicked(object? sender, string systemName)
         {

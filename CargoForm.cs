@@ -3,6 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Linq;
 using System.Drawing;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
@@ -125,6 +126,7 @@ namespace EliteDataRelay
             _statusWatcherService.BalanceChanged += OnBalanceChanged;
 
             _visitedSystemsService.JournalScanCompleted += OnJournalScanCompleted;
+            _visitedSystemsService.JournalScanProgressed += OnJournalScanProgressed;
             _visitedSystemsService.SystemsUpdated += OnSystemsUpdated;
             _materialService.MaterialsUpdated += OnMaterialsUpdated;
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
@@ -145,6 +147,7 @@ namespace EliteDataRelay
                 _cargoFormUI?.Dispose();
                 (_materialService as IDisposable)?.Dispose();
                 _visitedSystemsService.JournalScanCompleted -= OnJournalScanCompleted;
+                _visitedSystemsService.JournalScanProgressed -= OnJournalScanProgressed;
                 (_visitedSystemsService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();

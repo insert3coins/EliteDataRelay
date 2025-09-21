@@ -122,7 +122,7 @@ namespace EliteDataRelay
                 if (e.Success)
                 {
                     MessageBox.Show(this,
-                        $"Journal scan complete.\n\nFiles Scanned: {e.FilesScanned}\nNew Systems Found: {e.NewSystemsFound}",
+                        $"Journal scan complete.\n\nFiles Scanned: {e.FilesScanned}\nNew Systems Found: {e.NewSystemsFound}\nNew Bodies Found: {e.NewBodiesFound}",
                         "Scan Complete",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
@@ -137,6 +137,16 @@ namespace EliteDataRelay
                 }
             }));
         }
+
+        private void OnJournalScanProgressed(object? sender, JournalScanProgressEventArgs e)
+        {
+            Invoke(new Action(() =>
+            {
+                int percentage = e.TotalFiles > 0 ? (int)((double)e.FilesProcessed / e.TotalFiles * 100) : 0;
+                _cargoFormUI.UpdateScanProgress(percentage, $"Scanning file {e.FilesProcessed} of {e.TotalFiles}...");
+            }));
+        }
+
         #endregion
     }
 }

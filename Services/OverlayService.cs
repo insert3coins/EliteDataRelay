@@ -39,27 +39,37 @@ namespace EliteDataRelay.Services
             const int screenEdgePadding = 20;
             const int overlaySpacing = 10; // Space between overlays
 
-            // Define overlay dimensions. These are set in OverlayForm.cs.
-            const int leftOverlayHeight = 85;
-            const int rightOverlayWidth = 280;
-            const int rightOverlayHeight = 400;
-            const int materialsOverlayWidth = 340;
-            const int materialsOverlayHeight = 500;
+            // Create form instances first to get their actual dimensions.
+            if (AppConfiguration.EnableLeftOverlay)
+            {
+                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Left, AppConfiguration.AllowOverlayDrag);
+                _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
+            }
+            if (AppConfiguration.EnableRightOverlay)
+            {
+                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Right, AppConfiguration.AllowOverlayDrag);
+                _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
+            }
+            if (AppConfiguration.EnableMaterialsOverlay)
+            {
+                _materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials, AppConfiguration.AllowOverlayDrag);
+                _materialsOverlay.PositionChanged += OnOverlayPositionChanged;
+            }
 
             // Calculate default positions.
             // The right (cargo) and left (info) overlays are now stacked vertically on the right.
             // We calculate the total height of the stack to vertically center it on the screen.
             int totalVerticalHeight = 0;
-            if (AppConfiguration.EnableLeftOverlay)
+            if (_leftOverlayForm != null)
             {
-                totalVerticalHeight += leftOverlayHeight;
+                totalVerticalHeight += _leftOverlayForm.Height;
             }
-            if (AppConfiguration.EnableRightOverlay)
+            if (_rightOverlayForm != null)
             {
-                totalVerticalHeight += rightOverlayHeight;
+                totalVerticalHeight += _rightOverlayForm.Height;
             }
             // Add spacing only if both are enabled and will be stacked.
-            if (AppConfiguration.EnableLeftOverlay && AppConfiguration.EnableRightOverlay)
+            if (_leftOverlayForm != null && _rightOverlayForm != null)
             {
                 totalVerticalHeight += overlaySpacing;
             }
@@ -68,69 +78,60 @@ namespace EliteDataRelay.Services
             int currentY = startY;
 
             // Default X for the right-side stack.
-            int rightStackX = screen.Width - rightOverlayWidth - screenEdgePadding;
+            int rightStackX = screen.Width - (_rightOverlayForm?.Width ?? _leftOverlayForm?.Width ?? 0) - screenEdgePadding;
 
             Point defaultLeftLocation = Point.Empty;
-            if (AppConfiguration.EnableLeftOverlay)
+            if (_leftOverlayForm != null)
             {
                 defaultLeftLocation = new Point(rightStackX, currentY);
-                currentY += leftOverlayHeight + overlaySpacing;
+                currentY += _leftOverlayForm.Height + overlaySpacing;
             }
 
             Point defaultRightLocation = Point.Empty;
-            if (AppConfiguration.EnableRightOverlay)
+            if (_rightOverlayForm != null)
             {
                 defaultRightLocation = new Point(rightStackX, currentY);
             }
 
             // Default for materials overlay (to the left of the main stack)
-            int materialsX = rightStackX - materialsOverlayWidth - screenEdgePadding;
-            Point defaultMaterialsLocation = new Point(materialsX, (screen.Height / 2) - (materialsOverlayHeight / 2));
+            int materialsX = rightStackX - (_materialsOverlay?.Width ?? 0) - screenEdgePadding;
+            Point defaultMaterialsLocation = new Point(materialsX, (screen.Height / 2) - ((_materialsOverlay?.Height ?? 0) / 2));
 
-            if (AppConfiguration.EnableLeftOverlay)
+            if (_leftOverlayForm != null)
             {
-                var leftOverlay = new OverlayForm(OverlayForm.OverlayPosition.Left, AppConfiguration.AllowOverlayDrag);
-                leftOverlay.PositionChanged += OnOverlayPositionChanged;
                 if (AppConfiguration.LeftOverlayLocation != Point.Empty)
                 {
-                    leftOverlay.Location = AppConfiguration.LeftOverlayLocation;
+                    _leftOverlayForm.Location = AppConfiguration.LeftOverlayLocation;
                 }
                 else
                 {
-                    leftOverlay.Location = defaultLeftLocation;
+                    _leftOverlayForm.Location = defaultLeftLocation;
                 }
-                leftOverlay.Show();
-                _leftOverlayForm = leftOverlay;
+                _leftOverlayForm.Show();
             }
-            if (AppConfiguration.EnableRightOverlay)
+            if (_rightOverlayForm != null)
             {
-                var rightOverlay = new OverlayForm(OverlayForm.OverlayPosition.Right, AppConfiguration.AllowOverlayDrag);
-                rightOverlay.PositionChanged += OnOverlayPositionChanged;
                 if (AppConfiguration.RightOverlayLocation != Point.Empty)
                 {
-                    rightOverlay.Location = AppConfiguration.RightOverlayLocation;
+                    _rightOverlayForm.Location = AppConfiguration.RightOverlayLocation;
                 }
                 else
                 {
-                    rightOverlay.Location = defaultRightLocation;
+                    _rightOverlayForm.Location = defaultRightLocation;
                 }
-                rightOverlay.Show();
-                _rightOverlayForm = rightOverlay;
+                _rightOverlayForm.Show();
             }
-            if (AppConfiguration.EnableMaterialsOverlay)
+            if (_materialsOverlay != null)
             {
-                var materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials, AppConfiguration.AllowOverlayDrag);
-                materialsOverlay.PositionChanged += OnOverlayPositionChanged;
                 if (AppConfiguration.MaterialsOverlayLocation != Point.Empty)
                 {
-                    materialsOverlay.Location = AppConfiguration.MaterialsOverlayLocation;
+                    _materialsOverlay.Location = AppConfiguration.MaterialsOverlayLocation;
                 }
                 else
                 {
-                    materialsOverlay.Location = defaultMaterialsLocation;
+                    _materialsOverlay.Location = defaultMaterialsLocation;
                 }
-                materialsOverlay.Show();
-                _materialsOverlay = materialsOverlay;
+                _materialsOverlay.Show();
             }
         }
 

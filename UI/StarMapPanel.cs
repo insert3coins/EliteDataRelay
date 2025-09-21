@@ -35,13 +35,15 @@ namespace EliteDataRelay.UI
         private readonly Pen _planeLinePen = new Pen(Color.FromArgb(50, 255, 255, 255), 1);
         private readonly Font _labelFont;
         private readonly Brush _labelBackgroundBrush = new SolidBrush(Color.FromArgb(180, 0, 0, 0));
-        private readonly ToolTip _toolTip;
         private readonly Timer _pulseTimer;
+        private readonly Panel _infoCardPanel;
+        private readonly Panel _systemInfoCard;
+        private readonly Font _infoTitleFont;
         private bool _pulseState;
 
         public StarMapPanel()
         {
-            _labelFont = new Font("Consolas", 7.5f);
+            _labelFont = new Font("Consolas", 9f);
             _backgroundBrushes = new Brush[]
             {
                 new SolidBrush(Color.FromArgb(60, 60, 60)),
@@ -49,6 +51,7 @@ namespace EliteDataRelay.UI
                 new SolidBrush(Color.FromArgb(140, 140, 140)),
             };
             GenerateBackgroundStars(5000);
+            _infoTitleFont = new Font("Consolas", 10f, FontStyle.Bold);
             DoubleBuffered = true;
             BackColor = Color.Black;
             Dock = DockStyle.Fill;
@@ -59,10 +62,72 @@ namespace EliteDataRelay.UI
             MouseMove += OnMapMouseMove;
             MouseWheel += OnMapMouseWheel;
             MouseLeave += OnMapMouseLeave;
-            _toolTip = new ToolTip();
             _pulseTimer = new Timer { Interval = 500 };
             _pulseTimer.Tick += OnPulseTimerTick;
             this.Resize += (s, e) => this.Invalidate(); // Redraw on resize
+
+            _infoCardPanel = CreateControlsInfoCard();
+            this.Controls.Add(_infoCardPanel);
+            _infoCardPanel.BringToFront();
+
+            _systemInfoCard = CreateSystemInfoCard();
+            this.Controls.Add(_systemInfoCard);
+            _systemInfoCard.BringToFront();
+
+            this.Resize += (s, e) => {
+                _infoCardPanel.Location = new Point(this.Width - _infoCardPanel.Width - 10, 10);
+            };
+            // Set initial position after the panel has been added and sized.
+            _infoCardPanel.Location = new Point(this.Width - _infoCardPanel.Width - 10, 10);
+        }
+
+        private Panel CreateControlsInfoCard()
+        {
+            var infoPanel = new Panel
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                BackColor = Color.FromArgb(180, 20, 20, 20),
+                Padding = new Padding(10),
+            };
+
+            var layout = new TableLayoutPanel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+            };
+
+            var titleLabel = new Label { Text = "Map Controls", Font = _infoTitleFont, ForeColor = Color.White, AutoSize = true, Margin = new Padding(0, 0, 0, 5) };
+            var panLabel = new Label { Text = "• Pan: Left-click + Drag", Font = _labelFont, ForeColor = Color.LightGray, AutoSize = true };
+            var rotateLabel = new Label { Text = "• Rotate: Right-click + Drag", Font = _labelFont, ForeColor = Color.LightGray, AutoSize = true };
+            var zoomLabel = new Label { Text = "• Zoom: Mouse Wheel", Font = _labelFont, ForeColor = Color.LightGray, AutoSize = true };
+
+            layout.Controls.Add(titleLabel);
+            layout.Controls.Add(panLabel);
+            layout.Controls.Add(rotateLabel);
+            layout.Controls.Add(zoomLabel);
+
+            infoPanel.Controls.Add(layout);
+            return infoPanel;
+        }
+
+        private Panel CreateSystemInfoCard()
+        {
+            var infoPanel = new Panel
+            {
+                Visible = false,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                BackColor = Color.FromArgb(220, 10, 10, 10),
+                Padding = new Padding(8),
+                BorderStyle = BorderStyle.FixedSingle,
+                MaximumSize = new Size(400, 500), // Constrain the size
+                AutoScroll = true, // Add a scrollbar if content overflows
+            };
+            return infoPanel;
         }
 
         public void SetSystems(IReadOnlyList<StarSystem> systems, string currentSystem)
@@ -184,8 +249,10 @@ namespace EliteDataRelay.UI
                     brush.Dispose();
                 }
                 _labelBackgroundBrush.Dispose();
+                _infoCardPanel?.Dispose();
+                _systemInfoCard?.Dispose();
+                _infoTitleFont?.Dispose();
                 _pulseTimer.Dispose();
-                _toolTip.Dispose();
                 _labelFont.Dispose();
             }
             base.Dispose(disposing);

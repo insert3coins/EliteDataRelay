@@ -64,5 +64,23 @@ namespace EliteDataRelay.UI
 
             _controlFactory.StarMapSearchBox.AutoCompleteCustomSource = collection;
         }
+
+        public void ShowScanProgress(bool visible)
+        {
+            if (_controlFactory == null) return;
+            var panel = _controlFactory.StarMapScanProgress.Parent as Control;
+            if (panel != null) panel.Visible = visible;
+
+            // Disable buttons during scan
+            _controlFactory.ScanJournalsButton.Enabled = !visible;
+            _controlFactory.StarMapSearchButton.Enabled = !visible;
+        }
+
+        public void UpdateScanProgress(int percentage, string message)
+        {
+            if (_controlFactory == null) return;
+            _controlFactory.StarMapScanProgress.Value = Math.Clamp(percentage, 0, 100);
+            _controlFactory.StarMapScanLabel.Text = message;
+        }
     }
 }
