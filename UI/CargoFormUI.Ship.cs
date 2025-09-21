@@ -133,6 +133,9 @@ namespace EliteDataRelay.UI
 
                         foreach (var mod in module.Engineering.Modifiers)
                         {
+                            // Skip displaying the 'DamageType' modifier as the raw 'Damage' value is more useful.
+                            if (mod.Label.Equals("DamageType", System.StringComparison.OrdinalIgnoreCase)) continue;
+
                             bool isGood = (mod.Value > mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value < mod.OriginalValue && mod.LessIsGood == 1);
                             bool isBad = (mod.Value < mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value > mod.OriginalValue && mod.LessIsGood == 1);
 
