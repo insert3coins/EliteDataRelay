@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using System.Linq;
 using EliteDataRelay.Models;
 
 namespace EliteDataRelay.Services
@@ -11,7 +12,7 @@ namespace EliteDataRelay.Services
         private readonly System.Windows.Forms.Timer _timer;
 
         private long _startingBalance;
-        private int _previousCargoCount;
+        private CargoSnapshot? _previousSnapshot;
         private DateTime _sessionStartTime;
         private bool _sessionActive;
 
@@ -38,7 +39,7 @@ namespace EliteDataRelay.Services
             TotalCargoCollected = 0;
             SessionDuration = TimeSpan.Zero;
             _startingBalance = -1;
-            _previousCargoCount = -1;
+            _previousSnapshot = null;
             _sessionStartTime = DateTime.UtcNow;
             _sessionActive = true;
 
@@ -80,18 +81,33 @@ namespace EliteDataRelay.Services
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
-            var currentCargoCount = e.Snapshot.Count;
-            if (_previousCargoCount == -1)
+            var newSnapshot = e.Snapshot;
+
+            if (_previousSnapshot != null)
             {
-                _previousCargoCount = currentCargoCount;
+                // Create dictionaries for quick lookups. Using OrdinalIgnoreCase for safety.
+                var newInventory = newSnapshot.Inventory.ToDictionary(i => i.Name, i => i.Count, StringComparer.OrdinalIgnoreCase);
+                var oldInventory = _previousSnapshot.Inventory.ToDictionary(i => i.Name, i => i.Count, StringComparer.OrdinalIgnoreCase);
+
+                foreach (var item in newInventory)
+                {
+                    // The internal name for limpets is 'drones'.
+                    if (item.Key.Equals("drones", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue; // Skip limpets, do not count them in session cargo.
+                    }
+
+                    oldInventory.TryGetValue(item.Key, out int oldCount);
+                    long newCount = item.Value;
+
+                    if (newCount > oldCount)
+                    {
+                        TotalCargoCollected += (newCount - oldCount);
+                    }
+                }
             }
 
-            if (currentCargoCount > _previousCargoCount)
-            {
-                TotalCargoCollected += (currentCargoCount - _previousCargoCount);
-            }
-
-            _previousCargoCount = currentCargoCount;
+            _previousSnapshot = newSnapshot;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
