@@ -105,12 +105,19 @@ namespace EliteDataRelay
                 // The Loadout event is a primary source for cargo capacity.
                 _cargoCapacity = e.Loadout.CargoCapacity;
 
-                // After updating capacity, re-update any UI elements that depend on it.
-                if (_lastCargoSnapshot != null)
-                {
-                    _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
-                    _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
-                }
+                // After a loadout change, the previous cargo snapshot (count and items) is stale.
+                // We must clear it and wait for the next 'Cargo' event to provide the new state.
+                _lastCargoSnapshot = null;
+
+                // Update the UI to reflect the new capacity and the now-empty cargo state.
+                // The count will be properly updated by the next 'Cargo' event.
+                _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
+
+                // Create a new, empty snapshot to clear the UI list and visualizer.
+                // The UI will show "Cargo hold is empty." until the next update.
+                var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
+                _cargoFormUI.UpdateCargoList(emptySnapshot);
+                _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
             }));
         }
 

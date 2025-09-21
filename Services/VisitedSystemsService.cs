@@ -156,12 +156,12 @@ namespace EliteDataRelay.Services
                                           "VALUES ($systemName, $bodyName, $starType, $planetClass, $wasDiscovered, $wasMapped, $terraformState, $landable)";
                     command.Parameters.AddWithValue("$systemName", systemName);
                     command.Parameters.AddWithValue("$bodyName", newBody.BodyName);
-                    command.Parameters.AddWithValue("$starType", (object)newBody.StarType ?? DBNull.Value);
+                    command.Parameters.AddWithValue("$starType", newBody.StarType != null ? (object)newBody.StarType : DBNull.Value);
                     command.Parameters.AddWithValue("$planetClass", (object)newBody.PlanetClass ?? DBNull.Value);
                     command.Parameters.AddWithValue("$wasDiscovered", newBody.WasDiscovered);
                     command.Parameters.AddWithValue("$wasMapped", newBody.WasMapped);
                     command.Parameters.AddWithValue("$terraformState", (object)newBody.TerraformState ?? DBNull.Value);
-                    command.Parameters.AddWithValue("$landable", newBody.Landable);
+                    command.Parameters.AddWithValue("$landable", (object)newBody.Landable ?? DBNull.Value);
                     command.ExecuteNonQuery();
                 }
                 return true;
@@ -307,8 +307,8 @@ namespace EliteDataRelay.Services
                                     bodyCommand.Parameters["$bodyName"].Value = scanData.BodyName;
                                     bodyCommand.Parameters["$starType"].Value = (object?)scanData.StarType ?? DBNull.Value;
                                     bodyCommand.Parameters["$planetClass"].Value = (object?)scanData.PlanetClass ?? DBNull.Value;
-                                    bodyCommand.Parameters["$wasDiscovered"].Value = scanData.WasDiscovered;
-                                    bodyCommand.Parameters["$wasMapped"].Value = scanData.WasMapped;
+                                    bodyCommand.Parameters["$wasDiscovered"].Value = scanData.WasDiscovered ?? false;
+                                    bodyCommand.Parameters["$wasMapped"].Value = scanData.WasMapped ?? false;
                                     bodyCommand.Parameters["$terraformState"].Value = (object?)scanData.TerraformState ?? DBNull.Value;
                                     bodyCommand.Parameters["$landable"].Value = scanData.Landable ?? false;
                                     bodiesAdded += bodyCommand.ExecuteNonQuery();

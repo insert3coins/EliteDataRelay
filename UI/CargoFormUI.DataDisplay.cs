@@ -55,8 +55,11 @@ namespace EliteDataRelay.UI
             }
             else
             {
-                var emptyItem = new ListViewItem("Cargo hold is empty.") { ForeColor = SystemColors.GrayText };
-                listView.Items.Add(emptyItem);
+                // If inventory is empty, check if it's because the hold is empty or because we're waiting for an update.
+                string message = snapshot.Count > 0 ? "Cargo manifest updating..." : "Cargo hold is empty.";
+
+                var statusItem = new ListViewItem(message) { ForeColor = SystemColors.GrayText };
+                listView.Items.Add(statusItem);
                 AdjustMessageColumnLayout(); // Set columns for single message view
             }
             listView.EndUpdate();
@@ -188,7 +191,8 @@ namespace EliteDataRelay.UI
         {
             if (_controlFactory == null) return;
 
-            int count = snapshot.Inventory.Sum(item => item.Count);
+            // Use the explicit Count property, as Inventory might be empty if we only have a total from a Loadout event.
+            int count = snapshot.Count;
             int index = 0;
 
             // Calculate index based on percentage if capacity is known
