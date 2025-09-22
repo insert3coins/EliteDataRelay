@@ -18,6 +18,7 @@ namespace EliteDataRelay.Services
         event EventHandler<MaterialTradeEventArgs>? MaterialTradeEvent;
         event EventHandler<EngineerCraftEventArgs>? EngineerCraftEvent;
         event EventHandler<ScanEventArgs>? ScanEvent;
+        event EventHandler<DockableBodyEventArgs>? DockableBodyFound;
 
         bool IsMonitoring { get; }
         string JournalDirectoryPath { get; }

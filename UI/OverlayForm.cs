@@ -16,7 +16,8 @@ namespace EliteDataRelay.UI
         {
             Left,
             Right,
-            Materials
+            Materials,
+            SystemInfo
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -39,9 +40,17 @@ namespace EliteDataRelay.UI
         private IReadOnlyDictionary<string, MaterialItem> _manufacturedMaterials = new Dictionary<string, MaterialItem>();
         private IReadOnlyDictionary<string, MaterialItem> _encodedMaterials = new Dictionary<string, MaterialItem>();
         private Panel _materialsListPanel = null!;
+
+        // New fields for the system info overlay
+        private string _systemName = "Unknown System";
+        private List<string> _stars = new List<string>();
+        private List<string> _stations = new List<string>();
+        private List<string> _bodies = new List<string>();
+        private Panel _systemInfoPanel = null!;
         private int _scrollOffset = 0;
         private int _totalContentHeight = 0;
         private bool _isMouseOverMaterialsPanel;
+        private bool _isMouseOverSystemInfoPanel;
         private readonly bool _allowDrag;
 
         // Fonts are IDisposable, so we should keep references to them to dispose of them later.
@@ -75,6 +84,9 @@ namespace EliteDataRelay.UI
                     break;
                 case OverlayPosition.Materials:
                     this.Text = "Elite Data Relay: Materials";
+                    break;
+                case OverlayPosition.SystemInfo:
+                    this.Text = "Elite Data Relay: System Info";
                     break;
                 default:
                     this.Text = "Elite Data Relay Overlay";
@@ -159,7 +171,7 @@ namespace EliteDataRelay.UI
                     Controls.Add(bottomPanel); // Docks to bottom
                 Controls.Add(_cargoListPanel); // Fills remaining space
             }
-            else // Materials
+            else if (_position == OverlayPosition.Materials)
             {
                 this.Size = new Size(340, 500);
 
@@ -181,6 +193,22 @@ namespace EliteDataRelay.UI
                 Controls.Add(topBorder);
                 Controls.Add(bottomBorder);
                 Controls.Add(_materialsListPanel);
+            }
+            else // System Info
+            {
+                this.Size = new Size(350, 400);
+
+                _systemInfoPanel = new Panel
+                {
+                    Dock = DockStyle.Fill,
+                    BackColor = this.BackColor,
+                    Font = _listFont
+                };
+                _systemInfoPanel.Paint += OnSystemInfoPanelPaint;
+                _systemInfoPanel.MouseWheel += OnSystemInfoPanelMouseWheel;
+                _systemInfoPanel.MouseEnter += OnSystemInfoPanelMouseEnter;
+                _systemInfoPanel.MouseLeave += OnSystemInfoPanelMouseLeave;
+                Controls.Add(_systemInfoPanel);
             }
 
             // Wire up dragging for the form and all its children, recursively.
@@ -206,6 +234,33 @@ namespace EliteDataRelay.UI
             // Now that the form is fully initialized and invisible, set opacity to 1 to show it.
             // This prevents the user from seeing any part of the form's construction.
             this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+        }
+
+        private void OnSystemInfoPanelMouseEnter(object? sender, EventArgs e)
+        {
+            _isMouseOverSystemInfoPanel = true;
+            _systemInfoPanel.Invalidate();
+        }
+
+        private void OnSystemInfoPanelMouseLeave(object? sender, EventArgs e)
+        {
+            _isMouseOverSystemInfoPanel = false;
+            _systemInfoPanel.Invalidate();
+        }
+
+        private void OnSystemInfoPanelMouseWheel(object? sender, MouseEventArgs e)
+        {
+            // A standard mouse wheel tick is 120. We'll scroll by a fraction of that for smoother scrolling.
+            int scrollAmount = e.Delta / -4;
+            _scrollOffset += scrollAmount;
+
+            // Clamp the scroll offset to prevent scrolling beyond the content.
+            // The panel's height is the visible area.
+            int maxScroll = Math.Max(0, _totalContentHeight - _systemInfoPanel.Height);
+            _scrollOffset = Math.Clamp(_scrollOffset, 0, maxScroll);
+
+            // Trigger a repaint to show the new scroll position.
+            _systemInfoPanel.Invalidate();
         }
 
         private void OnMaterialsPanelMouseEnter(object? sender, EventArgs e)
@@ -423,6 +478,123 @@ namespace EliteDataRelay.UI
             }
         }
 
+        private void OnSystemInfoPanelPaint(object? sender, PaintEventArgs e)
+        {
+            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            using var textBrush = new SolidBrush(AppConfiguration.OverlayTextColor);
+            using var headerBrush = new SolidBrush(Color.FromArgb(255, 140, 0)); // Orange for headers
+            using var grayBrush = new SolidBrush(SystemColors.GrayText);
+
+            // --- Define content width, leaving space for scrollbar if needed ---
+            const int scrollbarWidth = 8;
+            int contentWidth = _systemInfoPanel.Width;
+            bool scrollbarVisible = _totalContentHeight > _systemInfoPanel.Height;
+            if (scrollbarVisible)
+            {
+                contentWidth -= (scrollbarWidth + 4); // scrollbar + padding
+            }
+
+            // Save the original transform state and apply our custom scroll offset
+            var originalTransform = e.Graphics.Transform;
+            // Apply the current scroll position to the graphics context
+            e.Graphics.TranslateTransform(0, -_scrollOffset);
+
+            float y = 5.0f;
+            const float x = 10.0f;
+
+            // Draw System Name
+            e.Graphics.DrawString(_systemName, _labelFont, headerBrush, x, y);
+            y += _labelFont.GetHeight(e.Graphics) + 10;
+
+            // Draw Stars
+            e.Graphics.DrawString("Stars:", _labelFont, textBrush, x, y);
+            y += _labelFont.GetHeight(e.Graphics);
+
+            if (_stars.Any())
+            {
+                foreach (var star in _stars)
+                {
+                    e.Graphics.DrawString($"  - {star}", _listFont, textBrush, x, y);
+                    y += _listFont.GetHeight(e.Graphics);
+                }
+            }
+            else
+            {
+                e.Graphics.DrawString("  - No scan data", _listFont, grayBrush, x, y);
+                y += _listFont.GetHeight(e.Graphics);
+            }
+
+            y += 10; // Spacing
+
+            // Draw Bodies
+            e.Graphics.DrawString("Planetary Bodies:", _labelFont, textBrush, x, y);
+            y += _labelFont.GetHeight(e.Graphics);
+
+            if (_bodies.Any())
+            {
+                foreach (var body in _bodies)
+                {
+                    e.Graphics.DrawString($"  - {body}", _listFont, textBrush, x, y);
+                    y += _listFont.GetHeight(e.Graphics);
+                }
+            }
+            else
+            {
+                e.Graphics.DrawString("  - No scan data", _listFont, grayBrush, x, y);
+                y += _listFont.GetHeight(e.Graphics);
+            }
+
+            y += 10; // Spacing
+
+            // Draw Stations
+            e.Graphics.DrawString("Stations:", _labelFont, textBrush, x, y);
+            y += _labelFont.GetHeight(e.Graphics);
+
+            if (_stations.Any())
+            {
+                foreach (var station in _stations)
+                {
+                    e.Graphics.DrawString($"  - {station}", _listFont, textBrush, x, y);
+                    y += _listFont.GetHeight(e.Graphics);
+                }
+            }
+            else
+            {
+                e.Graphics.DrawString("  - No station data", _listFont, grayBrush, x, y);
+                y += _listFont.GetHeight(e.Graphics);
+            }
+
+            // Store the total height of the content so we know our scroll limits
+            _totalContentHeight = (int)y;
+
+            // Restore the transform to draw the scrollbar in a fixed position
+            e.Graphics.Transform = originalTransform;
+
+            // --- Draw Custom Scrollbar ---
+            if (scrollbarVisible && _isMouseOverSystemInfoPanel)
+            {
+                var scrollbarRect = new Rectangle(_systemInfoPanel.Width - scrollbarWidth - 2, 2, scrollbarWidth, _systemInfoPanel.Height - 4);
+
+                // Draw the track
+                using var trackBrush = new SolidBrush(Color.FromArgb(50, 128, 128, 128));
+                e.Graphics.FillRectangle(trackBrush, scrollbarRect);
+
+                // Calculate thumb size and position
+                float visibleRatio = (float)_systemInfoPanel.Height / _totalContentHeight;
+                int thumbHeight = (int)(scrollbarRect.Height * visibleRatio);
+                thumbHeight = Math.Max(thumbHeight, 20); // Minimum thumb height
+
+                int scrollableHeight = _totalContentHeight - _systemInfoPanel.Height;
+                float scrollRatio = scrollableHeight > 0 ? (float)_scrollOffset / scrollableHeight : 0;
+                int thumbY = scrollbarRect.Y + (int)(scrollRatio * (scrollbarRect.Height - thumbHeight));
+
+                // Draw the thumb
+                var thumbRect = new Rectangle(scrollbarRect.X, thumbY, scrollbarWidth, thumbHeight);
+                using var thumbBrush = new SolidBrush(Color.FromArgb(150, 255, 140, 0)); // Semi-transparent orange
+                e.Graphics.FillRectangle(thumbBrush, thumbRect);
+            }
+        }
+
         private float DrawMaterialCategory(PaintEventArgs e, string name, IReadOnlyDictionary<string, MaterialItem> materials, float y, Brush textBrush, Brush headerBrush, Brush fullBrush, int contentWidth)
         {
             const float xName = 10.0f;
@@ -533,6 +705,21 @@ namespace EliteDataRelay.UI
             _encodedMaterials = materialService.EncodedMaterials;
 
             _materialsListPanel?.Invalidate();
+        }
+
+        public void UpdateSystemInfo(string systemName, List<string> stars, List<string> stations, List<string> bodies)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateSystemInfo(systemName, stars, stations, bodies)));
+                return;
+            }
+
+            _systemName = systemName;
+            _stars = stars;
+            _stations = stations;
+            _bodies = bodies;
+            _systemInfoPanel?.Invalidate();
         }
 
         private void UpdateLabel(Label label, string text)

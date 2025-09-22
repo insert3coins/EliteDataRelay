@@ -85,6 +85,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<ScanEventArgs>? ScanEvent;
 
         /// <summary>
+        /// Event raised when a dockable body (station, outpost, etc.) is found.
+        /// </summary>
+        public event EventHandler<DockableBodyEventArgs>? DockableBodyFound;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;
@@ -300,19 +305,52 @@ namespace EliteDataRelay.Services
                         }
                         else if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
                         {
-                            if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement))
+                            if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement) &&
+                                starSystemElement.GetString() is string starSystem &&
+                                !string.IsNullOrEmpty(starSystem))
                             {
-                                var starSystem = starSystemElement.GetString();
-                                if (jsonDoc.RootElement.TryGetProperty("StarPos", out var starPosElement) &&
-                                    starPosElement.ValueKind == JsonValueKind.Array)
+                                List<StationInfo>? stations = null;
+                                if (jsonDoc.RootElement.TryGetProperty("Stations", out var stationsElement) && stationsElement.ValueKind == JsonValueKind.Array)
                                 {
-                                    var starPos = starPosElement.EnumerateArray().Select(e => e.GetDouble()).ToArray();
-                                    if (!string.IsNullOrEmpty(starSystem) && starSystem != _lastStarSystem)
+                                    stations = new List<StationInfo>();
+                                    foreach (var stationJson in stationsElement.EnumerateArray())
                                     {
-                                        _lastStarSystem = starSystem;
-                                        Debug.WriteLine($"[JournalWatcherService] Found Location event. StarSystem: {starSystem}");
-                                        LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem, starPos));
+                                        stationJson.TryGetProperty("Name", out var nameElement);
+                                        stationJson.TryGetProperty("StationType", out var typeElement);
+                                        if (nameElement.GetString() is string name && typeElement.GetString() is string type)
+                                        {
+                                            stations.Add(new StationInfo { Name = name, Type = type });
+                                        }
                                     }
+                                }
+
+                                double[]? starPos = null;
+                                if (jsonDoc.RootElement.TryGetProperty("StarPos", out var starPosElement) && starPosElement.ValueKind == JsonValueKind.Array)
+                                {
+                                    starPos = starPosElement.EnumerateArray().Select(e => e.GetDouble()).ToArray();
+                                }
+
+                                long? systemAddress = null;
+                                if (jsonDoc.RootElement.TryGetProperty("SystemAddress", out var systemAddressElement) && systemAddressElement.TryGetInt64(out var sa))
+                                {
+                                    systemAddress = sa;
+                                }
+ 
+                                // The FSDJump event signals a new system, which means we should clear old system data.
+                                // The Location event can fire when docking, so we don't want to clear data then,
+                                // but we still want to treat the first-ever location as a new system.
+                                bool isNewSystem = (eventType == "FSDJump" || eventType == "CarrierJump") || _lastStarSystem == null;
+ 
+                                if (starSystem != _lastStarSystem || _lastStarSystem == null)
+                                {
+                                    _lastStarSystem = starSystem;
+                                    Debug.WriteLine($"[JournalWatcherService] Found Location/Jump event. StarSystem: {starSystem}, IsNewSystem: {isNewSystem}");
+                                    // Always pass the full station list when the system name changes.
+                                    LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), isNewSystem, stations, systemAddress));
+                                }
+                                else if (starPos != null) // If we are in the same system, still provide location updates but don't re-process stations.
+                                {
+                                    LocationChanged?.Invoke(this, new LocationChangedEventArgs(starSystem, starPos, false, null, systemAddress));
                                 }
                             }
                         }
@@ -347,6 +385,42 @@ namespace EliteDataRelay.Services
 
                                 var scanEvent = JsonSerializer.Deserialize<ScanEvent>(line, options);
                                 if (scanEvent != null) ScanEvent?.Invoke(this, new ScanEventArgs(starSystem, scanEvent, starPos));
+                            }
+                        }
+                        else if (eventType == "DockableBody")
+                        {
+                            if (jsonDoc.RootElement.TryGetProperty("StationName", out var stationNameElement) &&
+                                jsonDoc.RootElement.TryGetProperty("StationType", out var stationTypeElement) &&
+                                jsonDoc.RootElement.TryGetProperty("SystemAddress", out var systemAddressElement) &&
+                                stationNameElement.GetString() is string stationName &&
+                                stationTypeElement.GetString() is string stationType &&
+                                !string.IsNullOrEmpty(stationName))
+                            {
+                                long systemAddress = systemAddressElement.GetInt64();
+                                Debug.WriteLine($"[JournalWatcherService] Found DockableBody: {stationName}");
+                                DockableBodyFound?.Invoke(this, new DockableBodyEventArgs(stationName, stationType, systemAddress));
+                            }
+                        }
+                        else if (eventType == "FSSSignalDiscovered")
+                        {
+                            if (jsonDoc.RootElement.TryGetProperty("IsStation", out var isStationElement) && isStationElement.GetBoolean())
+                            {
+                                if (jsonDoc.RootElement.TryGetProperty("SignalName", out var signalNameElement) &&                                    
+                                    jsonDoc.RootElement.TryGetProperty("SystemAddress", out var systemAddressElement) &&
+                                    signalNameElement.GetString() is string stationName &&
+                                    !string.IsNullOrEmpty(stationName) &&
+                                    systemAddressElement.TryGetInt64(out long systemAddress))
+                                {
+                                    // SignalType is not always present, so we handle its absence and provide a default.
+                                    string stationType = "Station";
+                                    if (jsonDoc.RootElement.TryGetProperty("SignalType", out var signalTypeElement) && signalTypeElement.GetString() is string type)
+                                    {
+                                        stationType = type;
+                                    }
+
+                                    Debug.WriteLine($"[JournalWatcherService] Found FSSSignalDiscovered (Station): {stationName}");
+                                    DockableBodyFound?.Invoke(this, new DockableBodyEventArgs(stationName, stationType, systemAddress));
+                                }
                             }
                         }
                     }
@@ -437,12 +511,18 @@ namespace EliteDataRelay.Services
         /// Gets the current star system.
         /// </summary>
         public string StarSystem { get; }
+        public bool IsNewSystem { get; }
         public double[] StarPos { get; }
+        public List<StationInfo>? Stations { get; }
+        public long? SystemAddress { get; }
 
-        public LocationChangedEventArgs(string starSystem, double[] starPos)
+        public LocationChangedEventArgs(string starSystem, double[] starPos, bool isNewSystem, List<StationInfo>? stations, long? systemAddress)
         {
             StarSystem = starSystem;
+            IsNewSystem = isNewSystem;
             StarPos = starPos;
+            Stations = stations;
+            SystemAddress = systemAddress;
         }
     }
 
@@ -526,5 +606,28 @@ namespace EliteDataRelay.Services
             ScanData = scanData;
             StarPos = starPos;
         }
+    }
+
+    /// <summary>
+    /// Provides data for the <see cref="IJournalWatcherService.DockableBodyFound"/> event.
+    /// </summary>
+    public class DockableBodyEventArgs : EventArgs
+    {
+        public string StationName { get; }
+        public string StationType { get; }
+        public long SystemAddress { get; }
+
+        public DockableBodyEventArgs(string stationName, string stationType, long systemAddress)
+        {
+            StationName = stationName;
+            StationType = stationType;
+            SystemAddress = systemAddress;
+        }
+    }
+
+    public class StationInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
     }
 }

@@ -303,6 +303,12 @@ namespace EliteDataRelay.UI
             }
         }
 
+        public void UpdateSystemInfo(string systemName, List<string> stars, List<string> stations, List<string> bodies)
+        {
+            // Pass the data to the overlay service to be displayed.
+            _overlayService?.UpdateSystemInfo(systemName, stars, stations, bodies);
+        }
+
         public void UpdateTitle(string title)
         {
             _baseTitle = title;

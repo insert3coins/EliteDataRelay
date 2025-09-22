@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace EliteDataRelay.Models
@@ -7,6 +8,21 @@ namespace EliteDataRelay.Models
     {
         [JsonPropertyName("event")]
         public string? Event { get; set; }
+
+        [JsonPropertyName("StarSystem")]
+        public string? StarSystem { get; set; }
+
+        [JsonPropertyName("Stations")]
+        public List<StationInfo>? Stations { get; set; }
+
+        [JsonPropertyName("StarType")]
+        public string? StarType { get; set; }
+
+        [JsonPropertyName("BodyName")]
+        public string? BodyName { get; set; }
+
+        [JsonPropertyName("StationName")]
+        public string? StationName { get; set; }
     }
 
     public class LoadoutEvent : JournalEvent

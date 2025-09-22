@@ -113,6 +113,8 @@ namespace EliteDataRelay
                 // updated before we try to send them data, preventing a race condition.
                 this.BeginInvoke(new Action(RepopulateOverlay));
             }
+
+            UpdateSystemInfoOverlay();
         }
 
         private void OnSessionClicked(object? sender, EventArgs e)
