@@ -1,6 +1,7 @@
 using EliteDataRelay.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace EliteDataRelay.Services
@@ -17,7 +18,7 @@ namespace EliteDataRelay.Services
         public long? SystemAddress { get; private set; }
         
         private readonly HashSet<string> _discoveredStars = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private readonly HashSet<string> _discoveredStations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _discoveredStations = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // By name
         private readonly HashSet<string> _discoveredBodies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
@@ -41,11 +42,12 @@ namespace EliteDataRelay.Services
             {
                 foreach (var station in args.Stations)
                 {
-                    if (!_discoveredStations.Contains(station.Name.Trim()))
+                    string trimmedName = station.Name.Trim();
+                    if (!_discoveredStations.Contains(trimmedName))
                     {
-                        _discoveredStations.Add(station.Name.Trim());
+                        _discoveredStations.Add(trimmedName);
                         string prettyType = PrettifyStationType(station.Type);
-                        Stations.Add($"{station.Name.Trim()} ({prettyType})");
+                        Stations.Add($"{trimmedName} ({prettyType})");
                     }
                 }
                 Stations.Sort();
@@ -64,17 +66,13 @@ namespace EliteDataRelay.Services
             if (scanData.StarType != null && scanData.BodyName != null && !_discoveredStars.Contains(scanData.BodyName))
             {
                 _discoveredStars.Add(scanData.BodyName);
-                // e.g., "Procyon (G-Type Star)"
-                string starInfo = $"{scanData.BodyName} ({scanData.StarType})";
-                Stars.Add(starInfo);
+                Stars.Add($"{scanData.BodyName} ({scanData.StarType})");
                 Stars.Sort();
             }
             else if (scanData.PlanetClass != null && scanData.BodyName != null && !_discoveredBodies.Contains(scanData.BodyName))
             {
                 _discoveredBodies.Add(scanData.BodyName);
-                // e.g., "Earth (Earth-like world)"
-                string bodyInfo = $"{scanData.BodyName} ({scanData.PlanetClass})";
-                Bodies.Add(bodyInfo);
+                Bodies.Add($"{scanData.BodyName} ({scanData.PlanetClass})");
                 Bodies.Sort();
             }
         }
@@ -86,14 +84,13 @@ namespace EliteDataRelay.Services
         {
             // Only add the station if its SystemAddress matches our current known SystemAddress.
             // This is crucial for filtering out FSS signals from neighboring systems.
+            string trimmedName = args.StationName.Trim();
             if (this.SystemAddress.HasValue && args.SystemAddress == this.SystemAddress &&
-                !_discoveredStations.Contains(args.StationName.Trim()))
+                !_discoveredStations.Contains(trimmedName))
             {
-                _discoveredStations.Add(args.StationName.Trim());
-                // e.g., "Jameson Memorial (Orbis Starport)"
+                _discoveredStations.Add(trimmedName);
                 string prettyType = PrettifyStationType(args.StationType);
-                string stationInfo = $"{args.StationName.Trim()} ({prettyType})";
-                Stations.Add(stationInfo);
+                Stations.Add($"{trimmedName} ({prettyType})");
                 Stations.Sort();
             }
         }

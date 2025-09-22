@@ -536,8 +536,7 @@ namespace EliteDataRelay.UI
                 y += _listFont.GetHeight(e.Graphics);
             }
 
-            y += 10; // Spacing
-
+            y += 10;
             // Draw Bodies
             e.Graphics.DrawString("Planetary Bodies:", _labelFont, textBrush, x, y);
             y += _labelFont.GetHeight(e.Graphics);
@@ -564,8 +563,7 @@ namespace EliteDataRelay.UI
                 y += _listFont.GetHeight(e.Graphics);
             }
 
-            y += 10; // Spacing
-
+            y += 10;
             // Draw Stations
             e.Graphics.DrawString("Stations:", _labelFont, textBrush, x, y);
             y += _labelFont.GetHeight(e.Graphics);

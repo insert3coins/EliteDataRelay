@@ -7,10 +7,10 @@ namespace EliteDataRelay.Models
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }
-        public List<SystemBody> Bodies { get; set; } = new List<SystemBody>();
+        public List<StarSystemBody> Bodies { get; set; } = new List<StarSystemBody>();
     }
 
-    public class SystemBody
+    public class StarSystemBody
     {
         public string BodyName { get; set; } = string.Empty;
 
