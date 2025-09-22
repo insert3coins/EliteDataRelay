@@ -147,13 +147,10 @@ namespace EliteDataRelay
         private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
             _lastLocation = e.StarSystem;
-            _systemInfoService.HandleLocationChange(e);
 
             Invoke(new Action(() =>
             {
                 _cargoFormUI.UpdateLocation(_lastLocation);
-                // After a location change, especially a jump, update the system info overlay.
-                UpdateSystemInfoOverlay();
             }));
         }
 

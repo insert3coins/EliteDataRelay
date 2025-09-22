@@ -85,16 +85,12 @@ namespace EliteDataRelay.Configuration
         public static bool EnableLeftOverlay { get => _settings.EnableLeftOverlay; set => _settings.EnableLeftOverlay = value; }
         public static bool EnableRightOverlay { get => _settings.EnableRightOverlay; set => _settings.EnableRightOverlay = value; }
         public static bool EnableMaterialsOverlay { get => _settings.EnableMaterialsOverlay; set => _settings.EnableMaterialsOverlay = value; }
-        public static bool EnableSystemInfoOverlay { get => _settings.EnableSystemInfoOverlay; set => _settings.EnableSystemInfoOverlay = value; }
 
         public static bool AllowOverlayDrag { get => _settings.AllowOverlayDrag; set => _settings.AllowOverlayDrag = value; }
         public static Color OverlayTextColor { get => Color.FromArgb(_settings.OverlayTextColorArgb); set => _settings.OverlayTextColorArgb = value.ToArgb(); }
         public static Point LeftOverlayLocation { get => _settings.LeftOverlayLocation; set => _settings.LeftOverlayLocation = value; }
         public static Point RightOverlayLocation { get => _settings.RightOverlayLocation; set => _settings.RightOverlayLocation = value; }
         public static Point MaterialsOverlayLocation { get => _settings.MaterialsOverlayLocation; set => _settings.MaterialsOverlayLocation = value; }
-
-        // Hotkey Settings
-        public static Point SystemInfoOverlayLocation { get => _settings.SystemInfoOverlayLocation; set => _settings.SystemInfoOverlayLocation = value; }
         public static Keys StartMonitoringHotkey { get => _settings.StartMonitoringHotkey; set => _settings.StartMonitoringHotkey = value; }
         public static Keys StopMonitoringHotkey { get => _settings.StopMonitoringHotkey; set => _settings.StopMonitoringHotkey = value; }
         public static Keys ShowOverlayHotkey { get => _settings.ShowOverlayHotkey; set => _settings.ShowOverlayHotkey = value; }
@@ -236,13 +232,11 @@ namespace EliteDataRelay.Configuration
             public bool EnableLeftOverlay { get; set; } = false;
             public bool EnableRightOverlay { get; set; } = false;
             public bool EnableMaterialsOverlay { get; set; } = false;
-            public bool EnableSystemInfoOverlay { get; set; } = false;
             public bool AllowOverlayDrag { get; set; } = false;
             public int OverlayTextColorArgb { get; set; } = Color.Orange.ToArgb();
             public Point LeftOverlayLocation { get; set; } = Point.Empty;
             public Point RightOverlayLocation { get; set; } = Point.Empty;
             public Point MaterialsOverlayLocation { get; set; } = Point.Empty;
-            public Point SystemInfoOverlayLocation { get; set; } = Point.Empty;
             public Keys StartMonitoringHotkey { get; set; } = Keys.F1;
             public Keys StopMonitoringHotkey { get; set; } = Keys.F2;
             public Keys ShowOverlayHotkey { get; set; } = Keys.F3;

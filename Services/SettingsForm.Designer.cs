@@ -160,7 +160,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Overlay Functionality",
                 Location = new Point(12, 12),
-                Size = new Size(410, 180),
+                Size = new Size(410, 155),
             };
 
             // Enable Right Overlay CheckBox
@@ -180,17 +180,10 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
-            _chkEnableSystemInfoOverlay = new CheckBox
-            {
-                Text = "Enable system info overlay",
-                Location = new Point(15, 95),
-                AutoSize = true
-            };
-
             _chkShowSessionOnOverlay = new CheckBox
             {
                 Text = "Show session stats on right overlay (Cargo)",
-                Location = new Point(15, 120),
+                Location = new Point(15, 95),
                 AutoSize = true
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
@@ -199,7 +192,7 @@ namespace EliteDataRelay.UI
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(15, 145),
+                Location = new Point(15, 120),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -260,7 +253,6 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableMaterialsOverlay);
-            _grpOverlaySettings.Controls.Add(_chkEnableSystemInfoOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 

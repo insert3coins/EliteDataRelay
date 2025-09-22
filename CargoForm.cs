@@ -25,7 +25,6 @@ namespace EliteDataRelay
         private readonly ICargoFormUI _cargoFormUI;
         private readonly IMaterialService _materialService;
         private readonly SessionTrackingService _sessionTrackingService;
-        private readonly SystemInfoService _systemInfoService;
 
         public CargoForm()
         {
@@ -41,7 +40,6 @@ namespace EliteDataRelay
             _cargoFormUI = new CargoFormUI();
             _materialService = new MaterialService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _statusWatcherService);
-            _systemInfoService = new SystemInfoService();
 
             InitializeComponent();
             SetupEventHandlers();
@@ -104,8 +102,6 @@ namespace EliteDataRelay
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
             _journalWatcherService.LoadoutChanged += OnLoadoutChanged;
-            _journalWatcherService.ScanEvent += OnScanEvent;
-            _journalWatcherService.DockableBodyFound += OnDockableBodyFound;
         }
 
         protected override void Dispose(bool disposing)
@@ -124,29 +120,6 @@ namespace EliteDataRelay
                 _sessionTrackingService.Dispose();
             }
             base.Dispose(disposing);
-        }
-
-        private void OnScanEvent(object? sender, ScanEventArgs e)
-        {
-            _systemInfoService.HandleScan(e);
-            UpdateSystemInfoOverlay();
-        }
-
-        private void OnDockableBodyFound(object? sender, DockableBodyEventArgs e)
-        {
-            _systemInfoService.HandleDockableBody(e);
-            UpdateSystemInfoOverlay();
-        }
-
-        private void UpdateSystemInfoOverlay()
-        {
-            // The OverlayForm handles its own thread-safe invoking,
-            // so we can call this directly from any thread.
-            // We pass copies of the lists to prevent race conditions where the service
-            // clears the list on a background thread after the update has been
-            // invoked but before the UI thread has painted it.
-            _cargoFormUI.UpdateSystemInfo(_systemInfoService.SystemName, new List<string>(_systemInfoService.Stars), 
-                new List<string>(_systemInfoService.Stations), new List<string>(_systemInfoService.Bodies));
         }
     }
 }
