@@ -74,6 +74,8 @@ namespace EliteDataRelay.UI
             if (_controlFactory == null) return;
 
             var treeView = _controlFactory.MaterialTreeView;
+            string searchTerm = _controlFactory.MaterialSearchBox.Text;
+
             // Unhook the event handler while we programmatically update the checked states to prevent it from firing.
             treeView.AfterCheck -= OnMaterialNodeChecked;
 
@@ -110,9 +112,9 @@ namespace EliteDataRelay.UI
                         }
                     }
                 }
-                PopulateMaterialCategory(rawNode, pinnedRaw);
-                PopulateMaterialCategory(manufacturedNode, pinnedManufactured);
-                PopulateMaterialCategory(encodedNode, pinnedEncoded);
+                PopulateMaterialCategory(rawNode, FilterMaterials(pinnedRaw, searchTerm));
+                PopulateMaterialCategory(manufacturedNode, FilterMaterials(pinnedManufactured, searchTerm));
+                PopulateMaterialCategory(encodedNode, FilterMaterials(pinnedEncoded, searchTerm));
             }
             else
             {
@@ -145,9 +147,9 @@ namespace EliteDataRelay.UI
                         }
                     }
                 }
-                PopulateMaterialCategory(rawNode, rawWithPinned);
-                PopulateMaterialCategory(manufacturedNode, manufacturedWithPinned);
-                PopulateMaterialCategory(encodedNode, encodedWithPinned);
+                PopulateMaterialCategory(rawNode, FilterMaterials(rawWithPinned, searchTerm));
+                PopulateMaterialCategory(manufacturedNode, FilterMaterials(manufacturedWithPinned, searchTerm));
+                PopulateMaterialCategory(encodedNode, FilterMaterials(encodedWithPinned, searchTerm));
             }
 
             rawNode.Expand();
@@ -158,6 +160,25 @@ namespace EliteDataRelay.UI
 
             // Re-hook the event handler.
             treeView.AfterCheck += OnMaterialNodeChecked;
+        }
+
+        private IReadOnlyDictionary<string, MaterialItem> FilterMaterials(IReadOnlyDictionary<string, MaterialItem> materials, string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return materials;
+            }
+
+            var filtered = new Dictionary<string, MaterialItem>(StringComparer.InvariantCultureIgnoreCase);
+            foreach (var material in materials.Values)
+            {
+                string displayName = material.Localised ?? material.Name;
+                if (displayName.Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    filtered[material.Name] = material;
+                }
+            }
+            return filtered;
         }
 
         private void PopulateMaterialCategory(TreeNode categoryNode, IReadOnlyDictionary<string, MaterialItem> materials)

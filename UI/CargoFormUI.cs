@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Services;
 using EliteDataRelay.Configuration;
@@ -60,6 +61,7 @@ namespace EliteDataRelay.UI
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
             DisplayWelcomeMessage();
+            UpdateMaterialSearchAutocomplete();
         }
 
         private void OnFormLoad(object? sender, EventArgs e)
@@ -128,6 +130,7 @@ namespace EliteDataRelay.UI
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
             _controlFactory.PinMaterialsCheckBox.CheckedChanged += OnPinMaterialsCheckBoxChanged;
             _controlFactory.MaterialTreeView.AfterCheck += OnMaterialNodeChecked;
+            _controlFactory.MaterialSearchBox.TextChanged += OnMaterialSearchChanged;
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -137,6 +140,28 @@ namespace EliteDataRelay.UI
                 _trayIconManager.StopClicked += (s, e) => StopClicked?.Invoke(s, e);
                 _trayIconManager.ExitClicked += (s, e) => ExitClicked?.Invoke(s, e);
             }
+        }
+
+        private void OnMaterialSearchChanged(object? sender, EventArgs e)
+        {
+            // When search text changes, we need to re-filter and update the material list.
+            // The UpdateMaterialList method already has access to the cached material service.
+            if (_materialServiceCache != null)
+            {
+                UpdateMaterialList(_materialServiceCache);
+            }
+        }
+
+        private void UpdateMaterialSearchAutocomplete()
+        {
+            if (_controlFactory == null) return;
+
+            var allMaterials = MaterialDataService.GetAll();
+            var collection = new AutoCompleteStringCollection();
+            // Use the localised name if available, otherwise the fallback name.
+            var materialNames = allMaterials.Select(m => !string.IsNullOrEmpty(m.LocalisedName) ? m.LocalisedName : m.Name).ToArray();
+            collection.AddRange(materialNames);
+            _controlFactory.MaterialSearchBox.AutoCompleteCustomSource = collection;
         }
 
         private void OnShowApplication(object? sender, EventArgs e)
