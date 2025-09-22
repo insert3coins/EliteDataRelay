@@ -10,9 +10,6 @@ namespace EliteDataRelay.UI
     /// </summary>
     public interface IDataDisplayManager
     {
-        event EventHandler? ScanJournalsClicked;
-        event EventHandler<string>? SearchSystemClicked;
-
         /// <summary>
         /// Update the UI with new cargo data
         /// </summary>
@@ -77,49 +74,5 @@ namespace EliteDataRelay.UI
         /// </summary>
         /// <param name="loadout">The full ship loadout data.</param>
         void UpdateShipLoadout(ShipLoadout loadout);
-
-        /// <summary>
-        /// Updates the star map display with visited systems.
-        /// </summary>
-        /// <param name="systems">A list of visited systems.</param>
-        /// <param name="currentSystem">The name of the current system to highlight.</param>
-        void UpdateStarMap(IReadOnlyList<StarSystem> systems, string currentSystem);
-
-        /// <summary>
-        /// Centers the star map view on a specific system.
-        /// </summary>
-        /// <param name="systemName">The name of the system to center on.</param>
-        void CenterStarMapOnSystem(string systemName);
-
-        /// <summary>
-        /// Sets the current system and centers the star map view on it.
-        /// </summary>
-        /// <param name="systemName">The name of the system to set and center on.</param>
-        void SetAndCenterStarMapOnSystem(string systemName);
-
-        /// <summary>
-        /// Highlights a specific system on the star map.
-        /// </summary>
-        /// <param name="systemName">The name of the system to highlight, or null to clear.</param>
-        void HighlightSearchedSystem(string? systemName);
-
-        /// <summary>
-        /// Updates the autocomplete source for the star map search box.
-        /// </summary>
-        /// <param name="systems">A list of visited systems.</param>
-        void UpdateStarMapAutocomplete(IReadOnlyList<StarSystem> systems);
-
-        /// <summary>
-        /// Shows or hides the journal scan progress bar.
-        /// </summary>
-        /// <param name="visible">True to show, false to hide.</param>
-        void ShowScanProgress(bool visible);
-
-        /// <summary>
-        /// Updates the journal scan progress bar and label.
-        /// </summary>
-        /// <param name="percentage">The progress percentage (0-100).</param>
-        /// <param name="message">The status message to display.</param>
-        void UpdateScanProgress(int percentage, string message);
     }
 }

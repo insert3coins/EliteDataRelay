@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -24,7 +24,6 @@ namespace EliteDataRelay
         private readonly IStatusWatcherService _statusWatcherService;
         private readonly ICargoFormUI _cargoFormUI;
         private readonly IMaterialService _materialService;
-        private readonly IVisitedSystemsService _visitedSystemsService;
         private readonly SessionTrackingService _sessionTrackingService;
 
         public CargoForm()
@@ -40,7 +39,6 @@ namespace EliteDataRelay
             _statusWatcherService = new StatusWatcherService();
             _cargoFormUI = new CargoFormUI();
             _materialService = new MaterialService(_journalWatcherService);
-            _visitedSystemsService = new VisitedSystemsService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _statusWatcherService);
 
             InitializeComponent();
@@ -61,7 +59,6 @@ namespace EliteDataRelay
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
         private IMaterialService? _lastMaterialServiceCache;
-        private IReadOnlyList<StarSystem>? _lastVisitedSystems;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 
@@ -84,8 +81,6 @@ namespace EliteDataRelay
             _cargoFormUI.AboutClicked += OnAboutClicked;
             _cargoFormUI.SettingsClicked += OnSettingsClicked;
             _cargoFormUI.SessionClicked += OnSessionClicked;
-            _cargoFormUI.ScanJournalsClicked += OnScanJournalsClicked;
-            _cargoFormUI.SearchSystemClicked += OnSearchSystemClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer
@@ -101,9 +96,6 @@ namespace EliteDataRelay
             _journalWatcherService.LocationChanged += OnLocationChanged;
             _statusWatcherService.BalanceChanged += OnBalanceChanged;
 
-            _visitedSystemsService.JournalScanCompleted += OnJournalScanCompleted;
-            _visitedSystemsService.JournalScanProgressed += OnJournalScanProgressed;
-            _visitedSystemsService.SystemsUpdated += OnSystemsUpdated;
             _materialService.MaterialsUpdated += OnMaterialsUpdated;            
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             // Assumes JournalWatcherService is updated to provide these events
@@ -123,9 +115,6 @@ namespace EliteDataRelay
                 (_statusWatcherService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();
                 (_materialService as IDisposable)?.Dispose();
-                _visitedSystemsService.JournalScanCompleted -= OnJournalScanCompleted;
-                _visitedSystemsService.JournalScanProgressed -= OnJournalScanProgressed;
-                (_visitedSystemsService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();
                 _sessionTrackingService.Dispose();

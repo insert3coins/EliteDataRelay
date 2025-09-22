@@ -12,17 +12,10 @@ namespace EliteDataRelay.UI
         public ListView ListView { get; }
         public TreeView MaterialTreeView { get; }
         public CheckBox PinMaterialsCheckBox { get; }
-        public StarMapPanel StarMapPanel { get; }
         public PictureBox ShipIconPictureBox { get; }
         public Label ShipNameLabel { get; }
         public Label ShipIdentLabel { get; }
         public TreeView ShipModulesTreeView { get; }
-        public TextBox StarMapSearchBox { get; }
-        public Button StarMapSearchButton { get; }
-        public ProgressBar StarMapScanProgress { get; }
-        public Label StarMapScanLabel { get; }
-        public Button ResetStarMapViewButton { get; }
-        public Button ScanJournalsButton { get; }
         public TabControl TabControl { get; }
         public Button StartBtn { get; }
         public Button StopBtn { get; }
@@ -49,7 +42,6 @@ namespace EliteDataRelay.UI
 
             var cargoPage = new TabPage("Cargo");
             var materialsPage = new TabPage("Materials");
-            var starMapPage = new TabPage("Star Map");
             var shipPage = new TabPage("Ship");
 
             // Material TreeView
@@ -100,74 +92,6 @@ namespace EliteDataRelay.UI
             materialsPanel.Controls.Add(PinMaterialsCheckBox);
             materialsPage.Controls.Add(materialsPanel);
 
-            // Create a container panel for the star map tab
-            var starMapContainer = new Panel { Dock = DockStyle.Fill };
-            StarMapPanel = new StarMapPanel();
-
-            var starMapButtonPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                FlowDirection = FlowDirection.LeftToRight,
-                Padding = new Padding(3)
-            };
-
-            StarMapSearchBox = new TextBox
-            {
-                Width = 150,
-                Font = fontManager.VerdanaFont,
-                Margin = new Padding(3),
-                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
-                AutoCompleteSource = AutoCompleteSource.CustomSource
-            };
-
-            StarMapSearchButton = new Button
-            {
-                Text = "Find",
-                AutoSize = true,
-                Font = fontManager.VerdanaFont
-            };
-
-            ScanJournalsButton = new Button
-            {
-                Text = "Scan All Journals",
-                AutoSize = true,
-                Font = fontManager.VerdanaFont
-            };
-
-            ResetStarMapViewButton = new Button
-            {
-                Text = "Reset View",
-                AutoSize = true,
-                Font = fontManager.VerdanaFont
-            };
-
-            starMapButtonPanel.Controls.Add(new Label { Text = "Search:", AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = fontManager.VerdanaFont });
-            starMapButtonPanel.Controls.Add(StarMapSearchBox);
-            starMapButtonPanel.Controls.Add(StarMapSearchButton);
-            starMapButtonPanel.Controls.Add(ScanJournalsButton);
-            starMapButtonPanel.Controls.Add(ResetStarMapViewButton);
-
-            var progressPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Visible = false, // Initially hidden
-                FlowDirection = FlowDirection.LeftToRight,
-                Padding = new Padding(3)
-            };
-
-            StarMapScanLabel = new Label { Text = "Scanning...", AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = fontManager.VerdanaFont };
-            StarMapScanProgress = new ProgressBar { Width = 200, Style = ProgressBarStyle.Continuous, Margin = new Padding(3, 3, 3, 3) };
-
-            progressPanel.Controls.Add(StarMapScanLabel);
-            progressPanel.Controls.Add(StarMapScanProgress);
-
-            starMapContainer.Controls.Add(StarMapPanel); // Add fill-docked control first
-            starMapContainer.Controls.Add(progressPanel);
-            starMapContainer.Controls.Add(starMapButtonPanel);
-            starMapPage.Controls.Add(starMapContainer);
-
             // --- Ship Tab Controls ---
             var shipPanel = new Panel { Dock = DockStyle.Fill };
             var shipInfoPanel = new Panel { Dock = DockStyle.Top, Height = 150 };
@@ -207,7 +131,7 @@ namespace EliteDataRelay.UI
             shipPanel.Controls.Add(shipInfoPanel);
             shipPage.Controls.Add(shipPanel);
 
-            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage, starMapPage, shipPage });
+            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage, shipPage });
 
             // Create control buttons
             StartBtn = new Button { Text = "Start", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
@@ -356,17 +280,10 @@ namespace EliteDataRelay.UI
 
             TabControl.Dispose();
             MaterialTreeView.Dispose();
-            StarMapPanel.Dispose();
             ShipIconPictureBox.Dispose();
             ShipNameLabel.Dispose();
             ShipIdentLabel.Dispose();
             ShipModulesTreeView.Dispose();
-            StarMapSearchBox.Dispose();
-            StarMapSearchButton.Dispose();
-            StarMapScanProgress.Dispose();
-            StarMapScanLabel.Dispose();
-            ResetStarMapViewButton.Dispose();
-            ScanJournalsButton.Dispose();
             PinMaterialsCheckBox.Dispose();
             ListView.Dispose();
             StartBtn.Dispose();

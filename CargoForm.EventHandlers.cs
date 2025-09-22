@@ -144,63 +144,12 @@ namespace EliteDataRelay
             }
         }
 
-        private void OnSystemsUpdated(object? sender, EventArgs e)
-        {
-            _lastVisitedSystems = _visitedSystemsService.VisitedSystems;
-            Invoke(new Action(() =>
-            {
-                if (_lastVisitedSystems != null)
-                {
-                    _cargoFormUI.UpdateStarMap(_lastVisitedSystems, _lastLocation ?? string.Empty);
-                    _cargoFormUI.UpdateStarMapAutocomplete(_lastVisitedSystems);
-                }
-            }));
-        }
-
         private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
             _lastLocation = e.StarSystem;
             Invoke(new Action(() =>
             {
                 _cargoFormUI.UpdateLocation(_lastLocation);
-                if (_lastVisitedSystems != null)
-                {
-                    // Set the current system and center the map in a single operation to prevent redraw artifacts.
-                    _cargoFormUI.SetAndCenterStarMapOnSystem(_lastLocation);
-                }
-            }));
-        }
-
-        private void OnJournalScanCompleted(object? sender, JournalScanCompletedEventArgs e)
-        {
-            // This event is raised from a background thread, so we must invoke on the UI thread.
-            Invoke(new Action(() =>
-            {
-                if (e.Success)
-                {
-                    MessageBox.Show(this,
-                        $"Journal scan complete.\n\nFiles Scanned: {e.FilesScanned}\nNew Systems Found: {e.NewSystemsFound}\nNew Bodies Found: {e.NewBodiesFound}",
-                        "Scan Complete",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show(this,
-                        $"The journal scan failed.\n\nError: {e.ErrorMessage}",
-                        "Scan Failed",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                }
-            }));
-        }
-
-        private void OnJournalScanProgressed(object? sender, JournalScanProgressEventArgs e)
-        {
-            Invoke(new Action(() =>
-            {
-                int percentage = e.TotalFiles > 0 ? (int)((double)e.FilesProcessed / e.TotalFiles * 100) : 0;
-                _cargoFormUI.UpdateScanProgress(percentage, $"Scanning file {e.FilesProcessed} of {e.TotalFiles}...");
             }));
         }
 

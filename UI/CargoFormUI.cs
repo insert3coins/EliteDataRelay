@@ -129,8 +129,6 @@ namespace EliteDataRelay.UI
             _controlFactory.PinMaterialsCheckBox.CheckedChanged += OnPinMaterialsCheckBoxChanged;
             _controlFactory.MaterialTreeView.AfterCheck += OnMaterialNodeChecked;
 
-            InitializeStarMap(); // From partial class CargoFormUI.StarMap.cs
-
             // Tray icon event handlers
             if (_trayIconManager != null)
             {

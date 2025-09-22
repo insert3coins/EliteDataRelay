@@ -53,9 +53,6 @@ namespace EliteDataRelay
             {
                 this.WindowState = FormWindowState.Normal;
             }
-
-            // Start the visited systems service on load to populate the star map by default.
-            _visitedSystemsService.Start();
         }
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)

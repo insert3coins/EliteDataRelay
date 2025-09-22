@@ -20,10 +20,6 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
             if (_lastMaterialServiceCache != null) _cargoFormUI.UpdateMaterialsOverlay(_lastMaterialServiceCache);
-            if (_lastVisitedSystems != null && _lastLocation != null)
-            {
-                _cargoFormUI.UpdateStarMap(_lastVisitedSystems, _lastLocation);
-            }
 
             // Also repopulate session data if tracking is active and shown on the overlay.
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
