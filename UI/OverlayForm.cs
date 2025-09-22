@@ -503,7 +503,11 @@ namespace EliteDataRelay.UI
             const float x = 10.0f;
 
             // Draw System Name
-            e.Graphics.DrawString(_systemName, _labelFont, headerBrush, x, y);
+            using (var stringFormat = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap })
+            {
+                var systemNameRect = new RectangleF(x, y, contentWidth - x, _labelFont.GetHeight(e.Graphics));
+                e.Graphics.DrawString(_systemName, _labelFont, headerBrush, systemNameRect, stringFormat);
+            }
             y += _labelFont.GetHeight(e.Graphics) + 10;
 
             // Draw Stars
@@ -514,7 +518,15 @@ namespace EliteDataRelay.UI
             {
                 foreach (var star in _stars)
                 {
-                    e.Graphics.DrawString($"  - {star}", _listFont, textBrush, x, y);
+                    // Draw the bullet point separately to prevent it from being part of the truncated string.
+                    e.Graphics.DrawString("  -", _listFont, textBrush, x, y);
+
+                    using (var stringFormat = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap })
+                    {
+                        // Define an indented rectangle for the text, which will be truncated with an ellipsis if too long.
+                        var textRect = new RectangleF(x + 20, y, contentWidth - (x + 20), _listFont.GetHeight(e.Graphics));
+                        e.Graphics.DrawString(star, _listFont, textBrush, textRect, stringFormat);
+                    }
                     y += _listFont.GetHeight(e.Graphics);
                 }
             }
@@ -534,7 +546,15 @@ namespace EliteDataRelay.UI
             {
                 foreach (var body in _bodies)
                 {
-                    e.Graphics.DrawString($"  - {body}", _listFont, textBrush, x, y);
+                    // Draw the bullet point separately.
+                    e.Graphics.DrawString("  -", _listFont, textBrush, x, y);
+
+                    using (var stringFormat = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap })
+                    {
+                        // Define an indented rectangle for the text.
+                        var textRect = new RectangleF(x + 20, y, contentWidth - (x + 20), _listFont.GetHeight(e.Graphics));
+                        e.Graphics.DrawString(body, _listFont, textBrush, textRect, stringFormat);
+                    }
                     y += _listFont.GetHeight(e.Graphics);
                 }
             }
@@ -554,7 +574,15 @@ namespace EliteDataRelay.UI
             {
                 foreach (var station in _stations)
                 {
-                    e.Graphics.DrawString($"  - {station}", _listFont, textBrush, x, y);
+                    // Draw the bullet point separately.
+                    e.Graphics.DrawString("  -", _listFont, textBrush, x, y);
+
+                    using (var stringFormat = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap })
+                    {
+                        // Define an indented rectangle for the text.
+                        var textRect = new RectangleF(x + 20, y, contentWidth - (x + 20), _listFont.GetHeight(e.Graphics));
+                        e.Graphics.DrawString(station, _listFont, textBrush, textRect, stringFormat);
+                    }
                     y += _listFont.GetHeight(e.Graphics);
                 }
             }

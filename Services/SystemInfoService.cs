@@ -30,6 +30,7 @@ namespace EliteDataRelay.Services
                 ClearSystemData();
             }
 
+            // Always update the name and address to stay in sync, even if it's not a "new" system.
             SystemName = args.StarSystem;
             if (args.SystemAddress.HasValue)
             {
@@ -40,11 +41,11 @@ namespace EliteDataRelay.Services
             {
                 foreach (var station in args.Stations)
                 {
-                    if (!_discoveredStations.Contains(station.Name))
+                    if (!_discoveredStations.Contains(station.Name.Trim()))
                     {
-                        _discoveredStations.Add(station.Name);
+                        _discoveredStations.Add(station.Name.Trim());
                         string prettyType = PrettifyStationType(station.Type);
-                        Stations.Add($"{station.Name} ({prettyType})");
+                        Stations.Add($"{station.Name.Trim()} ({prettyType})");
                     }
                 }
                 Stations.Sort();
@@ -83,16 +84,15 @@ namespace EliteDataRelay.Services
         /// </summary>
         public void HandleDockableBody(DockableBodyEventArgs args)
         {
-            // Only add the station if it belongs to the current system.
-            // This is important for FSSSignalDiscovered, which can be found while in a different system.
-            // We also add it if the service doesn't yet have a system address, which can happen on startup.
-            if ((this.SystemAddress == null || args.SystemAddress == this.SystemAddress) && 
-                !_discoveredStations.Contains(args.StationName))
+            // Only add the station if its SystemAddress matches our current known SystemAddress.
+            // This is crucial for filtering out FSS signals from neighboring systems.
+            if (this.SystemAddress.HasValue && args.SystemAddress == this.SystemAddress &&
+                !_discoveredStations.Contains(args.StationName.Trim()))
             {
-                _discoveredStations.Add(args.StationName);
+                _discoveredStations.Add(args.StationName.Trim());
                 // e.g., "Jameson Memorial (Orbis Starport)"
                 string prettyType = PrettifyStationType(args.StationType);
-                string stationInfo = $"{args.StationName} ({prettyType})";
+                string stationInfo = $"{args.StationName.Trim()} ({prettyType})";
                 Stations.Add(stationInfo);
                 Stations.Sort();
             }
