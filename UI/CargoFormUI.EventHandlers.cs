@@ -47,12 +47,22 @@ namespace EliteDataRelay.UI
 
             // Convert the List<string> to a HashSet<string> to fix the type mismatch error.
             AppConfiguration.PinnedMaterials = new HashSet<string>(pinnedMaterials);
+            // Save the change to the configuration file so it persists.
+            AppConfiguration.Save();
 
             if (_controlFactory == null) return;
-            // If the "Show Pinned" checkbox is checked, we need to refresh the list to reflect the change.
+
+            // If the main UI is in "Show Pinned" mode, a check/uncheck means an item might
+            // appear or disappear from the list, so we must refresh it.
             if (_controlFactory.PinMaterialsCheckBox.Checked && _materialServiceCache != null)
             {
                 UpdateMaterialList(_materialServiceCache);
+            }
+
+            // If the overlay is in "Show Pinned" mode, it also needs to be refreshed to show the newly pinned/unpinned item.
+            // This is checked separately because the overlay's mode can be set independently in settings.
+            if (AppConfiguration.PinMaterialsMode && _materialServiceCache != null)
+            {
                 _overlayService?.UpdateMaterials(_materialServiceCache);
             }
         }

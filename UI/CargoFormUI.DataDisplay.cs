@@ -193,7 +193,14 @@ namespace EliteDataRelay.UI
 
             foreach (var material in materials.Values.OrderBy(m => m.Localised ?? m.Name))
             {
-                string displayName = !string.IsNullOrEmpty(material.Localised) ? char.ToUpper(material.Localised[0]) + material.Localised.Substring(1) : material.Name;
+                string nameToDisplay = !string.IsNullOrEmpty(material.Localised) ? material.Localised : material.Name;
+                string displayName = nameToDisplay;
+                // Ensure the first letter is capitalized for consistent display.
+                if (!string.IsNullOrEmpty(displayName))
+                {
+                    displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
+                }
+
                 int maxCount = MaterialDataService.GetMaxCount(material.Name);
                 string text = maxCount > 0 ? $"{displayName} ({material.Count} / {maxCount})" : $"{displayName} ({material.Count})";
 
