@@ -101,11 +101,10 @@ namespace EliteDataRelay.UI
             topControlsPanel.Controls.Add(searchLabel);
             topControlsPanel.Controls.Add(MaterialSearchBox);
 
-            // Add the top panel first so it docks to the top.
-            materialsPanel.Controls.Add(topControlsPanel);
-            // Add the TreeView last and set its Dock to Fill. It will automatically
-            // occupy the remaining space in the panel.
+            // Add the fill-docked control first to place it at the back of the Z-order.
             materialsPanel.Controls.Add(MaterialTreeView);
+            // Add other docked controls. They will be placed on top and will claim their space.
+            materialsPanel.Controls.Add(topControlsPanel);
             materialsPage.Controls.Add(materialsPanel);
 
             return materialsPage;
