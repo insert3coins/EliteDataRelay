@@ -101,10 +101,11 @@ namespace EliteDataRelay.UI
             topControlsPanel.Controls.Add(searchLabel);
             topControlsPanel.Controls.Add(MaterialSearchBox);
 
-            // Add the fill-docked control first to place it at the back of the Z-order.
-            materialsPanel.Controls.Add(MaterialTreeView);
-            // Add other docked controls. They will be placed on top and will claim their space.
+            // Add the top panel first so it docks to the top.
             materialsPanel.Controls.Add(topControlsPanel);
+            // Add the TreeView last and set its Dock to Fill. It will automatically
+            // occupy the remaining space in the panel.
+            materialsPanel.Controls.Add(MaterialTreeView);
             materialsPage.Controls.Add(materialsPanel);
 
             return materialsPage;
@@ -152,7 +153,10 @@ namespace EliteDataRelay.UI
             };
             ShipModulesTreeView.DrawNode += TreeView_DrawNode;
 
-            shipPanel.Controls.Add(ShipModulesTreeView); // Add fill control first
+            // Add the fill-docked control first to place it at the back of the Z-order.
+            // Other docked controls will then claim their space from the edges, and the
+            // Fill control will resize to occupy the remaining area.
+            shipPanel.Controls.Add(ShipModulesTreeView);
             shipPanel.Controls.Add(shipInfoPanel);
             shipPage.Controls.Add(shipPanel);
 
@@ -163,28 +167,67 @@ namespace EliteDataRelay.UI
         {
             if (e.Node == null) return;
 
-            // If the node is selected, draw it with a custom background and white text.
-            if ((e.State & TreeNodeStates.Selected) == TreeNodeStates.Selected)
+            // We are taking full control of drawing for all nodes to ensure consistent spacing and appearance,
+            // as the default drawing behavior is unreliable with OwnerDrawText and FullRowSelect.
+            e.DrawDefault = false;
+
+            var tree = e.Node.TreeView;
+            Rectangle rowBounds = e.Bounds;
+
+            bool isSelected = (e.State & TreeNodeStates.Selected) == TreeNodeStates.Selected;
+
+            // 1. Determine colors and draw the background for the entire row.
+            Color backColor = isSelected ? Color.FromArgb(0, 120, 215) : tree.BackColor;
+            Color foreColor = isSelected ? Color.White : e.Node.ForeColor;
+            if (foreColor.IsEmpty) // If no color is set on the node, use the tree's default.
             {
-                // Use a modern highlight color, consistent with button borders.
-                Color highlightColor = Color.FromArgb(0, 120, 215);
-                using (var highlightBrush = new SolidBrush(highlightColor))
+                foreColor = tree.ForeColor;
+            }
+
+            using (var backBrush = new SolidBrush(backColor))
+            {
+                e.Graphics.FillRectangle(backBrush, rowBounds);
+            }
+
+            // 2. Calculate the correct indented position for the node's content (checkbox and text).
+            // The offset of '20' accounts for the root-level expand/collapse glyph.
+            int nodeContentLeft = (e.Node.Level * tree.Indent) + 20;
+            // Use the TreeView's ClientSize.Width to determine the available width for content,
+            // preventing it from being drawn under a vertical scrollbar. e.Bounds.Width is unreliable
+            // when a scrollbar is visible.
+            int contentWidth = tree.ClientSize.Width - nodeContentLeft;
+            Rectangle nodeContentBounds = new Rectangle(nodeContentLeft, rowBounds.Top, contentWidth, rowBounds.Height);
+
+            Rectangle textBounds = nodeContentBounds;
+
+            // 3. Draw the checkbox, if enabled.
+            if (tree.CheckBoxes)
+            {
+                const int checkboxSize = 14;
+                const int checkboxPadding = 4;
+                int checkboxY = nodeContentBounds.Top + (nodeContentBounds.Height - checkboxSize) / 2;
+                Point checkboxLocation = new Point(nodeContentBounds.Left, checkboxY);
+                var checkboxRect = new Rectangle(checkboxLocation, new Size(checkboxSize, checkboxSize));
+
+                var state = e.Node.Checked ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedNormal : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal;
+
+                // If selected, we must draw a standard background behind the checkbox so it's visible against the highlight.
+                if (isSelected)
                 {
-                    e.Graphics.FillRectangle(highlightBrush, e.Bounds);
+                    using (var checkboxBackBrush = new SolidBrush(tree.BackColor))
+                    {
+                        e.Graphics.FillRectangle(checkboxBackBrush, checkboxRect);
+                    }
                 }
+                CheckBoxRenderer.DrawCheckBox(e.Graphics, checkboxLocation, state);
 
-                // Define text format flags for vertical centering.
-                TextFormatFlags flags = TextFormatFlags.GlyphOverhangPadding | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
+                // Adjust the text bounds to be to the right of the checkbox, adding padding.
+                textBounds = new Rectangle(nodeContentBounds.Left + checkboxSize + checkboxPadding, nodeContentBounds.Top, nodeContentBounds.Width - (checkboxSize + checkboxPadding), nodeContentBounds.Height);
+            }
 
-                // Draw the node text in white.
-                TextRenderer.DrawText(e.Graphics, e.Node.Text, e.Node.TreeView.Font, e.Bounds, Color.White, flags);
-            }
-            else
-            {
-                // For all other nodes, use the default drawing behavior.
-                // This respects any ForeColor changes (like for full materials) and is simpler.
-                e.DrawDefault = true;
-            }
+            // 4. Draw the node's text in the calculated bounds.
+            TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
+            TextRenderer.DrawText(e.Graphics, e.Node.Text, tree.Font, textBounds, foreColor, flags);
         }
 
         private TableLayoutPanel CreateShipLabelsPanel(FontManager fontManager)

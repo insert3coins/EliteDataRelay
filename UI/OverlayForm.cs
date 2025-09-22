@@ -107,28 +107,6 @@ namespace EliteDataRelay.UI
             {
                 this.Size = new Size(280, 600);
 
-                var topPanel = new FlowLayoutPanel
-                {
-                    Dock = DockStyle.Top,
-                    Height = 30,
-                    FlowDirection = FlowDirection.LeftToRight,
-                    WrapContents = false,
-                    BackColor = Color.Transparent
-                };
-
-                _cargoLabel = new Label
-                {
-                    AutoSize = true,
-                    Font = _labelFont,
-                    ForeColor = AppConfiguration.OverlayTextColor,
-                    BackColor = Color.Transparent,
-                    Text = "", // Default to empty string
-                    Margin = new Padding(10, 5, 0, 0)
-                };
-
-                _cargoSizeLabel = CreateOverlayLabel(new Point(0, 0), _listFont);
-                _cargoSizeLabel.Margin = new Padding(10, 5, 0, 0);
-
                 // Create a Panel to custom-draw the cargo list. This is more reliable for
                 // dragging and gives us full control over the appearance.
                 _cargoListPanel = new Panel
@@ -138,6 +116,10 @@ namespace EliteDataRelay.UI
                     Font = _listFont
                 };
                 _cargoListPanel.Paint += OnCargoListPanelPaint;
+
+                // Initialize labels that will be used for drawing the header text.
+                _cargoLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                _cargoSizeLabel = CreateOverlayLabel(Point.Empty, _listFont);
 
                 Panel? bottomPanel = null;
                 if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
@@ -170,15 +152,12 @@ namespace EliteDataRelay.UI
                     bottomPanel.Controls.Add(sessionFlowPanel);
                 }
 
-                topPanel.Controls.Add(_cargoLabel);
-                topPanel.Controls.Add(_cargoSizeLabel);
-
-                // Add docked controls. For docking to work correctly, the Fill-docked control
-                // must be added first to be at the bottom of the Z-order.
-                Controls.Add(_cargoListPanel); // Fills remaining space
+                // Add docked controls. The order is important for layout. Top and Bottom panels
+                // are added first to claim their space from the edges. The Fill-docked panel
+                // is added last to occupy the remaining area.
                 if (bottomPanel != null)
                     Controls.Add(bottomPanel); // Docks to bottom
-                Controls.Add(topPanel); // Docks to top
+                Controls.Add(_cargoListPanel); // Fills remaining space
             }
             else // Materials
             {
@@ -198,10 +177,10 @@ namespace EliteDataRelay.UI
                 _materialsListPanel.MouseEnter += OnMaterialsPanelMouseEnter;
                 _materialsListPanel.MouseLeave += OnMaterialsPanelMouseLeave;
 
-                // Add docked controls. The Fill-docked control must be added first.
-                Controls.Add(_materialsListPanel);
+                // Add docked controls in the correct order for them to stack properly.
                 Controls.Add(topBorder);
                 Controls.Add(bottomBorder);
+                Controls.Add(_materialsListPanel);
             }
 
             // Wire up dragging for the form and all its children, recursively.
@@ -306,10 +285,16 @@ namespace EliteDataRelay.UI
             using (var textBrush = new SolidBrush(AppConfiguration.OverlayTextColor))
             using (var grayBrush = new SolidBrush(SystemColors.GrayText))
             {
-                float y = 5.0f;
+                // 1. Draw the header text first at the top of the panel.
+                e.Graphics.DrawString(_cargoLabel.Text, _labelFont, textBrush, 10, 5);
+                var cargoTextSize = e.Graphics.MeasureString(_cargoLabel.Text, _labelFont);
+                e.Graphics.DrawString(_cargoSizeLabel.Text, _listFont, textBrush, 10 + cargoTextSize.Width + 10, 8);
+
+                // 2. Draw the cargo list, starting below the header area.
+                float y = 35.0f;
                 const float xName = 10.0f;
                 const float xCount = 200.0f;
-
+                
                 var itemsToDraw = _cargoItems.ToList();
 
                 if (!itemsToDraw.Any())
