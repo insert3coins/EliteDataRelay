@@ -97,7 +97,6 @@ namespace EliteDataRelay.Configuration
         public static Keys HideOverlayHotkey { get => _settings.HideOverlayHotkey; set => _settings.HideOverlayHotkey = value; }
 
         // Window Settings
-        public static Size WindowSize { get => _settings.WindowSize; set => _settings.WindowSize = value; }
         public static Point WindowLocation { get => _settings.WindowLocation; set => _settings.WindowLocation = value; }
         public static FormWindowState WindowState { get => _settings.WindowState; set => _settings.WindowState = value; }
 
@@ -241,7 +240,6 @@ namespace EliteDataRelay.Configuration
             public Keys StopMonitoringHotkey { get; set; } = Keys.F2;
             public Keys ShowOverlayHotkey { get; set; } = Keys.F3;
             public Keys HideOverlayHotkey { get; set; } = Keys.F4;
-            public Size WindowSize { get; set; } = new Size(800, 600);
             public Point WindowLocation { get; set; } = Point.Empty;
             public FormWindowState WindowState { get; set; } = FormWindowState.Normal;
             public int DebounceDelayMs { get; set; } = 250;

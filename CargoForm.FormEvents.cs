@@ -26,12 +26,6 @@ namespace EliteDataRelay
             // Asynchronously check for updates on startup without blocking the UI.
             _ = UpdateCheckService.CheckForUpdatesAsync();
 
-            // Restore window size and location from settings
-            if (AppConfiguration.WindowSize.Width > 0 && AppConfiguration.WindowSize.Height > 0)
-            {
-                this.Size = AppConfiguration.WindowSize;
-            }
-
             // Ensure the form is not loaded off-screen
             if (AppConfiguration.WindowLocation != Point.Empty)
             {
@@ -73,17 +67,14 @@ namespace EliteDataRelay
                 case FormWindowState.Maximized:
                     AppConfiguration.WindowState = FormWindowState.Maximized;
                     AppConfiguration.WindowLocation = this.RestoreBounds.Location;
-                    AppConfiguration.WindowSize = this.RestoreBounds.Size;
                     break;
                 case FormWindowState.Normal:
                     AppConfiguration.WindowState = FormWindowState.Normal;
                     AppConfiguration.WindowLocation = this.Location;
-                    AppConfiguration.WindowSize = this.Size;
                     break;
                 default: // Minimized
                     AppConfiguration.WindowState = FormWindowState.Normal; // Don't save as minimized
                     AppConfiguration.WindowLocation = this.RestoreBounds.Location;
-                    AppConfiguration.WindowSize = this.RestoreBounds.Size;
                     break;
             }
             AppConfiguration.Save();

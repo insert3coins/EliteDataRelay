@@ -108,6 +108,14 @@ namespace EliteDataRelay.UI
             {
                 this.Size = new Size(280, 600);
 
+                var contentPanel = new Panel
+                {
+                    Location = new Point(1, 1),
+                    Size = new Size(this.ClientSize.Width - 2, this.ClientSize.Height - 2),
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
+
                 // Create a Panel to custom-draw the cargo list. This is more reliable for
                 // dragging and gives us full control over the appearance.
                 _cargoListPanel = new Panel
@@ -123,6 +131,7 @@ namespace EliteDataRelay.UI
                 _cargoSizeLabel = CreateOverlayLabel(Point.Empty, _listFont);
 
                 Panel? bottomPanel = null;
+                Panel? bottomSeparator = null;
                 if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
                 {
                     bottomPanel = new Panel
@@ -131,6 +140,8 @@ namespace EliteDataRelay.UI
                         Height = 60, // Increased height to accommodate two stacked labels
                         BackColor = Color.Transparent
                     };
+
+                    bottomSeparator = new Panel { Height = 1, Dock = DockStyle.Bottom, BackColor = Color.FromArgb(100, 100, 100) };
 
                     var sessionFlowPanel = new FlowLayoutPanel {
                         Dock = DockStyle.Fill,
@@ -157,16 +168,31 @@ namespace EliteDataRelay.UI
                 // are added first to claim their space from the edges. The Fill-docked panel
                 // is added last to occupy the remaining area.
                 if (bottomPanel != null)
-                    Controls.Add(bottomPanel); // Docks to bottom
-                Controls.Add(_cargoListPanel); // Fills remaining space
+                {
+                    // Add the session panel first so it's at the very bottom.
+                    contentPanel.Controls.Add(bottomPanel);
+                    // Add the separator next, which will dock just above the session panel.
+                    if (bottomSeparator != null)
+                    {
+                        contentPanel.Controls.Add(bottomSeparator);
+                    }
+                }
+                contentPanel.Controls.Add(_cargoListPanel); // Add last to fill remaining space
+                Controls.Add(contentPanel);
             }
             else if (_position == OverlayPosition.Materials)
             {
                 this.Size = new Size(340, 500);
 
-                var topBorder = new Panel { Height = 1, Dock = DockStyle.Top, BackColor = Color.FromArgb(100, 100, 100) };
-                var bottomBorder = new Panel { Height = 1, Dock = DockStyle.Bottom, BackColor = Color.FromArgb(100, 100, 100) };
+                var contentPanel = new Panel
+                {
+                    Location = new Point(1, 1),
+                    Size = new Size(this.ClientSize.Width - 2, this.ClientSize.Height - 2),
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
 
+                // The materials list will fill the content panel.
                 _materialsListPanel = new Panel
                 {
                     Dock = DockStyle.Fill,
@@ -178,15 +204,14 @@ namespace EliteDataRelay.UI
                 _materialsListPanel.MouseEnter += OnMaterialsPanelMouseEnter;
                 _materialsListPanel.MouseLeave += OnMaterialsPanelMouseLeave;
 
-                // Add docked controls in the correct order for them to stack properly.
-                Controls.Add(topBorder);
-                Controls.Add(bottomBorder);
-                Controls.Add(_materialsListPanel);
+                contentPanel.Controls.Add(_materialsListPanel);
+                Controls.Add(contentPanel);
             }
 
             // Wire up dragging for the form and all its children, recursively.
             AttachDragHandlers(this);
         }
+
         private Label CreateOverlayLabel(Point location, Font? font = null)
         {
             return new Label
