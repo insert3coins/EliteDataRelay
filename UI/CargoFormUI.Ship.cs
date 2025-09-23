@@ -82,7 +82,7 @@ namespace EliteDataRelay.UI
 
             _lastStatus = status;
             UpdateMassDisplay();
-            // UpdateJumpRangeDisplay(); // Jump range is now only updated on Loadout.
+            UpdateJumpRangeDisplay();
 
             if (status.HullHealth.HasValue)
             {
@@ -110,16 +110,27 @@ namespace EliteDataRelay.UI
 
             if (_lastLoadout != null)
             {
-                // We are removing the complex calculations and only displaying
-                // the MaxJumpRange value provided directly by the game's Loadout event.
-                // This value represents the unladen jump range with a full main tank.
-                label.Text = $"{_lastLoadout.MaxJumpRange:F2} LY";
-                var tooltip = $"Max (Unladen): {_lastLoadout.MaxJumpRange:F2} LY";
-                _controlFactory.ToolTip.SetToolTip(label, tooltip);
+                var jumpRange = JumpRangeCalculator.Calculate(_lastLoadout, _lastStatus);
+                if (jumpRange != null)
+                {
+                    label.Text = $"{jumpRange.Laden:F2} / {jumpRange.Current:F2} / {jumpRange.Max:F2} LY";
+                    var tooltip = new StringBuilder();
+                    tooltip.AppendLine($"Min (Laden): {jumpRange.Laden:F2} LY");
+                    tooltip.AppendLine($"Current: {jumpRange.Current:F2} LY");
+                    tooltip.AppendLine($"Max (Unladen): {jumpRange.Max:F2} LY");
+                    _controlFactory.ToolTip.SetToolTip(label, tooltip.ToString());
+                }
+                else
+                {
+                    // Fallback to just MaxJumpRange if calculator fails
+                    label.Text = $"{_lastLoadout.MaxJumpRange:F2} LY";
+                    _controlFactory.ToolTip.SetToolTip(label, $"Max (Unladen): {_lastLoadout.MaxJumpRange:F2} LY");
+                }
             }
             else
             {
                 label.Text = "N/A";
+                _controlFactory.ToolTip.SetToolTip(label, null);
             }
         }
 
@@ -135,10 +146,7 @@ namespace EliteDataRelay.UI
             }
 
             // The journal's 'UnladenMass' is the total mass of the ship including hull and all modules (with empty tanks).
-            double shipBaseMass = _lastLoadout.UnladenMass;
-
-            // Current mass starts with the ship's base mass (hull + modules).
-            double currentMass = shipBaseMass;
+            double currentMass = _lastLoadout.UnladenMass;
             if (_lastStatus != null)
             {
                 // The in-game UI mass display includes both main and reserve fuel tanks.

@@ -21,24 +21,28 @@ namespace EliteDataRelay.UI
             // Create the individual info and stats panels
             var shipInfoPanel = CreateShipInfoPanel(fontManager);
             var shipStatsPanel = CreateShipStatsPanel(fontManager);
-            shipStatsPanel.Dock = DockStyle.Fill; // Override the default DockStyle.Top
-            shipStatsPanel.Padding = new Padding(5, 10, 10, 5); // Tweak padding for the new layout
 
-            // Create a container to hold the info and stats panels side-by-side
+            // Adjust padding for the new vertical layout
+            shipInfoPanel.Padding = new Padding(10, 10, 10, 0);
+            shipStatsPanel.Dock = DockStyle.Fill;
+            shipStatsPanel.Padding = new Padding(10, 5, 10, 10);
+
+            // Create a container to hold the info and stats panels stacked vertically
             var topContainerPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                ColumnCount = 2,
-                RowCount = 1,
+                ColumnCount = 1,
+                RowCount = 2,
                 Padding = new Padding(0) // No padding on the container itself
             };
-            topContainerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            topContainerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            topContainerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            topContainerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            topContainerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             topContainerPanel.Controls.Add(shipInfoPanel, 0, 0);
-            topContainerPanel.Controls.Add(shipStatsPanel, 1, 0);
+            topContainerPanel.Controls.Add(shipStatsPanel, 0, 1);
 
             ShipModulesTreeView = new TreeView
             {

@@ -133,6 +133,10 @@ namespace EliteDataRelay.UI
             _controlFactory.SettingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
             _controlFactory.SessionBtn.Click += (s, e) => SessionClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
+
+            // Wire up the main action buttons
+
+            // Wire up the materials tab controls
             _controlFactory.PinMaterialsCheckBox.CheckedChanged += OnPinMaterialsCheckBoxChanged;
             _controlFactory.MaterialTreeView.AfterCheck += OnMaterialNodeChecked;
             _controlFactory.MaterialSearchBox.TextChanged += OnMaterialSearchChanged;
