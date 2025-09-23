@@ -10,14 +10,42 @@ namespace EliteDataRelay.UI
 {
     public partial class CargoFormUI
     {
+        private double? _maxFuel;
+        private int? _maxCargo;
+        private ShipLoadout? _lastLoadout;
+        private StatusFile? _lastStatus;
+
         public void UpdateShipLoadout(ShipLoadout loadout)
         {
             if (_controlFactory == null) return;
 
-            var treeView = _controlFactory.ShipModulesTreeView;
+            // Update the ship stats panel
+            if (loadout != null)
+            {
+                SetHullHealthVisuals(loadout.HullHealth);
+                _controlFactory.RebuyValueLabel.Text = $"{loadout.Rebuy:N0} CR";
 
-            // Store the path of the top-most visible node to prevent the view from scrolling on update.
-            string? topNodePath = treeView.TopNode?.FullPath;
+                if (loadout.FuelCapacity != null)
+                {
+                    _maxFuel = loadout.FuelCapacity.Main + loadout.FuelCapacity.Reserve;
+                    _controlFactory.FuelValueLabel.Text = $"? / {_maxFuel.Value:F2} T";
+                }
+                else
+                {
+                    _maxFuel = null;
+                    _controlFactory.FuelValueLabel.Text = "N/A";
+                }
+
+                _maxCargo = loadout.CargoCapacity;
+                _controlFactory.CargoValueLabel.Text = $"? / {_maxCargo} T";
+            }
+
+            _lastLoadout = loadout;
+            UpdateJumpRangeDisplay();
+            UpdateMassDisplay();
+
+
+            var treeView = _controlFactory.ShipModulesTreeView;
 
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
@@ -35,152 +63,187 @@ namespace EliteDataRelay.UI
             var coreNode = treeView.Nodes.Add("Core Internals");
             var optionalNode = treeView.Nodes.Add("Optional Internals");
 
-            // Group modules by slot type using a more efficient and readable GroupBy
-            var groupedModules = loadout.Modules.GroupBy(m =>
-            {
-                if (m.Slot.Contains("Hardpoint", StringComparison.OrdinalIgnoreCase)) return "Hardpoints";
-                if (m.Slot.Contains("Utility", StringComparison.OrdinalIgnoreCase)) return "Utility";
-                if (m.Slot.StartsWith("Slot", StringComparison.OrdinalIgnoreCase)) return "Optional";
-                return "Core";
-            });
+            var moduleGroups = loadout.Modules
+                .GroupBy(GetModuleCategory)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
-            foreach (var group in groupedModules)
-            {
-                var sortedModules = group.OrderBy(m => m.Slot);
-                switch (group.Key)
-                {
-                    case "Hardpoints":
-                        PopulateModuleCategory(hardpointsNode, sortedModules);
-                        break;
-                    case "Utility":
-                        PopulateModuleCategory(utilityNode, sortedModules);
-                        break;
-                    case "Core":
-                        PopulateModuleCategory(coreNode, sortedModules);
-                        break;
-                    case "Optional":
-                        PopulateModuleCategory(optionalNode, sortedModules);
-                        break;
-                }
-            }
+            PopulateModuleCategory(hardpointsNode, moduleGroups.GetValueOrDefault("Hardpoints"));
+            PopulateModuleCategory(utilityNode, moduleGroups.GetValueOrDefault("Utility"));
+            PopulateModuleCategory(coreNode, moduleGroups.GetValueOrDefault("Core"));
+            PopulateModuleCategory(optionalNode, moduleGroups.GetValueOrDefault("Optional"));
 
-            // Expand all categories
-            hardpointsNode.Expand();
-            utilityNode.Expand();
-            coreNode.Expand();
-            optionalNode.Expand();
-
-            // Restore the previous scroll position by finding the node that was at the top.
-            if (topNodePath != null)
-            {
-                var nodeToRestore = FindNodeByFullPath(treeView.Nodes, topNodePath);
-                if (nodeToRestore != null)
-                {
-                    treeView.TopNode = nodeToRestore;
-                }
-            }
-
+            treeView.ExpandAll();
             treeView.EndUpdate();
         }
 
-        private void PopulateModuleCategory(TreeNode categoryNode, IEnumerable<ShipModule> modules)
+        public void UpdateShipStatus(StatusFile status)
         {
-            if (!modules.Any())
+            if (_controlFactory == null) return;
+
+            _lastStatus = status;
+            UpdateMassDisplay();
+            // UpdateJumpRangeDisplay(); // Jump range is now only updated on Loadout.
+
+            if (status.HullHealth.HasValue)
             {
-                categoryNode.Nodes.Add("Empty").ForeColor = SystemColors.GrayText;
-                return;
+                SetHullHealthVisuals(status.HullHealth.Value);
             }
 
-            foreach (var module in modules)
+            if (status.Fuel != null && _maxFuel.HasValue)
             {
-                string moduleName = ItemNameService.TranslateModuleName(module.Item);
-                string displayText = $"{module.Slot}: {moduleName}";
+                var currentFuel = status.Fuel.FuelMain + status.Fuel.FuelReservoir;
+                _controlFactory.FuelValueLabel.Text = $"{currentFuel:F2} / {_maxFuel.Value:F2} T";
+            }
 
-                // Append a summary of the engineering to the main display text for better visibility.
-                if (module.Engineering != null)
-                {
-                    var engineeringSummary = new List<string>();
-                    string blueprintName = ItemNameService.TranslateBlueprintName(module.Engineering.BlueprintName);
-                    engineeringSummary.Add($"{blueprintName} G{module.Engineering.Level}");
-
-                    if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffectLocalised))
-                    {
-                        engineeringSummary.Add(module.Engineering.ExperimentalEffectLocalised);
-                    }
-
-                    displayText += $" ({string.Join(", ", engineeringSummary)})";
-                }
-                var node = categoryNode.Nodes.Add(displayText);
-
-                // Add Engineering details as expandable child nodes
-                if (module.Engineering != null)
-                {
-                    string blueprintName = ItemNameService.TranslateBlueprintName(module.Engineering.BlueprintName);
-                    node.Nodes.Add($"Blueprint: {blueprintName} G{module.Engineering.Level}").ForeColor = SystemColors.GrayText;
-                    node.Nodes.Add($"Engineer: {module.Engineering.Engineer}").ForeColor = SystemColors.GrayText;
-                    if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffectLocalised))
-                    {
-                        node.Nodes.Add($"Effect: {module.Engineering.ExperimentalEffectLocalised}").ForeColor = SystemColors.GrayText;
-                    }
-
-                    node.Nodes.Add($"Quality: {module.Engineering.Quality:P1}").ForeColor = SystemColors.GrayText;
-                    node.Nodes.Add($"Integrity: {module.Health:P1}").ForeColor = SystemColors.GrayText;
-
-                    if (module.Engineering.Modifiers.Any())
-                    {
-                        var modsNode = node.Nodes.Add("Modifications");
-                        modsNode.ForeColor = SystemColors.GrayText;
-
-                        foreach (var mod in module.Engineering.Modifiers)
-                        {
-                            // Skip displaying the 'DamageType' modifier as the raw 'Damage' value is more useful.
-                            if (mod.Label.Equals("DamageType", System.StringComparison.OrdinalIgnoreCase)) continue;
-
-                            bool isGood = (mod.Value > mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value < mod.OriginalValue && mod.LessIsGood == 1);
-                            bool isBad = (mod.Value < mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value > mod.OriginalValue && mod.LessIsGood == 1);
-
-                            string indicator = "";
-                            Color modColor = SystemColors.ControlText;
-
-                            if (isGood) { indicator = " ▲"; modColor = Color.FromArgb(0, 150, 0); } // Dark Green
-                            if (isBad) { indicator = " ▼"; modColor = Color.FromArgb(192, 0, 0); } // Dark Red
-
-                            var modNode = modsNode.Nodes.Add($"{mod.Label}: {mod.Value:N2}{indicator}");
-                            modNode.ForeColor = modColor;
-                        }
-                    }
-                }
-                else
-                {
-                    // For non-engineered modules, still show the integrity.
-                    node.Nodes.Add($"Integrity: {module.Health:P1}").ForeColor = SystemColors.GrayText;
-                }
-
-                // Add a basic tooltip with non-engineering info.
-                var tooltip = new StringBuilder();
-                tooltip.AppendLine($"Slot: {module.Slot}");
-                tooltip.AppendLine($"Item: {module.Item}");
-                tooltip.AppendLine($"Powered: {(module.IsOn ? "On" : "Off")}");
-                tooltip.AppendLine($"Priority: {module.Priority}");
-                node.ToolTipText = tooltip.ToString();
+            if (_maxCargo.HasValue)
+            {
+                // The status file provides current cargo tonnage, which is what we want to display.
+                _controlFactory.CargoValueLabel.Text = $"{status.Cargo:F0} / {_maxCargo.Value} T";
             }
         }
 
-        private TreeNode? FindNodeByFullPath(TreeNodeCollection nodes, string path)
+        private void UpdateJumpRangeDisplay()
         {
-            foreach (TreeNode node in nodes)
+            if (_controlFactory == null) return;
+
+            var label = _controlFactory.JumpRangeValueLabel;
+
+            if (_lastLoadout != null)
             {
-                if (node.FullPath.Equals(path, StringComparison.OrdinalIgnoreCase))
+                // We are removing the complex calculations and only displaying
+                // the MaxJumpRange value provided directly by the game's Loadout event.
+                // This value represents the unladen jump range with a full main tank.
+                label.Text = $"{_lastLoadout.MaxJumpRange:F2} LY";
+                var tooltip = $"Max (Unladen): {_lastLoadout.MaxJumpRange:F2} LY";
+                _controlFactory.ToolTip.SetToolTip(label, tooltip);
+            }
+            else
+            {
+                label.Text = "N/A";
+            }
+        }
+
+        private void UpdateMassDisplay()
+        {
+            if (_controlFactory == null) return;
+
+            var label = _controlFactory.MassValueLabel;
+            if (_lastLoadout == null)
+            {
+                label.Text = "N/A";
+                return;
+            }
+
+            // The journal's 'UnladenMass' is the total mass of the ship including hull and all modules (with empty tanks).
+            double shipBaseMass = _lastLoadout.UnladenMass;
+
+            // Current mass starts with the ship's base mass (hull + modules).
+            double currentMass = shipBaseMass;
+            if (_lastStatus != null)
+            {
+                // The in-game UI mass display includes both main and reserve fuel tanks.
+                currentMass += (_lastStatus.Fuel?.FuelMain ?? 0) + (_lastStatus.Fuel?.FuelReservoir ?? 0) + _lastStatus.Cargo;
+            }
+
+            label.Text = $"{currentMass:F1} T";
+            _controlFactory.ToolTip.SetToolTip(label, null);
+        }
+
+        private void SetHullHealthVisuals(double hullHealth)
+        {
+            if (_controlFactory == null) return;
+
+            var label = _controlFactory.HullHealthValueLabel;
+            label.Text = $"{hullHealth:P1}";
+
+            if (hullHealth > 0.75)
+                label.ForeColor = Color.FromArgb(0, 128, 0); // Dark Green
+            else if (hullHealth > 0.35)
+                label.ForeColor = Color.Orange;
+            else
+                label.ForeColor = Color.DarkRed;
+        }
+
+        private void PopulateModuleCategory(TreeNode categoryNode, List<ShipModule>? modules)
+        {
+            if (modules == null || !modules.Any())
+            {
+                categoryNode.Nodes.Add("Empty").ForeColor = SystemColors.GrayText;
+            }
+            else
+            {
+                // Sort modules by their slot name for a consistent order
+                foreach (var module in modules.OrderBy(m => m.Slot))
                 {
-                    return node;
-                }
-                TreeNode? foundNode = FindNodeByFullPath(node.Nodes, path);
-                if (foundNode != null)
-                {
-                    return foundNode;
+                    // The node's text is just a placeholder; all rendering is done in the DrawNode event.
+                    // We store the full module object in the Tag for the drawing routine to use.
+                    var node = categoryNode.Nodes.Add(module.Item);
+                    node.Tag = module;
+                    node.ToolTipText = BuildModuleTooltip(module);
                 }
             }
-            return null;
+            categoryNode.Text = $"{categoryNode.Text} ({modules?.Count ?? 0})";
+        }
+
+        private string BuildModuleTooltip(ShipModule module)
+        {
+            var tooltip = new StringBuilder();
+            tooltip.AppendLine($"Slot: {module.Slot}");
+            tooltip.AppendLine($"Powered: {(module.On ? "On" : "Off")}");
+            tooltip.AppendLine($"Priority: {module.Priority}");
+            tooltip.AppendLine($"Health: {module.Health:P1}");
+
+            if (module.Engineering != null)
+            {
+                tooltip.AppendLine("---");
+                tooltip.AppendLine($"Engineer: {module.Engineering.Engineer}");
+                tooltip.AppendLine($"Blueprint: {module.Engineering.BlueprintName} (G{module.Engineering.Level})");
+                if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffect_Localised))
+                {
+                    tooltip.AppendLine($"Experimental: {module.Engineering.ExperimentalEffect_Localised}");
+                }
+
+                if (module.Engineering.Modifiers.Any())
+                {
+                    tooltip.AppendLine("---");
+                    tooltip.AppendLine("Modifications:");
+                    foreach (var mod in module.Engineering.Modifiers.OrderBy(m => m.Label))
+                    {
+                        if (mod.Label.Equals("DamageType", StringComparison.OrdinalIgnoreCase)) continue;
+
+                        bool isGood = (mod.Value > mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value < mod.OriginalValue && mod.LessIsGood == 1);
+                        bool isBad = (mod.Value < mod.OriginalValue && mod.LessIsGood == 0) || (mod.Value > mod.OriginalValue && mod.LessIsGood == 1);
+
+                        string indicator = isGood ? " ▲" : (isBad ? " ▼" : "");
+                        tooltip.AppendLine($"  • {mod.Label}: {mod.Value:N2}{indicator}");
+                    }
+                }
+            }
+            return tooltip.ToString();
+        }
+
+        private string GetModuleCategory(ShipModule module)
+        {
+            string slot = module.Slot.ToLowerInvariant();
+
+            if (slot.StartsWith("hardpoint")) return "Hardpoints";
+            if (slot.StartsWith("utility")) return "Utility";
+            if (slot.StartsWith("slot") || slot.StartsWith("military")) return "Optional";
+
+            switch (module.Slot)
+            {
+                case "Armour":
+                case "PowerPlant":
+                case "MainEngines":
+                case "FrameShiftDrive":
+                case "LifeSupport":
+                case "PowerDistributor":
+                case "Radar":
+                case "FuelTank":
+                    return "Core";
+                default:
+                    return "Optional"; // Fallback for any other slots
+            }
         }
     }
 }

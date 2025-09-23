@@ -1,5 +1,6 @@
 using EliteDataRelay.Models;
 using System;
+using System.Text.Json.Serialization;
 
 namespace EliteDataRelay.Services
 {
@@ -34,12 +35,32 @@ namespace EliteDataRelay.Services
         }
     }
 
-    public class LoadoutChangedEventArgs : EventArgs
+    /// <summary>
+    /// Provides data for the BalanceChanged event.
+    /// </summary>
+    public class BalanceChangedEventArgs : EventArgs
     {
-        public ShipLoadout Loadout { get; }
-        public LoadoutChangedEventArgs(ShipLoadout loadout)
+        public long Balance { get; }
+        public BalanceChangedEventArgs(long balance)
         {
-            Loadout = loadout;
+            Balance = balance;
         }
     }
+
+    public class LoadGameEvent
+    {
+        public string Commander { get; set; } = string.Empty;
+        public string ShipName { get; set; } = string.Empty;
+        public string ShipIdent { get; set; } = string.Empty;
+        [JsonPropertyName("Ship_Localised")]
+        public string? ShipLocalised { get; set; }
+    }
+
+    public class ShipyardSwapEvent
+    {
+        public string ShipType { get; set; } = string.Empty;
+        [JsonPropertyName("ShipType_Localised")]
+        public string? ShipTypeLocalised { get; set; }
+    }
+
 }

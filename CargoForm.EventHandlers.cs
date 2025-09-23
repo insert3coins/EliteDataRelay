@@ -121,6 +121,16 @@ namespace EliteDataRelay
             }));
         }
 
+        private void OnStatusChanged(object? sender, StatusChangedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            // It provides live updates for fuel, cargo, hull, etc.
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateShipStatus(e.Status);
+            }));
+        }
+
         private void OnMaterialsUpdated(object? sender, EventArgs e)
         {
             _lastMaterialServiceCache = _materialService;

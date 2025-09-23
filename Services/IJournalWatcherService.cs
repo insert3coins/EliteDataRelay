@@ -1,3 +1,4 @@
+using EliteDataRelay.Models;
 using System;
 
 namespace EliteDataRelay.Services
@@ -6,12 +7,12 @@ namespace EliteDataRelay.Services
     {
         event EventHandler<CargoCapacityEventArgs>? CargoCapacityChanged;
         event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
+        event EventHandler<BalanceChangedEventArgs>? BalanceChanged;
         event EventHandler<LocationChangedEventArgs>? LocationChanged;
         event EventHandler<CommanderNameChangedEventArgs>? CommanderNameChanged;
         event EventHandler<LoadoutChangedEventArgs>? LoadoutChanged;
+        event EventHandler<StatusChangedEventArgs>? StatusChanged;
         event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
-
-        // Material Events
         event EventHandler<MaterialsEventArgs>? MaterialsEvent;
         event EventHandler<MaterialCollectedEventArgs>? MaterialCollectedEvent;
         event EventHandler<MaterialCollectedEventArgs>? MaterialDiscardedEvent;

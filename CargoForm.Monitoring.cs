@@ -50,7 +50,6 @@ namespace EliteDataRelay
 
             // Now start the services that produce events.
             _journalWatcherService.StartMonitoring(); // This will do an initial read of the whole journal.
-            _statusWatcherService.StartMonitoring();
             _fileMonitoringService.StartMonitoring();
 
             // Process initial file snapshot after starting monitoring
@@ -72,9 +71,6 @@ namespace EliteDataRelay
 
             // Stop journal monitoring
             _journalWatcherService.StopMonitoring();
-
-            // Stop status monitoring
-            _statusWatcherService.StopMonitoring();
 
             // Stop material service
             _materialService.Stop();

@@ -17,6 +17,7 @@ namespace EliteDataRelay.UI
         event EventHandler? SessionClicked;
 
         // Methods
+        void UpdateShipStatus(StatusFile status);
         void InitializeUI(Form owner);
         void SetButtonStates(bool startEnabled, bool stopEnabled);
         void UpdateMonitoringVisuals(bool isMonitoring);

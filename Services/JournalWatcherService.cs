@@ -21,7 +21,9 @@ namespace EliteDataRelay.Services
         private string? _currentJournalFile;
         private string? _lastStarSystem;
         private string? _lastCargoHash;
+        private string? _lastStatusHash;
         private long _lastPosition;
+        private long _lastKnownBalance = -1;
         private string? _lastCommanderName;
         private string? _lastShipName;
         private string? _lastShipIdent;
@@ -39,6 +41,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
 
         /// <summary>
+        /// Event raised when the player's balance changes.
+        /// </summary>
+        public event EventHandler<BalanceChangedEventArgs>? BalanceChanged;
+
+        /// <summary>
         /// Event raised when the player's location (StarSystem) changes.
         /// </summary>
         public event EventHandler<LocationChangedEventArgs>? LocationChanged;
@@ -52,6 +59,11 @@ namespace EliteDataRelay.Services
         /// Event raised when a full ship loadout is available.
         /// </summary>
         public event EventHandler<LoadoutChangedEventArgs>? LoadoutChanged;
+
+        /// <summary>
+        /// Event raised when the Status.json file changes.
+        /// </summary>
+        public event EventHandler<StatusChangedEventArgs>? StatusChanged;
 
         /// <summary>
         /// Event raised when the ship information changes.
@@ -116,6 +128,8 @@ namespace EliteDataRelay.Services
             _lastPosition = 0;
             _lastStarSystem = null;
             _lastCargoHash = null;
+            _lastStatusHash = null;
+            _lastKnownBalance = -1;
             _lastCommanderName = null;
             _lastShipName = null;
             _lastShipIdent = null;
@@ -151,6 +165,7 @@ namespace EliteDataRelay.Services
         private void PollTimer_Tick(object? state)
         {
             ProcessNewJournalEntries();
+            ProcessStatusFile();
         }
 
         public void Dispose()

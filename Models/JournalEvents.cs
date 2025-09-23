@@ -1,66 +1,43 @@
 using System;
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace EliteDataRelay.Models
 {
-    public class JournalEvent
+    public class LoadoutChangedEventArgs : EventArgs
     {
+        public ShipLoadout Loadout { get; }
+
+        public LoadoutChangedEventArgs(ShipLoadout loadout)
+        {
+            Loadout = loadout;
+        }
+    }
+
+    public class StatusFile
+    {
+        [JsonPropertyName("timestamp")]
+        public string? Timestamp { get; set; }
         [JsonPropertyName("event")]
         public string? Event { get; set; }
-
-        [JsonPropertyName("StarSystem")]
-        public string? StarSystem { get; set; }
-
-        [JsonPropertyName("Stations")]
-        public List<StationInfo>? Stations { get; set; }
-
-        [JsonPropertyName("StarType")]
-        public string? StarType { get; set; }
-
-        [JsonPropertyName("BodyName")]
-        public string? BodyName { get; set; }
-
-        [JsonPropertyName("StationName")]
-        public string? StationName { get; set; }
+        [JsonPropertyName("fuel")]
+        public StatusFuel? Fuel { get; set; }
+        [JsonPropertyName("cargo")]
+        public double Cargo { get; set; }
+        [JsonPropertyName("balance")]
+        public long? Balance { get; set; }
+        [JsonPropertyName("hullhealth")]
+        public double? HullHealth { get; set; }
     }
 
-    public class LoadoutEvent : JournalEvent
+    public class StatusFuel
     {
-        [JsonPropertyName("CargoCapacity")]
-        public int CargoCapacity { get; set; }
-
-        [JsonPropertyName("ShipName")]
-        public string? ShipName { get; set; }
-
-        [JsonPropertyName("Ship_Localised")]
-        public string? ShipLocalised { get; set; }
-
-        [JsonPropertyName("ShipIdent")]
-        public string? ShipIdent { get; set; }
+        public double FuelMain { get; set; }
+        public double FuelReservoir { get; set; }
     }
 
-    public class LoadGameEvent : JournalEvent
+    public class StatusChangedEventArgs : EventArgs
     {
-        [JsonPropertyName("Commander")]
-        public string? Commander { get; set; }
-
-        [JsonPropertyName("ShipName")]
-        public string? ShipName { get; set; }
-
-        [JsonPropertyName("Ship_Localised")]
-        public string? ShipLocalised { get; set; }
-
-        [JsonPropertyName("ShipIdent")]
-        public string? ShipIdent { get; set; }
-    }
-
-    public class ShipyardSwapEvent : JournalEvent
-    {
-        [JsonPropertyName("ShipType")]
-        public string? ShipType { get; set; }
-
-        [JsonPropertyName("ShipType_Localised")]
-        public string? ShipTypeLocalised { get; set; }
+        public StatusFile Status { get; }
+        public StatusChangedEventArgs(StatusFile status) { Status = status; }
     }
 }

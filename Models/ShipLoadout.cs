@@ -5,88 +5,58 @@ namespace EliteDataRelay.Models
 {
     public class ShipLoadout
     {
-        [JsonPropertyName("Ship")]
         public string Ship { get; set; } = string.Empty;
-
-        [JsonPropertyName("ShipName")]
+        [JsonPropertyName("ShipID")]
+        public int ShipId { get; set; }
         public string ShipName { get; set; } = string.Empty;
-
-        [JsonPropertyName("ShipIdent")]
         public string ShipIdent { get; set; } = string.Empty;
-
-        [JsonPropertyName("CargoCapacity")]
         public int CargoCapacity { get; set; }
-
-        [JsonPropertyName("Modules")]
+        public double HullHealth { get; set; }
+        public long Rebuy { get; set; }
+        public double UnladenMass { get; set; }
+        public double MaxJumpRange { get; set; }
+        public FuelCapacityInfo? FuelCapacity { get; set; }
         public List<ShipModule> Modules { get; set; } = new List<ShipModule>();
     }
 
     public class ShipModule
     {
-        [JsonPropertyName("Slot")]
         public string Slot { get; set; } = string.Empty;
-
-        [JsonPropertyName("Item")]
         public string Item { get; set; } = string.Empty;
-
-        [JsonPropertyName("On")]
-        public bool IsOn { get; set; }
-
-        [JsonPropertyName("Priority")]
+        public bool On { get; set; }
         public int Priority { get; set; }
-
-        [JsonPropertyName("Health")]
         public double Health { get; set; }
-
-        [JsonPropertyName("Value")]
+        public double Mass { get; set; }
         public long Value { get; set; }
-
-        [JsonPropertyName("Engineering")]
-        public Engineering? Engineering { get; set; }
+        public ModuleEngineering? Engineering { get; set; }
     }
 
-    public class Engineering
+    public class ModuleEngineering
     {
-        [JsonPropertyName("Engineer")]
         public string Engineer { get; set; } = string.Empty;
-
         [JsonPropertyName("EngineerID")]
-        public long EngineerID { get; set; }
-
-        [JsonPropertyName("BlueprintID")]
-        public long BlueprintID { get; set; }
-
-        [JsonPropertyName("BlueprintName")]
+        public long EngineerId { get; set; }
         public string BlueprintName { get; set; } = string.Empty;
-
-        [JsonPropertyName("Level")]
+        [JsonPropertyName("BlueprintID")]
+        public long BlueprintId { get; set; }
         public int Level { get; set; }
-
-        [JsonPropertyName("Quality")]
         public double Quality { get; set; }
-
-        [JsonPropertyName("ExperimentalEffect")]
-        public string? ExperimentalEffect { get; set; }
-
         [JsonPropertyName("ExperimentalEffect_Localised")]
-        public string? ExperimentalEffectLocalised { get; set; }
-
-        [JsonPropertyName("Modifiers")]
-        public List<Modifier> Modifiers { get; set; } = new List<Modifier>();
+        public string? ExperimentalEffect_Localised { get; set; }
+        public List<ModuleModifier> Modifiers { get; set; } = new List<ModuleModifier>();
     }
 
-    public class Modifier
+    public class ModuleModifier
     {
-        [JsonPropertyName("Label")]
         public string Label { get; set; } = string.Empty;
-
-        [JsonPropertyName("Value")]
         public double Value { get; set; }
-
-        [JsonPropertyName("OriginalValue")]
         public double OriginalValue { get; set; }
-
-        [JsonPropertyName("LessIsGood")]
         public int LessIsGood { get; set; }
+    }
+
+    public class FuelCapacityInfo
+    {
+        public double Main { get; set; }
+        public double Reserve { get; set; }
     }
 }

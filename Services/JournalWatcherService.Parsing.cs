@@ -273,6 +273,52 @@ namespace EliteDataRelay.Services
             }
         }
 
+        private void ProcessStatusFile()
+        {
+            var statusFilePath = Path.Combine(_journalDir, "Status.json");
+            if (!File.Exists(statusFilePath))
+            {
+                return;
+            }
+
+            try
+            {
+                string content = File.ReadAllText(statusFilePath);
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return;
+                }
+
+                string hash = ComputeHash(content);
+                if (hash == _lastStatusHash)
+                {
+                    return;
+                }
+
+                _lastStatusHash = hash;
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var statusEvent = JsonSerializer.Deserialize<StatusFile>(content, options);
+
+                if (statusEvent != null)
+                {
+                    Debug.WriteLine($"[JournalWatcherService] Found Status.json update. Fuel: {statusEvent.Fuel?.FuelMain}, Cargo: {statusEvent.Cargo}, Hull: {statusEvent.HullHealth:P1}");
+                    StatusChanged?.Invoke(this, new StatusChangedEventArgs(statusEvent));
+
+                    // Also handle balance changes to replace StatusWatcherService
+                    if (statusEvent.Balance.HasValue && statusEvent.Balance.Value != _lastKnownBalance)
+                    {
+                        _lastKnownBalance = statusEvent.Balance.Value;
+                        BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(_lastKnownBalance));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[JournalWatcherService] Error processing Status.json: {ex}");
+            }
+        }
+
         private void UpdateShipInformation(string? shipName, string? shipIdent, string? shipType, string? internalShipName)
         {
             // Only raise an update event if something has actually changed.
@@ -313,6 +359,14 @@ namespace EliteDataRelay.Services
 
             using var sha = SHA256.Create();
             byte[] bytes = Encoding.UTF8.GetBytes(json);
+            byte[] hashBytes = sha.ComputeHash(bytes);
+            return Convert.ToBase64String(hashBytes);
+        }
+
+        private string ComputeHash(string content)
+        {
+            using var sha = SHA256.Create();
+            byte[] bytes = Encoding.UTF8.GetBytes(content);
             byte[] hashBytes = sha.ComputeHash(bytes);
             return Convert.ToBase64String(hashBytes);
         }

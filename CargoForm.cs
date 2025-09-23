@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -21,7 +21,6 @@ namespace EliteDataRelay
         private readonly IJournalWatcherService _journalWatcherService;
         private readonly ISoundService _soundService;
         private readonly IFileOutputService _fileOutputService;
-        private readonly IStatusWatcherService _statusWatcherService;
         private readonly ICargoFormUI _cargoFormUI;
         private readonly IMaterialService _materialService;
         private readonly SessionTrackingService _sessionTrackingService;
@@ -36,10 +35,9 @@ namespace EliteDataRelay
             _journalWatcherService = new JournalWatcherService();
             _soundService = new SoundService();
             _fileOutputService = new FileOutputService();
-            _statusWatcherService = new StatusWatcherService();
             _cargoFormUI = new CargoFormUI();
             _materialService = new MaterialService(_journalWatcherService);
-            _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _statusWatcherService);
+            _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _journalWatcherService);
 
             InitializeComponent();
             SetupEventHandlers();
@@ -94,7 +92,7 @@ namespace EliteDataRelay
             _cargoProcessorService.CargoProcessed += OnCargoProcessed;
             _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
             _journalWatcherService.LocationChanged += OnLocationChanged;
-            _statusWatcherService.BalanceChanged += OnBalanceChanged;
+            _journalWatcherService.BalanceChanged += OnBalanceChanged;
 
             _materialService.MaterialsUpdated += OnMaterialsUpdated;            
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
@@ -102,6 +100,7 @@ namespace EliteDataRelay
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
             _journalWatcherService.LoadoutChanged += OnLoadoutChanged;
+            _journalWatcherService.StatusChanged += OnStatusChanged;
         }
 
         protected override void Dispose(bool disposing)
@@ -112,7 +111,6 @@ namespace EliteDataRelay
                 (_journalWatcherService as IDisposable)?.Dispose();
                 (_fileMonitoringService as IDisposable)?.Dispose();
                 (_soundService as IDisposable)?.Dispose();
-                (_statusWatcherService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();
                 (_materialService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();

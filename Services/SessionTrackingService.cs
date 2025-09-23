@@ -8,7 +8,7 @@ namespace EliteDataRelay.Services
     public class SessionTrackingService : IDisposable
     {
         private readonly ICargoProcessorService _cargoProcessor;
-        private readonly IStatusWatcherService _statusWatcher;
+        private readonly IJournalWatcherService _journalWatcher;
         private readonly System.Windows.Forms.Timer _timer;
 
         private long _startingBalance;
@@ -22,10 +22,10 @@ namespace EliteDataRelay.Services
 
         public event EventHandler? SessionUpdated;
 
-        public SessionTrackingService(ICargoProcessorService cargoProcessor, IStatusWatcherService statusWatcher)
+        public SessionTrackingService(ICargoProcessorService cargoProcessor, IJournalWatcherService journalWatcher)
         {
             _cargoProcessor = cargoProcessor ?? throw new ArgumentNullException(nameof(cargoProcessor));
-            _statusWatcher = statusWatcher ?? throw new ArgumentNullException(nameof(statusWatcher));
+            _journalWatcher = journalWatcher ?? throw new ArgumentNullException(nameof(journalWatcher));
             _timer = new System.Windows.Forms.Timer { Interval = 1000 };
             _timer.Tick += OnTimerTick;
         }
@@ -45,7 +45,7 @@ namespace EliteDataRelay.Services
 
             // Subscribe to events
             _cargoProcessor.CargoProcessed += OnCargoProcessed;
-            _statusWatcher.BalanceChanged += OnBalanceChanged;
+            _journalWatcher.BalanceChanged += OnBalanceChanged;
             _timer.Start();
 
             SessionUpdated?.Invoke(this, EventArgs.Empty);
@@ -57,7 +57,7 @@ namespace EliteDataRelay.Services
 
             // Unsubscribe to prevent memory leaks
             _cargoProcessor.CargoProcessed -= OnCargoProcessed;
-            _statusWatcher.BalanceChanged -= OnBalanceChanged;
+            _journalWatcher.BalanceChanged -= OnBalanceChanged;
             _timer.Stop();
             _sessionActive = false;
         }
