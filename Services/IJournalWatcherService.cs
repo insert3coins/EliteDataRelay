@@ -1,8 +1,11 @@
-using EliteDataRelay.Models;
 using System;
+using EliteDataRelay.Models;
 
 namespace EliteDataRelay.Services
 {
+    /// <summary>
+    /// Defines the contract for a service that monitors the Elite Dangerous journal files.
+    /// </summary>
     public interface IJournalWatcherService : IDisposable
     {
         event EventHandler<CargoCapacityEventArgs>? CargoCapacityChanged;
@@ -24,5 +27,6 @@ namespace EliteDataRelay.Services
 
         void StartMonitoring();
         void StopMonitoring();
+        void Reset();
     }
 }

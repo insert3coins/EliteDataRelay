@@ -41,6 +41,11 @@ namespace EliteDataRelay
         private void OnStopClicked(object? sender, EventArgs e)
         {
             _soundService.PlayStopSound();
+
+            // Reset services that maintain state to ensure a clean start next time.
+            _cargoProcessorService.Reset();
+            _journalWatcherService.Reset();
+
             StopMonitoringInternal();
         }
 

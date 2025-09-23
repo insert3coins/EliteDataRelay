@@ -23,6 +23,16 @@ namespace EliteDataRelay.Services
         public event EventHandler<CargoProcessedEventArgs>? CargoProcessed;
 
         /// <summary>
+        /// Resets the internal state of the service, clearing the last known hash.
+        /// This forces the next file processing to treat the data as new.
+        /// </summary>
+        public void Reset()
+        {
+            _lastInventoryHash = null;
+            Debug.WriteLine("[CargoProcessorService] State has been reset.");
+        }
+
+        /// <summary>
         /// Process the cargo file and extract cargo snapshot data
         /// </summary>
         public void ProcessCargoFile()

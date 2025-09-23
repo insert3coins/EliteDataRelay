@@ -12,6 +12,26 @@ namespace EliteDataRelay.Services
 {
     public partial class JournalWatcherService
     {
+        /// <summary>
+        /// Resets the internal state of the watcher. This clears the last known file position,
+        /// hashes, and other cached data, forcing a full re-read on the next poll.
+        /// </summary>
+        public void Reset()
+        {
+            _currentJournalFile = null;
+            _lastPosition = 0;
+            _lastStarSystem = null;
+            _lastCargoHash = null;
+            _lastStatusHash = null;
+            _lastShipName = null;
+            _lastShipIdent = null;
+            _lastShipType = null;
+            _lastCommanderName = null;
+            _lastKnownBalance = 0;
+
+            Debug.WriteLine("[JournalWatcherService] State has been reset.");
+        }
+
         private void ProcessNewJournalEntries()
         {
             // On each poll, first check if there's a newer journal file than the one we're watching.
