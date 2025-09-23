@@ -216,32 +216,32 @@ namespace EliteDataRelay.UI
             var labelFont = fontManager.VerdanaFont;
             var valueFont = new Font(fontManager.VerdanaFont, FontStyle.Bold);
 
-            // Row 1: Hull Health, Mass
-            statsPanel.Controls.Add(new Label { Text = "Hull Health:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-            HullHealthValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
-            statsPanel.Controls.Add(HullHealthValueLabel, 1, 0);
-
-            statsPanel.Controls.Add(new Label { Text = "Mass:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 2, 0);
+            // Row 0: Mass, Fuel
+            statsPanel.Controls.Add(new Label { Text = "Mass:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
             MassValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
-            statsPanel.Controls.Add(MassValueLabel, 3, 0);
+            statsPanel.Controls.Add(MassValueLabel, 1, 0);
 
-            // Row 2: Fuel, Cargo
-            statsPanel.Controls.Add(new Label { Text = "Fuel:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
+            statsPanel.Controls.Add(new Label { Text = "Fuel:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 2, 0);
             FuelValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
-            statsPanel.Controls.Add(FuelValueLabel, 1, 1);
+            statsPanel.Controls.Add(FuelValueLabel, 3, 0);
+
+            // Row 1: Jump Range, Cargo
+            statsPanel.Controls.Add(new Label { Text = "Jump Range:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
+            JumpRangeValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
+            statsPanel.Controls.Add(JumpRangeValueLabel, 1, 1);
 
             statsPanel.Controls.Add(new Label { Text = "Cargo:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 2, 1);
             CargoValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
             statsPanel.Controls.Add(CargoValueLabel, 3, 1);
 
-            // Row 3: Jump Range, Rebuy
-            statsPanel.Controls.Add(new Label { Text = "Jump Range:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-            JumpRangeValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
-            statsPanel.Controls.Add(JumpRangeValueLabel, 1, 2);
-
-            statsPanel.Controls.Add(new Label { Text = "Rebuy:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 2, 2);
+            // Row 2: Rebuy, Hull Health
+            statsPanel.Controls.Add(new Label { Text = "Rebuy:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
             RebuyValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
-            statsPanel.Controls.Add(RebuyValueLabel, 3, 2);
+            statsPanel.Controls.Add(RebuyValueLabel, 1, 2);
+
+            statsPanel.Controls.Add(new Label { Text = "Hull Health:", Font = labelFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft }, 2, 2);
+            HullHealthValueLabel = new Label { Text = "N/A", Font = valueFont, AutoSize = true, Anchor = AnchorStyles.Left, TextAlign = ContentAlignment.MiddleLeft };
+            statsPanel.Controls.Add(HullHealthValueLabel, 3, 2);
 
             return statsPanel;
         }
@@ -410,7 +410,7 @@ namespace EliteDataRelay.UI
 
             ShipNameLabel = new Label
             {
-                Font = new Font(fontManager.VerdanaFont.FontFamily, 12f, FontStyle.Bold),
+                Font = new Font(fontManager.VerdanaFont.FontFamily, 10f, FontStyle.Bold),
                 AutoSize = false,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.BottomCenter,

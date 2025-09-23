@@ -46,14 +46,14 @@ namespace EliteDataRelay.Services
             const int overlaySpacing = 10; // Space between overlays
 
             // Create form instances first to get their actual dimensions.
-            if (AppConfiguration.EnableLeftOverlay)
+            if (AppConfiguration.EnableInfoOverlay)
             {
-                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Left, AppConfiguration.AllowOverlayDrag);
+                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag);
                 _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (AppConfiguration.EnableRightOverlay)
+            if (AppConfiguration.EnableCargoOverlay)
             {
-                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Right, AppConfiguration.AllowOverlayDrag);
+                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (AppConfiguration.EnableMaterialsOverlay)
@@ -105,9 +105,9 @@ namespace EliteDataRelay.Services
 
             if (_leftOverlayForm != null)
             {
-                if (AppConfiguration.LeftOverlayLocation != Point.Empty)
+                if (AppConfiguration.InfoOverlayLocation != Point.Empty)
                 {
-                    _leftOverlayForm.Location = AppConfiguration.LeftOverlayLocation;
+                    _leftOverlayForm.Location = AppConfiguration.InfoOverlayLocation;
                 }
                 else
                 {
@@ -117,9 +117,9 @@ namespace EliteDataRelay.Services
             }
             if (_rightOverlayForm != null)
             {
-                if (AppConfiguration.RightOverlayLocation != Point.Empty)
+                if (AppConfiguration.CargoOverlayLocation != Point.Empty)
                 {
-                    _rightOverlayForm.Location = AppConfiguration.RightOverlayLocation;
+                    _rightOverlayForm.Location = AppConfiguration.CargoOverlayLocation;
                 }
                 else
                 {
@@ -169,11 +169,11 @@ namespace EliteDataRelay.Services
         {
             if (sender == _leftOverlayForm)
             {
-                AppConfiguration.LeftOverlayLocation = newLocation;
+                AppConfiguration.InfoOverlayLocation = newLocation;
             }
             else if (sender == _rightOverlayForm)
             {
-                AppConfiguration.RightOverlayLocation = newLocation;
+                AppConfiguration.CargoOverlayLocation = newLocation;
             }
             else if (sender == _materialsOverlay)
             {

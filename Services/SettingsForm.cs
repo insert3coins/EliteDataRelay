@@ -63,8 +63,8 @@ namespace EliteDataRelay.UI
         private Color _originalOverlayTextColor;
         private Color _originalOverlayBackColor;
         private int _originalOverlayOpacity;
-        private Point _originalLeftOverlayLocation;
-        private Point _originalRightOverlayLocation;
+        private Point _originalInfoOverlayLocation;
+        private Point _originalCargoOverlayLocation;
         private Point _originalMaterialsOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
@@ -98,9 +98,9 @@ namespace EliteDataRelay.UI
             _txtOutputFormat.Text = AppConfiguration.OutputFileFormat;
             _txtOutputFileName.Text = AppConfiguration.OutputFileName;
             _chkEnableSessionTracking.Checked = AppConfiguration.EnableSessionTracking;
-            _chkEnableLeftOverlay.Checked = AppConfiguration.EnableLeftOverlay;
+            _chkEnableLeftOverlay.Checked = AppConfiguration.EnableInfoOverlay;
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
-            _chkEnableRightOverlay.Checked = AppConfiguration.EnableRightOverlay;
+            _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
             _chkEnableMaterialsOverlay.Checked = AppConfiguration.EnableMaterialsOverlay;
             _chkPinMaterialsMode.Checked = AppConfiguration.PinMaterialsMode;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
@@ -126,8 +126,8 @@ namespace EliteDataRelay.UI
             _originalOverlayTextColor = _overlayTextColor;
             _originalOverlayBackColor = _overlayBackColor;
             _originalOverlayOpacity = _overlayOpacity;
-            _originalLeftOverlayLocation = AppConfiguration.LeftOverlayLocation;
-            _originalRightOverlayLocation = AppConfiguration.RightOverlayLocation;
+            _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
+            _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
             _originalMaterialsOverlayLocation = AppConfiguration.MaterialsOverlayLocation;
 
             UpdateAppearanceControls();
@@ -181,9 +181,9 @@ namespace EliteDataRelay.UI
             AppConfiguration.OutputFileFormat = _txtOutputFormat.Text;
             AppConfiguration.OutputFileName = _txtOutputFileName.Text;
             AppConfiguration.EnableSessionTracking = _chkEnableSessionTracking.Checked;
-            AppConfiguration.EnableLeftOverlay = _chkEnableLeftOverlay.Checked;
+            AppConfiguration.EnableInfoOverlay = _chkEnableLeftOverlay.Checked;
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
-            AppConfiguration.EnableRightOverlay = _chkEnableRightOverlay.Checked;
+            AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableMaterialsOverlay = _chkEnableMaterialsOverlay.Checked;
             AppConfiguration.PinMaterialsMode = _chkPinMaterialsMode.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
@@ -268,8 +268,8 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayBackgroundColor = _originalOverlayBackColor;
             AppConfiguration.OverlayOpacity = _originalOverlayOpacity;
 
-            AppConfiguration.LeftOverlayLocation = _originalLeftOverlayLocation;
-            AppConfiguration.RightOverlayLocation = _originalRightOverlayLocation;
+            AppConfiguration.InfoOverlayLocation = _originalInfoOverlayLocation;
+            AppConfiguration.CargoOverlayLocation = _originalCargoOverlayLocation;
             AppConfiguration.MaterialsOverlayLocation = _originalMaterialsOverlayLocation;
 
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);

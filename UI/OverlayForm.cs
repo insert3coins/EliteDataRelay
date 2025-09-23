@@ -14,8 +14,8 @@ namespace EliteDataRelay.UI
     {
         public enum OverlayPosition
         {
-            Left,
-            Right,
+            Info,
+            Cargo,
             Materials
         }
 
@@ -68,10 +68,10 @@ namespace EliteDataRelay.UI
 
             switch (_position)
             {
-                case OverlayPosition.Left:
+                case OverlayPosition.Info:
                     this.Text = "Elite Data Relay: Info";
                     break;
-                case OverlayPosition.Right:
+                case OverlayPosition.Cargo:
                     this.Text = "Elite Data Relay: Cargo";
                     break;
                 case OverlayPosition.Materials:
@@ -92,7 +92,7 @@ namespace EliteDataRelay.UI
 
             // Create controls in the constructor to ensure they exist before the form is shown.
             // This prevents a race condition where update methods could be called before OnLoad completes.
-            if (_position == OverlayPosition.Left)
+            if (_position == OverlayPosition.Info)
             {
                 // --- Left-aligned info ---
                 this.Size = new Size(280, 85);
@@ -104,7 +104,7 @@ namespace EliteDataRelay.UI
                 Controls.Add(_shipLabel);
                 Controls.Add(_balanceLabel);
             }
-            else if (_position == OverlayPosition.Right)
+            else if (_position == OverlayPosition.Cargo)
             {
                 this.Size = new Size(280, 600);
 

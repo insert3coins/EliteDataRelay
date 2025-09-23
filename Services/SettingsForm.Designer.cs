@@ -150,7 +150,7 @@ namespace EliteDataRelay.UI
             // Enable Left Overlay CheckBox
             _chkEnableLeftOverlay = new CheckBox
             {
-                Text = "Enable left overlay (CMDR, Ship, Balance)",
+                Text = "Enable info overlay (CMDR, Ship, Balance)",
                 Location = new Point(15, 20),
                 AutoSize = true
             };
@@ -166,7 +166,7 @@ namespace EliteDataRelay.UI
             // Enable Right Overlay CheckBox
             _chkEnableRightOverlay = new CheckBox
             {
-                Text = "Enable right overlay (Cargo)",
+                Text = "Enable cargo overlay",
                 Location = new Point(15, 45),
                 AutoSize = true
             };
@@ -182,7 +182,7 @@ namespace EliteDataRelay.UI
 
             _chkShowSessionOnOverlay = new CheckBox
             {
-                Text = "Show session stats on right overlay (Cargo)",
+                Text = "Show session stats on cargo overlay",
                 Location = new Point(15, 95),
                 AutoSize = true
             };

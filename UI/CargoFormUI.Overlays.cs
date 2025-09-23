@@ -14,7 +14,7 @@ namespace EliteDataRelay.UI
         public void RefreshOverlay()
         {
             _overlayService?.Stop();
-            if (AppConfiguration.EnableLeftOverlay || AppConfiguration.EnableRightOverlay || AppConfiguration.EnableMaterialsOverlay)
+            if (AppConfiguration.EnableInfoOverlay || AppConfiguration.EnableCargoOverlay || AppConfiguration.EnableMaterialsOverlay)
             {
                 _overlayService?.Start();
             }

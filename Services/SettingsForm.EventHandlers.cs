@@ -74,8 +74,8 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayOpacity = _overlayOpacity;
 
             // Also reset overlay positions
-            AppConfiguration.LeftOverlayLocation = Point.Empty;
-            AppConfiguration.RightOverlayLocation = Point.Empty;
+            AppConfiguration.InfoOverlayLocation = Point.Empty;
+            AppConfiguration.CargoOverlayLocation = Point.Empty;
             AppConfiguration.MaterialsOverlayLocation = Point.Empty;
 
             // Raise the event to trigger a refresh of the live overlays.
