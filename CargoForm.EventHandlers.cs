@@ -1,0 +1,169 @@
+using System;
+using System.Linq;
+using System.Windows.Forms;
+using EliteDataRelay.Configuration;
+using EliteDataRelay.Models;
+using EliteDataRelay.Services;
+
+namespace EliteDataRelay
+{
+    public partial class CargoForm
+    {
+        #region Service Event Handlers
+
+        private void OnFileChanged(object? sender, EventArgs e)
+        {
+            // Delegate file processing to the cargo processor service
+            _cargoProcessorService.ProcessCargoFile();
+        }
+
+        private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastCargoSnapshot = e.Snapshot;
+                // --- File Output ---
+                if (AppConfiguration.EnableFileOutput)
+                {
+                    _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+                }
+
+                // Update the header label in the button panel
+                _cargoFormUI.UpdateCargoHeader(e.Snapshot.Count, _cargoCapacity);
+
+                // Update the main window display with the new list view
+                _cargoFormUI.UpdateCargoList(e.Snapshot);
+
+                // Update the visual cargo size indicator
+                _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
+            }));
+        }
+
+        private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
+        {
+            // This event can be raised from a background thread.
+            _cargoCapacity = e.CargoCapacity;
+
+            // After updating capacity, we must invoke on the UI thread to update the display.
+            // This ensures the UI reflects the new capacity immediately.
+            Invoke(new Action(() =>
+            {
+                if (_lastCargoSnapshot != null)
+                {
+                    _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
+                    _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
+                }
+                else
+                {
+                    // If we don't have cargo data yet, just update the header with 0 count.
+                    _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
+                }
+            }));
+        }
+
+        private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastBalance = e.Balance;
+                _cargoFormUI.UpdateBalance(e.Balance);
+            }));
+        }
+
+        private void OnCommanderNameChanged(object? sender, CommanderNameChangedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastCommanderName = e.CommanderName;
+                _cargoFormUI.UpdateCommanderName(e.CommanderName);
+            }));
+        }
+
+        private void OnShipInfoChanged(object? sender, ShipInfoChangedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastShipName = e.ShipName;
+                _lastShipIdent = e.ShipIdent;
+                _lastShipType = e.ShipType;
+                _lastInternalShipName = e.InternalShipName;
+                _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName);
+            }));
+        }
+
+        private void OnLoadoutChanged(object? sender, LoadoutChangedEventArgs e)
+        {
+            // The event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateShipLoadout(e.Loadout);
+
+                // The Loadout event is a primary source for cargo capacity.
+                _cargoCapacity = e.Loadout.CargoCapacity;
+
+                // After a loadout change, the previous cargo snapshot (count and items) is stale.
+                // We must clear it and wait for the next 'Cargo' event to provide the new state.
+                _lastCargoSnapshot = null;
+
+                // Update the UI to reflect the new capacity and the now-empty cargo state.
+                // The count will be properly updated by the next 'Cargo' event.
+                _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
+
+                // Create a new, empty snapshot to clear the UI list and visualizer.
+                // The UI will show "Cargo hold is empty." until the next update.
+                var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
+                _cargoFormUI.UpdateCargoList(emptySnapshot);
+                _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
+            }));
+        }
+
+        private void OnStatusChanged(object? sender, StatusChangedEventArgs e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            // It provides live updates for fuel, cargo, hull, etc.
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateShipStatus(e.Status);
+            }));
+        }
+
+        private void OnMaterialsUpdated(object? sender, EventArgs e)
+        {
+            _lastMaterialServiceCache = _materialService;
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateMaterialList(_materialService);
+                _cargoFormUI.UpdateMaterialsOverlay(_materialService);
+            }));
+        }
+
+        private void OnSessionUpdated(object? sender, EventArgs e)
+        {
+            if (sender is not SessionTrackingService tracker) return;
+
+            if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+            {
+                Invoke(new Action(() =>
+                {
+                    _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
+                }));
+            }
+        }
+
+        private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        {
+            _lastLocation = e.StarSystem;
+
+            Invoke(new Action(() =>
+            {
+                _cargoFormUI.UpdateLocation(_lastLocation);
+            }));
+        }
+
+        #endregion
+    }
+}
