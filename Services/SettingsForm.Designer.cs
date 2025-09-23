@@ -27,12 +27,10 @@ namespace EliteDataRelay.UI
             var generalTabPage = new TabPage("General");
             var overlayTabPage = new TabPage("Overlay");
             var hotkeysTabPage = new TabPage("Hotkeys");
-            var materialsTabPage = new TabPage("Materials");
 
             tabControl.TabPages.Add(generalTabPage);
             tabControl.TabPages.Add(overlayTabPage);
             tabControl.TabPages.Add(hotkeysTabPage);
-            tabControl.TabPages.Add(materialsTabPage);
             
             #region General Tab
 
@@ -306,38 +304,6 @@ namespace EliteDataRelay.UI
 
             // Add controls to the Hotkeys tab
             hotkeysTabPage.Controls.Add(_grpHotkeys);
-            #endregion
-
-            #region Materials Tab
-
-            var grpPinning = new GroupBox
-            {
-                Text = "Material Pinning for Overlay",
-                Location = new Point(12, 12),
-                Size = new Size(440, 430),
-            };
-
-            _chkPinMaterialsMode = new CheckBox
-            {
-                Text = "Only show pinned materials on the overlay",
-                Location = new Point(15, 24),
-                AutoSize = true
-            };
-            _chkPinMaterialsMode.CheckedChanged += (s, e) =>
-            {
-                if (_clbPinnedMaterials != null) _clbPinnedMaterials.Enabled = _chkPinMaterialsMode.Checked;
-            };
-
-            _clbPinnedMaterials = new CheckedListBox
-            {
-                Location = new Point(15, 54),
-                Size = new Size(410, 360),
-                CheckOnClick = true,
-            };
-
-            grpPinning.Controls.AddRange(new Control[] { _chkPinMaterialsMode, _clbPinnedMaterials });
-            materialsTabPage.Controls.Add(grpPinning);
-
             #endregion
 
             // OK Button

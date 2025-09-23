@@ -210,7 +210,7 @@ namespace EliteDataRelay.UI
 
                 if (maxCount > 0 && material.Count >= maxCount)
                 {
-                    node.ForeColor = Color.Orange; // Visual indicator for max capacity
+                    node.BackColor = Color.FromArgb(255, 230, 180); // Light orange/gold to indicate max capacity
                 }
             }
         }
@@ -356,6 +356,13 @@ namespace EliteDataRelay.UI
             listView.Columns[0].Width = 200;
             listView.Columns[1].Width = 80;
             listView.Columns[2].Width = -2; // Fill remaining space
+        }
+
+        public void UpdatePinMaterialsCheckboxText()
+        {
+            if (_controlFactory == null) return;
+            int pinnedCount = AppConfiguration.PinnedMaterials.Count;
+            _controlFactory.PinMaterialsCheckBox.Text = $"Show Pinned Materials Only ({pinnedCount})";
         }
     }
 }

@@ -66,6 +66,11 @@ namespace EliteDataRelay.UI
             TopMost = true;
             StartPosition = FormStartPosition.Manual;
 
+            // Apply appearance settings from configuration for semi-transparent background.
+            // A form's BackColor cannot have an alpha component. We use the opaque version of the color
+            // and rely on the form's Opacity property to handle the transparency.
+            this.BackColor = Color.FromArgb(255, AppConfiguration.OverlayBackgroundColor);
+
             switch (_position)
             {
                 case OverlayPosition.Info:
@@ -81,11 +86,6 @@ namespace EliteDataRelay.UI
                     this.Text = "Elite Data Relay Overlay";
                     break;
             }
-
-            // Apply appearance settings from configuration for semi-transparent background.
-            // A form's BackColor cannot have an alpha component. We use the opaque version of the color
-            // and rely on the form's Opacity property to handle the transparency.
-            this.BackColor = Color.FromArgb(255, AppConfiguration.OverlayBackgroundColor);
 
             _labelFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize, FontStyle.Bold);
             _listFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);

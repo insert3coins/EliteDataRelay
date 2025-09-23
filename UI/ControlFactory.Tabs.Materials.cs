@@ -5,6 +5,8 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
+        public Button ClearPinnedButton { get; private set; } = null!;
+
         private TabPage CreateMaterialsTabPage(FontManager fontManager)
         {
             var materialsPage = new TabPage("Materials");
@@ -55,9 +57,18 @@ namespace EliteDataRelay.UI
                 AutoCompleteSource = AutoCompleteSource.CustomSource
             };
 
+            // New button to clear pinned materials
+            ClearPinnedButton = new Button
+            {
+                Text = "Clear Pinned",
+                AutoSize = true,
+                Margin = new Padding(10, 3, 3, 3)
+            };
+
             topControlsPanel.Controls.Add(PinMaterialsCheckBox);
             topControlsPanel.Controls.Add(searchLabel);
             topControlsPanel.Controls.Add(MaterialSearchBox);
+            topControlsPanel.Controls.Add(ClearPinnedButton);
 
             // Add the fill-docked control first to place it at the back of the Z-order.
             materialsPanel.Controls.Add(MaterialTreeView);
@@ -82,7 +93,16 @@ namespace EliteDataRelay.UI
             bool isSelected = (e.State & TreeNodeStates.Selected) == TreeNodeStates.Selected;
 
             // 1. Determine colors and draw the background for the entire row.
-            Color backColor = isSelected ? Color.FromArgb(0, 120, 215) : tree.BackColor;
+            Color backColor;
+            if (isSelected)
+            {
+                backColor = Color.FromArgb(0, 120, 215);
+            }
+            else
+            {
+                // Use the node's specific back color if it's set (for max capacity), otherwise use the tree's default.
+                backColor = e.Node.BackColor.IsEmpty ? tree.BackColor : e.Node.BackColor;
+            }
             Color foreColor = isSelected ? Color.White : e.Node.ForeColor;
             if (foreColor.IsEmpty) // If no color is set on the node, use the tree's default.
             {
@@ -141,6 +161,7 @@ namespace EliteDataRelay.UI
             MaterialTreeView.Dispose();
             MaterialSearchBox.Dispose();
             PinMaterialsCheckBox.Dispose();
+            ClearPinnedButton.Dispose();
         }
     }
 }

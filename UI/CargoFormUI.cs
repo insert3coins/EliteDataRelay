@@ -21,6 +21,7 @@ namespace EliteDataRelay.UI
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";
         private IMaterialService? _materialServiceCache;
+        private System.Windows.Forms.Timer? _materialSearchTimer;
 
         private string _baseTitle = "";
 
@@ -48,6 +49,9 @@ namespace EliteDataRelay.UI
             _controlFactory = new ControlFactory(_fontManager);
             _overlayService = new OverlayService();
 
+            _materialSearchTimer = new System.Windows.Forms.Timer { Interval = 300 };
+            _materialSearchTimer.Tick += OnMaterialSearchTimerTick;
+
             if (_controlFactory.WatchingLabel != null)
             {
                 _watchingAnimationManager = new WatchingAnimationManager(_controlFactory.WatchingLabel);
@@ -62,6 +66,7 @@ namespace EliteDataRelay.UI
             SetupEventHandlers();
             DisplayWelcomeMessage();
             UpdateMaterialSearchAutocomplete();
+            UpdatePinMaterialsCheckboxText();
         }
 
         private void OnFormLoad(object? sender, EventArgs e)
@@ -131,6 +136,7 @@ namespace EliteDataRelay.UI
             _controlFactory.PinMaterialsCheckBox.CheckedChanged += OnPinMaterialsCheckBoxChanged;
             _controlFactory.MaterialTreeView.AfterCheck += OnMaterialNodeChecked;
             _controlFactory.MaterialSearchBox.TextChanged += OnMaterialSearchChanged;
+            _controlFactory.ClearPinnedButton.Click += OnClearPinnedClicked;
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -144,6 +150,15 @@ namespace EliteDataRelay.UI
 
         private void OnMaterialSearchChanged(object? sender, EventArgs e)
         {
+            // Debounce the search input to avoid refreshing on every keystroke.
+            _materialSearchTimer?.Stop();
+            _materialSearchTimer?.Start();
+        }
+
+        private void OnMaterialSearchTimerTick(object? sender, EventArgs e)
+        {
+            _materialSearchTimer?.Stop();
+
             // When search text changes, we need to re-filter and update the material list.
             // The UpdateMaterialList method already has access to the cached material service.
             if (_materialServiceCache != null)
@@ -185,6 +200,7 @@ namespace EliteDataRelay.UI
             _layoutManager?.Dispose();
             _trayIconManager?.Dispose();
             _watchingAnimationManager?.Dispose();
+            _materialSearchTimer?.Dispose();
             _overlayService?.Dispose();
             _appIcon?.Dispose();
             _iconStream?.Dispose();

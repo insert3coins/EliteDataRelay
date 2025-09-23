@@ -10,8 +10,6 @@ namespace EliteDataRelay.UI
         private void OnPinMaterialsCheckBoxChanged(object? sender, EventArgs e)
         {
             if (_controlFactory == null || _materialServiceCache == null) return;
-
-            _controlFactory.MaterialTreeView.Enabled = !_controlFactory.PinMaterialsCheckBox.Checked;
             AppConfiguration.PinMaterialsMode = _controlFactory.PinMaterialsCheckBox.Checked;
             AppConfiguration.Save();
 
@@ -49,6 +47,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.PinnedMaterials = new HashSet<string>(pinnedMaterials);
             // Save the change to the configuration file so it persists.
             AppConfiguration.Save();
+            UpdatePinMaterialsCheckboxText();
 
             if (_controlFactory == null) return;
 
@@ -63,6 +62,28 @@ namespace EliteDataRelay.UI
             // This is checked separately because the overlay's mode can be set independently in settings.
             if (AppConfiguration.PinMaterialsMode && _materialServiceCache != null)
             {
+                _overlayService?.UpdateMaterials(_materialServiceCache);
+            }
+        }
+
+        private void OnClearPinnedClicked(object? sender, EventArgs e)
+        {
+            if (_controlFactory == null || _materialServiceCache == null) return;
+
+            var result = MessageBox.Show(
+                "Are you sure you want to unpin all materials?",
+                "Confirm Clear",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                AppConfiguration.PinnedMaterials.Clear();
+                AppConfiguration.Save();
+                UpdatePinMaterialsCheckboxText();
+
+                // Refresh both the main UI and the overlay to reflect the changes.
+                UpdateMaterialList(_materialServiceCache);
                 _overlayService?.UpdateMaterials(_materialServiceCache);
             }
         }

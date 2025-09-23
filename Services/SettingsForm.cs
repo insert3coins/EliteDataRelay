@@ -44,8 +44,6 @@ namespace EliteDataRelay.UI
         private Panel _pnlBackColor = null!;
         private TrackBar _trackBarOpacity = null!;
         private Label _lblOpacityValue = null!;
-        private CheckBox _chkPinMaterialsMode = null!;
-        private CheckedListBox _clbPinnedMaterials = null!;
 
         private Keys _startHotkey;
         private Keys _stopHotkey;
@@ -76,19 +74,7 @@ namespace EliteDataRelay.UI
             // When the form is closing, check if the user cancelled. If so, revert any live changes.
             this.FormClosing += SettingsForm_FormClosing;
 
-            PopulateMaterialsList();
             LoadSettings();
-        }
-
-        private void PopulateMaterialsList()
-        {
-            var materials = MaterialDataService.GetAll();
-            _clbPinnedMaterials.Items.Clear();
-            foreach (var material in materials)
-            {
-                // Store the non-localised name in the item's tag for saving
-                _clbPinnedMaterials.Items.Add($"{material.LocalisedName} (G{material.Grade})", false);
-            }
         }
 
         private void LoadSettings()
@@ -102,7 +88,6 @@ namespace EliteDataRelay.UI
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
             _chkEnableMaterialsOverlay.Checked = AppConfiguration.EnableMaterialsOverlay;
-            _chkPinMaterialsMode.Checked = AppConfiguration.PinMaterialsMode;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -112,7 +97,6 @@ namespace EliteDataRelay.UI
             _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
             OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
-            _clbPinnedMaterials.Enabled = _chkPinMaterialsMode.Checked;
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
 
             // Load overlay appearance settings
@@ -131,18 +115,6 @@ namespace EliteDataRelay.UI
             _originalMaterialsOverlayLocation = AppConfiguration.MaterialsOverlayLocation;
 
             UpdateAppearanceControls();
-
-            // Check the pinned materials
-            var pinned = AppConfiguration.PinnedMaterials.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            var allMaterials = MaterialDataService.GetAll().ToList();
-            for (int i = 0; i < _clbPinnedMaterials.Items.Count; i++)
-            {
-                if (i < allMaterials.Count)
-                {
-                    var materialName = allMaterials[i].Name;
-                    _clbPinnedMaterials.SetItemChecked(i, pinned.Contains(materialName));
-                }
-            }
         }
 
         private void UpdateHotkey(string? tag, Keys key)
@@ -185,30 +157,12 @@ namespace EliteDataRelay.UI
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
             AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableMaterialsOverlay = _chkEnableMaterialsOverlay.Checked;
-            AppConfiguration.PinMaterialsMode = _chkPinMaterialsMode.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
             AppConfiguration.ShowOverlayHotkey = _showOverlayHotkey;
             AppConfiguration.HideOverlayHotkey = _hideOverlayHotkey;
             AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
-
-            // Save pinned materials
-            var pinnedMaterials = new List<string>();
-            var allMaterials = MaterialDataService.GetAll().ToList();
-            for (int i = 0; i < _clbPinnedMaterials.CheckedItems.Count; i++)
-            {
-                var checkedItem = _clbPinnedMaterials.CheckedItems[i];
-                if (checkedItem != null)
-                {
-                    int originalIndex = _clbPinnedMaterials.Items.IndexOf(checkedItem);
-                    if (originalIndex >= 0 && originalIndex < allMaterials.Count)
-                    {
-                        pinnedMaterials.Add(allMaterials[originalIndex].Name);
-                    }
-                }
-            }
-            AppConfiguration.PinnedMaterials = new HashSet<string>(pinnedMaterials);
 
             // Save appearance settings
             AppConfiguration.OverlayFontName = _overlayFont.Name;
