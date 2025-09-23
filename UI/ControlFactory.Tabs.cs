@@ -208,9 +208,9 @@ namespace EliteDataRelay.UI
                 RowCount = 3,
                 Padding = new Padding(10, 5, 10, 5),
             };
-            statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+            statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+            statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
 
             var labelFont = fontManager.VerdanaFont;
