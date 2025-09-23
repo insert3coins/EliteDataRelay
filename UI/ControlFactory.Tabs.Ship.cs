@@ -11,6 +11,7 @@ namespace EliteDataRelay.UI
         public Label CargoValueLabel { get; private set; } = null!;
         public Label JumpRangeValueLabel { get; private set; } = null!;
         public Label RebuyValueLabel { get; private set; } = null!;
+        private TreeNode? _lastHoveredNode;
 
         private TabPage CreateShipTabPage(FontManager fontManager)
         {
@@ -48,10 +49,12 @@ namespace EliteDataRelay.UI
                 DrawMode = TreeViewDrawMode.OwnerDrawText,
                 FullRowSelect = true,
                 ShowLines = true,
-                ShowNodeToolTips = true,
+                ShowNodeToolTips = false, // We use a custom tooltip component for owner drawing.
             };
             // Use a dedicated drawing handler for the ship loadout
             ShipModulesTreeView.DrawNode += ShipModulesTreeView_DrawNode;
+            ShipModulesTreeView.MouseMove += ShipModulesTreeView_MouseMove;
+            ShipModulesTreeView.MouseLeave += ShipModulesTreeView_MouseLeave;
 
             // Add the fill-docked control first to place it at the back of the Z-order.
             // Other docked controls will then claim their space from the edges, and the
@@ -186,7 +189,6 @@ namespace EliteDataRelay.UI
             // --- Prepare text and fonts ---
             string name = Services.ModuleDataService.GetModuleDisplayName(module);
             string details = Services.ModuleDataService.GetModuleDetails(module);
-            string engineeringText = Services.ModuleDataService.GetEngineeringInfo(module);
 
             using var mainFont = new Font(tree.Font.FontFamily, 9f, FontStyle.Regular);
             using var detailFont = new Font(tree.Font.FontFamily, 8f, FontStyle.Regular);
@@ -216,11 +218,32 @@ namespace EliteDataRelay.UI
             TextRenderer.DrawText(e.Graphics, name, mainFont, nameRect, foreColor, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
 
             // --- Line 2: Engineering Info ---
-            if (!string.IsNullOrEmpty(engineeringText))
+            if (module.Engineering != null)
             {
-                // Use the full available width for the second line and add ellipsis if needed.
                 var engRect = new Rectangle(left, nameRect.Bottom, availableWidth, detailFont.Height);
-                TextRenderer.DrawText(e.Graphics, engineeringText, detailFont, engRect, isSelected ? Color.LightSkyBlue : Color.DodgerBlue, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                float currentX = engRect.Left;
+
+                // Define colors for blueprint and experimental effects
+                var blueprintColor = isSelected ? Color.LightSkyBlue : Color.DodgerBlue;
+                var experimentalColor = isSelected ? Color.Plum : Color.MediumPurple;
+                var textFormat = TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.NoPadding;
+
+                // 1. Draw Blueprint Name and Grade
+                string blueprintText = $"{module.Engineering.BlueprintName} G{module.Engineering.Level}";
+                TextRenderer.DrawText(e.Graphics, blueprintText, detailFont, new Point((int)currentX, engRect.Top), blueprintColor, textFormat);
+                var blueprintSize = TextRenderer.MeasureText(e.Graphics, blueprintText, detailFont, Size.Empty, textFormat);
+                currentX += blueprintSize.Width;
+
+                // 2. Draw Experimental Effect, if any, and if it fits
+                if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffect_Localised))
+                {
+                    string experimentalText = $", {module.Engineering.ExperimentalEffect_Localised}";
+                    var experimentalSize = TextRenderer.MeasureText(e.Graphics, experimentalText, detailFont, Size.Empty, textFormat);
+                    if (currentX + experimentalSize.Width <= engRect.Right)
+                    {
+                        TextRenderer.DrawText(e.Graphics, experimentalText, detailFont, new Point((int)currentX, engRect.Top), experimentalColor, textFormat);
+                    }
+                }
             }
         }
 
@@ -265,6 +288,8 @@ namespace EliteDataRelay.UI
             ShipNameLabel.Dispose();
             ShipIdentLabel.Dispose();
             ShipModulesTreeView.DrawNode -= ShipModulesTreeView_DrawNode;
+            ShipModulesTreeView.MouseMove -= ShipModulesTreeView_MouseMove;
+            ShipModulesTreeView.MouseLeave -= ShipModulesTreeView_MouseLeave;
             ShipModulesTreeView.Dispose();
             HullHealthValueLabel.Dispose();
             MassValueLabel.Dispose();
@@ -272,6 +297,29 @@ namespace EliteDataRelay.UI
             CargoValueLabel.Dispose();
             JumpRangeValueLabel.Dispose();
             RebuyValueLabel.Dispose();
+        }
+
+        private void ShipModulesTreeView_MouseMove(object? sender, MouseEventArgs e)
+        {
+            var node = ShipModulesTreeView.GetNodeAt(e.Location);
+            if (node != _lastHoveredNode)
+            {
+                _lastHoveredNode = node;
+                if (node != null && !string.IsNullOrEmpty(node.ToolTipText))
+                {
+                    ToolTip.SetToolTip(ShipModulesTreeView, node.ToolTipText);
+                }
+                else
+                {
+                    ToolTip.SetToolTip(ShipModulesTreeView, null);
+                }
+            }
+        }
+
+        private void ShipModulesTreeView_MouseLeave(object? sender, System.EventArgs e)
+        {
+            _lastHoveredNode = null;
+            ToolTip.SetToolTip(ShipModulesTreeView, null);
         }
     }
 }
