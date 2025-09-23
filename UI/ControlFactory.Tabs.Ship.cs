@@ -55,6 +55,7 @@ namespace EliteDataRelay.UI
                 ShowLines = true,
                 ShowNodeToolTips = false, // We use a custom tooltip component for owner drawing.
             };
+            ShipModulesTreeView.BeforeSelect += ShipModulesTreeView_BeforeSelect;
             // Use a dedicated drawing handler for the ship loadout
             ShipModulesTreeView.DrawNode += ShipModulesTreeView_DrawNode;
             ShipModulesTreeView.MouseMove += ShipModulesTreeView_MouseMove;
@@ -294,6 +295,7 @@ namespace EliteDataRelay.UI
             ShipModulesTreeView.DrawNode -= ShipModulesTreeView_DrawNode;
             ShipModulesTreeView.MouseMove -= ShipModulesTreeView_MouseMove;
             ShipModulesTreeView.MouseLeave -= ShipModulesTreeView_MouseLeave;
+            ShipModulesTreeView.BeforeSelect -= ShipModulesTreeView_BeforeSelect;
             ShipModulesTreeView.Dispose();
             HullHealthValueLabel.Dispose();
             MassValueLabel.Dispose();
@@ -324,6 +326,13 @@ namespace EliteDataRelay.UI
         {
             _lastHoveredNode = null;
             ToolTip.SetToolTip(ShipModulesTreeView, null);
+        }
+
+        private void ShipModulesTreeView_BeforeSelect(object? sender, TreeViewCancelEventArgs e)
+        {
+            // By canceling the BeforeSelect event, we prevent any node from being selected,
+            // which in turn prevents the blue selection highlight from being drawn.
+            e.Cancel = true;
         }
     }
 }

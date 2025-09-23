@@ -116,8 +116,9 @@ namespace EliteDataRelay.UI
             _baseTitle = _form.Text;
             UpdateFullTitleText();
 
-            // Set a minimum size to prevent the window from becoming too small to be useful.
-            _form.MinimumSize = new Size(AppConfiguration.WindowSize.Width, AppConfiguration.WindowSize.Height);
+            // Make the window a fixed size and not resizable.
+            _form.FormBorderStyle = FormBorderStyle.FixedSingle;
+            _form.Size = new Size(AppConfiguration.WindowSize.Width, AppConfiguration.WindowSize.Height);
 
             // Set application icon from pre-loaded resource
             if (_appIcon != null) _form.Icon = _appIcon;
