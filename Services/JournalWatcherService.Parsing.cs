@@ -206,19 +206,6 @@ namespace EliteDataRelay.Services
                             var shipIdent = loadGameEvent.ShipIdent;
                             UpdateShipInformation(shipName, shipIdent, shipType, internalShipName);
                         }
-                        else if (eventType == "Cargo")
-                        {
-                            var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(journalLine, options);
-                            if (snapshot != null)
-                            {
-                                string hash = ComputeHash(snapshot);
-                                if (hash == _lastCargoHash) continue;
-
-                                _lastCargoHash = hash;
-                                Debug.WriteLine($"[JournalWatcherService] Found Cargo event. Inventory count: {snapshot.Count}");
-                                CargoInventoryChanged?.Invoke(this, new CargoInventoryEventArgs(snapshot));
-                            }
-                        }
                         else if (eventType == "Materials")
                         {
                             var materialsEvent = JsonSerializer.Deserialize<MaterialsEvent>(journalLine, options);
@@ -293,6 +280,48 @@ namespace EliteDataRelay.Services
             }
         }
 
+        private void ProcessCargoFile()
+        {
+            var cargoFilePath = Path.Combine(_journalDir, "Cargo.json");
+            if (!File.Exists(cargoFilePath))
+            {
+                return;
+            }
+
+            try
+            {
+                // Use a FileStream with ReadWrite share to avoid exceptions if the game is writing to the file.
+                using var fs = new FileStream(cargoFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(fs);
+                string content = reader.ReadToEnd();
+
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return;
+                }
+
+                string hash = ComputeHash(content);
+                if (hash == _lastCargoHash)
+                {
+                    return;
+                }
+                _lastCargoHash = hash;
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(content, options);
+
+                if (snapshot != null)
+                {
+                    Debug.WriteLine($"[JournalWatcherService] Found Cargo.json update. Inventory count: {snapshot.Count}");
+                    CargoInventoryChanged?.Invoke(this, new CargoInventoryEventArgs(snapshot));
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[JournalWatcherService] Error processing Cargo.json: {ex}");
+            }
+        }
+
         private void ProcessStatusFile()
         {
             var statusFilePath = Path.Combine(_journalDir, "Status.json");
@@ -303,7 +332,11 @@ namespace EliteDataRelay.Services
 
             try
             {
-                string content = File.ReadAllText(statusFilePath);
+                // Use a FileStream with ReadWrite share to avoid exceptions if the game is writing to the file.
+                using var fs = new FileStream(statusFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(fs);
+                string content = reader.ReadToEnd();
+
                 if (string.IsNullOrWhiteSpace(content))
                 {
                     return;
@@ -337,6 +370,9 @@ namespace EliteDataRelay.Services
             {
                 Debug.WriteLine($"[JournalWatcherService] Error processing Status.json: {ex}");
             }
+
+            // Also process the cargo file in the same polling tick.
+            ProcessCargoFile();
         }
 
         private void UpdateShipInformation(string? shipName, string? shipIdent, string? shipType, string? internalShipName)
@@ -360,27 +396,6 @@ namespace EliteDataRelay.Services
                 return s;
             }
             return char.ToUpperInvariant(s[0]) + s.Substring(1);
-        }
-
-        /// <summary>
-        /// Compute SHA256 hash of cargo snapshot for duplicate detection.
-        /// </summary>
-        /// <param name="snapshot">The cargo snapshot to hash.</param>
-        /// <returns>Base64-encoded SHA256 hash.</returns>
-        private string ComputeHash(CargoSnapshot snapshot)
-        {
-            string json = JsonSerializer.Serialize(
-                new
-                {
-                    snapshot.Count,
-                    snapshot.Inventory
-                },
-                new JsonSerializerOptions { WriteIndented = false, PropertyNameCaseInsensitive = true });
-
-            using var sha = SHA256.Create();
-            byte[] bytes = Encoding.UTF8.GetBytes(json);
-            byte[] hashBytes = sha.ComputeHash(bytes);
-            return Convert.ToBase64String(hashBytes);
         }
 
         private string ComputeHash(string content)
