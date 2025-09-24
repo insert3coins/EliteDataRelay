@@ -26,7 +26,6 @@ namespace EliteDataRelay.UI
         void HideOverlays();
         void UpdateCargoHeader(int currentCount, int? capacity);
         void UpdateCargoList(CargoSnapshot snapshot);
-        void UpdateMaterialList(IMaterialService materialService);
         void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity);
         void UpdateLocation(string starSystem);
         void UpdateCommanderName(string commanderName);
@@ -34,8 +33,8 @@ namespace EliteDataRelay.UI
         void UpdateBalance(long balance);
         void UpdateTitle(string title);
         void UpdateShipLoadout(ShipLoadout loadout);
-        void UpdateMaterialsOverlay(IMaterialService materialService);
         void UpdateSessionOverlay(long cargo, long credits);
         void UpdateSystemInfo(SystemInfoData data);
+        void UpdateStationInfo(StationInfoData data);
     }
 }

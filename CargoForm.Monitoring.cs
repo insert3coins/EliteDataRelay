@@ -19,7 +19,6 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
-            if (_lastMaterialServiceCache != null) _cargoFormUI.UpdateMaterialsOverlay(_lastMaterialServiceCache);
 
             // Also repopulate session data if tracking is active and shown on the overlay.
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
@@ -41,15 +40,15 @@ namespace EliteDataRelay
             // Re-populate the UI (and the new overlay) with the last known data.
             RepopulateOverlay();
 
-            // Start the journal watcher first. Its initial poll will establish the current location.
+            // Start the journal watcher and let its initial poll complete. This establishes the current state.
             _journalWatcherService.StartMonitoring();
 
-            // Now start the other services that may depend on the initial state.
-            _materialService.Start();
+            // Now that the current state is known, start the other services.
             if (AppConfiguration.EnableSessionTracking)
             {
                 _sessionTrackingService.StartSession();
             }
+            _stationInfoService.Start();
             _systemInfoService.Start();
             _fileMonitoringService.StartMonitoring();
 
@@ -62,6 +61,8 @@ namespace EliteDataRelay
 
         private void StopMonitoringInternal()
         {
+            // Clear cached data first to prevent showing stale info on next start.
+
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: true, stopEnabled: false);
             _cargoFormUI.UpdateMonitoringVisuals(isMonitoring: false);
@@ -73,9 +74,6 @@ namespace EliteDataRelay
             // Stop journal monitoring
             _journalWatcherService.StopMonitoring();
 
-            // Stop material service
-            _materialService.Stop();
-
             // Stop the game process checker
             _gameProcessCheckTimer?.Stop();
 
@@ -85,9 +83,11 @@ namespace EliteDataRelay
                 _sessionTrackingService.StopSession();
             }
 
+            _stationInfoService.Stop();
             _systemInfoService.Stop();
 
-            // Clear the system info cache to prevent showing stale data on next start.
+            // Clear cached data after stopping services
+            _lastStationInfoData = null;
             _lastSystemInfoData = null;
         }
 

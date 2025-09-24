@@ -40,4 +40,43 @@ namespace EliteDataRelay.Models
         public StatusFile Status { get; }
         public StatusChangedEventArgs(StatusFile status) { Status = status; }
     }
+
+    public class DockedEvent
+    {
+        public string StationName { get; set; } = string.Empty;
+        public string StationType { get; set; } = string.Empty;
+        public string? StationAllegiance { get; set; }
+        public string? StationEconomy { get; set; }
+        [JsonPropertyName("StationEconomy_Localised")]
+        public string? StationEconomyLocalised { get; set; }
+        public string? StationGovernment { get; set; }
+        [JsonPropertyName("StationGovernment_Localised")]
+        public string? StationGovernmentLocalised { get; set; }
+        [JsonPropertyName("StationFaction")]
+        public StationFactionInfo? StationFaction { get; set; }
+        public List<string> StationServices { get; set; } = new();
+    }
+
+    public class StationFactionInfo
+    {
+        public string Name { get; set; } = string.Empty;
+    }
+
+    public class DockedEventArgs : EventArgs
+    {
+        public DockedEvent DockedEvent { get; }
+        public DockedEventArgs(DockedEvent dockedEvent)
+        {
+            DockedEvent = dockedEvent;
+        }
+    }
+
+    public class UndockedEventArgs : EventArgs
+    {
+        public string StationName { get; }
+        public UndockedEventArgs(string stationName)
+        {
+            StationName = stationName;
+        }
+    }
 }

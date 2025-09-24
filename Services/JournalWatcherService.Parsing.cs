@@ -74,6 +74,20 @@ namespace EliteDataRelay.Services
                         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         string? eventType = eventElement.GetString();
 
+                        // Handle the case where we load into the game already docked.
+                        // The 'Location' event will contain all the necessary station info.
+                        if (eventType == "Location" &&
+                            jsonDoc.RootElement.TryGetProperty("Docked", out var dockedElement) &&
+                            dockedElement.GetBoolean())
+                        {
+                            var dockedEvent = JsonSerializer.Deserialize<DockedEvent>(journalLine, options);
+                            if (dockedEvent != null)
+                            {
+                                _lastDockedEventArgs = new DockedEventArgs(dockedEvent);
+                                Docked?.Invoke(this, _lastDockedEventArgs);
+                            }
+                        }
+
                         // We only care about location-changing events in this pass.
                         if (eventType != "Location" && eventType != "FSDJump" && eventType != "CarrierJump")
                         {
@@ -147,26 +161,6 @@ namespace EliteDataRelay.Services
                         {
                             ProcessLoadoutEvent(journalLine, options);
                         }
-                        else if (eventType == "Materials")
-                        {
-                            ProcessMaterialsEvent(journalLine, options);
-                        }
-                        else if (eventType == "MaterialCollected")
-                        {
-                            ProcessMaterialCollectedEvent(journalLine, options);
-                        }
-                        else if (eventType == "MaterialDiscarded")
-                        {
-                            ProcessMaterialDiscardedEvent(journalLine, options);
-                        }
-                        else if (eventType == "MaterialTrade")
-                        {
-                            ProcessMaterialTradeEvent(journalLine, options);
-                        }
-                        else if (eventType == "EngineerCraft")
-                        {
-                            ProcessEngineerCraftEvent(journalLine, options);
-                        }
                         else if (eventType == "ShipyardSwap")
                         {
                             ProcessShipyardSwapEvent(journalLine, options);
@@ -176,6 +170,28 @@ namespace EliteDataRelay.Services
                             // These events indicate a loadout change. The subsequent 'Loadout' event is the source of truth.
                             // We don't need to take action here, but acknowledging the event is useful for debugging.
                             Debug.WriteLine($"[JournalWatcherService] Detected module change event: {eventType}. Awaiting next Loadout.");
+                        }
+                        else if (eventType == "Docked")
+                        {
+                            var dockedEvent = JsonSerializer.Deserialize<DockedEvent>(journalLine, options);
+                            if (dockedEvent != null)
+                            {
+                                _lastDockedEventArgs = new DockedEventArgs(dockedEvent);
+                                Docked?.Invoke(this, _lastDockedEventArgs);
+                            }
+                        }
+                        else if (eventType == "Undocked")
+                        {
+                            // The Undocked event just has a "StationName" property.
+                            var stationName = jsonDoc.RootElement.TryGetProperty("StationName", out var nameElement) ? nameElement.GetString() : "Unknown";
+                            // Clear the last docked state when we undock.
+                            // This is crucial for the initial scan to correctly determine the player is no longer docked.
+                            if (_lastDockedEventArgs != null)
+                            {
+                                Debug.WriteLine($"[JournalWatcherService] Undocked from {_lastDockedEventArgs.DockedEvent.StationName}. Clearing docked state.");
+                            }
+                            _lastDockedEventArgs = null;
+                            Undocked?.Invoke(this, new UndockedEventArgs(stationName ?? "Unknown"));
                         }
                     }
                     catch (JsonException ex)

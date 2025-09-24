@@ -31,12 +31,6 @@ namespace EliteDataRelay.UI
         void UpdateCargoList(CargoSnapshot snapshot);
 
         /// <summary>
-        /// Updates the material display with the current material list.
-        /// </summary>
-        /// <param name="materialService">The material service containing the data.</param>
-        void UpdateMaterialList(IMaterialService materialService);
-
-        /// <summary>
         /// Update the form title.
         /// </summary>
         /// <param name="title">New title text</param>

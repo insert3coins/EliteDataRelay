@@ -132,16 +132,6 @@ namespace EliteDataRelay
             }));
         }
 
-        private void OnMaterialsUpdated(object? sender, EventArgs e)
-        {
-            _lastMaterialServiceCache = _materialService;
-            Invoke(new Action(() =>
-            {
-                _cargoFormUI.UpdateMaterialList(_materialService);
-                _cargoFormUI.UpdateMaterialsOverlay(_materialService);
-            }));
-        }
-
         private void OnSessionUpdated(object? sender, EventArgs e)
         {
             if (sender is not SessionTrackingService tracker) return;
@@ -162,6 +152,16 @@ namespace EliteDataRelay
             Invoke(new Action(() =>
             {
                 _cargoFormUI.UpdateLocation(_lastLocation);
+            }));
+        }
+
+        private void OnStationInfoUpdated(object? sender, StationInfoData e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastStationInfoData = e;
+                _cargoFormUI.UpdateStationInfo(e);
             }));
         }
 

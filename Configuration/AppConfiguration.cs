@@ -65,11 +65,6 @@ namespace EliteDataRelay.Configuration
             get => _settings.OverlayOpacity;
             set => _settings.OverlayOpacity = value;
         }
-        public static bool PinMaterialsMode
-        {
-            get => _settings.PinMaterialsMode;
-            set => _settings.PinMaterialsMode = value;
-        }
         public static bool EnableHotkeys
         {
             get => _settings.EnableHotkeys;
@@ -85,15 +80,15 @@ namespace EliteDataRelay.Configuration
         // Overlay Settings
         public static bool EnableInfoOverlay { get => _settings.EnableInfoOverlay; set => _settings.EnableInfoOverlay = value; }
         public static bool EnableCargoOverlay { get => _settings.EnableCargoOverlay; set => _settings.EnableCargoOverlay = value; }
-        public static bool EnableMaterialsOverlay { get => _settings.EnableMaterialsOverlay; set => _settings.EnableMaterialsOverlay = value; }
         public static bool EnableSystemInfoOverlay { get => _settings.EnableSystemInfoOverlay; set => _settings.EnableSystemInfoOverlay = value; }
+        public static bool EnableStationInfoOverlay { get => _settings.EnableStationInfoOverlay; set => _settings.EnableStationInfoOverlay = value; }
 
         public static bool AllowOverlayDrag { get => _settings.AllowOverlayDrag; set => _settings.AllowOverlayDrag = value; }
         public static Color OverlayTextColor { get => Color.FromArgb(_settings.OverlayTextColorArgb); set => _settings.OverlayTextColorArgb = value.ToArgb(); }
         public static Point InfoOverlayLocation { get => _settings.InfoOverlayLocation; set => _settings.InfoOverlayLocation = value; }
         public static Point CargoOverlayLocation { get => _settings.CargoOverlayLocation; set => _settings.CargoOverlayLocation = value; }
-        public static Point MaterialsOverlayLocation { get => _settings.MaterialsOverlayLocation; set => _settings.MaterialsOverlayLocation = value; }
         public static Point SystemInfoOverlayLocation { get => _settings.SystemInfoOverlayLocation; set => _settings.SystemInfoOverlayLocation = value; }
+        public static Point StationInfoOverlayLocation { get => _settings.StationInfoOverlayLocation; set => _settings.StationInfoOverlayLocation = value; }
         public static Keys StartMonitoringHotkey { get => _settings.StartMonitoringHotkey; set => _settings.StartMonitoringHotkey = value; }
         public static Keys StopMonitoringHotkey { get => _settings.StopMonitoringHotkey; set => _settings.StopMonitoringHotkey = value; }
         public static Keys ShowOverlayHotkey { get => _settings.ShowOverlayHotkey; set => _settings.ShowOverlayHotkey = value; }
@@ -116,12 +111,6 @@ namespace EliteDataRelay.Configuration
         public static float DefaultFontSize => _settings.DefaultFontSize;
 
         public static string WelcomeMessage => _settings.WelcomeMessage;
-        // This is a reference type, so callers can already modify the contents of the set.
-        public static HashSet<string> PinnedMaterials
-        {
-            get => _settings.PinnedMaterials;
-            set => _settings.PinnedMaterials = value;
-        }
 
         /// <summary>
         /// Static constructor to set up paths and load settings on application start.
@@ -220,12 +209,10 @@ namespace EliteDataRelay.Configuration
             public bool EnableSessionTracking { get; set; } = true;
             public bool ShowSessionOnOverlay { get; set; } = true;
             public string WelcomeMessage { get; set; } = "Click 'Start' to begin monitoring.";
-            public HashSet<string> PinnedMaterials { get; set; } = new HashSet<string>();
             public int OverlayBackgroundColorArgb { get; set; } = Color.FromArgb(150, 0, 0, 0).ToArgb();
             public string OverlayFontName { get; set; } = "Consolas";
             public float OverlayFontSize { get; set; } = 12f;
             public int OverlayOpacity { get; set; } = 70;
-            public bool PinMaterialsMode { get; set; } = false;
             public bool EnableHotkeys { get; set; } = true; // Hotkeys are enabled by default for new installations.
             public bool EnableFileOutput { get; set; } = false;
             public string OutputFileFormat { get; set; } = "{name} - {count}";
@@ -233,14 +220,14 @@ namespace EliteDataRelay.Configuration
             public string OutputDirectory { get; set; } = string.Empty;
             public bool EnableInfoOverlay { get; set; } = false;
             public bool EnableCargoOverlay { get; set; } = false;
-            public bool EnableMaterialsOverlay { get; set; } = false;
             public bool EnableSystemInfoOverlay { get; set; } = false;
+            public bool EnableStationInfoOverlay { get; set; } = false;
             public bool AllowOverlayDrag { get; set; } = false;
             public int OverlayTextColorArgb { get; set; } = Color.Orange.ToArgb();
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
-            public Point MaterialsOverlayLocation { get; set; } = Point.Empty;
             public Point SystemInfoOverlayLocation { get; set; } = Point.Empty;
+            public Point StationInfoOverlayLocation { get; set; } = Point.Empty;
             public Keys StartMonitoringHotkey { get; set; } = Keys.F1;
             public Keys StopMonitoringHotkey { get; set; } = Keys.F2;
             public Keys ShowOverlayHotkey { get; set; } = Keys.F3;

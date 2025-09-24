@@ -16,11 +16,8 @@ namespace EliteDataRelay.Services
         event EventHandler<LoadoutChangedEventArgs>? LoadoutChanged;
         event EventHandler<StatusChangedEventArgs>? StatusChanged;
         event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
-        event EventHandler<MaterialsEventArgs>? MaterialsEvent;
-        event EventHandler<MaterialCollectedEventArgs>? MaterialCollectedEvent;
-        event EventHandler<MaterialCollectedEventArgs>? MaterialDiscardedEvent;
-        event EventHandler<MaterialTradeEventArgs>? MaterialTradeEvent;
-        event EventHandler<EngineerCraftEventArgs>? EngineerCraftEvent;
+        event EventHandler<DockedEventArgs>? Docked;
+        event EventHandler<UndockedEventArgs>? Undocked;
 
         bool IsMonitoring { get; }
         string JournalDirectoryPath { get; }
@@ -29,5 +26,6 @@ namespace EliteDataRelay.Services
         void StopMonitoring();
         void Reset();
         LocationChangedEventArgs? GetLastKnownLocation();
+        DockedEventArgs? GetLastKnownDockedState();
     }
 }

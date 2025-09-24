@@ -8,12 +8,6 @@ namespace EliteDataRelay.UI
     public interface IOverlayManager
     {
         /// <summary>
-        /// Updates the materials overlay with the current material list.
-        /// </summary>
-        /// <param name="materialService">The material service containing the data.</param>
-        void UpdateMaterialsOverlay(IMaterialService materialService);
-
-        /// <summary>
         /// Stops and starts the overlay service to apply new settings.
         /// </summary>
         void RefreshOverlay();

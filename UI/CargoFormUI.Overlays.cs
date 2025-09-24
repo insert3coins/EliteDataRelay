@@ -5,16 +5,10 @@ namespace EliteDataRelay.UI
 {
     public partial class CargoFormUI
     {
-        public void UpdateMaterialsOverlay(IMaterialService materialService)
-        {
-            _materialServiceCache = materialService; // Also cache here for overlay refreshes
-            _overlayService?.UpdateMaterials(materialService);
-        }
-
         public void RefreshOverlay()
         {
             _overlayService?.Stop();
-            if (AppConfiguration.EnableInfoOverlay || AppConfiguration.EnableCargoOverlay || AppConfiguration.EnableMaterialsOverlay || AppConfiguration.EnableSystemInfoOverlay)
+            if (AppConfiguration.EnableInfoOverlay || AppConfiguration.EnableCargoOverlay || AppConfiguration.EnableSystemInfoOverlay || AppConfiguration.EnableStationInfoOverlay)
             {
                 _overlayService?.Start();
             }

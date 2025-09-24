@@ -16,17 +16,15 @@ namespace EliteDataRelay.UI
             };
 
             var cargoPage = CreateCargoTabPage(fontManager);
-            var materialsPage = CreateMaterialsTabPage(fontManager);
             var shipPage = CreateShipTabPage(fontManager);
 
-            TabControl.TabPages.AddRange(new[] { cargoPage, materialsPage, shipPage });
+            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage });
         }
 
         private void DisposeTabControls()
         {
             TabControl.Dispose();
             DisposeCargoTabControls();
-            DisposeMaterialsTabControls();
             DisposeShipTabControls();
         }
     }

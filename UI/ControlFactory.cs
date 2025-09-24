@@ -10,9 +10,6 @@ namespace EliteDataRelay.UI
     public partial class ControlFactory : IDisposable
     {
         public ListView ListView { get; private set; } = null!;
-        public TreeView MaterialTreeView { get; private set; } = null!;
-        public CheckBox PinMaterialsCheckBox { get; private set; } = null!;
-        public TextBox MaterialSearchBox { get; private set; } = null!;
         public PictureBox ShipIconPictureBox { get; private set; } = null!;
         public Label ShipNameLabel { get; private set; } = null!;
         public Label ShipIdentLabel { get; private set; } = null!;

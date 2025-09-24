@@ -26,8 +26,8 @@ namespace EliteDataRelay.UI
         private Label _lblOutputFileName = null!;
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
-        private CheckBox _chkEnableMaterialsOverlay = null!;
         private CheckBox _chkEnableSystemInfoOverlay = null!;
+        private CheckBox _chkEnableStationInfoOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
         private GroupBox _grpSessionTracking = null!;
@@ -64,8 +64,8 @@ namespace EliteDataRelay.UI
         private int _originalOverlayOpacity;
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
-        private Point _originalMaterialsOverlayLocation;
         private Point _originalSystemInfoOverlayLocation;
+        private Point _originalStationInfoOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
 
@@ -88,9 +88,9 @@ namespace EliteDataRelay.UI
             _chkEnableSessionTracking.Checked = AppConfiguration.EnableSessionTracking;
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableInfoOverlay;
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
-            _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
-            _chkEnableMaterialsOverlay.Checked = AppConfiguration.EnableMaterialsOverlay;
+            _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;            
             _chkEnableSystemInfoOverlay.Checked = AppConfiguration.EnableSystemInfoOverlay;
+            _chkEnableStationInfoOverlay.Checked = AppConfiguration.EnableStationInfoOverlay;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -115,8 +115,8 @@ namespace EliteDataRelay.UI
             _originalOverlayOpacity = _overlayOpacity;
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
-            _originalMaterialsOverlayLocation = AppConfiguration.MaterialsOverlayLocation;
             _originalSystemInfoOverlayLocation = AppConfiguration.SystemInfoOverlayLocation;
+            _originalStationInfoOverlayLocation = AppConfiguration.StationInfoOverlayLocation;
 
             UpdateAppearanceControls();
         }
@@ -159,9 +159,9 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableSessionTracking = _chkEnableSessionTracking.Checked;
             AppConfiguration.EnableInfoOverlay = _chkEnableLeftOverlay.Checked;
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
-            AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
-            AppConfiguration.EnableMaterialsOverlay = _chkEnableMaterialsOverlay.Checked;
+            AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;            
             AppConfiguration.EnableSystemInfoOverlay = _chkEnableSystemInfoOverlay.Checked;
+            AppConfiguration.EnableStationInfoOverlay = _chkEnableStationInfoOverlay.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
@@ -229,8 +229,8 @@ namespace EliteDataRelay.UI
 
             AppConfiguration.InfoOverlayLocation = _originalInfoOverlayLocation;
             AppConfiguration.CargoOverlayLocation = _originalCargoOverlayLocation;
-            AppConfiguration.MaterialsOverlayLocation = _originalMaterialsOverlayLocation;
             AppConfiguration.SystemInfoOverlayLocation = _originalSystemInfoOverlayLocation;
+            AppConfiguration.StationInfoOverlayLocation = _originalStationInfoOverlayLocation;
 
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }

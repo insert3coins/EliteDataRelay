@@ -20,9 +20,7 @@ namespace EliteDataRelay.UI
         private OverlayService? _overlayService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
-        private string _currentLocation = "Unknown";
-        private IMaterialService? _materialServiceCache;
-        private System.Windows.Forms.Timer? _materialSearchTimer;
+        private string _currentLocation = "Unknown";        
 
         private string _baseTitle = "";
 
@@ -50,9 +48,6 @@ namespace EliteDataRelay.UI
             _controlFactory = new ControlFactory(_fontManager);
             _overlayService = new OverlayService();
 
-            _materialSearchTimer = new System.Windows.Forms.Timer { Interval = 300 };
-            _materialSearchTimer.Tick += OnMaterialSearchTimerTick;
-
             if (_controlFactory.WatchingLabel != null)
             {
                 _watchingAnimationManager = new WatchingAnimationManager(_controlFactory.WatchingLabel);
@@ -65,9 +60,7 @@ namespace EliteDataRelay.UI
             SetupFormProperties();
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
-            DisplayWelcomeMessage();
-            UpdateMaterialSearchAutocomplete();
-            UpdatePinMaterialsCheckboxText();
+            DisplayWelcomeMessage();            
         }
 
         private void OnFormLoad(object? sender, EventArgs e)
@@ -136,14 +129,6 @@ namespace EliteDataRelay.UI
             _controlFactory.SessionBtn.Click += (s, e) => SessionClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
 
-            // Wire up the main action buttons
-
-            // Wire up the materials tab controls
-            _controlFactory.PinMaterialsCheckBox.CheckedChanged += OnPinMaterialsCheckBoxChanged;
-            _controlFactory.MaterialTreeView.AfterCheck += OnMaterialNodeChecked;
-            _controlFactory.MaterialSearchBox.TextChanged += OnMaterialSearchChanged;
-            _controlFactory.ClearPinnedButton.Click += OnClearPinnedClicked;
-
             // Tray icon event handlers
             if (_trayIconManager != null)
             {
@@ -152,37 +137,6 @@ namespace EliteDataRelay.UI
                 _trayIconManager.StopClicked += (s, e) => StopClicked?.Invoke(s, e);
                 _trayIconManager.ExitClicked += (s, e) => ExitClicked?.Invoke(s, e);
             }
-        }
-
-        private void OnMaterialSearchChanged(object? sender, EventArgs e)
-        {
-            // Debounce the search input to avoid refreshing on every keystroke.
-            _materialSearchTimer?.Stop();
-            _materialSearchTimer?.Start();
-        }
-
-        private void OnMaterialSearchTimerTick(object? sender, EventArgs e)
-        {
-            _materialSearchTimer?.Stop();
-
-            // When search text changes, we need to re-filter and update the material list.
-            // The UpdateMaterialList method already has access to the cached material service.
-            if (_materialServiceCache != null)
-            {
-                UpdateMaterialList(_materialServiceCache);
-            }
-        }
-
-        private void UpdateMaterialSearchAutocomplete()
-        {
-            if (_controlFactory == null) return;
-
-            var allMaterials = MaterialDataService.GetAll();
-            var collection = new AutoCompleteStringCollection();
-            // Use the localised name if available, otherwise the fallback name.
-            var materialNames = allMaterials.Select(m => !string.IsNullOrEmpty(m.LocalisedName) ? m.LocalisedName : m.Name).ToArray();
-            collection.AddRange(materialNames);
-            _controlFactory.MaterialSearchBox.AutoCompleteCustomSource = collection;
         }
 
         private void OnShowApplication(object? sender, EventArgs e)
@@ -204,13 +158,17 @@ namespace EliteDataRelay.UI
             _overlayService?.UpdateSystemInfo(data);
         }
 
+        public void UpdateStationInfo(StationInfoData data)
+        {
+            _overlayService?.UpdateStationInfo(data);
+        }
+
         public void Dispose()
         {
             _controlFactory?.Dispose();
             _layoutManager?.Dispose();
             _trayIconManager?.Dispose();
             _watchingAnimationManager?.Dispose();
-            _materialSearchTimer?.Dispose();
             _overlayService?.Dispose();
             _fontManager?.Dispose(); // Dispose fonts after the controls that use them.
             _appIcon?.Dispose();

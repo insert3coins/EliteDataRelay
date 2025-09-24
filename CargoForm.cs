@@ -22,9 +22,9 @@ namespace EliteDataRelay
         private readonly ISoundService _soundService;
         private readonly IFileOutputService _fileOutputService;
         private readonly ICargoFormUI _cargoFormUI;
-        private readonly IMaterialService _materialService;
         private readonly SessionTrackingService _sessionTrackingService;
         private readonly ISystemInfoService _systemInfoService;
+        private readonly IStationInfoService _stationInfoService;
 
         public CargoForm()
         {
@@ -37,9 +37,9 @@ namespace EliteDataRelay
             _soundService = new SoundService();
             _fileOutputService = new FileOutputService();
             _cargoFormUI = new CargoFormUI();
-            _materialService = new MaterialService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _journalWatcherService);
             _systemInfoService = new SystemInfoService(_journalWatcherService);
+            _stationInfoService = new StationInfoService(_journalWatcherService);
 
             InitializeComponent();
             SetupEventHandlers();
@@ -58,7 +58,7 @@ namespace EliteDataRelay
         private long? _lastBalance;
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
-        private IMaterialService? _lastMaterialServiceCache;
+        private StationInfoData? _lastStationInfoData;
         private SystemInfoData? _lastSystemInfoData;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
@@ -97,13 +97,13 @@ namespace EliteDataRelay
             _journalWatcherService.LocationChanged += OnLocationChanged;
             _journalWatcherService.BalanceChanged += OnBalanceChanged;
 
-            _materialService.MaterialsUpdated += OnMaterialsUpdated;            
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             // Assumes JournalWatcherService is updated to provide these events
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
             _journalWatcherService.LoadoutChanged += OnLoadoutChanged;
             _journalWatcherService.StatusChanged += OnStatusChanged;
+            _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
         }
 
@@ -116,10 +116,10 @@ namespace EliteDataRelay
                 (_fileMonitoringService as IDisposable)?.Dispose();
                 (_soundService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();
-                (_materialService as IDisposable)?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();
                 _sessionTrackingService.Dispose();
+                (_stationInfoService as IDisposable)?.Dispose();
                 (_systemInfoService as IDisposable)?.Dispose();
             }
             base.Dispose(disposing);

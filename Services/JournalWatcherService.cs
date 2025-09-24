@@ -29,6 +29,7 @@ namespace EliteDataRelay.Services
         private string? _lastShipIdent;
         private string? _lastShipType;
         private LocationChangedEventArgs? _lastLocationArgs;
+        private DockedEventArgs? _lastDockedEventArgs;
         private bool _isMonitoring;
 
         /// <summary>
@@ -72,25 +73,14 @@ namespace EliteDataRelay.Services
         public event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
 
         /// <summary>
-        /// Event raised for a full materials list snapshot.
+        /// Event raised when the player docks at a station or carrier.
         /// </summary>
-        public event EventHandler<MaterialsEventArgs>? MaterialsEvent;
+        public event EventHandler<DockedEventArgs>? Docked;
 
         /// <summary>
-        /// Event raised when a material is collected.
+        /// Event raised when the player undocks from a station or carrier.
         /// </summary>
-        public event EventHandler<MaterialCollectedEventArgs>? MaterialCollectedEvent;
-
-        /// <summary>
-        /// Event raised when a material is discarded.
-        /// </summary>
-        public event EventHandler<MaterialCollectedEventArgs>? MaterialDiscardedEvent;
-
-        /// <summary>
-        /// Event raised when materials are traded or used in crafting.
-        /// </summary>
-        public event EventHandler<MaterialTradeEventArgs>? MaterialTradeEvent;
-        public event EventHandler<EngineerCraftEventArgs>? EngineerCraftEvent;
+        public event EventHandler<UndockedEventArgs>? Undocked;
 
         /// <summary>
         /// Gets whether the monitoring service is currently active.
@@ -140,6 +130,7 @@ namespace EliteDataRelay.Services
             _lastKnownBalance = -1;
             _lastCommanderName = null;
             _lastLocationArgs = null;
+            _lastDockedEventArgs = null;
             Debug.WriteLine("[JournalWatcherService] State has been reset.");
         }
 
@@ -183,6 +174,11 @@ namespace EliteDataRelay.Services
         public LocationChangedEventArgs? GetLastKnownLocation()
         {
             return _lastLocationArgs;
+        }
+
+        public DockedEventArgs? GetLastKnownDockedState()
+        {
+            return _lastDockedEventArgs;
         }
     }
 }

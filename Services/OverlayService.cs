@@ -11,8 +11,8 @@ namespace EliteDataRelay.Services
     {
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
-        private OverlayForm? _materialsOverlay;
         private OverlayForm? _systemInfoOverlay;
+        private OverlayForm? _stationInfoOverlay;
 
         public void Start()
         {
@@ -58,15 +58,15 @@ namespace EliteDataRelay.Services
                 _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (AppConfiguration.EnableMaterialsOverlay)
-            {
-                _materialsOverlay = new OverlayForm(OverlayForm.OverlayPosition.Materials, AppConfiguration.AllowOverlayDrag);
-                _materialsOverlay.PositionChanged += OnOverlayPositionChanged;
-            }
             if (AppConfiguration.EnableSystemInfoOverlay)
             {
                 _systemInfoOverlay = new OverlayForm(OverlayForm.OverlayPosition.SystemInfo, AppConfiguration.AllowOverlayDrag);
                 _systemInfoOverlay.PositionChanged += OnOverlayPositionChanged;
+            }
+            if (AppConfiguration.EnableStationInfoOverlay)
+            {
+                _stationInfoOverlay = new OverlayForm(OverlayForm.OverlayPosition.StationInfo, AppConfiguration.AllowOverlayDrag);
+                _stationInfoOverlay.PositionChanged += OnOverlayPositionChanged;
             }
 
             // Calculate default positions.
@@ -106,15 +106,18 @@ namespace EliteDataRelay.Services
                 defaultRightLocation = new Point(rightStackX, currentY);
             }
 
-            // Default for materials overlay (to the left of the main stack)
-            int materialsX = rightStackX - (_materialsOverlay?.Width ?? 0) - screenEdgePadding;
-            Point defaultMaterialsLocation = new Point(materialsX, (screen.Height / 2) - ((_materialsOverlay?.Height ?? 0) / 2));
-
-            // Default for System Info overlay (top middle)
+            // Default for System Info overlay (bottom right)
             Point defaultSystemInfoLocation = Point.Empty;
             if (_systemInfoOverlay != null)
             {
-                defaultSystemInfoLocation = new Point((screen.Width / 2) - (_systemInfoOverlay.Width / 2), screenEdgePadding);
+                defaultSystemInfoLocation = new Point(screen.Width - _systemInfoOverlay.Width - screenEdgePadding, screen.Height - _systemInfoOverlay.Height - screenEdgePadding);
+            }
+
+            // Default for Station Info overlay (bottom left)
+            Point defaultStationInfoLocation = Point.Empty;
+            if (_stationInfoOverlay != null)
+            {
+                defaultStationInfoLocation = new Point(screenEdgePadding, screen.Height - _stationInfoOverlay.Height - screenEdgePadding);
             }
 
             if (_leftOverlayForm != null)
@@ -141,18 +144,6 @@ namespace EliteDataRelay.Services
                 }
                 _rightOverlayForm.Show();
             }
-            if (_materialsOverlay != null)
-            {
-                if (AppConfiguration.MaterialsOverlayLocation != Point.Empty)
-                {
-                    _materialsOverlay.Location = AppConfiguration.MaterialsOverlayLocation;
-                }
-                else
-                {
-                    _materialsOverlay.Location = defaultMaterialsLocation;
-                }
-                _materialsOverlay.Show();
-            }
             if (_systemInfoOverlay != null)
             {
                 if (AppConfiguration.SystemInfoOverlayLocation != Point.Empty)
@@ -165,34 +156,46 @@ namespace EliteDataRelay.Services
                 }
                 _systemInfoOverlay.Show();
             }
+            if (_stationInfoOverlay != null)
+            {
+                if (AppConfiguration.StationInfoOverlayLocation != Point.Empty)
+                {
+                    _stationInfoOverlay.Location = AppConfiguration.StationInfoOverlayLocation;
+                }
+                else
+                {
+                    _stationInfoOverlay.Location = defaultStationInfoLocation;
+                }
+                _stationInfoOverlay.Show();
+            }
         }
 
         public void Stop()
         {
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
-            _materialsOverlay?.Close();
             _systemInfoOverlay?.Close();
+            _stationInfoOverlay?.Close();
             _leftOverlayForm = null;
             _rightOverlayForm = null;
-            _materialsOverlay = null;
             _systemInfoOverlay = null;
+            _stationInfoOverlay = null;
         }
 
         public void Show()
         {
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
-            _materialsOverlay?.Show();
             _systemInfoOverlay?.Show();
+            _stationInfoOverlay?.Show();
         }
 
         public void Hide()
         {
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
-            _materialsOverlay?.Hide();
             _systemInfoOverlay?.Hide();
+            _stationInfoOverlay?.Hide();
         }
 
         private void OnOverlayPositionChanged(object? sender, Point newLocation)
@@ -205,13 +208,13 @@ namespace EliteDataRelay.Services
             {
                 AppConfiguration.CargoOverlayLocation = newLocation;
             }
-            else if (sender == _materialsOverlay)
-            {
-                AppConfiguration.MaterialsOverlayLocation = newLocation;
-            }
             else if (sender == _systemInfoOverlay)
             {
                 AppConfiguration.SystemInfoOverlayLocation = newLocation;
+            }
+            else if (sender == _stationInfoOverlay)
+            {
+                AppConfiguration.StationInfoOverlayLocation = newLocation;
             }
             AppConfiguration.Save();
         }
@@ -251,14 +254,14 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.UpdateSessionCargoCollected($"Session Cargo: {cargo}");
         }
 
-        public void UpdateMaterials(IMaterialService materialService)
-        {
-            _materialsOverlay?.UpdateMaterials(materialService);
-        }
-
         public void UpdateSystemInfo(SystemInfoData data)
         {
             _systemInfoOverlay?.UpdateSystemInfo(data);
+        }
+
+        public void UpdateStationInfo(StationInfoData data)
+        {
+            _stationInfoOverlay?.UpdateStationInfo(data);
         }
 
         #endregion
