@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 using EliteDataRelay.Configuration;
 
@@ -198,15 +199,20 @@ namespace EliteDataRelay.UI
             _form.Activate();
         }
 
+        public void UpdateSystemInfo(SystemInfoData data)
+        {
+            _overlayService?.UpdateSystemInfo(data);
+        }
+
         public void Dispose()
         {
-            _fontManager?.Dispose();
             _controlFactory?.Dispose();
             _layoutManager?.Dispose();
             _trayIconManager?.Dispose();
             _watchingAnimationManager?.Dispose();
             _materialSearchTimer?.Dispose();
             _overlayService?.Dispose();
+            _fontManager?.Dispose(); // Dispose fonts after the controls that use them.
             _appIcon?.Dispose();
             _iconStream?.Dispose();
         }

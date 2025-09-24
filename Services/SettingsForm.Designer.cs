@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
@@ -158,7 +159,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Overlay Functionality",
                 Location = new Point(12, 12),
-                Size = new Size(410, 155),
+                Size = new Size(440, 185),
             };
 
             // Enable Right Overlay CheckBox
@@ -178,10 +179,18 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            // Enable System Info Overlay CheckBox
+            _chkEnableSystemInfoOverlay = new CheckBox
+            {
+                Text = "Enable system info overlay (from EDSM/Inara)",
+                Location = new Point(15, 95),
+                AutoSize = true
+            };
+
             _chkShowSessionOnOverlay = new CheckBox
             {
                 Text = "Show session stats on cargo overlay",
-                Location = new Point(15, 95),
+                Location = new Point(15, 120),
                 AutoSize = true
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
@@ -190,7 +199,7 @@ namespace EliteDataRelay.UI
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(15, 120),
+                Location = new Point(15, 150),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -251,6 +260,7 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableMaterialsOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableSystemInfoOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 

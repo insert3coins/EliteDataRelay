@@ -16,7 +16,8 @@ namespace EliteDataRelay.UI
         {
             Info,
             Cargo,
-            Materials
+            Materials,
+            SystemInfo
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -39,6 +40,15 @@ namespace EliteDataRelay.UI
         private IReadOnlyDictionary<string, MaterialItem> _manufacturedMaterials = new Dictionary<string, MaterialItem>();
         private IReadOnlyDictionary<string, MaterialItem> _encodedMaterials = new Dictionary<string, MaterialItem>();
         private Panel _materialsListPanel = null!;
+
+        // New fields for the system info overlay
+        private Label _systemNameLabel = null!;
+        private Label _allegianceLabel = null!;
+        private Label _economyLabel = null!;
+        private Label _governmentLabel = null!;
+        private Label _securityLabel = null!;
+        private Label _populationLabel = null!;
+        private Label _factionLabel = null!;
 
         private int _scrollOffset = 0;
         private int _totalContentHeight = 0;
@@ -81,6 +91,9 @@ namespace EliteDataRelay.UI
                     break;
                 case OverlayPosition.Materials:
                     this.Text = "Elite Data Relay: Materials";
+                    break;
+                case OverlayPosition.SystemInfo:
+                    this.Text = "Elite Data Relay: System Info";
                     break;
                 default:
                     this.Text = "Elite Data Relay Overlay";
@@ -207,6 +220,66 @@ namespace EliteDataRelay.UI
                 contentPanel.Controls.Add(_materialsListPanel);
                 Controls.Add(contentPanel);
             }
+            else if (_position == OverlayPosition.SystemInfo)
+            {
+                this.Size = new Size(450, 180);
+
+                // --- Header ---
+                var titleLabel = CreateOverlayLabel(new Point(10, 8), _listFont);
+                titleLabel.Text = "SYSTEM INFORMATION";
+                titleLabel.ForeColor = Color.FromArgb(255, 140, 0); // Header orange
+
+                _systemNameLabel = CreateOverlayLabel(new Point(10, 25), _labelFont);
+
+                var separator = new Label { Height = 2, Dock = DockStyle.None, BorderStyle = BorderStyle.Fixed3D, BackColor = Color.Gray, Location = new Point(10, 55), Width = this.ClientSize.Width - 20 };
+
+                // --- Details Table ---
+                var detailsTable = new TableLayoutPanel
+                {
+                    Location = new Point(10, 65),
+                    Size = new Size(this.ClientSize.Width - 20, 105),
+                    ColumnCount = 4,
+                    RowCount = 4,
+                    BackColor = Color.Transparent
+                };
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));   // Value
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Label
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));   // Value
+
+                // Create labels for the grid
+                _allegianceLabel = CreateOverlayLabel(Point.Empty, _listFont); // Assign created label to field
+                _governmentLabel = CreateOverlayLabel(Point.Empty, _listFont); // Assign created label to field
+                _economyLabel = CreateOverlayLabel(Point.Empty, _listFont);    // Assign created label to field
+                _securityLabel = CreateOverlayLabel(Point.Empty, _listFont);   // Assign created label to field
+                _populationLabel = CreateOverlayLabel(Point.Empty, _listFont); // Assign created label to field
+                _factionLabel = CreateOverlayLabel(Point.Empty, _listFont);    // Assign created label to field
+                _factionLabel.AutoSize = false;
+                _factionLabel.Dock = DockStyle.Fill;
+
+                // Add labels to the table
+                detailsTable.Controls.Add(CreateHeaderLabel("Allegiance:"), 0, 0);
+                detailsTable.Controls.Add(_allegianceLabel, 1, 0);
+                detailsTable.Controls.Add(CreateHeaderLabel("Gov:"), 2, 0);
+                detailsTable.Controls.Add(_governmentLabel, 3, 0);
+
+                detailsTable.Controls.Add(CreateHeaderLabel("Economy:"), 0, 1);
+                detailsTable.Controls.Add(_economyLabel, 1, 1);
+                detailsTable.Controls.Add(CreateHeaderLabel("Security:"), 2, 1);
+                detailsTable.Controls.Add(_securityLabel, 3, 1);
+
+                detailsTable.Controls.Add(CreateHeaderLabel("Population:"), 0, 2);
+                detailsTable.Controls.Add(_populationLabel, 1, 2);
+
+                detailsTable.Controls.Add(CreateHeaderLabel("Faction:"), 0, 3);
+                detailsTable.SetColumnSpan(_factionLabel, 3); // Let the faction span the remaining columns
+                detailsTable.Controls.Add(_factionLabel, 1, 3);
+
+                Controls.Add(titleLabel);
+                Controls.Add(_systemNameLabel);
+                Controls.Add(separator);
+                Controls.Add(detailsTable);
+            }
 
             // Wire up dragging for the form and all its children, recursively.
             AttachDragHandlers(this);
@@ -222,6 +295,18 @@ namespace EliteDataRelay.UI
                 ForeColor = AppConfiguration.OverlayTextColor,
                 BackColor = Color.Transparent,
                 Text = "" // Default to empty string 
+            };
+        }
+
+        private Label CreateHeaderLabel(string text)
+        {
+            return new Label
+            {
+                Text = text,
+                Font = _listFont,
+                ForeColor = SystemColors.GrayText, // Use a dimmer color for headers
+                BackColor = Color.Transparent,
+                AutoSize = true
             };
         }
 
@@ -562,10 +647,47 @@ namespace EliteDataRelay.UI
             _materialsListPanel?.Invalidate();
         }
 
+        public void UpdateSystemInfo(SystemInfoData data)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateSystemInfo(data)));
+                return;
+            }
+
+            UpdateLabel(_systemNameLabel, data.SystemName, AppConfiguration.OverlayTextColor); // Main system name
+            UpdateLabel(_allegianceLabel, data.Allegiance, AppConfiguration.OverlayTextColor);
+            UpdateLabel(_governmentLabel, data.Government, AppConfiguration.OverlayTextColor);
+            UpdateLabel(_economyLabel, data.Economy, AppConfiguration.OverlayTextColor);
+            UpdateLabel(_securityLabel, data.Security, GetColorForSecurityLevel(data.Security));
+            UpdateLabel(_populationLabel, $"{data.Population:N0}", AppConfiguration.OverlayTextColor);
+            UpdateLabel(_factionLabel, $"{data.ControllingFaction} ({data.FactionState})", AppConfiguration.OverlayTextColor);
+        }
+
+        private Color GetColorForSecurityLevel(string securityLevel)
+        {
+            if (string.IsNullOrEmpty(securityLevel)) return AppConfiguration.OverlayTextColor;
+
+            return securityLevel.ToLowerInvariant() switch
+            {
+                "high" => Color.SkyBlue,
+                "medium" => Color.Goldenrod,
+                "low" => Color.Orange,
+                "anarchy" => Color.Crimson,
+                _ => AppConfiguration.OverlayTextColor
+            };
+        }
+
         private void UpdateLabel(Label label, string text)
         {
             if (InvokeRequired) { Invoke(new Action(() => label.Text = text)); }
             else { label.Text = text; }
+        }
+
+        private void UpdateLabel(Label label, string text, Color color)
+        {
+            if (InvokeRequired) { Invoke(new Action(() => { label.Text = text; label.ForeColor = color; })); }
+            else { label.Text = text; label.ForeColor = color; }
         }
 
          // Clean up any resources being used.

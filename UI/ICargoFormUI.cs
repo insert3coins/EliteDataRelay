@@ -36,5 +36,6 @@ namespace EliteDataRelay.UI
         void UpdateShipLoadout(ShipLoadout loadout);
         void UpdateMaterialsOverlay(IMaterialService materialService);
         void UpdateSessionOverlay(long cargo, long credits);
+        void UpdateSystemInfo(SystemInfoData data);
     }
 }

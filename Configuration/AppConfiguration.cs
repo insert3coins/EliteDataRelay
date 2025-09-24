@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -85,12 +86,14 @@ namespace EliteDataRelay.Configuration
         public static bool EnableInfoOverlay { get => _settings.EnableInfoOverlay; set => _settings.EnableInfoOverlay = value; }
         public static bool EnableCargoOverlay { get => _settings.EnableCargoOverlay; set => _settings.EnableCargoOverlay = value; }
         public static bool EnableMaterialsOverlay { get => _settings.EnableMaterialsOverlay; set => _settings.EnableMaterialsOverlay = value; }
+        public static bool EnableSystemInfoOverlay { get => _settings.EnableSystemInfoOverlay; set => _settings.EnableSystemInfoOverlay = value; }
 
         public static bool AllowOverlayDrag { get => _settings.AllowOverlayDrag; set => _settings.AllowOverlayDrag = value; }
         public static Color OverlayTextColor { get => Color.FromArgb(_settings.OverlayTextColorArgb); set => _settings.OverlayTextColorArgb = value.ToArgb(); }
         public static Point InfoOverlayLocation { get => _settings.InfoOverlayLocation; set => _settings.InfoOverlayLocation = value; }
         public static Point CargoOverlayLocation { get => _settings.CargoOverlayLocation; set => _settings.CargoOverlayLocation = value; }
         public static Point MaterialsOverlayLocation { get => _settings.MaterialsOverlayLocation; set => _settings.MaterialsOverlayLocation = value; }
+        public static Point SystemInfoOverlayLocation { get => _settings.SystemInfoOverlayLocation; set => _settings.SystemInfoOverlayLocation = value; }
         public static Keys StartMonitoringHotkey { get => _settings.StartMonitoringHotkey; set => _settings.StartMonitoringHotkey = value; }
         public static Keys StopMonitoringHotkey { get => _settings.StopMonitoringHotkey; set => _settings.StopMonitoringHotkey = value; }
         public static Keys ShowOverlayHotkey { get => _settings.ShowOverlayHotkey; set => _settings.ShowOverlayHotkey = value; }
@@ -218,12 +221,12 @@ namespace EliteDataRelay.Configuration
             public bool ShowSessionOnOverlay { get; set; } = true;
             public string WelcomeMessage { get; set; } = "Click 'Start' to begin monitoring.";
             public HashSet<string> PinnedMaterials { get; set; } = new HashSet<string>();
-            public int OverlayBackgroundColorArgb { get; set; } = Color.FromArgb(200, 0, 0, 0).ToArgb();
+            public int OverlayBackgroundColorArgb { get; set; } = Color.FromArgb(150, 0, 0, 0).ToArgb();
             public string OverlayFontName { get; set; } = "Consolas";
             public float OverlayFontSize { get; set; } = 12f;
-            public int OverlayOpacity { get; set; } = 85;
+            public int OverlayOpacity { get; set; } = 70;
             public bool PinMaterialsMode { get; set; } = false;
-            public bool EnableHotkeys { get; set; } = true;
+            public bool EnableHotkeys { get; set; } = true; // Hotkeys are enabled by default for new installations.
             public bool EnableFileOutput { get; set; } = false;
             public string OutputFileFormat { get; set; } = "{name} - {count}";
             public string OutputFileName { get; set; } = "cargo.txt";
@@ -231,11 +234,13 @@ namespace EliteDataRelay.Configuration
             public bool EnableInfoOverlay { get; set; } = false;
             public bool EnableCargoOverlay { get; set; } = false;
             public bool EnableMaterialsOverlay { get; set; } = false;
+            public bool EnableSystemInfoOverlay { get; set; } = false;
             public bool AllowOverlayDrag { get; set; } = false;
             public int OverlayTextColorArgb { get; set; } = Color.Orange.ToArgb();
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point MaterialsOverlayLocation { get; set; } = Point.Empty;
+            public Point SystemInfoOverlayLocation { get; set; } = Point.Empty;
             public Keys StartMonitoringHotkey { get; set; } = Keys.F1;
             public Keys StopMonitoringHotkey { get; set; } = Keys.F2;
             public Keys ShowOverlayHotkey { get; set; } = Keys.F3;

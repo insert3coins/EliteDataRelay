@@ -28,5 +28,6 @@ namespace EliteDataRelay.Services
         void StartMonitoring();
         void StopMonitoring();
         void Reset();
+        LocationChangedEventArgs? GetLastKnownLocation();
     }
 }

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -24,6 +24,7 @@ namespace EliteDataRelay
         private readonly ICargoFormUI _cargoFormUI;
         private readonly IMaterialService _materialService;
         private readonly SessionTrackingService _sessionTrackingService;
+        private readonly ISystemInfoService _systemInfoService;
 
         public CargoForm()
         {
@@ -38,6 +39,7 @@ namespace EliteDataRelay
             _cargoFormUI = new CargoFormUI();
             _materialService = new MaterialService(_journalWatcherService);
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _journalWatcherService);
+            _systemInfoService = new SystemInfoService(_journalWatcherService);
 
             InitializeComponent();
             SetupEventHandlers();
@@ -57,6 +59,7 @@ namespace EliteDataRelay
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
         private IMaterialService? _lastMaterialServiceCache;
+        private SystemInfoData? _lastSystemInfoData;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 
@@ -101,6 +104,7 @@ namespace EliteDataRelay
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
             _journalWatcherService.LoadoutChanged += OnLoadoutChanged;
             _journalWatcherService.StatusChanged += OnStatusChanged;
+            _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
         }
 
         protected override void Dispose(bool disposing)
@@ -116,6 +120,7 @@ namespace EliteDataRelay
                 _gameProcessCheckTimer?.Dispose();
                 _sessionSummaryForm?.Dispose();
                 _sessionTrackingService.Dispose();
+                (_systemInfoService as IDisposable)?.Dispose();
             }
             base.Dispose(disposing);
         }

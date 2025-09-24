@@ -20,6 +20,7 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
             if (_lastMaterialServiceCache != null) _cargoFormUI.UpdateMaterialsOverlay(_lastMaterialServiceCache);
+            if (_lastSystemInfoData != null) _cargoFormUI.UpdateSystemInfo(_lastSystemInfoData);
 
             // Also repopulate session data if tracking is active and shown on the overlay.
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
@@ -47,6 +48,7 @@ namespace EliteDataRelay
             {
                 _sessionTrackingService.StartSession();
             }
+            _systemInfoService.Start();
 
             // Now start the services that produce events.
             _journalWatcherService.StartMonitoring(); // This will do an initial read of the whole journal.
@@ -83,6 +85,8 @@ namespace EliteDataRelay
             {
                 _sessionTrackingService.StopSession();
             }
+
+            _systemInfoService.Stop();
         }
 
         #endregion

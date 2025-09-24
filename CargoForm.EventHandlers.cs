@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
+using EliteDataRelay.UI;
 
 namespace EliteDataRelay
 {
@@ -161,6 +162,16 @@ namespace EliteDataRelay
             Invoke(new Action(() =>
             {
                 _cargoFormUI.UpdateLocation(_lastLocation);
+            }));
+        }
+
+        private void OnSystemInfoUpdated(object? sender, SystemInfoData e)
+        {
+            // This event is raised from a background thread, so we must invoke on the UI thread.
+            Invoke(new Action(() =>
+            {
+                _lastSystemInfoData = e;
+                _cargoFormUI.UpdateSystemInfo(e);
             }));
         }
 

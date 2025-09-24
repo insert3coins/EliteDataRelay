@@ -44,12 +44,7 @@ namespace EliteDataRelay.Services
             double currentRange = CalculateSingleRange(currentMass, optimalMass, maxFuelPerJump, baseFsdStats);
             double ladenRange = CalculateSingleRange(ladenMass, optimalMass, maxFuelPerJump, baseFsdStats);
 
-            return new JumpRangeResult
-            {
-                Current = currentRange,
-                Laden = ladenRange,
-                Max = loadout.MaxJumpRange // This is the unladen range from the journal
-            };
+            return new JumpRangeResult(currentRange, ladenRange, loadout.MaxJumpRange);
         }
 
         private static double CalculateSingleRange(double totalMass, double optimalMass, double maxFuelPerJump, FsdStats baseFsdStats)

@@ -1,25 +1,13 @@
 namespace EliteDataRelay.Models
 {
-    public class FsdStats
-    {
-        public double OptimalMass { get; }
-        public double MaxFuelPerJump { get; }
-        public double PowerConstant { get; }
-        public double FuelMultiplier { get; }
+    /// <summary>
+    /// Represents the base statistics for a Frame Shift Drive module.
+    /// Using a record for immutable data transfer.
+    /// </summary>
+    public record FsdStats(double OptimalMass, double MaxFuelPerJump, double PowerConstant, double FuelMultiplier);
 
-        public FsdStats(double optimalMass, double maxFuelPerJump, double powerConstant, double fuelMultiplier)
-        {
-            OptimalMass = optimalMass;
-            MaxFuelPerJump = maxFuelPerJump;
-            PowerConstant = powerConstant;
-            FuelMultiplier = fuelMultiplier;
-        }
-    }
-
-    public class JumpRangeResult
-    {
-        public double Current { get; set; }
-        public double Laden { get; set; }
-        public double Max { get; set; }
-    }
+    /// <summary>
+    /// Represents the calculated jump range values.
+    /// </summary>
+    public record JumpRangeResult(double Current, double Laden, double Max);
 }

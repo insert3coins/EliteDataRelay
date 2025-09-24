@@ -28,6 +28,7 @@ namespace EliteDataRelay.Services
         private string? _lastShipName;
         private string? _lastShipIdent;
         private string? _lastShipType;
+        private LocationChangedEventArgs? _lastLocationArgs;
         private bool _isMonitoring;
 
         /// <summary>
@@ -122,6 +123,26 @@ namespace EliteDataRelay.Services
             Debug.WriteLine("[JournalWatcherService] Started monitoring");
         }
 
+        /// <summary>
+        /// Resets the internal state of the watcher. This clears the last known file position,
+        /// hashes, and other cached data, forcing a full re-read on the next poll.
+        /// </summary>
+        public void Reset()
+        {
+            _currentJournalFile = null;
+            _lastPosition = 0;
+            _lastStarSystem = null;
+            _lastCargoHash = null;
+            _lastStatusHash = null;
+            _lastShipName = null;
+            _lastShipIdent = null;
+            _lastShipType = null;
+            _lastCommanderName = null;
+            _lastKnownBalance = 0;
+
+            Debug.WriteLine("[JournalWatcherService] State has been reset.");
+        }
+
         private void ResetState()
         {
             _currentJournalFile = null;
@@ -134,6 +155,7 @@ namespace EliteDataRelay.Services
             _lastShipName = null;
             _lastShipIdent = null;
             _lastShipType = null;
+            _lastLocationArgs = null;
             Debug.WriteLine("[JournalWatcherService] Service state has been reset.");
         }
 
@@ -172,6 +194,11 @@ namespace EliteDataRelay.Services
         {
             StopMonitoring();
             _pollTimer?.Dispose();
+        }
+
+        public LocationChangedEventArgs? GetLastKnownLocation()
+        {
+            return _lastLocationArgs;
         }
     }
 }

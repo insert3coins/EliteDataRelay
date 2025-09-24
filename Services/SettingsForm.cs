@@ -27,6 +27,7 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
         private CheckBox _chkEnableMaterialsOverlay = null!;
+        private CheckBox _chkEnableSystemInfoOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
         private GroupBox _grpSessionTracking = null!;
@@ -64,6 +65,7 @@ namespace EliteDataRelay.UI
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
         private Point _originalMaterialsOverlayLocation;
+        private Point _originalSystemInfoOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
 
@@ -88,6 +90,7 @@ namespace EliteDataRelay.UI
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
             _chkEnableMaterialsOverlay.Checked = AppConfiguration.EnableMaterialsOverlay;
+            _chkEnableSystemInfoOverlay.Checked = AppConfiguration.EnableSystemInfoOverlay;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -113,6 +116,7 @@ namespace EliteDataRelay.UI
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
             _originalMaterialsOverlayLocation = AppConfiguration.MaterialsOverlayLocation;
+            _originalSystemInfoOverlayLocation = AppConfiguration.SystemInfoOverlayLocation;
 
             UpdateAppearanceControls();
         }
@@ -157,6 +161,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
             AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableMaterialsOverlay = _chkEnableMaterialsOverlay.Checked;
+            AppConfiguration.EnableSystemInfoOverlay = _chkEnableSystemInfoOverlay.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
@@ -225,6 +230,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.InfoOverlayLocation = _originalInfoOverlayLocation;
             AppConfiguration.CargoOverlayLocation = _originalCargoOverlayLocation;
             AppConfiguration.MaterialsOverlayLocation = _originalMaterialsOverlayLocation;
+            AppConfiguration.SystemInfoOverlayLocation = _originalSystemInfoOverlayLocation;
 
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
