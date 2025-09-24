@@ -222,7 +222,7 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.SystemInfo)
             {
-                this.Size = new Size(450, 180);
+                this.Size = new Size(450, 165);
 
                 // --- Header ---
                 var titleLabel = CreateOverlayLabel(new Point(10, 8), _listFont);
@@ -237,7 +237,8 @@ namespace EliteDataRelay.UI
                 var detailsTable = new TableLayoutPanel
                 {
                     Location = new Point(10, 65),
-                    Size = new Size(this.ClientSize.Width - 20, 105),
+                    AutoSize = true,
+                    Width = this.ClientSize.Width - 20,
                     ColumnCount = 4,
                     RowCount = 4,
                     BackColor = Color.Transparent

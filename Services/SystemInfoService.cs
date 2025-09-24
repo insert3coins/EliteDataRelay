@@ -34,6 +34,14 @@ namespace EliteDataRelay.Services
             _journalWatcher.LocationChanged += OnLocationChanged;
             _isStarted = true;
 
+            // On startup, proactively get the last known location from the journal watcher.
+            // This populates the overlay immediately without waiting for a new jump event.
+            var lastLocation = _journalWatcher.GetLastKnownLocation();
+            if (lastLocation != null)
+            {
+                OnLocationChanged(this, lastLocation);
+            }
+
         }
 
         public void Stop()
@@ -45,8 +53,9 @@ namespace EliteDataRelay.Services
 
         private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
-            // We only want to fetch data for a new system. The initial poll from JournalWatcher will handle the first load.
-            if (e.IsNewSystem)
+            // We want to fetch data if it's a new system OR if this is the very first location
+            // event we've received since starting (sender == this).
+            if (e.IsNewSystem || sender == this)
             {
                 try
                 {
