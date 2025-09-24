@@ -23,21 +23,21 @@ namespace EliteDataRelay.UI
             if (loadout != null)
             {
                 SetHullHealthVisuals(loadout.HullHealth);
-                _controlFactory.RebuyValueLabel.Text = $"{loadout.Rebuy:N0} CR";
+                if (_controlFactory.RebuyValueLabel != null) _controlFactory.RebuyValueLabel.Text = $"{loadout.Rebuy:N0} CR";
 
                 if (loadout.FuelCapacity != null)
                 {
                     _maxFuel = loadout.FuelCapacity.Main + loadout.FuelCapacity.Reserve;
-                    _controlFactory.FuelValueLabel.Text = $"? / {_maxFuel.Value:F2} T";
+                    if (_controlFactory.FuelValueLabel != null) _controlFactory.FuelValueLabel.Text = $"? / {_maxFuel.Value:F2} T";
                 }
                 else
                 {
                     _maxFuel = null;
-                    _controlFactory.FuelValueLabel.Text = "N/A";
+                    if (_controlFactory.FuelValueLabel != null) _controlFactory.FuelValueLabel.Text = "N/A";
                 }
 
                 _maxCargo = loadout.CargoCapacity;
-                _controlFactory.CargoValueLabel.Text = $"? / {_maxCargo} T";
+                if (_controlFactory.CargoValueLabel != null) _controlFactory.CargoValueLabel.Text = $"? / {_maxCargo} T";
             }
 
             _lastLoadout = loadout;
@@ -46,6 +46,8 @@ namespace EliteDataRelay.UI
 
 
             var treeView = _controlFactory.ShipModulesTreeView;
+
+            if (treeView == null) return;
 
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
@@ -92,13 +94,13 @@ namespace EliteDataRelay.UI
             if (status.Fuel != null && _maxFuel.HasValue)
             {
                 var currentFuel = status.Fuel.FuelMain + status.Fuel.FuelReservoir;
-                _controlFactory.FuelValueLabel.Text = $"{currentFuel:F2} / {_maxFuel.Value:F2} T";
+                if (_controlFactory.FuelValueLabel != null) _controlFactory.FuelValueLabel.Text = $"{currentFuel:F2} / {_maxFuel.Value:F2} T";
             }
 
             if (_maxCargo.HasValue)
             {
                 // The status file provides current cargo tonnage, which is what we want to display.
-                _controlFactory.CargoValueLabel.Text = $"{status.Cargo:F0} / {_maxCargo.Value} T";
+                if (_controlFactory.CargoValueLabel != null) _controlFactory.CargoValueLabel.Text = $"{status.Cargo:F0} / {_maxCargo.Value} T";
             }
         }
 
@@ -107,6 +109,8 @@ namespace EliteDataRelay.UI
             if (_controlFactory == null) return;
 
             var label = _controlFactory.JumpRangeValueLabel;
+
+            if (label == null) return;
 
             if (_lastLoadout != null)
             {
@@ -139,6 +143,9 @@ namespace EliteDataRelay.UI
             if (_controlFactory == null) return;
 
             var label = _controlFactory.MassValueLabel;
+
+            if (label == null) return;
+
             if (_lastLoadout == null)
             {
                 label.Text = "N/A";
@@ -162,6 +169,8 @@ namespace EliteDataRelay.UI
             if (_controlFactory == null) return;
 
             var label = _controlFactory.HullHealthValueLabel;
+            if (label == null) return;
+
             label.Text = $"{hullHealth:P1}";
 
             if (hullHealth > 0.75)

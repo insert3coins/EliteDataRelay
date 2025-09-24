@@ -5,6 +5,7 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
+        public PictureBox ShipIconPictureBox { get; private set; } = null!;
         public Label HullHealthValueLabel { get; private set; } = null!;
         public Label MassValueLabel { get; private set; } = null!;
         public Label FuelValueLabel { get; private set; } = null!;
@@ -289,20 +290,22 @@ namespace EliteDataRelay.UI
 
         private void DisposeShipTabControls()
         {
-            ShipIconPictureBox.Dispose();
-            ShipNameLabel.Dispose();
-            ShipIdentLabel.Dispose();
-            ShipModulesTreeView.DrawNode -= ShipModulesTreeView_DrawNode;
-            ShipModulesTreeView.MouseMove -= ShipModulesTreeView_MouseMove;
-            ShipModulesTreeView.MouseLeave -= ShipModulesTreeView_MouseLeave;
-            ShipModulesTreeView.BeforeSelect -= ShipModulesTreeView_BeforeSelect;
-            ShipModulesTreeView.Dispose();
-            HullHealthValueLabel.Dispose();
-            MassValueLabel.Dispose();
-            FuelValueLabel.Dispose();
-            CargoValueLabel.Dispose();
-            JumpRangeValueLabel.Dispose();
-            RebuyValueLabel.Dispose();
+            ShipNameLabel?.Dispose();
+            ShipIdentLabel?.Dispose();
+            if (ShipModulesTreeView != null)
+            {
+                ShipModulesTreeView.DrawNode -= ShipModulesTreeView_DrawNode;
+                ShipModulesTreeView.MouseMove -= ShipModulesTreeView_MouseMove;
+                ShipModulesTreeView.MouseLeave -= ShipModulesTreeView_MouseLeave;
+                ShipModulesTreeView.BeforeSelect -= ShipModulesTreeView_BeforeSelect;
+                ShipModulesTreeView.Dispose();
+            }
+            HullHealthValueLabel?.Dispose();
+            MassValueLabel?.Dispose();
+            FuelValueLabel?.Dispose();
+            CargoValueLabel?.Dispose();
+            JumpRangeValueLabel?.Dispose();
+            RebuyValueLabel?.Dispose();
         }
 
         private void ShipModulesTreeView_MouseMove(object? sender, MouseEventArgs e)

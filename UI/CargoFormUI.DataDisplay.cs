@@ -119,26 +119,18 @@ namespace EliteDataRelay.UI
             }
 
             // Update the dedicated controls on the "Ship" tab
-            if (_controlFactory.ShipIconPictureBox != null)
+            // Display the ship type (e.g., "Krait Mk II") and the user-defined name if it's set.
+            string nameLabel = shipType;
+            if (!string.IsNullOrEmpty(shipName) && shipName != "N/A" && !shipName.Equals(shipType, StringComparison.OrdinalIgnoreCase))
             {
-                _controlFactory.ShipIconPictureBox.Image = ShipIconService.GetShipIcon(internalShipName);
+                nameLabel = $"{shipType} \"{shipName}\"";
             }
-
             if (_controlFactory.ShipNameLabel != null)
             {
-                // Display the ship type (e.g., "Krait Mk II") and the user-defined name if it's set.
-                string nameLabel = shipType;
-                if (!string.IsNullOrEmpty(shipName) && shipName != "N/A" && !shipName.Equals(shipType, StringComparison.OrdinalIgnoreCase))
-                {
-                    nameLabel = $"{shipType} \"{shipName}\"";
-                }
                 _controlFactory.ShipNameLabel.Text = nameLabel;
             }
 
-            if (_controlFactory.ShipIdentLabel != null)
-            {
-                _controlFactory.ShipIdentLabel.Text = $"ID: {shipIdent}";
-            }
+            if (_controlFactory.ShipIdentLabel != null) _controlFactory.ShipIdentLabel.Text = $"ID: {shipIdent}";
 
             // The overlay does not show the image, so no change to this call is needed.
             _overlayService?.UpdateShip(shipName, shipIdent, shipType);
