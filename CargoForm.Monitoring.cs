@@ -87,6 +87,9 @@ namespace EliteDataRelay
             }
 
             _systemInfoService.Stop();
+
+            // Clear the system info cache to prevent showing stale data on next start.
+            _lastSystemInfoData = null;
         }
 
         #endregion

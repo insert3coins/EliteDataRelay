@@ -115,7 +115,7 @@ namespace EliteDataRelay.Services
 
             // Reset state and do an initial poll immediately to get the current state.
             // The timer will then continue at the configured interval.
-            ResetState();
+            Reset();
             PollTimer_Tick(null);
 
             _pollTimer?.Change(AppConfiguration.PollingIntervalMs, AppConfiguration.PollingIntervalMs); // Start polling after an initial delay.
@@ -137,26 +137,10 @@ namespace EliteDataRelay.Services
             _lastShipName = null;
             _lastShipIdent = null;
             _lastShipType = null;
-            _lastCommanderName = null;
-            _lastKnownBalance = 0;
-
-            Debug.WriteLine("[JournalWatcherService] State has been reset.");
-        }
-
-        private void ResetState()
-        {
-            _currentJournalFile = null;
-            _lastPosition = 0;
-            _lastStarSystem = null;
-            _lastCargoHash = null;
-            _lastStatusHash = null;
             _lastKnownBalance = -1;
             _lastCommanderName = null;
-            _lastShipName = null;
-            _lastShipIdent = null;
-            _lastShipType = null;
             _lastLocationArgs = null;
-            Debug.WriteLine("[JournalWatcherService] Service state has been reset.");
+            Debug.WriteLine("[JournalWatcherService] State has been reset.");
         }
 
         public void StopMonitoring()
@@ -167,7 +151,7 @@ namespace EliteDataRelay.Services
             _isMonitoring = false;
             Debug.WriteLine("[JournalWatcherService] Stopped monitoring");
 
-            ResetState();
+            Reset();
         }
         private string? FindLatestJournalFile()
         {
