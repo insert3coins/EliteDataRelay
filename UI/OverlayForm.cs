@@ -25,12 +25,12 @@ namespace EliteDataRelay.UI
         private Point _dragCursorStartPoint;
         private Point _dragFormStartPoint;
 
-        private Label _cmdrLabel = null!;
-        private Label _shipLabel = null!;
-        private Label _balanceLabel = null!;
-        private Label _cargoLabel = null!;
-        private Label _sessionCargoCollectedLabel = null!;
-        private Label _sessionCreditsEarnedLabel = null!;
+        private Label _cmdrValueLabel = null!;
+        private Label _shipValueLabel = null!;
+        private Label _balanceValueLabel = null!;
+        private Label _cargoHeaderLabel = null!;
+        private Label _sessionCargoValueLabel = null!;
+        private Label _sessionCreditsValueLabel = null!;
         private Panel _cargoListPanel = null!;
         private Label _cargoSizeLabel = null!;
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();

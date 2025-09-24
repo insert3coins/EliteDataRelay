@@ -20,8 +20,8 @@ namespace EliteDataRelay.UI
             using (var grayBrush = new SolidBrush(SystemColors.GrayText))
             {
                 // 1. Draw the header text first at the top of the panel.
-                e.Graphics.DrawString(_cargoLabel.Text, _labelFont, textBrush, 10, 5);
-                var cargoTextSize = e.Graphics.MeasureString(_cargoLabel.Text, _labelFont);
+                e.Graphics.DrawString(_cargoHeaderLabel.Text, _labelFont, textBrush, 10, 5);
+                var cargoTextSize = e.Graphics.MeasureString(_cargoHeaderLabel.Text, _labelFont);
                 e.Graphics.DrawString(_cargoSizeLabel.Text, _listFont, textBrush, 10 + cargoTextSize.Width + 10, 8);
 
                 // 2. Draw the cargo list, starting below the header area.

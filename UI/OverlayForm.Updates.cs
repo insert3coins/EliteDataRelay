@@ -12,25 +12,25 @@ namespace EliteDataRelay.UI
 {
     public partial class OverlayForm
     {
-        public void UpdateCommander(string text) => UpdateLabel(_cmdrLabel, text);
-        public void UpdateShip(string text) => UpdateLabel(_shipLabel, text);
-        public void UpdateBalance(string text) => UpdateLabel(_balanceLabel, text);
-        public void UpdateCargo(string text) => UpdateLabel(_cargoLabel, text);
+        public void UpdateCommander(string text) => UpdateLabel(_cmdrValueLabel, text);
+        public void UpdateShip(string text) => UpdateLabel(_shipValueLabel, text);
+        public void UpdateBalance(long balance) => UpdateLabel(_balanceValueLabel, $"{balance:N0} CR");
+        public void UpdateCargo(int count, int? capacity) => UpdateLabel(_cargoHeaderLabel, capacity.HasValue ? $"Cargo: {count}/{capacity.Value}" : $"Cargo: {count}");
         public void UpdateCargoSize(string text) => UpdateLabel(_cargoSizeLabel, text);
-        public void UpdateSessionCargoCollected(string text)
+        public void UpdateSessionCargoCollected(long cargo)
         {
             // Only update if the label was created
-            if (_sessionCargoCollectedLabel != null)
+            if (_sessionCargoValueLabel != null)
             {
-                UpdateLabel(_sessionCargoCollectedLabel, text);
+                UpdateLabel(_sessionCargoValueLabel, $"{cargo}");
             }
         }
 
-        public void UpdateSessionCreditsEarned(string text)
+        public void UpdateSessionCreditsEarned(long credits)
         {
-            if (_sessionCreditsEarnedLabel != null)
+            if (_sessionCreditsValueLabel != null)
             {
-                UpdateLabel(_sessionCreditsEarnedLabel, text);
+                UpdateLabel(_sessionCreditsValueLabel, $"{credits:N0}");
             }
         }
 

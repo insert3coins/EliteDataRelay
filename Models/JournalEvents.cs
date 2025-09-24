@@ -43,6 +43,10 @@ namespace EliteDataRelay.Models
 
     public class DockedEvent
     {
+        // For Fleet Carriers, this property holds the custom name of the carrier.
+        // For stations, it is not present.
+        public string? Name { get; set; }
+
         public string StationName { get; set; } = string.Empty;
         public string StationType { get; set; } = string.Empty;
         public string? StationAllegiance { get; set; }

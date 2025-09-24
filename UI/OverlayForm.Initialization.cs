@@ -10,15 +10,31 @@ namespace EliteDataRelay.UI
         {
             if (_position == OverlayPosition.Info)
             {
-                // --- Left-aligned info ---
-                this.Size = new Size(280, 85);
-                _cmdrLabel = CreateOverlayLabel(new Point(10, 10), _labelFont);
-                _shipLabel = CreateOverlayLabel(new Point(10, 35), _labelFont);
-                _balanceLabel = CreateOverlayLabel(new Point(10, 60), _labelFont);
+                this.Size = new Size(320, 85);
+                var detailsTable = new TableLayoutPanel
+                {
+                    Location = new Point(10, 10),
+                    AutoSize = true,
+                    Width = this.ClientSize.Width - 20,
+                    ColumnCount = 2,
+                    RowCount = 3,
+                    BackColor = Color.Transparent
+                };
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-                Controls.Add(_cmdrLabel);
-                Controls.Add(_shipLabel);
-                Controls.Add(_balanceLabel);
+                _cmdrValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                _shipValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                _balanceValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+
+                detailsTable.Controls.Add(CreateHeaderLabel("CMDR:"), 0, 0);
+                detailsTable.Controls.Add(_cmdrValueLabel, 1, 0);
+                detailsTable.Controls.Add(CreateHeaderLabel("Ship:"), 0, 1);
+                detailsTable.Controls.Add(_shipValueLabel, 1, 1);
+                detailsTable.Controls.Add(CreateHeaderLabel("Balance:"), 0, 2);
+                detailsTable.Controls.Add(_balanceValueLabel, 1, 2);
+
+                Controls.Add(detailsTable);
             }
             else if (_position == OverlayPosition.Cargo)
             {
@@ -43,7 +59,7 @@ namespace EliteDataRelay.UI
                 _cargoListPanel.Paint += OnCargoListPanelPaint;
 
                 // Initialize labels that will be used for drawing the header text.
-                _cargoLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                _cargoHeaderLabel = CreateOverlayLabel(Point.Empty, _labelFont); // This was named _cargoLabel before, but _cargoHeaderLabel is more descriptive
                 _cargoSizeLabel = CreateOverlayLabel(Point.Empty, _listFont);
 
                 Panel? bottomPanel = null;
@@ -59,26 +75,25 @@ namespace EliteDataRelay.UI
 
                     bottomSeparator = new Panel { Height = 1, Dock = DockStyle.Bottom, BackColor = Color.FromArgb(100, 100, 100) };
 
-                    var sessionFlowPanel = new FlowLayoutPanel
+                    var sessionTablePanel = new TableLayoutPanel
                     {
                         Dock = DockStyle.Fill,
-                        FlowDirection = FlowDirection.TopDown, // Stack controls vertically
-                        WrapContents = false,
-                        BackColor = Color.Transparent
+                        BackColor = Color.Transparent,
+                        Padding = new Padding(10, 5, 10, 5),
+                        ColumnCount = 2,
+                        RowCount = 2,
                     };
+                    sessionTablePanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                    sessionTablePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-                    _sessionCargoCollectedLabel = CreateOverlayLabel(Point.Empty, _labelFont);
-                    _sessionCargoCollectedLabel.Margin = new Padding(10, 2, 0, 0); // Smaller top margin for the second item
-                    _sessionCargoCollectedLabel.AutoSize = true;
+                    _sessionCreditsValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                    _sessionCargoValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
 
-                    _sessionCreditsEarnedLabel = CreateOverlayLabel(Point.Empty, _labelFont);
-                    _sessionCreditsEarnedLabel.Margin = new Padding(10, 5, 0, 0); // Top margin for the first item
-                    _sessionCreditsEarnedLabel.AutoSize = true;
-
-                    // Add CR/hr first so it appears on top
-                    sessionFlowPanel.Controls.Add(_sessionCreditsEarnedLabel);
-                    sessionFlowPanel.Controls.Add(_sessionCargoCollectedLabel);
-                    bottomPanel.Controls.Add(sessionFlowPanel);
+                    sessionTablePanel.Controls.Add(CreateHeaderLabel("Session CR:"), 0, 0);
+                    sessionTablePanel.Controls.Add(_sessionCreditsValueLabel, 1, 0);
+                    sessionTablePanel.Controls.Add(CreateHeaderLabel("Session Cargo:"), 0, 1);
+                    sessionTablePanel.Controls.Add(_sessionCargoValueLabel, 1, 1);
+                    bottomPanel.Controls.Add(sessionTablePanel);
                 }
 
                 // Add docked controls. The order is important for layout. Top and Bottom panels
