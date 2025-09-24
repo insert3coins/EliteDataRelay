@@ -10,48 +10,6 @@ namespace EliteDataRelay.Services
 {
     public partial class JournalWatcherService
     {
-        private void ProcessCargoFile()
-        {
-            var cargoFilePath = Path.Combine(_journalDir, "Cargo.json");
-            if (!File.Exists(cargoFilePath))
-            {
-                return;
-            }
-
-            try
-            {
-                // Use a FileStream with ReadWrite share to avoid exceptions if the game is writing to the file.
-                using var fs = new FileStream(cargoFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var reader = new StreamReader(fs);
-                string content = reader.ReadToEnd();
-
-                if (string.IsNullOrWhiteSpace(content))
-                {
-                    return;
-                }
-
-                string hash = ComputeHash(content);
-                if (hash == _lastCargoHash)
-                {
-                    return;
-                }
-                _lastCargoHash = hash;
-
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(content, options);
-
-                if (snapshot != null)
-                {
-                    Debug.WriteLine($"[JournalWatcherService] Found Cargo.json update. Inventory count: {snapshot.Count}");
-                    CargoInventoryChanged?.Invoke(this, new CargoInventoryEventArgs(snapshot));
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[JournalWatcherService] Error processing Cargo.json: {ex}");
-            }
-        }
-
         private void ProcessStatusFile()
         {
             var statusFilePath = Path.Combine(_journalDir, "Status.json");
@@ -100,9 +58,6 @@ namespace EliteDataRelay.Services
             {
                 Debug.WriteLine($"[JournalWatcherService] Error processing Status.json: {ex}");
             }
-
-            // Also process the cargo file in the same polling tick.
-            ProcessCargoFile();
         }
 
         private string ComputeHash(string content)

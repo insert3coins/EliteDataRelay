@@ -42,22 +42,18 @@ namespace EliteDataRelay
             _cargoFormUI.UpdateTitle("Elite Data Relay – Watching");
 
             // Re-populate the UI (and the new overlay) with the last known data.
-            RepopulateOverlay();
-
-            // Start the journal watcher and let its initial poll complete. This establishes the current state.
-            _journalWatcherService.StartMonitoring();
-
-            // Now that the current state is known, start the other services.
             if (AppConfiguration.EnableSessionTracking)
             {
                 _sessionTrackingService.StartSession();
             }
+
+            // Start file-based services first so they are ready.
+            _fileMonitoringService.StartMonitoring();
             _stationInfoService.Start();
             _systemInfoService.Start();
-            _fileMonitoringService.StartMonitoring();
 
-            // Process initial file snapshot after starting monitoring
-            _cargoProcessorService.ProcessCargoFile();
+            // Start the journal watcher last. Its initial poll will fire events that other services may need to handle.
+            _journalWatcherService.StartMonitoring();
 
             // Start the game process checker
             _gameProcessCheckTimer?.Start();

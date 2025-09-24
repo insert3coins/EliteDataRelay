@@ -4,7 +4,7 @@ namespace EliteDataRelay.Services
 {
     public interface IFileMonitoringService : IDisposable
     {
-        event EventHandler? FileChanged;
+        event Action? FileChanged;
         bool IsMonitoring { get; }
         void StartMonitoring();
         void StopMonitoring();

@@ -32,9 +32,9 @@ namespace EliteDataRelay
             // Create all service instances. This form now owns its dependencies,
             // simplifying the application's object graph and ensuring only one
             // set of services exists.
-            _fileMonitoringService = new FileMonitoringService();
-            _cargoProcessorService = new CargoProcessorService();
             _journalWatcherService = new JournalWatcherService();
+            _fileMonitoringService = new FileMonitoringService(_journalWatcherService);
+            _cargoProcessorService = new CargoProcessorService();
             _soundService = new SoundService();
             _fileOutputService = new FileOutputService();
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _journalWatcherService);
@@ -58,6 +58,7 @@ namespace EliteDataRelay
         private string? _lastShipIdent;
         private string? _lastInternalShipName;
         private long? _lastBalance;
+        private uint? _lastShipId;
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
         private StationInfoData? _lastStationInfoData;
@@ -93,7 +94,9 @@ namespace EliteDataRelay
             _gameProcessCheckTimer.Tick += OnGameProcessCheck;
 
             // Wire up service events
-            _fileMonitoringService.FileChanged += OnFileChanged;
+            // Use a lambda to subscribe ProcessCargoFile (which returns bool) to the FileChanged event (which expects void).
+            // We discard the boolean result as it's not needed for file change notifications.
+            _fileMonitoringService.FileChanged += () => _cargoProcessorService.ProcessCargoFile();
             _cargoProcessorService.CargoProcessed += OnCargoProcessed;
             _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
             _journalWatcherService.LocationChanged += OnLocationChanged;
@@ -105,6 +108,7 @@ namespace EliteDataRelay
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
             _journalWatcherService.LoadoutChanged += OnLoadoutChanged;
             _journalWatcherService.StatusChanged += OnStatusChanged;
+            _journalWatcherService.InitialScanComplete += OnInitialScanComplete;
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
         }

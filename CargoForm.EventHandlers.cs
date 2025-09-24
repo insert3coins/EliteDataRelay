@@ -12,12 +12,6 @@ namespace EliteDataRelay
     {
         #region Service Event Handlers
 
-        private void OnFileChanged(object? sender, EventArgs e)
-        {
-            // Delegate file processing to the cargo processor service
-            _cargoProcessorService.ProcessCargoFile();
-        }
-
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
@@ -101,24 +95,42 @@ namespace EliteDataRelay
             // The event is raised from a background thread, so we must invoke on the UI thread.
             Invoke(new Action(() =>
             {
-                _cargoFormUI.UpdateShipLoadout(e.Loadout);
+                var newLoadout = e.Loadout;
+                _cargoFormUI.UpdateShipLoadout(newLoadout);
 
                 // The Loadout event is a primary source for cargo capacity.
-                _cargoCapacity = e.Loadout.CargoCapacity;
+                _cargoCapacity = newLoadout.CargoCapacity;
 
-                // After a loadout change, the previous cargo snapshot (count and items) is stale.
-                // We must clear it and wait for the next 'Cargo' event to provide the new state.
-                _lastCargoSnapshot = null;
+                // Only clear the cargo hold if the ship has actually changed (e.g., ShipyardSwap).
+                // If it's the same ship, this is likely a re-scan on startup, and we should preserve the cargo data.
+                if (_lastShipId.HasValue && newLoadout.ShipId != _lastShipId.Value)
+                {
+                    // After a loadout change, the previous cargo snapshot (count and items) is stale.
+                    // We must clear it and wait for the next 'Cargo' event to provide the new state.
+                    _lastCargoSnapshot = null;
 
-                // Update the UI to reflect the new capacity and the now-empty cargo state.
-                // The count will be properly updated by the next 'Cargo' event.
-                _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
+                    // Update the UI to reflect the new capacity and the now-empty cargo state.
+                    _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
 
-                // Create a new, empty snapshot to clear the UI list and visualizer.
-                // The UI will show "Cargo hold is empty." until the next update.
-                var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
-                _cargoFormUI.UpdateCargoList(emptySnapshot);
-                _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
+                    // Create a new, empty snapshot to clear the UI list and visualizer.
+                    var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
+                    _cargoFormUI.UpdateCargoList(emptySnapshot);
+                    _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
+                }
+                _lastShipId = (uint)newLoadout.ShipId;
+            }));
+        }
+
+        private void OnInitialScanComplete(object? sender, EventArgs e)
+        {
+            // This event fires after the journal watcher has completed its first read on startup.
+            // At this point, a 'Loadout' event may have cleared our cargo display.
+            // We now force a re-read of Cargo.json to ensure the UI is synchronized with the
+            // actual cargo contents, resolving the "empty on start" issue.
+            Invoke(new Action(() =>
+            {
+                System.Diagnostics.Debug.WriteLine("[CargoForm] Journal initial scan complete. Re-reading cargo file to ensure sync.");
+                _ = _cargoProcessorService.ProcessCargoFile(force: true);
             }));
         }
 

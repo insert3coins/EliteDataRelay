@@ -17,10 +17,10 @@ namespace EliteDataRelay.Services
     public partial class JournalWatcherService : IJournalWatcherService, IDisposable
     {
         private readonly string _journalDir;
+        private FileSystemWatcher? _journalDirectoryWatcher;
         private System.Threading.Timer? _pollTimer;
         private string? _currentJournalFile;
         private string? _lastStarSystem;
-        private string? _lastCargoHash;
         private string? _lastStatusHash;
         private long _lastPosition;
         private long _lastKnownBalance = -1;
@@ -36,11 +36,6 @@ namespace EliteDataRelay.Services
         /// Event raised when the cargo capacity is found in a Loadout event.
         /// </summary>
         public event EventHandler<CargoCapacityEventArgs>? CargoCapacityChanged;
-
-        /// <summary>
-        /// Event raised when the cargo inventory changes.
-        /// </summary>
-        public event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
 
         /// <summary>
         /// Event raised when the player's balance changes.
@@ -83,6 +78,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<UndockedEventArgs>? Undocked;
 
         /// <summary>
+        /// Event raised after the initial poll is complete when monitoring starts.
+        /// </summary>
+        public event EventHandler? InitialScanComplete;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;
@@ -107,6 +107,17 @@ namespace EliteDataRelay.Services
             // The timer will then continue at the configured interval.
             Reset();
             PollTimer_Tick(null);
+            InitialScanComplete?.Invoke(this, EventArgs.Empty);
+
+            // Set up a FileSystemWatcher for immediate detection of new journal files.
+            // This is more responsive than relying solely on the polling timer.
+            _journalDirectoryWatcher = new FileSystemWatcher(_journalDir)
+            {
+                Filter = "Journal.*.log",
+                NotifyFilter = NotifyFilters.FileName, // We only care about new files being created.
+                EnableRaisingEvents = true
+            };
+            _journalDirectoryWatcher.Created += OnJournalFileCreated;
 
             _pollTimer?.Change(AppConfiguration.PollingIntervalMs, AppConfiguration.PollingIntervalMs); // Start polling after an initial delay.
             _isMonitoring = true;
@@ -122,7 +133,6 @@ namespace EliteDataRelay.Services
             _currentJournalFile = null;
             _lastPosition = 0;
             _lastStarSystem = null;
-            _lastCargoHash = null;
             _lastStatusHash = null;
             _lastShipName = null;
             _lastShipIdent = null;
@@ -139,6 +149,9 @@ namespace EliteDataRelay.Services
             if (!_isMonitoring) return;
 
             _pollTimer?.Change(Timeout.Infinite, Timeout.Infinite); // Stop the timer.
+            _journalDirectoryWatcher?.Dispose();
+            _journalDirectoryWatcher = null;
+
             _isMonitoring = false;
             Debug.WriteLine("[JournalWatcherService] Stopped monitoring");
 
@@ -163,6 +176,17 @@ namespace EliteDataRelay.Services
         {
             ProcessNewJournalEntries();
             ProcessStatusFile();
+        }
+
+        /// <summary>
+        /// Handles the event when a new journal file is created. This triggers an
+        /// immediate poll to process the new file, rather than waiting for the next timer tick.
+        /// </summary>
+        private void OnJournalFileCreated(object sender, FileSystemEventArgs e)
+        {
+            Debug.WriteLine($"[JournalWatcherService] FileSystemWatcher detected new journal: {e.Name}. Triggering immediate poll.");
+            // Run the poll on a background thread to avoid holding up the FileSystemWatcher event.
+            ThreadPool.QueueUserWorkItem(_ => PollTimer_Tick(null));
         }
 
         public void Dispose()

@@ -35,7 +35,7 @@ namespace EliteDataRelay.Services
         /// <summary>
         /// Process the cargo file and extract cargo snapshot data
         /// </summary>
-        public void ProcessCargoFile()
+        public bool ProcessCargoFile(bool force = false)
         {
             for (int attempt = 1; attempt <= AppConfiguration.FileReadMaxAttempts; attempt++)
             {
@@ -43,7 +43,9 @@ namespace EliteDataRelay.Services
                 {
                     if (!File.Exists(AppConfiguration.CargoPath))
                     {
-                        return;
+                        // On the last attempt, if the file still doesn't exist, log it.
+                        if (attempt == AppConfiguration.FileReadMaxAttempts) Debug.WriteLine($"[CargoProcessorService] Cargo.json not found after {attempt} attempts.");
+                        return false;
                     }
 
                     // Open file with shared read-write to handle file locking
@@ -60,12 +62,11 @@ namespace EliteDataRelay.Services
 
                     // Deserialize JSON directly from the stream for better performance.
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(stream, options);
-                    if (snapshot == null) return;
+                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(stream, options) ?? new CargoSnapshot(new(), 0);
 
                     // Fingerprint guard – skip duplicate snapshots
                     string hash = ComputeHash(snapshot);
-                    if (hash == _lastInventoryHash) return;
+                    if (!force && hash == _lastInventoryHash) return true;
                     
                     _lastInventoryHash = hash;
 
@@ -73,7 +74,7 @@ namespace EliteDataRelay.Services
                     CargoProcessed?.Invoke(this, new CargoProcessedEventArgs(snapshot, hash));
                     
                     Debug.WriteLine($"[CargoProcessorService] Successfully processed cargo snapshot with hash: {hash[..8]}...");
-                    break; // Success
+                    return true; // Success
                 }
                 catch (IOException) when (attempt < AppConfiguration.FileReadMaxAttempts)
                 {
@@ -93,6 +94,7 @@ namespace EliteDataRelay.Services
                     break; // Unexpected error – stop retrying
                 }
             }
+            return false;
         }
 
         /// <summary>

@@ -25,14 +25,18 @@ namespace EliteDataRelay
                 return;
             }
 
-            if (!File.Exists(AppConfiguration.CargoPath))
+            // Attempt an initial read of the cargo file. This serves as a more robust check
+            // than just File.Exists, as it also handles an empty or locked file.
+            bool initialReadSuccess = _cargoProcessorService.ProcessCargoFile();
+
+            if (!initialReadSuccess)
             {
                 MessageBox.Show(
-                    $"Cargo.json not found. Cannot start monitoring.\n\nMake sure Elite Dangerous is running and you are logged into the game.\nThe file is usually created when you enter your ship.\n\nExpected Path: {AppConfiguration.CargoPath}",
-                    "File Not Found",
+                    "Could not read initial cargo data.\n\n" +
+                    "This can happen if the game is still starting up. Monitoring will begin, and the display will update automatically once you are in-game.",
+                    "Initial Cargo Read Failed",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
+                    MessageBoxIcon.Information);
             }
 
             StartMonitoring();

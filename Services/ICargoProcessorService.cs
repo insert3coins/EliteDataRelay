@@ -9,7 +9,7 @@ namespace EliteDataRelay.Services
     public interface ICargoProcessorService
     {
         event EventHandler<CargoProcessedEventArgs>? CargoProcessed;
-        void ProcessCargoFile();
+        bool ProcessCargoFile(bool force = false);
         void Reset();
     }
 }

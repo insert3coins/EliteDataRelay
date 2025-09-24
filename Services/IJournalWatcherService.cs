@@ -9,7 +9,6 @@ namespace EliteDataRelay.Services
     public interface IJournalWatcherService : IDisposable
     {
         event EventHandler<CargoCapacityEventArgs>? CargoCapacityChanged;
-        event EventHandler<CargoInventoryEventArgs>? CargoInventoryChanged;
         event EventHandler<BalanceChangedEventArgs>? BalanceChanged;
         event EventHandler<LocationChangedEventArgs>? LocationChanged;
         event EventHandler<CommanderNameChangedEventArgs>? CommanderNameChanged;
@@ -18,6 +17,7 @@ namespace EliteDataRelay.Services
         event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
         event EventHandler<DockedEventArgs>? Docked;
         event EventHandler<UndockedEventArgs>? Undocked;
+        event EventHandler? InitialScanComplete;
 
         bool IsMonitoring { get; }
         string JournalDirectoryPath { get; }
