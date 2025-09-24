@@ -45,6 +45,7 @@ namespace EliteDataRelay.Services
 
             var screen = primaryScreen.WorkingArea;
             const int screenEdgePadding = 20;
+            const int overlaySpacing = 10;
 
             // Create form instances first to get their actual dimensions.
             if (AppConfiguration.EnableInfoOverlay)
@@ -68,15 +69,6 @@ namespace EliteDataRelay.Services
                 _stationInfoOverlay.PositionChanged += OnOverlayPositionChanged;
             }
 
-            // --- Calculate default positions ---
- 
-            // Default for Info overlay (top left)
-            Point defaultLeftLocation = Point.Empty;
-            if (_leftOverlayForm != null)
-            {
-                defaultLeftLocation = new Point(screenEdgePadding, screenEdgePadding);
-            }
-
             // Default for Cargo overlay (middle right)
             Point defaultRightLocation = Point.Empty;
             if (_rightOverlayForm != null)
@@ -89,10 +81,21 @@ namespace EliteDataRelay.Services
             Point defaultSystemInfoLocation = Point.Empty;
             if (_systemInfoOverlay != null)
             {
-                defaultSystemInfoLocation = new Point(screen.Width - _systemInfoOverlay.Width - screenEdgePadding, screen.Height - _systemInfoOverlay.Height - screenEdgePadding);
+                int x = screen.Width - _systemInfoOverlay.Width - screenEdgePadding;
+                int y = screen.Height - _systemInfoOverlay.Height - screenEdgePadding;
+                defaultSystemInfoLocation = new Point(x, y);
             }
 
-            // Default for Station Info overlay (bottom left)
+            // Default for Info overlay (above System Info)
+            Point defaultLeftLocation = Point.Empty;
+            if (_leftOverlayForm != null)
+            {
+                int x = screen.Width - _leftOverlayForm.Width - screenEdgePadding;
+                int y = screen.Height - (_systemInfoOverlay?.Height ?? 0) - _leftOverlayForm.Height - screenEdgePadding - overlaySpacing;
+                defaultLeftLocation = new Point(x, y);
+            }
+
+            // Default for Station Info overlay (bottom left, unchanged)
             Point defaultStationInfoLocation = Point.Empty;
             if (_stationInfoOverlay != null)
             {
