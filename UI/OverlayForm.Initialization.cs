@@ -175,7 +175,7 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.StationInfo)
             {
-                this.Size = new Size(450, 220);
+                this.Size = new Size(450, 260);
 
                 var titleLabel = CreateOverlayLabel(new Point(10, 8), _listFont);
                 titleLabel.Text = "STATION INFORMATION";
@@ -199,35 +199,41 @@ namespace EliteDataRelay.UI
                 var detailsTable = new TableLayoutPanel
                 {
                     AutoSize = true,
-                    Width = contentFlowPanel.Width,
-                    ColumnCount = 4,
-                    RowCount = 3,
+                    Dock = DockStyle.Top,
+                    Width = contentFlowPanel.Width, // Set width to fill parent
+                    ColumnCount = 2,
+                    RowCount = 4,
                     BackColor = Color.Transparent
                 };
-                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Labels
+                detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Values
 
                 _stationAllegianceLabel = CreateOverlayLabel(Point.Empty, _listFont); // Assign created label to field
                 _stationGovernmentLabel = CreateOverlayLabel(Point.Empty, _listFont); // Assign created label to field
                 _stationEconomyLabel = CreateOverlayLabel(Point.Empty, _listFont);    // Assign created label to field
                 _stationFactionLabel = CreateOverlayLabel(Point.Empty, _listFont);    // Assign created label to field
+                _stationFactionLabel.AutoSize = false; // Must be false for wrapping and fill to work
+                _stationFactionLabel.Dock = DockStyle.Fill;
+                _stationFactionLabel.TextAlign = ContentAlignment.MiddleLeft;
 
                 detailsTable.Controls.Add(CreateHeaderLabel("Allegiance:"), 0, 0);
                 detailsTable.Controls.Add(_stationAllegianceLabel, 1, 0);
-                detailsTable.Controls.Add(CreateHeaderLabel("Gov:"), 2, 0);
-                detailsTable.Controls.Add(_stationGovernmentLabel, 3, 0);
-                detailsTable.Controls.Add(CreateHeaderLabel("Economy:"), 0, 1);
-                detailsTable.Controls.Add(_stationEconomyLabel, 1, 1);
-                detailsTable.Controls.Add(CreateHeaderLabel("Faction:"), 0, 2);
-                detailsTable.SetColumnSpan(_stationFactionLabel, 3);
-                detailsTable.Controls.Add(_stationFactionLabel, 1, 2);
 
-                _servicesPanel = new FlowLayoutPanel { AutoSize = true, Width = contentFlowPanel.Width, BackColor = Color.Transparent, Padding = new Padding(0, 10, 0, 0) };
+                detailsTable.Controls.Add(CreateHeaderLabel("Government:"), 0, 1);
+                detailsTable.Controls.Add(_stationGovernmentLabel, 1, 1);
+
+                detailsTable.Controls.Add(CreateHeaderLabel("Economy:"), 0, 2);
+                detailsTable.Controls.Add(_stationEconomyLabel, 1, 2);
+
+                detailsTable.Controls.Add(CreateHeaderLabel("Faction:"), 0, 3);
+                detailsTable.Controls.Add(_stationFactionLabel, 1, 3);
+
+                _servicesPanel = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight, Dock = DockStyle.Top, Width = contentFlowPanel.Width, BackColor = Color.Transparent, Padding = new Padding(0, 10, 0, 0) };
+                _unavailableServicesPanel = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight, Dock = DockStyle.Top, Width = contentFlowPanel.Width, BackColor = Color.Transparent, Padding = new Padding(0, 5, 0, 0) };
 
                 contentFlowPanel.Controls.Add(detailsTable);
                 contentFlowPanel.Controls.Add(_servicesPanel);
+                contentFlowPanel.Controls.Add(_unavailableServicesPanel);
 
                 Controls.Add(titleLabel);
                 Controls.Add(_stationNameLabel);

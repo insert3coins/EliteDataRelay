@@ -84,6 +84,7 @@ namespace EliteDataRelay.UI
 
             // Update services
             _servicesPanel.Controls.Clear();
+            _unavailableServicesPanel.Controls.Clear();
             AddServiceLabel("Refuel", data.HasRefuel);
             AddServiceLabel("Repair", data.HasRepair);
             AddServiceLabel("Rearm", data.HasRearm);
@@ -104,7 +105,15 @@ namespace EliteDataRelay.UI
                 Margin = new Padding(0, 0, 5, 5),
                 AutoSize = true
             };
-            _servicesPanel.Controls.Add(label);
+
+            if (isAvailable)
+            {
+                _servicesPanel.Controls.Add(label);
+            }
+            else
+            {
+                _unavailableServicesPanel.Controls.Add(label);
+            }
         }
 
         private Color GetColorForSecurityLevel(string securityLevel)

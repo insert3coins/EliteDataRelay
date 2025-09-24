@@ -111,8 +111,9 @@ namespace EliteDataRelay
                     _sessionTrackingService.StopSession();
                 }
 
-                _cargoFormUI.RefreshOverlay();
-                _cargoFormUI.ShowOverlays(); // Ensure overlays are visible after refresh
+                // Restart the overlay service to apply changes like font, color, opacity, or drag mode.
+                _overlayService.Start();
+
                 // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
                 // windows have fully processed their creation messages and are ready to be
                 // updated before we try to send them data, preventing a race condition.

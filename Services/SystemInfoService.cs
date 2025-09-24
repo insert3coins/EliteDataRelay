@@ -20,6 +20,7 @@ namespace EliteDataRelay.Services
 
         private readonly IJournalWatcherService _journalWatcher;
         private bool _isStarted;
+        private SystemInfoData? _lastSystemInfo;
 
         public event EventHandler<SystemInfoData>? SystemInfoUpdated;
 
@@ -60,6 +61,7 @@ namespace EliteDataRelay.Services
                 try
                 {
                     var systemInfo = await FetchSystemInfoAsync(e.StarSystem) ?? new SystemInfoData { SystemName = e.StarSystem };
+                    _lastSystemInfo = systemInfo;
                     SystemInfoUpdated?.Invoke(this, systemInfo);
                 }
                 catch (Exception ex)
@@ -67,6 +69,11 @@ namespace EliteDataRelay.Services
                     System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Error fetching system info: {ex.Message}");
                 }
             }
+        }
+
+        public SystemInfoData? GetLastSystemInfo()
+        {
+            return _lastSystemInfo;
         }
 
         private async Task<SystemInfoData?> FetchSystemInfoAsync(string systemName)

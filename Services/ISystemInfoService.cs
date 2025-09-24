@@ -8,5 +8,6 @@ namespace EliteDataRelay.Services
         event EventHandler<SystemInfoData>? SystemInfoUpdated;
         void Start();
         void Stop();
+        SystemInfoData? GetLastSystemInfo();
     }
 }

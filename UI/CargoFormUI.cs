@@ -17,7 +17,7 @@ namespace EliteDataRelay.UI
         private TrayIconManager? _trayIconManager;
         private Icon? _appIcon;
         private LayoutManager? _layoutManager;
-        private OverlayService? _overlayService;
+    private readonly OverlayService _overlayService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";        
@@ -36,17 +36,17 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SessionClicked;
 
-        public void InitializeUI(Form form)
+    public CargoFormUI(OverlayService overlayService)
         {
-            _form = form ?? throw new ArgumentNullException(nameof(form));
-            _form.Resize += OnFormResize;
-            _form.Load += OnFormLoad;
+        _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
+    }
 
+    public void InitializeUI(Form form)
+    {
+        _form = form ?? throw new ArgumentNullException(nameof(form));
             InitializeIcon();
-            _trayIconManager = new TrayIconManager(_appIcon);
             _fontManager = new FontManager();
             _controlFactory = new ControlFactory(_fontManager);
-            _overlayService = new OverlayService();
 
             if (_controlFactory.WatchingLabel != null)
             {
@@ -57,6 +57,9 @@ namespace EliteDataRelay.UI
             // Assuming LayoutManager is adapted to add _controlFactory.TabControl to the form's main panel.
             _layoutManager = new LayoutManager(_form, _controlFactory); 
 
+        _form.Resize += OnFormResize;
+        _form.Load += OnFormLoad;
+        _trayIconManager = new TrayIconManager(_appIcon);
             SetupFormProperties();
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
@@ -169,7 +172,6 @@ namespace EliteDataRelay.UI
             _layoutManager?.Dispose();
             _trayIconManager?.Dispose();
             _watchingAnimationManager?.Dispose();
-            _overlayService?.Dispose();
             _fontManager?.Dispose(); // Dispose fonts after the controls that use them.
             _appIcon?.Dispose();
             _iconStream?.Dispose();

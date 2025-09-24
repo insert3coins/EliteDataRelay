@@ -52,6 +52,7 @@ namespace EliteDataRelay.UI
         private Label _stationGovernmentLabel = null!;
         private Label _stationFactionLabel = null!;
         private FlowLayoutPanel _servicesPanel = null!;
+        private FlowLayoutPanel _unavailableServicesPanel = null!;
         private readonly bool _allowDrag;
 
         // Fonts are IDisposable, so we should keep references to them to dispose of them later.

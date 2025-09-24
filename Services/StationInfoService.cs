@@ -8,6 +8,7 @@ namespace EliteDataRelay.Services
     {
         private readonly IJournalWatcherService _journalWatcher;
         private bool _isStarted;
+        private StationInfoData? _lastStationInfo;
 
         public event EventHandler<StationInfoData>? StationInfoUpdated;
 
@@ -47,7 +48,21 @@ namespace EliteDataRelay.Services
 
         private void OnDocked(object? sender, DockedEventArgs e)
         {
-            var dockedEvent = e.DockedEvent;
+            var stationInfo = CreateStationInfoData(e.DockedEvent);
+            _lastStationInfo = stationInfo;
+            StationInfoUpdated?.Invoke(this, stationInfo);
+        }
+
+        private void OnUndocked(object? sender, UndockedEventArgs e)
+        {
+            // When undocked, send an empty data object to clear the overlay.
+            var undockedInfo = new StationInfoData { StationName = "Undocked" };
+            _lastStationInfo = undockedInfo;
+            StationInfoUpdated?.Invoke(this, undockedInfo);
+        }
+
+        private StationInfoData CreateStationInfoData(DockedEvent dockedEvent)
+        {
             var services = dockedEvent.StationServices.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             // When docked at a fleet carrier, the StationName is the ID (e.g., "K2K-12K")
@@ -60,7 +75,7 @@ namespace EliteDataRelay.Services
                 stationDisplayName = $"{dockedEvent.Name} ({dockedEvent.StationName})";
             }
 
-            var stationInfo = new StationInfoData
+            return new StationInfoData
             {
                 StationName = stationDisplayName,
                 StationType = dockedEvent.StationType,
@@ -75,20 +90,16 @@ namespace EliteDataRelay.Services
                 HasShipyard = services.Contains("shipyard"),
                 HasMarket = services.Contains("market")
             };
-
-            StationInfoUpdated?.Invoke(this, stationInfo);
-        }
-
-        private void OnUndocked(object? sender, UndockedEventArgs e)
-        {
-            // When undocked, send an empty data object to clear the overlay.
-            // We use the station name just for consistency, but the UI will treat it as empty.
-            StationInfoUpdated?.Invoke(this, new StationInfoData { StationName = "Undocked" });
         }
 
         public void Dispose()
         {
             Stop();
+        }
+
+        public StationInfoData? GetLastStationInfo()
+        {
+            return _lastStationInfo;
         }
     }
 }

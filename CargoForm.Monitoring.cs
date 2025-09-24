@@ -19,6 +19,10 @@ namespace EliteDataRelay
                 _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
+            
+            // Also repopulate system and station info
+            if (_lastSystemInfoData != null) _cargoFormUI.UpdateSystemInfo(_lastSystemInfoData);
+            if (_lastStationInfoData != null) _cargoFormUI.UpdateStationInfo(_lastStationInfoData);
 
             // Also repopulate session data if tracking is active and shown on the overlay.
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)

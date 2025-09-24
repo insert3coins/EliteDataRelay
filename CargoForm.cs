@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -25,6 +25,7 @@ namespace EliteDataRelay
         private readonly SessionTrackingService _sessionTrackingService;
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
+        private readonly OverlayService _overlayService;
 
         public CargoForm()
         {
@@ -36,10 +37,11 @@ namespace EliteDataRelay
             _journalWatcherService = new JournalWatcherService();
             _soundService = new SoundService();
             _fileOutputService = new FileOutputService();
-            _cargoFormUI = new CargoFormUI();
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _journalWatcherService);
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
+            _overlayService = new OverlayService();
+            _cargoFormUI = new CargoFormUI(_overlayService);
 
             InitializeComponent();
             SetupEventHandlers();
@@ -121,6 +123,7 @@ namespace EliteDataRelay
                 _sessionTrackingService.Dispose();
                 (_stationInfoService as IDisposable)?.Dispose();
                 (_systemInfoService as IDisposable)?.Dispose();
+                _overlayService.Dispose();
             }
             base.Dispose(disposing);
         }

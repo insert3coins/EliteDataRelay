@@ -8,5 +8,6 @@ namespace EliteDataRelay.Services
         event EventHandler<StationInfoData>? StationInfoUpdated;
         void Start();
         void Stop();
+        StationInfoData? GetLastStationInfo();
     }
 }
