@@ -114,12 +114,12 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.SystemInfo)
             {
-                this.Size = new Size(450, 165);
+                this.Size = new Size(445, 160);
 
                 // --- Header ---
                 var titleLabel = CreateOverlayLabel(new Point(10, 8), _listFont);
                 titleLabel.Text = "SYSTEM INFORMATION";
-                titleLabel.ForeColor = Color.FromArgb(255, 140, 0); // Header orange
+                titleLabel.ForeColor = Color.FromArgb(255, 150, 0); // Header orange
 
                 _systemNameLabel = CreateOverlayLabel(new Point(10, 25), _labelFont);
 

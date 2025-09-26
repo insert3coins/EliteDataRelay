@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace EliteDataRelay.Services
 {
@@ -21,6 +22,7 @@ namespace EliteDataRelay.Services
         private readonly IJournalWatcherService _journalWatcher;
         private bool _isStarted;
         private SystemInfoData? _lastSystemInfo;
+        private CancellationTokenSource? _cancellationTokenSource;
 
         public event EventHandler<SystemInfoData>? SystemInfoUpdated;
 
@@ -48,22 +50,33 @@ namespace EliteDataRelay.Services
         public void Stop()
         {
             if (!_isStarted) return;
+            // Cancel any pending operations when stopping the service.
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
             _journalWatcher.LocationChanged -= OnLocationChanged;
             _isStarted = false;
         }
 
         private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
-            // We want to fetch data if it's a new system OR if this is the very first location
-            // event we've received since starting (sender == this).
-            if (e.IsNewSystem || sender == this)
+            // We want to fetch data if it's a new system OR if this is the very first location event
+            // we've received since starting. The `_lastSystemInfo` will be null in that case.
+            // This ensures we populate the overlay on startup.
+            if (e.IsNewSystem || _lastSystemInfo == null)
             {
                 try
                 {
-                    var systemInfo = await FetchSystemInfoAsync(e.StarSystem) ?? new SystemInfoData { SystemName = e.StarSystem };
+                    // Cancel any previously running fetch operation.
+                    _cancellationTokenSource?.Cancel();
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    var token = _cancellationTokenSource.Token;
+
+                    var systemInfo = await FetchSystemInfoAsync(e.StarSystem, token) ?? new SystemInfoData { SystemName = e.StarSystem };
                     _lastSystemInfo = systemInfo;
                     SystemInfoUpdated?.Invoke(this, systemInfo);
                 }
+                catch (OperationCanceledException) { /* This is expected if a new jump happens, so we can ignore it. */ }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Error fetching system info: {ex.Message}");
@@ -76,7 +89,7 @@ namespace EliteDataRelay.Services
             return _lastSystemInfo;
         }
 
-        private async Task<SystemInfoData?> FetchSystemInfoAsync(string systemName)
+        private async Task<SystemInfoData?> FetchSystemInfoAsync(string systemName, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(systemName))
             {
@@ -88,12 +101,12 @@ namespace EliteDataRelay.Services
                 // EDSM API endpoint for system information
                 var url = $"https://www.edsm.net/api-v1/system?systemName={Uri.EscapeDataString(systemName)}&showInformation=1";
                 
-                // EDSM returns an empty array `[]` if the system is not found,
-                // or an object `{...}` if it is. We need to handle both cases.
-                var response = await _httpClient.GetAsync(url);
+                // Pass the cancellation token to the HTTP client.
+                var response = await _httpClient.GetAsync(url, cancellationToken);
                 response.EnsureSuccessStatusCode();
 
-                var contentStream = await response.Content.ReadAsStreamAsync();
+                // EDSM returns an empty array `[]` if the system is not found, or an object `{...}` if it is.
+                var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
                 using var jsonDoc = await JsonDocument.ParseAsync(contentStream);
 
                 if (jsonDoc.RootElement.ValueKind == JsonValueKind.Array)
@@ -151,6 +164,7 @@ namespace EliteDataRelay.Services
         public void Dispose()
         {
             Stop();
+            _cancellationTokenSource?.Dispose();
         }
     }
 }

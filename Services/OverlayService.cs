@@ -169,7 +169,14 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _systemInfoOverlay?.Show();
-            _stationInfoOverlay?.Show();
+
+            // Only show the station info overlay if it has valid data (i.e., we are docked).
+            // The UpdateStationInfo method handles setting the visibility based on docked status,
+            // but a global "Show" command can override it. This check prevents that.
+            if (_stationInfoOverlay != null && _stationInfoOverlay.Visible)
+            {
+                _stationInfoOverlay.Show();
+            }
         }
 
         public void Hide()
