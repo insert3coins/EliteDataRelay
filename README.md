@@ -14,12 +14,6 @@ A lightweight Windows utility for Elite Dangerous that monitors your in-game sta
 
 ![Screenshot](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Screenshot.png)
 
-![ScreenshotMaterials](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Mats.png)
-
-![ScreenshotShip](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Ship.png)
-
-![GameOverLay](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/GameOverlay.png)
-
 ---
 
 ## ✨ Features
