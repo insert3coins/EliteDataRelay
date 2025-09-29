@@ -43,7 +43,7 @@ namespace EliteDataRelay.UI
             {
                 _watchingAnimationManager.Start();
                 // Only start the overlay service if at least one of the overlays is enabled.
-                if (AppConfiguration.EnableInfoOverlay || AppConfiguration.EnableCargoOverlay || AppConfiguration.EnableSystemInfoOverlay || AppConfiguration.EnableStationInfoOverlay)
+                if (AppConfiguration.EnableInfoOverlay || AppConfiguration.EnableCargoOverlay)
                 {
                     _overlayService?.Start();
                 }

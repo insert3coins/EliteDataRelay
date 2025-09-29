@@ -76,8 +76,6 @@ namespace EliteDataRelay.UI
             // Also reset overlay positions
             AppConfiguration.InfoOverlayLocation = Point.Empty;
             AppConfiguration.CargoOverlayLocation = Point.Empty;
-            AppConfiguration.SystemInfoOverlayLocation = Point.Empty;
-            AppConfiguration.StationInfoOverlayLocation = Point.Empty;
 
             // Raise the event to trigger a refresh of the live overlays.
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);

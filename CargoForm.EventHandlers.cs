@@ -182,8 +182,8 @@ namespace EliteDataRelay
             // This event is raised from a background thread, so we must invoke on the UI thread.
             Invoke(new Action(() =>
             {
-                _lastSystemInfoData = e;
-                _cargoFormUI.UpdateSystemInfo(e);
+                // _lastSystemInfoData = e;
+                _cargoFormUI.UpdateSystemInfo(e); // This call is preserved for future use
             }));
         }
 

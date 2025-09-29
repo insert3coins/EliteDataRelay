@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -62,7 +62,6 @@ namespace EliteDataRelay
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
         private StationInfoData? _lastStationInfoData;
-        private SystemInfoData? _lastSystemInfoData;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 

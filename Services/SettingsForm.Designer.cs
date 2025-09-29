@@ -171,22 +171,6 @@ namespace EliteDataRelay.UI
             };
             _chkEnableRightOverlay.CheckedChanged += OnEnableRightOverlayCheckedChanged;
 
-            // Enable System Info Overlay CheckBox
-            _chkEnableSystemInfoOverlay = new CheckBox
-            {
-                Text = "Enable system info overlay (from EDSM/Inara)",
-                Location = new Point(15, 70), // Keep this one
-                AutoSize = true
-            };
-
-            // Enable Station Info Overlay CheckBox
-            _chkEnableStationInfoOverlay = new CheckBox
-            {
-                Text = "Enable station info overlay (when docked)",
-                Location = new Point(15, 95),
-                AutoSize = true
-            };
-
             _chkShowSessionOnOverlay = new CheckBox
             {
                 Text = "Show session stats on cargo overlay",
@@ -259,8 +243,6 @@ namespace EliteDataRelay.UI
             // Add functionality controls to the overlay settings group
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
-            _grpOverlaySettings.Controls.Add(_chkEnableSystemInfoOverlay);
-            _grpOverlaySettings.Controls.Add(_chkEnableStationInfoOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 

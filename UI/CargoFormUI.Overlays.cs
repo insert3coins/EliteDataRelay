@@ -8,7 +8,7 @@ namespace EliteDataRelay.UI
         public void RefreshOverlay()
         {
             _overlayService?.Stop();
-            if (AppConfiguration.EnableInfoOverlay || AppConfiguration.EnableCargoOverlay || AppConfiguration.EnableSystemInfoOverlay || AppConfiguration.EnableStationInfoOverlay)
+            if (AppConfiguration.EnableInfoOverlay || AppConfiguration.EnableCargoOverlay)
             {
                 _overlayService?.Start();
             }

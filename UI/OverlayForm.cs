@@ -15,9 +15,7 @@ namespace EliteDataRelay.UI
         public enum OverlayPosition
         {
             Info,
-            Cargo,
-            SystemInfo,
-            StationInfo
+            Cargo
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -35,24 +33,6 @@ namespace EliteDataRelay.UI
         private Label _cargoSizeLabel = null!;
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
 
-        // New fields for the system info overlay
-        private Label _systemNameLabel = null!;
-        private Label _allegianceLabel = null!;
-        private Label _economyLabel = null!;
-        private Label _governmentLabel = null!;
-        private Label _securityLabel = null!;
-        private Label _populationLabel = null!;
-        private Label _factionLabel = null!;
-
-        // New fields for the station info overlay
-        private Label _stationNameLabel = null!;
-        private Label _stationTypeLabel = null!;
-        private Label _stationAllegianceLabel = null!;
-        private Label _stationEconomyLabel = null!;
-        private Label _stationGovernmentLabel = null!;
-        private Label _stationFactionLabel = null!;
-        private FlowLayoutPanel _servicesPanel = null!;
-        private FlowLayoutPanel _unavailableServicesPanel = null!;
         private readonly bool _allowDrag;
 
         // Fonts are IDisposable, so we should keep references to them to dispose of them later.
@@ -88,12 +68,6 @@ namespace EliteDataRelay.UI
                     break;
                 case OverlayPosition.Cargo:
                     this.Text = "Elite Data Relay: Cargo";
-                    break;
-                case OverlayPosition.SystemInfo:
-                    this.Text = "Elite Data Relay: System Info";
-                    break;
-                case OverlayPosition.StationInfo:
-                    this.Text = "Elite Data Relay: Station Info";
                     break;
                 default:
                     this.Text = "Elite Data Relay Overlay";

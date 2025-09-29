@@ -11,8 +11,6 @@ namespace EliteDataRelay.Services
     {
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
-        private OverlayForm? _systemInfoOverlay;
-        private OverlayForm? _stationInfoOverlay;
 
         public void Start()
         {
@@ -58,16 +56,6 @@ namespace EliteDataRelay.Services
                 _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (AppConfiguration.EnableSystemInfoOverlay)
-            {
-                _systemInfoOverlay = new OverlayForm(OverlayForm.OverlayPosition.SystemInfo, AppConfiguration.AllowOverlayDrag);
-                _systemInfoOverlay.PositionChanged += OnOverlayPositionChanged;
-            }
-            if (AppConfiguration.EnableStationInfoOverlay)
-            {
-                _stationInfoOverlay = new OverlayForm(OverlayForm.OverlayPosition.StationInfo, AppConfiguration.AllowOverlayDrag);
-                _stationInfoOverlay.PositionChanged += OnOverlayPositionChanged;
-            }
 
             // Default for Cargo overlay (middle right)
             Point defaultRightLocation = Point.Empty;
@@ -77,29 +65,13 @@ namespace EliteDataRelay.Services
                 defaultRightLocation = new Point(screen.Width - _rightOverlayForm.Width - screenEdgePadding, y);
             }
 
-            // Default for System Info overlay (bottom right)
-            Point defaultSystemInfoLocation = Point.Empty;
-            if (_systemInfoOverlay != null)
-            {
-                int x = screen.Width - _systemInfoOverlay.Width - screenEdgePadding;
-                int y = screen.Height - _systemInfoOverlay.Height - screenEdgePadding;
-                defaultSystemInfoLocation = new Point(x, y);
-            }
-
             // Default for Info overlay (above System Info)
             Point defaultLeftLocation = Point.Empty;
             if (_leftOverlayForm != null)
             {
                 int x = screen.Width - _leftOverlayForm.Width - screenEdgePadding;
-                int y = screen.Height - (_systemInfoOverlay?.Height ?? 0) - _leftOverlayForm.Height - screenEdgePadding - overlaySpacing;
+                int y = screen.Height - _leftOverlayForm.Height - screenEdgePadding - overlaySpacing;
                 defaultLeftLocation = new Point(x, y);
-            }
-
-            // Default for Station Info overlay (bottom left, unchanged)
-            Point defaultStationInfoLocation = Point.Empty;
-            if (_stationInfoOverlay != null)
-            {
-                defaultStationInfoLocation = new Point(screenEdgePadding, screen.Height - _stationInfoOverlay.Height - screenEdgePadding);
             }
 
             if (_leftOverlayForm != null)
@@ -126,65 +98,26 @@ namespace EliteDataRelay.Services
                 }
                 _rightOverlayForm.Show();
             }
-            if (_systemInfoOverlay != null)
-            {
-                if (AppConfiguration.SystemInfoOverlayLocation != Point.Empty)
-                {
-                    _systemInfoOverlay.Location = AppConfiguration.SystemInfoOverlayLocation;
-                }
-                else
-                {
-                    _systemInfoOverlay.Location = defaultSystemInfoLocation;
-                }
-                _systemInfoOverlay.Show();
-            }
-            if (_stationInfoOverlay != null)
-            {
-                if (AppConfiguration.StationInfoOverlayLocation != Point.Empty)
-                {
-                    _stationInfoOverlay.Location = AppConfiguration.StationInfoOverlayLocation;
-                }
-                else
-                {
-                    _stationInfoOverlay.Location = defaultStationInfoLocation;
-                }
-                _stationInfoOverlay.Show();
-            }
         }
 
         public void Stop()
         {
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
-            _systemInfoOverlay?.Close();
-            _stationInfoOverlay?.Close();
             _leftOverlayForm = null;
             _rightOverlayForm = null;
-            _systemInfoOverlay = null;
-            _stationInfoOverlay = null;
         }
 
         public void Show()
         {
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
-            _systemInfoOverlay?.Show();
-
-            // Only show the station info overlay if it has valid data (i.e., we are docked).
-            // The UpdateStationInfo method handles setting the visibility based on docked status,
-            // but a global "Show" command can override it. This check prevents that.
-            if (_stationInfoOverlay != null && _stationInfoOverlay.Visible)
-            {
-                _stationInfoOverlay.Show();
-            }
         }
 
         public void Hide()
         {
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
-            _systemInfoOverlay?.Hide();
-            _stationInfoOverlay?.Hide();
         }
 
         private void OnOverlayPositionChanged(object? sender, Point newLocation)
@@ -196,14 +129,6 @@ namespace EliteDataRelay.Services
             else if (sender == _rightOverlayForm)
             {
                 AppConfiguration.CargoOverlayLocation = newLocation;
-            }
-            else if (sender == _systemInfoOverlay)
-            {
-                AppConfiguration.SystemInfoOverlayLocation = newLocation;
-            }
-            else if (sender == _stationInfoOverlay)
-            {
-                AppConfiguration.StationInfoOverlayLocation = newLocation;
             }
             AppConfiguration.Save();
         }
@@ -245,12 +170,12 @@ namespace EliteDataRelay.Services
 
         public void UpdateSystemInfo(SystemInfoData data)
         {
-            _systemInfoOverlay?.UpdateSystemInfo(data);
+            // _systemInfoOverlay?.UpdateSystemInfo(data);
         }
 
         public void UpdateStationInfo(StationInfoData data)
         {
-            _stationInfoOverlay?.UpdateStationInfo(data);
+            // _stationInfoOverlay?.UpdateStationInfo(data);
         }
 
         #endregion

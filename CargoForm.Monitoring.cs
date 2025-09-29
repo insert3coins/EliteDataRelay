@@ -21,7 +21,7 @@ namespace EliteDataRelay
             }
             
             // Also repopulate system and station info
-            if (_lastSystemInfoData != null) _cargoFormUI.UpdateSystemInfo(_lastSystemInfoData);
+            // if (_lastSystemInfoData != null) _cargoFormUI.UpdateSystemInfo(_lastSystemInfoData);
             if (_lastStationInfoData != null) _cargoFormUI.UpdateStationInfo(_lastStationInfoData);
 
             // Also repopulate session data if tracking is active and shown on the overlay.
@@ -88,7 +88,7 @@ namespace EliteDataRelay
 
             // Clear cached data after stopping services
             _lastStationInfoData = null;
-            _lastSystemInfoData = null;
+            // _lastSystemInfoData = null;
         }
 
         #endregion
