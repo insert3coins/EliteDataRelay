@@ -71,27 +71,30 @@ namespace EliteDataRelay.Services
                 defaultRightLocation = new Point(screen.Width - _rightOverlayForm.Width - screenEdgePadding, y);
             }
 
-            // Default for Ship Icon overlay (bottom left)
+            // --- Calculate positions for the bottom-left overlay stack ---
+            // This new logic correctly handles any combination of Info, Ship, and Chat overlays.
+
+            // 1. Calculate the total height of the stack.
+            int totalStackHeight = 0;
+            if (_leftOverlayForm != null) totalStackHeight += _leftOverlayForm.Height;
+            if (_shipIconOverlayForm != null) totalStackHeight += (totalStackHeight > 0 ? overlaySpacing : 0) + _shipIconOverlayForm.Height;
+
+            // 2. Determine the starting Y position for the entire stack (bottom-aligned).
+            int currentY = screen.Height - totalStackHeight - screenEdgePadding;
+
+            // 3. Assign positions to each overlay in the stack from top to bottom.
+            Point defaultLeftLocation = Point.Empty;
+            if (_leftOverlayForm != null)
+            {
+                defaultLeftLocation = new Point(screenEdgePadding, currentY);
+                currentY += _leftOverlayForm.Height + overlaySpacing;
+            }
+
             Point defaultShipIconLocation = Point.Empty;
             if (_shipIconOverlayForm != null)
             {
-                int y = screen.Height - _shipIconOverlayForm.Height - screenEdgePadding;
-                defaultShipIconLocation = new Point(screenEdgePadding, y);
-            }
-            
-            // Default for Info overlay (above Ship Icon overlay)
-            Point defaultLeftLocation = Point.Empty;
-            if (_leftOverlayForm != null && _shipIconOverlayForm != null)
-            {
-                // If both are enabled, position Info above Ship Icon.
-                int y = defaultShipIconLocation.Y - _leftOverlayForm.Height - overlaySpacing;
-                defaultLeftLocation = new Point(screenEdgePadding, y);
-            }
-            else if (_leftOverlayForm != null)
-            {
-                // If only Info is enabled, give it a default bottom-left position.
-                int y = screen.Height - _leftOverlayForm.Height - screenEdgePadding;
-                defaultLeftLocation = new Point(screenEdgePadding, y);
+                defaultShipIconLocation = new Point(screenEdgePadding, currentY);
+                currentY += _shipIconOverlayForm.Height + overlaySpacing;
             }
 
             if (_leftOverlayForm != null)

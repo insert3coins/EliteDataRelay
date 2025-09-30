@@ -24,6 +24,9 @@ namespace EliteDataRelay.Services
         private TwitchAPI? _api;
         private TwitchApiPollingService? _pollingService;
 
+        public TwitchAPI? ApiClient => _api;
+        public string? ChannelId { get; private set; }
+
         public void Start()
         {
             var username = AppConfiguration.TwitchUsername;
@@ -40,20 +43,22 @@ namespace EliteDataRelay.Services
             // The API needs the token without the prefix.
             var apiOauth = oauth.Replace("oauth:", "");
 
-            // --- Initialize API for follower polling ---
+            // --- Initialize API and Polling Service ---
             _api = new TwitchAPI();
-            _api.Settings.ClientId = "9wz2k52qb5dp4w3v42emp66z2l0y2p"; // Using the same public client ID as auth
+            _api.Settings.ClientId = AppConfiguration.TwitchClientId;
             _api.Settings.AccessToken = apiOauth;
 
             _pollingService = new TwitchApiPollingService(_api);
             _pollingService.NewFollowerDetected += OnNewFollowerDetected;
-            _ = _pollingService.Start(channel, apiOauth);
+            _pollingService.TokenExpired += OnTokenExpired;
+            _pollingService.Start(channel, apiOauth).ContinueWith(t => { ChannelId = _pollingService.ChannelId; });
 
             // --- Initialize Client for chat and other events ---
             var credentials = new ConnectionCredentials(username, oauth);
             var clientOptions = new ClientOptions { MessagesAllowedInPeriod = 750, ThrottlingPeriod = TimeSpan.FromSeconds(30) };
             var customClient = new WebSocketClient(clientOptions);
             _client = new TwitchClient(customClient);
+            _client.OnConnected += (s, e) => _client.SendRaw("CAP REQ :twitch.tv/tags"); // Request tags for badge info
             _client.Initialize(credentials, channel);
 
             // Subscribe to events
@@ -72,6 +77,7 @@ namespace EliteDataRelay.Services
         {
             _pollingService?.Stop();
             _client?.Disconnect();
+            _client = null; // Ensure the client is fully released
         }
 
         #region Event Handlers
@@ -81,7 +87,9 @@ namespace EliteDataRelay.Services
             ChatMessageReceived?.Invoke(this, new TwitchChatMessageEventArgs
             {
                 Username = e.ChatMessage.DisplayName,
-                Message = e.ChatMessage.Message
+                Message = e.ChatMessage.Message,
+                Badges = e.ChatMessage.Badges,
+                BadgeInfo = e.ChatMessage.BadgeInfo
             });
         }
 
@@ -130,6 +138,24 @@ namespace EliteDataRelay.Services
         private void OnNewFollowerDetected(object? sender, string username)
         {
             FollowerReceived?.Invoke(this, new TwitchFollowerEventArgs { Username = username });
+        }
+
+        private async void OnTokenExpired(object? sender, EventArgs e)
+        {
+            Debug.WriteLine("[TwitchService] Token expired. Attempting to refresh and reconnect...");
+            Stop(); // Stop all current connections
+
+            bool success = await TwitchAuthService.RefreshTokenAsync();
+            if (success)
+            {
+                Debug.WriteLine("[TwitchService] Token refresh successful. Restarting service...");
+                Start(); // Restart with the new token
+            }
+            else
+            {
+                Debug.WriteLine("[TwitchService] Token refresh failed. User will need to log in again.");
+                // Optionally, you could raise an event here to notify the main UI to update the login status.
+            }
         }
 
         #endregion

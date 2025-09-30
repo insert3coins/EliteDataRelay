@@ -15,6 +15,7 @@ namespace EliteDataRelay.UI
         event EventHandler? AboutClicked;
         event EventHandler? SettingsClicked;
         event EventHandler? SessionClicked;
+        event EventHandler? TestClicked;
 
         // Methods
         void UpdateShipStatus(StatusFile status);

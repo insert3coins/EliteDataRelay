@@ -36,6 +36,8 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SessionClicked;
 
+        public event EventHandler? TestClicked;
+
     public CargoFormUI(OverlayService overlayService)
         {
         _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
@@ -130,6 +132,7 @@ namespace EliteDataRelay.UI
             _controlFactory.ExitBtn.Click += (s, e) => ExitClicked?.Invoke(s, e);
             _controlFactory.SettingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
             _controlFactory.SessionBtn.Click += (s, e) => SessionClicked?.Invoke(s, e);
+            _controlFactory.TestBtn.Click += (s, e) => TestClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
 
             // Tray icon event handlers

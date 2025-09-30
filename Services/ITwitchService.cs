@@ -1,4 +1,5 @@
 using System;
+using TwitchLib.Api;
 
 namespace EliteDataRelay.Services
 {
@@ -9,6 +10,9 @@ namespace EliteDataRelay.Services
         event EventHandler<TwitchRaidEventArgs>? RaidReceived;
         event EventHandler<TwitchSubscriptionEventArgs>? SubscriptionReceived;
 
+        TwitchAPI? ApiClient { get; }
+        string? ChannelId { get; }
+
         void Start();
         void Stop();
     }
@@ -17,6 +21,8 @@ namespace EliteDataRelay.Services
     {
         public string Username { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
+        public System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>> Badges { get; set; } = new();
+        public System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>> BadgeInfo { get; set; } = new();
     }
 
     public class TwitchFollowerEventArgs : EventArgs { public string Username { get; set; } = string.Empty; }

@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -90,8 +91,10 @@ namespace EliteDataRelay.UI
             {
                 Dock = DockStyle.Fill,
                 SizeMode = PictureBoxSizeMode.Zoom,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                Name = "ShipIconPictureBox"
             };
+            
 
             var shipLabelsPanel = CreateShipLabelsPanel(fontManager);
 

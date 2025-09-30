@@ -52,7 +52,9 @@ namespace EliteDataRelay.UI
         private Button _btnLoginToTwitch = null!;
         private Button _btnLogoutOfTwitch = null!;
         private Label _lblTwitchLoginStatus = null!;
+        private Button _btnTestAlerts = null!;
         private TextBox _txtTwitchChannel = null!;
+        private TextBox _txtTwitchClientId = null!;
         private TextBox _txtTwitchClientSecret = null!;
 
 
@@ -78,8 +80,11 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? LiveSettingsChanged;
 
-        public SettingsForm()
+        private readonly TwitchTestService _testService;
+
+        public SettingsForm(TwitchTestService testService)
         {
+            _testService = testService;
             InitializeComponent();
 
             // When the form is closing, check if the user cancelled. If so, revert any live changes.
@@ -112,11 +117,12 @@ namespace EliteDataRelay.UI
 
             // Load Twitch Settings
             _chkEnableTwitchIntegration.Checked = AppConfiguration.EnableTwitchIntegration;
-            _chkEnableTwitchChatBubbles.Checked = AppConfiguration.EnableTwitchChatBubbles;
+            _chkEnableTwitchChatBubbles.Checked = AppConfiguration.EnableTwitchChatOverlay;
             _chkEnableTwitchFollowerAlerts.Checked = AppConfiguration.EnableTwitchFollowerAlerts;
             _chkEnableTwitchRaidAlerts.Checked = AppConfiguration.EnableTwitchRaidAlerts;
             _chkEnableTwitchSubAlerts.Checked = AppConfiguration.EnableTwitchSubAlerts;
             _txtTwitchChannel.Text = AppConfiguration.TwitchChannelName;
+            _txtTwitchClientId.Text = AppConfiguration.TwitchClientId;
             _txtTwitchClientSecret.Text = AppConfiguration.TwitchClientSecret;
             UpdateTwitchLoginStatus();
 
@@ -190,11 +196,12 @@ namespace EliteDataRelay.UI
 
             // Save Twitch Settings
             AppConfiguration.EnableTwitchIntegration = _chkEnableTwitchIntegration.Checked;
-            AppConfiguration.EnableTwitchChatBubbles = _chkEnableTwitchChatBubbles.Checked;
+            AppConfiguration.EnableTwitchChatOverlay = _chkEnableTwitchChatBubbles.Checked;
             AppConfiguration.EnableTwitchFollowerAlerts = _chkEnableTwitchFollowerAlerts.Checked;
             AppConfiguration.EnableTwitchRaidAlerts = _chkEnableTwitchRaidAlerts.Checked;
             AppConfiguration.EnableTwitchSubAlerts = _chkEnableTwitchSubAlerts.Checked;
             AppConfiguration.TwitchChannelName = _txtTwitchChannel.Text;
+            AppConfiguration.TwitchClientId = _txtTwitchClientId.Text;
             AppConfiguration.TwitchClientSecret = _txtTwitchClientSecret.Text;
             // The tokens are saved by the TwitchAuthService, so we don't need to save them here.
             // AppConfiguration.TwitchOAuthToken = _txtTwitchOAuthToken.Text;

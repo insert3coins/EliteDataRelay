@@ -19,11 +19,6 @@ namespace EliteDataRelay.Services
     /// </summary>
     public static class TwitchAuthService
     {
-        // IMPORTANT: For a real application, you should register your own client ID with Twitch.
-        // This is a public client ID intended for use with local development and the Authorization Code Flow.
-        // It is configured to allow http://localhost redirects.
-        // This one is from the official Twitch "Sample Go" application and is known to work.
-        private const string ClientId = "8uu6pvwkbmw520q4t86e3t1dsnt7rp";
         private const string RedirectUri = "http://localhost:8899/redirect/";
 
         public static async Task<bool> LoginToTwitch()
@@ -56,7 +51,7 @@ namespace EliteDataRelay.Services
 
             // 3. Open the user's browser to the Twitch authorization page.
             string scopes = "chat:read channel:read:subscriptions user:read:follows user:read:email"; // Removed "channel:read:raids" as it's deprecated for this flow.
-            string authUrl = $"https://id.twitch.tv/oauth2/authorize?client_id={ClientId}&redirect_uri={Uri.EscapeDataString(RedirectUri)}&response_type=code&scope={Uri.EscapeDataString(scopes)}";
+            string authUrl = $"https://id.twitch.tv/oauth2/authorize?client_id={AppConfiguration.TwitchClientId}&redirect_uri={Uri.EscapeDataString(RedirectUri)}&response_type=code&scope={Uri.EscapeDataString(scopes)}";
             Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
 
             // 4. Wait for Twitch to redirect the user back to our local listener.
@@ -116,6 +111,54 @@ namespace EliteDataRelay.Services
             output.Close();
         }
 
+        public static async Task<bool> RefreshTokenAsync()
+        {
+            string refreshToken = AppConfiguration.TwitchRefreshToken;
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                Debug.WriteLine("[TwitchAuthService] No refresh token available to refresh.");
+                return false;
+            }
+
+            Debug.WriteLine("[TwitchAuthService] Attempting to refresh Twitch token...");
+
+            using var client = new HttpClient();
+            string tokenUrl = "https://id.twitch.tv/oauth2/token";
+
+            var requestParams = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("client_id", AppConfiguration.TwitchClientId),
+                new KeyValuePair<string, string>("client_secret", AppConfiguration.TwitchClientSecret),
+                new KeyValuePair<string, string>("grant_type", "refresh_token"),
+                new KeyValuePair<string, string>("refresh_token", refreshToken)
+            };
+
+            var content = new FormUrlEncodedContent(requestParams);
+
+            var response = await client.PostAsync(tokenUrl, content);
+            if (!response.IsSuccessStatusCode)
+            {
+                string error = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"[TwitchAuthService] Token refresh failed: {error}");
+                // If refresh fails, the user must log in again. Clear the bad credentials.
+                AppConfiguration.ClearTwitchCredentials();
+                return false;
+            }
+
+            var tokenData = await response.Content.ReadFromJsonAsync<TwitchTokenResponse>();
+            if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken))
+            {
+                return false;
+            }
+
+            // Save the new tokens. The username and channel name remain the same.
+            AppConfiguration.TwitchOAuthToken = $"oauth:{tokenData.AccessToken}";
+            AppConfiguration.TwitchRefreshToken = tokenData.RefreshToken ?? string.Empty;
+            AppConfiguration.Save();
+            Debug.WriteLine("[TwitchAuthService] Token successfully refreshed.");
+            return true;
+        }
+
         private static async Task<bool> ExchangeCodeForTokenAsync(string authCode)
         {
             using var client = new HttpClient();
@@ -123,7 +166,7 @@ namespace EliteDataRelay.Services
 
             var requestParams = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("client_id", ClientId),
+                new KeyValuePair<string, string>("client_id", AppConfiguration.TwitchClientId),
                 new KeyValuePair<string, string>("code", authCode),
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
                 new KeyValuePair<string, string>("redirect_uri", RedirectUri)
@@ -169,7 +212,7 @@ namespace EliteDataRelay.Services
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-            client.DefaultRequestHeaders.Add("Client-Id", ClientId);
+            client.DefaultRequestHeaders.Add("Client-Id", AppConfiguration.TwitchClientId);
 
             var response = await client.GetAsync("https://api.twitch.tv/helix/users");
             if (!response.IsSuccessStatusCode) return null;

@@ -46,6 +46,7 @@ namespace EliteDataRelay.UI
             _buttonFlowPanel.Controls.Add(_controlFactory.StopBtn);
             _buttonFlowPanel.Controls.Add(_controlFactory.SessionBtn);
             _buttonFlowPanel.Controls.Add(_controlFactory.SettingsBtn);
+            _buttonFlowPanel.Controls.Add(_controlFactory.TestBtn);
             _buttonFlowPanel.Controls.Add(_controlFactory.AboutBtn);
             _buttonFlowPanel.Controls.Add(_controlFactory.ExitBtn);
 

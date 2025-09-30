@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TwitchLib.Api;
+using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 
 namespace EliteDataRelay.Services
@@ -16,10 +17,11 @@ namespace EliteDataRelay.Services
     {
         private readonly TwitchAPI _twitchApi;
         private System.Threading.Timer? _followerPollTimer;
-        private string? _channelId;
         private List<string>? _knownFollowerIds;
 
+        public string? ChannelId { get; private set; }
         public event EventHandler<string>? NewFollowerDetected;
+        public event EventHandler? TokenExpired;
 
         public TwitchApiPollingService(TwitchAPI twitchApi)
         {
@@ -34,15 +36,15 @@ namespace EliteDataRelay.Services
                 return;
             }
 
-            _channelId = await GetChannelId(channelName);
-            if (string.IsNullOrEmpty(_channelId))
+            ChannelId = await GetChannelId(channelName);
+            if (string.IsNullOrEmpty(ChannelId))
             {
                 Debug.WriteLine($"[TwitchApiPollingService] Could not resolve channel ID for '{channelName}'. Follower polling will not start.");
                 return;
             }
 
             // Initialize the list of known followers to prevent firing events for all existing followers on startup.
-            _knownFollowerIds = await GetFollowerIds(_channelId, accessToken);
+            _knownFollowerIds = await GetFollowerIds(ChannelId, accessToken);
             Debug.WriteLine($"[TwitchApiPollingService] Initialized with {_knownFollowerIds.Count} known followers.");
 
             // Start polling for new followers every 30 seconds.
@@ -56,25 +58,34 @@ namespace EliteDataRelay.Services
 
         private async void PollForNewFollowers(object? state)
         {
-            if (string.IsNullOrEmpty(_channelId) || state is not string accessToken) return;
+            if (string.IsNullOrEmpty(ChannelId) || state is not string accessToken) return;
 
-            var currentFollowers = await GetFollowerIds(_channelId, accessToken);
-            if (_knownFollowerIds == null)
+            try
             {
+                var currentFollowers = await GetFollowerIds(ChannelId, accessToken);
+                if (_knownFollowerIds == null)
+                {
+                    _knownFollowerIds = currentFollowers;
+                    return;
+                }
+
+                var newFollowers = currentFollowers.Except(_knownFollowerIds).ToList();
+                foreach (var followerId in newFollowers)
+                {
+                    // We get the ID, but for the alert, we need the name.
+                    var userResponse = await _twitchApi.Helix.Users.GetUsersAsync(new List<string> { followerId });
+                    var username = userResponse?.Users.FirstOrDefault()?.DisplayName ?? "A new follower";
+                    NewFollowerDetected?.Invoke(this, username);
+                }
+
                 _knownFollowerIds = currentFollowers;
-                return;
             }
-
-            var newFollowers = currentFollowers.Except(_knownFollowerIds).ToList();
-            foreach (var followerId in newFollowers)
+            catch (BadTokenException)
             {
-                // We get the ID, but for the alert, we need the name.
-                var userResponse = await _twitchApi.Helix.Users.GetUsersAsync(new List<string> { followerId });
-                var username = userResponse?.Users.FirstOrDefault()?.DisplayName ?? "A new follower";
-                NewFollowerDetected?.Invoke(this, username);
+                Debug.WriteLine("[TwitchApiPollingService] Bad token detected during API poll. Firing TokenExpired event.");
+                Stop(); // Stop polling to prevent repeated errors.
+                TokenExpired?.Invoke(this, EventArgs.Empty);
             }
-
-            _knownFollowerIds = currentFollowers;
         }
 
         private async Task<string?> GetChannelId(string channelName)

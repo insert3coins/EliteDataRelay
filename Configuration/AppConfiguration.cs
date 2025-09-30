@@ -9,7 +9,7 @@ using System.Drawing;
 
 namespace EliteDataRelay.Configuration
 {
-    public static class AppConfiguration
+    public static partial class AppConfiguration
     {
         private static readonly string _settingsPath;
         private static AppSettings _settings = new AppSettings();
@@ -24,110 +24,17 @@ namespace EliteDataRelay.Configuration
         // This path is usually found dynamically, but we provide a config setting for it.
         public static string CargoPath { get => _settings.CargoPath; set => _settings.CargoPath = value; }
 
-        // Public properties to access settings from other parts of the application
         public static string JournalPath
         {
             get => _settings.JournalPath;
             set => _settings.JournalPath = value;
         }
-        public static int PollingIntervalMs
-        {
-            get => _settings.PollingIntervalMs;
-            set => _settings.PollingIntervalMs = value;
-        }
-        public static bool EnableSessionTracking
-        {
-            get => _settings.EnableSessionTracking;
-            set => _settings.EnableSessionTracking = value;
-        }
-        public static bool ShowSessionOnOverlay
-        {
-            get => _settings.ShowSessionOnOverlay;
-            set => _settings.ShowSessionOnOverlay = value;
-        }
-        public static Color OverlayBackgroundColor
-        {
-            get => Color.FromArgb(_settings.OverlayBackgroundColorArgb);
-            set => _settings.OverlayBackgroundColorArgb = value.ToArgb();
-        }
-        public static string OverlayFontName
-        {
-            get => _settings.OverlayFontName;
-            set => _settings.OverlayFontName = value;
-        }
-        public static float OverlayFontSize
-        {
-            get => _settings.OverlayFontSize;
-            set => _settings.OverlayFontSize = value;
-        }
-        public static int OverlayOpacity
-        {
-            get => _settings.OverlayOpacity;
-            set => _settings.OverlayOpacity = value;
-        }
-        public static bool EnableHotkeys
-        {
-            get => _settings.EnableHotkeys;
-            set => _settings.EnableHotkeys = value;
-        }
-
-        // File Output Settings
-        public static bool EnableFileOutput { get => _settings.EnableFileOutput; set => _settings.EnableFileOutput = value; }
-        public static string OutputFileFormat { get => _settings.OutputFileFormat; set => _settings.OutputFileFormat = value; }
-        public static string OutputFileName { get => _settings.OutputFileName; set => _settings.OutputFileName = value; }
-        public static string OutputDirectory { get => _settings.OutputDirectory; set => _settings.OutputDirectory = value; }
-
-        // Overlay Settings
-        public static bool EnableInfoOverlay { get => _settings.EnableInfoOverlay; set => _settings.EnableInfoOverlay = value; }
-        public static bool EnableCargoOverlay { get => _settings.EnableCargoOverlay; set => _settings.EnableCargoOverlay = value; }
-        public static bool EnableShipIconOverlay { get => _settings.EnableShipIconOverlay; set => _settings.EnableShipIconOverlay = value; }
-
-        // Twitch Settings
-        public static bool EnableTwitchIntegration { get => _settings.EnableTwitchIntegration; set => _settings.EnableTwitchIntegration = value; }
-        public static bool EnableTwitchChatBubbles { get => _settings.EnableTwitchChatBubbles; set => _settings.EnableTwitchChatBubbles = value; }
-        public static bool EnableTwitchFollowerAlerts { get => _settings.EnableTwitchFollowerAlerts; set => _settings.EnableTwitchFollowerAlerts = value; }
-        public static bool EnableTwitchRaidAlerts { get => _settings.EnableTwitchRaidAlerts; set => _settings.EnableTwitchRaidAlerts = value; }
-        public static bool EnableTwitchSubAlerts { get => _settings.EnableTwitchSubAlerts; set => _settings.EnableTwitchSubAlerts = value; }
-        public static string TwitchChannelName { get => _settings.TwitchChannelName; set => _settings.TwitchChannelName = value; }
-        public static string TwitchUsername { get => _settings.TwitchUsername; set => _settings.TwitchUsername = value; }
-        public static string TwitchOAuthToken { get => _settings.TwitchOAuthToken; set => _settings.TwitchOAuthToken = value; }
-        public static string TwitchRefreshToken { get => _settings.TwitchRefreshToken; set => _settings.TwitchRefreshToken = value; }
-        public static string TwitchClientSecret { get => _settings.TwitchClientSecret; set => _settings.TwitchClientSecret = value; }
-
-        public static bool AllowOverlayDrag { get => _settings.AllowOverlayDrag; set => _settings.AllowOverlayDrag = value; }
-        public static Color OverlayTextColor { get => Color.FromArgb(_settings.OverlayTextColorArgb); set => _settings.OverlayTextColorArgb = value.ToArgb(); }
-        public static Point InfoOverlayLocation { get => _settings.InfoOverlayLocation; set => _settings.InfoOverlayLocation = value; }
-        public static Point CargoOverlayLocation { get => _settings.CargoOverlayLocation; set => _settings.CargoOverlayLocation = value; }
-        public static Point ShipIconOverlayLocation { get => _settings.ShipIconOverlayLocation; set => _settings.ShipIconOverlayLocation = value; }
-        public static Keys StartMonitoringHotkey { get => _settings.StartMonitoringHotkey; set => _settings.StartMonitoringHotkey = value; }
-        public static Keys StopMonitoringHotkey { get => _settings.StopMonitoringHotkey; set => _settings.StopMonitoringHotkey = value; }
-        public static Keys ShowOverlayHotkey { get => _settings.ShowOverlayHotkey; set => _settings.ShowOverlayHotkey = value; }
-        public static Keys HideOverlayHotkey { get => _settings.HideOverlayHotkey; set => _settings.HideOverlayHotkey = value; }
-
-        // Window Settings
-        public static Point WindowLocation { get => _settings.WindowLocation; set => _settings.WindowLocation = value; }
-        public static FormWindowState WindowState { get => _settings.WindowState; set => _settings.WindowState = value; }
-
-        // Misc Technical Settings
-        public static int DebounceDelayMs { get => _settings.DebounceDelayMs; set => _settings.DebounceDelayMs = value; }
-        public static int FileReadMaxAttempts { get => _settings.FileReadMaxAttempts; set => _settings.FileReadMaxAttempts = value; }
-        public static int FileReadRetryDelayMs { get => _settings.FileReadRetryDelayMs; set => _settings.FileReadRetryDelayMs = value; }
-        public static int FileSystemDelayMs { get => _settings.FileSystemDelayMs; set => _settings.FileSystemDelayMs = value; }
-        public static int ThreadMaxRetries { get => _settings.ThreadMaxRetries; set => _settings.ThreadMaxRetries = value; }
-        public static int ThreadRetryDelayMs { get => _settings.ThreadRetryDelayMs; set => _settings.ThreadRetryDelayMs = value; }
-
-        // Font Settings
-        public static string ConsolasFontName => _settings.ConsolasFontName;
-        public static float DefaultFontSize => _settings.DefaultFontSize;
-
-        public static string WelcomeMessage => _settings.WelcomeMessage;
 
         /// <summary>
         /// Static constructor to set up paths and load settings on application start.
         /// </summary>
         static AppConfiguration()
         {
-            // Define the application's data directory in AppData\Roaming
             AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EliteDataRelay");
             Directory.CreateDirectory(AppDataPath); // Ensure the directory exists
 
@@ -213,7 +120,7 @@ namespace EliteDataRelay.Configuration
             _settings.TwitchUsername = string.Empty;
             _settings.TwitchOAuthToken = string.Empty;
             _settings.TwitchRefreshToken = string.Empty;
-            _settings.TwitchClientSecret = string.Empty;
+            // We don't clear Client ID or Secret as they are not user-specific credentials.
             // We can leave the channel name as it might be useful.
             Save();
             Debug.WriteLine("[AppConfiguration] Twitch credentials cleared.");
@@ -223,56 +130,10 @@ namespace EliteDataRelay.Configuration
         /// <summary>
         /// A private class to hold all settings for easy serialization.
         /// </summary>
-        private class AppSettings
+        private partial class AppSettings
         {
             public string CargoPath { get; set; } = string.Empty;
             public string JournalPath { get; set; } = string.Empty;
-            public int PollingIntervalMs { get; set; } = 1000;
-            public bool EnableSessionTracking { get; set; } = true;
-            public bool ShowSessionOnOverlay { get; set; } = true;
-            public string WelcomeMessage { get; set; } = "Click 'Start' to begin monitoring.";
-            public int OverlayBackgroundColorArgb { get; set; } = Color.FromArgb(150, 0, 0, 0).ToArgb();
-            public string OverlayFontName { get; set; } = "Consolas";
-            public float OverlayFontSize { get; set; } = 12f;
-            public int OverlayOpacity { get; set; } = 70;
-            public bool EnableHotkeys { get; set; } = true; // Hotkeys are enabled by default for new installations.
-            public bool EnableFileOutput { get; set; } = false;
-            public string OutputFileFormat { get; set; } = "{name} - {count}";
-            public string OutputFileName { get; set; } = "cargo.txt";
-            public string OutputDirectory { get; set; } = string.Empty;
-            public bool EnableInfoOverlay { get; set; } = false;
-            public bool EnableCargoOverlay { get; set; } = false;
-            public bool EnableShipIconOverlay { get; set; } = true;
-            public bool EnableTwitchIntegration { get; set; } = true;
-            public bool EnableTwitchChatBubbles { get; set; } = true;
-            public bool EnableTwitchFollowerAlerts { get; set; } = true;
-            public bool EnableTwitchRaidAlerts { get; set; } = true;
-            public bool EnableTwitchSubAlerts { get; set; } = true;
-            public string TwitchChannelName { get; set; } = string.Empty;
-            public string TwitchUsername { get; set; } = string.Empty;
-            public string TwitchOAuthToken { get; set; } = string.Empty;
-            public string TwitchRefreshToken { get; set; } = string.Empty;
-            public string TwitchClientSecret { get; set; } = string.Empty;
-
-            public bool AllowOverlayDrag { get; set; } = false;
-            public int OverlayTextColorArgb { get; set; } = Color.Orange.ToArgb();
-            public Point InfoOverlayLocation { get; set; } = Point.Empty;
-            public Point CargoOverlayLocation { get; set; } = Point.Empty;
-            public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
-            public Keys StartMonitoringHotkey { get; set; } = Keys.F1;
-            public Keys StopMonitoringHotkey { get; set; } = Keys.F2;
-            public Keys ShowOverlayHotkey { get; set; } = Keys.F3;
-            public Keys HideOverlayHotkey { get; set; } = Keys.F4;
-            public Point WindowLocation { get; set; } = Point.Empty;
-            public FormWindowState WindowState { get; set; } = FormWindowState.Normal;
-            public int DebounceDelayMs { get; set; } = 250;
-            public int FileReadMaxAttempts { get; set; } = 5;
-            public int FileReadRetryDelayMs { get; set; } = 100;
-            public int FileSystemDelayMs { get; set; } = 500;
-            public int ThreadMaxRetries { get; set; } = 5;
-            public int ThreadRetryDelayMs { get; set; } = 100;
-            public string ConsolasFontName { get; set; } = "Consolas";
-            public float DefaultFontSize { get; set; } = 10f;
         }
     }
 }

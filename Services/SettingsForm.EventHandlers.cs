@@ -79,6 +79,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.InfoOverlayLocation = Point.Empty;
             AppConfiguration.CargoOverlayLocation = Point.Empty;
             AppConfiguration.ShipIconOverlayLocation = Point.Empty;
+            AppConfiguration.TwitchChatOverlayLocation = Point.Empty;
 
             // Raise the event to trigger a refresh of the live overlays.
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -187,9 +188,11 @@ namespace EliteDataRelay.UI
             // Enable/disable connection and feature controls
             _txtTwitchChannel.Enabled = enabled;
             _btnLoginToTwitch.Enabled = enabled;
+            _txtTwitchClientId.Enabled = enabled;
             _txtTwitchClientSecret.Enabled = enabled;
             _btnLogoutOfTwitch.Enabled = enabled; // Visibility is handled in UpdateTwitchLoginStatus
             _lblTwitchLoginStatus.Enabled = enabled;
+            _btnTestAlerts.Enabled = enabled;
 
             // Enable/disable the feature-specific checkboxes
             _chkEnableTwitchChatBubbles.Enabled = enabled;
@@ -239,6 +242,14 @@ namespace EliteDataRelay.UI
             AppConfiguration.ClearTwitchCredentials();
             UpdateTwitchLoginStatus();
             MessageBox.Show(this, "You have been logged out.", "Logout Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void OnTestAlertsClicked(object? sender, EventArgs e)
+        {
+            using (var testForm = new TestAlertsForm(_testService))
+            {
+                testForm.ShowDialog(this);
+            }
         }
     }
 }

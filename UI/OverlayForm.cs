@@ -15,8 +15,8 @@ namespace EliteDataRelay.UI
         public enum OverlayPosition
         {
             Info,
-        Cargo,
-        ShipIcon
+            Cargo,
+            ShipIcon
         }
 
         public event EventHandler<Point>? PositionChanged;

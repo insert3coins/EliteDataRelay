@@ -28,6 +28,8 @@ namespace EliteDataRelay
         private readonly OverlayService _overlayService;
         private readonly ITwitchService _twitchService;
         private readonly TwitchOverlayManager _twitchOverlayManager;
+        private readonly TwitchBadgeService _twitchBadgeService;
+        private readonly TwitchTestService _twitchTestService;
 
         public CargoForm()
         {
@@ -43,11 +45,16 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
-            _twitchService = new TwitchService();
-            _twitchOverlayManager = new TwitchOverlayManager(_twitchService, _overlayService);
             _cargoFormUI = new CargoFormUI(_overlayService);
 
             InitializeComponent();
+
+            // Now that the UI and its controls are created, we can initialize the Twitch services.
+            _twitchService = new TwitchService();
+            _twitchBadgeService = new TwitchBadgeService(_twitchService);
+            _twitchOverlayManager = new TwitchOverlayManager(_twitchService, _overlayService, _twitchBadgeService);
+            _twitchTestService = new TwitchTestService(_twitchOverlayManager); // This will now use the updated manager
+
             SetupEventHandlers();
         }
 
@@ -88,6 +95,7 @@ namespace EliteDataRelay
             _cargoFormUI.AboutClicked += OnAboutClicked;
             _cargoFormUI.SettingsClicked += OnSettingsClicked;
             _cargoFormUI.SessionClicked += OnSessionClicked;
+            _cargoFormUI.TestClicked += OnTestClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer
@@ -133,6 +141,7 @@ namespace EliteDataRelay
                 _overlayService.Dispose();
                 _twitchOverlayManager.Dispose();
                 _twitchService.Dispose();
+                _twitchBadgeService.Dispose();
             }
             base.Dispose(disposing);
         }

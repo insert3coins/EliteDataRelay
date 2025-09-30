@@ -332,22 +332,25 @@ namespace EliteDataRelay.UI
             {
                 Text = "Connection Settings",
                 Location = new Point(15, 55),
-                Size = new Size(410, 110),
+                Size = new Size(410, 140),
             };
 
             var lblChannel = new Label { Text = "Twitch Channel Name:", Location = new Point(15, 25), AutoSize = true };
             _txtTwitchChannel = new TextBox { Location = new Point(160, 22), Size = new Size(235, 20), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
 
-            var lblLoginStatus = new Label { Text = "Status:", Location = new Point(15, 53), AutoSize = true };
-            _lblTwitchLoginStatus = new Label { Text = "Not logged in", Location = new Point(160, 53), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
+            var lblClientId = new Label { Text = "Client ID:", Location = new Point(15, 53), AutoSize = true };
+            _txtTwitchClientId = new TextBox { Location = new Point(160, 50), Size = new Size(235, 20), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
 
-            var lblSecret = new Label { Text = "Client Secret:", Location = new Point(15, 80), AutoSize = true };
-            _txtTwitchClientSecret = new TextBox { Location = new Point(160, 77), Size = new Size(235, 20), PasswordChar = '*', Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+            var lblSecret = new Label { Text = "Client Secret:", Location = new Point(15, 81), AutoSize = true };
+            _txtTwitchClientSecret = new TextBox { Location = new Point(160, 78), Size = new Size(235, 20), PasswordChar = '*', Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+
+            var lblLoginStatus = new Label { Text = "Status:", Location = new Point(15, 109), AutoSize = true };
+            _lblTwitchLoginStatus = new Label { Text = "Not logged in", Location = new Point(160, 109), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
 
             _btnLogoutOfTwitch = new Button
             {
                 Text = "Logout",
-                Location = new Point(280, 49),
+                Location = new Point(280, 105),
                 Size = new Size(65, 25),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
@@ -356,7 +359,7 @@ namespace EliteDataRelay.UI
             _btnLoginToTwitch = new Button
             {
                 Text = "Login with Twitch",
-                Location = new Point(350, 49),
+                Location = new Point(350, 105),
                 Size = new Size(115, 25), // Adjusted size and location
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
@@ -364,6 +367,8 @@ namespace EliteDataRelay.UI
 
             grpTwitchConnection.Controls.Add(lblChannel);
             grpTwitchConnection.Controls.Add(_txtTwitchChannel);
+            grpTwitchConnection.Controls.Add(lblClientId);
+            grpTwitchConnection.Controls.Add(_txtTwitchClientId);
             grpTwitchConnection.Controls.Add(lblLoginStatus);
             grpTwitchConnection.Controls.Add(lblSecret);
             grpTwitchConnection.Controls.Add(_txtTwitchClientSecret);
@@ -375,13 +380,13 @@ namespace EliteDataRelay.UI
             var grpTwitchFeatures = new GroupBox
             {
                 Text = "Enabled Features",
-                Location = new Point(15, 175),
-                Size = new Size(410, 115),
+                Location = new Point(15, 205),
+                Size = new Size(410, 150),
             };
 
             _chkEnableTwitchChatBubbles = new CheckBox
             {
-                Text = "Show chat bubbles for messages",
+                Text = "Show animated chat column",
                 Location = new Point(15, 25),
                 AutoSize = true
             };
@@ -404,10 +409,20 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            _btnTestAlerts = new Button
+            {
+                Text = "Test Alerts...",
+                Location = new Point(300, 115),
+                Size = new Size(95, 25),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+            };
+            _btnTestAlerts.Click += OnTestAlertsClicked;
+
             grpTwitchFeatures.Controls.Add(_chkEnableTwitchChatBubbles);
             grpTwitchFeatures.Controls.Add(_chkEnableTwitchFollowerAlerts);
             grpTwitchFeatures.Controls.Add(_chkEnableTwitchRaidAlerts);
             grpTwitchFeatures.Controls.Add(_chkEnableTwitchSubAlerts);
+            grpTwitchFeatures.Controls.Add(_btnTestAlerts);
             grpTwitch.Controls.Add(_chkEnableTwitchIntegration);
             grpTwitch.Controls.Add(grpTwitchConnection);
             grpTwitch.Controls.Add(grpTwitchFeatures);
