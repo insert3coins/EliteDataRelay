@@ -47,6 +47,12 @@ namespace EliteDataRelay
                 _sessionTrackingService.StartSession();
             }
 
+            // Start Twitch service if enabled
+            if (AppConfiguration.EnableTwitchIntegration)
+            {
+                _twitchService.Start();
+            }
+
             // Start file-based services first so they are ready.
             _fileMonitoringService.StartMonitoring();
             _stationInfoService.Start();
@@ -76,6 +82,9 @@ namespace EliteDataRelay
 
             // Stop the game process checker
             _gameProcessCheckTimer?.Stop();
+
+            // Always stop the twitch service to halt any running timers
+            _twitchService.Stop();
 
             // Stop the session tracker
             if (AppConfiguration.EnableSessionTracking)

@@ -82,6 +82,18 @@ namespace EliteDataRelay.Configuration
         public static bool EnableCargoOverlay { get => _settings.EnableCargoOverlay; set => _settings.EnableCargoOverlay = value; }
         public static bool EnableShipIconOverlay { get => _settings.EnableShipIconOverlay; set => _settings.EnableShipIconOverlay = value; }
 
+        // Twitch Settings
+        public static bool EnableTwitchIntegration { get => _settings.EnableTwitchIntegration; set => _settings.EnableTwitchIntegration = value; }
+        public static bool EnableTwitchChatBubbles { get => _settings.EnableTwitchChatBubbles; set => _settings.EnableTwitchChatBubbles = value; }
+        public static bool EnableTwitchFollowerAlerts { get => _settings.EnableTwitchFollowerAlerts; set => _settings.EnableTwitchFollowerAlerts = value; }
+        public static bool EnableTwitchRaidAlerts { get => _settings.EnableTwitchRaidAlerts; set => _settings.EnableTwitchRaidAlerts = value; }
+        public static bool EnableTwitchSubAlerts { get => _settings.EnableTwitchSubAlerts; set => _settings.EnableTwitchSubAlerts = value; }
+        public static string TwitchChannelName { get => _settings.TwitchChannelName; set => _settings.TwitchChannelName = value; }
+        public static string TwitchUsername { get => _settings.TwitchUsername; set => _settings.TwitchUsername = value; }
+        public static string TwitchOAuthToken { get => _settings.TwitchOAuthToken; set => _settings.TwitchOAuthToken = value; }
+        public static string TwitchRefreshToken { get => _settings.TwitchRefreshToken; set => _settings.TwitchRefreshToken = value; }
+        public static string TwitchClientSecret { get => _settings.TwitchClientSecret; set => _settings.TwitchClientSecret = value; }
+
         public static bool AllowOverlayDrag { get => _settings.AllowOverlayDrag; set => _settings.AllowOverlayDrag = value; }
         public static Color OverlayTextColor { get => Color.FromArgb(_settings.OverlayTextColorArgb); set => _settings.OverlayTextColorArgb = value.ToArgb(); }
         public static Point InfoOverlayLocation { get => _settings.InfoOverlayLocation; set => _settings.InfoOverlayLocation = value; }
@@ -196,6 +208,18 @@ namespace EliteDataRelay.Configuration
             }
         }
 
+        public static void ClearTwitchCredentials()
+        {
+            _settings.TwitchUsername = string.Empty;
+            _settings.TwitchOAuthToken = string.Empty;
+            _settings.TwitchRefreshToken = string.Empty;
+            _settings.TwitchClientSecret = string.Empty;
+            // We can leave the channel name as it might be useful.
+            Save();
+            Debug.WriteLine("[AppConfiguration] Twitch credentials cleared.");
+        }
+
+
         /// <summary>
         /// A private class to hold all settings for easy serialization.
         /// </summary>
@@ -219,6 +243,17 @@ namespace EliteDataRelay.Configuration
             public bool EnableInfoOverlay { get; set; } = false;
             public bool EnableCargoOverlay { get; set; } = false;
             public bool EnableShipIconOverlay { get; set; } = true;
+            public bool EnableTwitchIntegration { get; set; } = true;
+            public bool EnableTwitchChatBubbles { get; set; } = true;
+            public bool EnableTwitchFollowerAlerts { get; set; } = true;
+            public bool EnableTwitchRaidAlerts { get; set; } = true;
+            public bool EnableTwitchSubAlerts { get; set; } = true;
+            public string TwitchChannelName { get; set; } = string.Empty;
+            public string TwitchUsername { get; set; } = string.Empty;
+            public string TwitchOAuthToken { get; set; } = string.Empty;
+            public string TwitchRefreshToken { get; set; } = string.Empty;
+            public string TwitchClientSecret { get; set; } = string.Empty;
+
             public bool AllowOverlayDrag { get; set; } = false;
             public int OverlayTextColorArgb { get; set; } = Color.Orange.ToArgb();
             public Point InfoOverlayLocation { get; set; } = Point.Empty;

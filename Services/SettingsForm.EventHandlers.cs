@@ -1,8 +1,10 @@
 using System;
 using System.Drawing;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -176,6 +178,67 @@ namespace EliteDataRelay.UI
 
             UpdateHotkey(txt.Tag as string, e.KeyData);
             UpdateHotkeyText();
+        }
+
+        private void OnEnableTwitchIntegrationCheckedChanged(object? sender, EventArgs e)
+        {
+            bool enabled = _chkEnableTwitchIntegration.Checked;
+
+            // Enable/disable connection and feature controls
+            _txtTwitchChannel.Enabled = enabled;
+            _btnLoginToTwitch.Enabled = enabled;
+            _txtTwitchClientSecret.Enabled = enabled;
+            _btnLogoutOfTwitch.Enabled = enabled; // Visibility is handled in UpdateTwitchLoginStatus
+            _lblTwitchLoginStatus.Enabled = enabled;
+
+            // Enable/disable the feature-specific checkboxes
+            _chkEnableTwitchChatBubbles.Enabled = enabled;
+            _chkEnableTwitchFollowerAlerts.Enabled = enabled;
+            _chkEnableTwitchRaidAlerts.Enabled = enabled;
+            _chkEnableTwitchSubAlerts.Enabled = enabled;
+
+            // Also, if the user is logging in, we can assume they want to use their own channel name.
+            if (enabled && !string.IsNullOrEmpty(AppConfiguration.TwitchUsername))
+            {
+                _txtTwitchChannel.Text = AppConfiguration.TwitchUsername;
+            }
+        }
+
+        private async void OnLoginToTwitchClicked(object? sender, EventArgs e)
+        {
+            // Disable the form to prevent interaction during the async login process.
+            this.Enabled = false;
+            _lblTwitchLoginStatus.Text = "Waiting for browser...";
+            _lblTwitchLoginStatus.ForeColor = Color.Blue;
+            this.Update(); // Force the UI to repaint immediately.
+
+            try
+            {
+                bool success = await TwitchAuthService.LoginToTwitch();
+                if (success)
+                {
+                    // Pre-fill the channel name with the logged-in user's name and save it immediately.
+                    _txtTwitchChannel.Text = AppConfiguration.TwitchUsername;
+                    AppConfiguration.TwitchChannelName = AppConfiguration.TwitchUsername;
+                    MessageBox.Show(this, $"Successfully logged in as {AppConfiguration.TwitchUsername}!", "Login Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(this, "Twitch login was cancelled or failed.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            finally
+            {
+                this.Enabled = true;
+                UpdateTwitchLoginStatus();
+            }
+        }
+
+        private void OnLogoutOfTwitchClicked(object? sender, EventArgs e)
+        {
+            AppConfiguration.ClearTwitchCredentials();
+            UpdateTwitchLoginStatus();
+            MessageBox.Show(this, "You have been logged out.", "Logout Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

@@ -171,6 +171,11 @@ namespace EliteDataRelay.Services
                             // We don't need to take action here, but acknowledging the event is useful for debugging.
                             Debug.WriteLine($"[JournalWatcherService] Detected module change event: {eventType}. Awaiting next Loadout.");
                         }
+                        else if (IsFinancialEvent(eventType))
+                        {
+                            // Process events that directly affect the player's credit balance.
+                            ProcessFinancialEvent(jsonDoc);
+                        }
                         else if (eventType == "Docked")
                         {
                             var dockedEvent = JsonSerializer.Deserialize<DockedEvent>(journalLine, options);
@@ -205,6 +210,28 @@ namespace EliteDataRelay.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"[JournalWatcherService] Error polling journal file: {ex}");
+            }
+        }
+
+        private bool IsFinancialEvent(string? eventType)
+        {
+            return eventType switch
+            {
+                "MarketSell" or "MissionCompleted" or "SellExplorationData" or "RedeemVoucher" or "PayFines" or "PayBounties" or "RebuyShip" or "SellDrones" => true,
+                _ => false,
+            };
+        }
+
+        private void ProcessFinancialEvent(JsonDocument jsonDoc)
+        {
+            // Most financial events have a 'Balance' property after the transaction.
+            if (jsonDoc.RootElement.TryGetProperty("Balance", out var balanceElement) && balanceElement.TryGetInt64(out var newBalance))
+            {
+                if (newBalance != _lastKnownBalance)
+                {
+                    _lastKnownBalance = newBalance;
+                    BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(_lastKnownBalance));
+                }
             }
         }
 

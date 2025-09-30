@@ -172,6 +172,22 @@ namespace EliteDataRelay.Services
             AppConfiguration.Save();
         }
 
+        /// <summary>
+        /// Gets a reference to a specific, active overlay form.
+        /// </summary>
+        /// <param name="position">The type of overlay to retrieve.</param>
+        /// <returns>The <see cref="OverlayForm"/> instance, or null if not active.</returns>
+        public OverlayForm? GetOverlay(OverlayForm.OverlayPosition position)
+        {
+            return position switch
+            {
+                OverlayForm.OverlayPosition.Info => _leftOverlayForm,
+                OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
+                OverlayForm.OverlayPosition.ShipIcon => _shipIconOverlayForm,
+                _ => null
+            };
+        }
+
         #region Data Update Methods
         // These methods update the UI controls on the specific overlay forms.
         // The OverlayForm itself handles thread safety with InvokeRequired checks.

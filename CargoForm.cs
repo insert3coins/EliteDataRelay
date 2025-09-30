@@ -26,6 +26,8 @@ namespace EliteDataRelay
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
         private readonly OverlayService _overlayService;
+        private readonly ITwitchService _twitchService;
+        private readonly TwitchOverlayManager _twitchOverlayManager;
 
         public CargoForm()
         {
@@ -41,6 +43,8 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
+            _twitchService = new TwitchService();
+            _twitchOverlayManager = new TwitchOverlayManager(_twitchService, _overlayService);
             _cargoFormUI = new CargoFormUI(_overlayService);
 
             InitializeComponent();
@@ -127,6 +131,8 @@ namespace EliteDataRelay
                 (_stationInfoService as IDisposable)?.Dispose();
                 (_systemInfoService as IDisposable)?.Dispose();
                 _overlayService.Dispose();
+                _twitchOverlayManager.Dispose();
+                _twitchService.Dispose();
             }
             base.Dispose(disposing);
         }

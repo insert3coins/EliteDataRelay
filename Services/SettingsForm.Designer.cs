@@ -11,7 +11,7 @@ namespace EliteDataRelay.UI
         {
             // Form Properties
             Text = "Settings";
-            ClientSize = new Size(464, 565);
+            ClientSize = new Size(464, 585);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -22,16 +22,18 @@ namespace EliteDataRelay.UI
             var tabControl = new TabControl
             {
                 Dock = DockStyle.Top,
-                Height = 490,
+                Height = 510,
             };
 
             var generalTabPage = new TabPage("General");
             var overlayTabPage = new TabPage("Overlay");
             var hotkeysTabPage = new TabPage("Hotkeys");
+            var twitchTabPage = new TabPage("Twitch");
 
             tabControl.TabPages.Add(generalTabPage);
             tabControl.TabPages.Add(overlayTabPage);
             tabControl.TabPages.Add(hotkeysTabPage);
+            tabControl.TabPages.Add(twitchTabPage);
             
             #region General Tab
 
@@ -307,12 +309,118 @@ namespace EliteDataRelay.UI
             hotkeysTabPage.Controls.Add(_grpHotkeys);
             #endregion
 
+            #region Twitch Tab
+
+            // Twitch GroupBox
+            var grpTwitch = new GroupBox
+            {
+                Text = "Twitch Integration",
+                Location = new Point(12, 12),
+                Size = new Size(440, 305),
+            };
+
+            _chkEnableTwitchIntegration = new CheckBox
+            {
+                Text = "Enable Twitch integration (chat bubbles, alerts)",
+                Location = new Point(15, 25),
+                AutoSize = true
+            };
+            _chkEnableTwitchIntegration.CheckedChanged += OnEnableTwitchIntegrationCheckedChanged;
+
+            // Connection Settings GroupBox
+            var grpTwitchConnection = new GroupBox
+            {
+                Text = "Connection Settings",
+                Location = new Point(15, 55),
+                Size = new Size(410, 110),
+            };
+
+            var lblChannel = new Label { Text = "Twitch Channel Name:", Location = new Point(15, 25), AutoSize = true };
+            _txtTwitchChannel = new TextBox { Location = new Point(160, 22), Size = new Size(235, 20), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+
+            var lblLoginStatus = new Label { Text = "Status:", Location = new Point(15, 53), AutoSize = true };
+            _lblTwitchLoginStatus = new Label { Text = "Not logged in", Location = new Point(160, 53), AutoSize = true, Font = new Font(this.Font, FontStyle.Bold) };
+
+            var lblSecret = new Label { Text = "Client Secret:", Location = new Point(15, 80), AutoSize = true };
+            _txtTwitchClientSecret = new TextBox { Location = new Point(160, 77), Size = new Size(235, 20), PasswordChar = '*', Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+
+            _btnLogoutOfTwitch = new Button
+            {
+                Text = "Logout",
+                Location = new Point(280, 49),
+                Size = new Size(65, 25),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            _btnLogoutOfTwitch.Click += OnLogoutOfTwitchClicked;
+
+            _btnLoginToTwitch = new Button
+            {
+                Text = "Login with Twitch",
+                Location = new Point(350, 49),
+                Size = new Size(115, 25), // Adjusted size and location
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            _btnLoginToTwitch.Click += OnLoginToTwitchClicked;
+
+            grpTwitchConnection.Controls.Add(lblChannel);
+            grpTwitchConnection.Controls.Add(_txtTwitchChannel);
+            grpTwitchConnection.Controls.Add(lblLoginStatus);
+            grpTwitchConnection.Controls.Add(lblSecret);
+            grpTwitchConnection.Controls.Add(_txtTwitchClientSecret);
+            grpTwitchConnection.Controls.Add(_lblTwitchLoginStatus);
+            grpTwitchConnection.Controls.Add(_btnLogoutOfTwitch);
+            grpTwitchConnection.Controls.Add(_btnLoginToTwitch);
+
+            // Features GroupBox
+            var grpTwitchFeatures = new GroupBox
+            {
+                Text = "Enabled Features",
+                Location = new Point(15, 175),
+                Size = new Size(410, 115),
+            };
+
+            _chkEnableTwitchChatBubbles = new CheckBox
+            {
+                Text = "Show chat bubbles for messages",
+                Location = new Point(15, 25),
+                AutoSize = true
+            };
+            _chkEnableTwitchFollowerAlerts = new CheckBox
+            {
+                Text = "Show new follower alerts",
+                Location = new Point(15, 50),
+                AutoSize = true
+            };
+            _chkEnableTwitchRaidAlerts = new CheckBox
+            {
+                Text = "Show raid alerts",
+                Location = new Point(15, 75),
+                AutoSize = true
+            };
+            _chkEnableTwitchSubAlerts = new CheckBox
+            {
+                Text = "Show new subscriber alerts",
+                Location = new Point(15, 100),
+                AutoSize = true
+            };
+
+            grpTwitchFeatures.Controls.Add(_chkEnableTwitchChatBubbles);
+            grpTwitchFeatures.Controls.Add(_chkEnableTwitchFollowerAlerts);
+            grpTwitchFeatures.Controls.Add(_chkEnableTwitchRaidAlerts);
+            grpTwitchFeatures.Controls.Add(_chkEnableTwitchSubAlerts);
+            grpTwitch.Controls.Add(_chkEnableTwitchIntegration);
+            grpTwitch.Controls.Add(grpTwitchConnection);
+            grpTwitch.Controls.Add(grpTwitchFeatures);
+            twitchTabPage.Controls.Add(grpTwitch);
+
+            #endregion
+
             // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 530) };
+            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 550) };
             _btnOk.Click += (sender, e) => SaveSettings();
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 530) };
+            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 550) };
 
             // Add Controls
             Controls.Add(tabControl);

@@ -44,6 +44,17 @@ namespace EliteDataRelay.UI
         private Panel _pnlBackColor = null!;
         private TrackBar _trackBarOpacity = null!;
         private Label _lblOpacityValue = null!;
+        private CheckBox _chkEnableTwitchIntegration = null!;
+        private CheckBox _chkEnableTwitchChatBubbles = null!;
+        private CheckBox _chkEnableTwitchFollowerAlerts = null!;
+        private CheckBox _chkEnableTwitchRaidAlerts = null!;
+        private CheckBox _chkEnableTwitchSubAlerts = null!;
+        private Button _btnLoginToTwitch = null!;
+        private Button _btnLogoutOfTwitch = null!;
+        private Label _lblTwitchLoginStatus = null!;
+        private TextBox _txtTwitchChannel = null!;
+        private TextBox _txtTwitchClientSecret = null!;
+
 
         private Keys _startHotkey;
         private Keys _stopHotkey;
@@ -98,6 +109,19 @@ namespace EliteDataRelay.UI
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
             OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
+
+            // Load Twitch Settings
+            _chkEnableTwitchIntegration.Checked = AppConfiguration.EnableTwitchIntegration;
+            _chkEnableTwitchChatBubbles.Checked = AppConfiguration.EnableTwitchChatBubbles;
+            _chkEnableTwitchFollowerAlerts.Checked = AppConfiguration.EnableTwitchFollowerAlerts;
+            _chkEnableTwitchRaidAlerts.Checked = AppConfiguration.EnableTwitchRaidAlerts;
+            _chkEnableTwitchSubAlerts.Checked = AppConfiguration.EnableTwitchSubAlerts;
+            _txtTwitchChannel.Text = AppConfiguration.TwitchChannelName;
+            _txtTwitchClientSecret.Text = AppConfiguration.TwitchClientSecret;
+            UpdateTwitchLoginStatus();
+
+            // Trigger the check changed event to set the initial enabled state of child controls
+            OnEnableTwitchIntegrationCheckedChanged(null, EventArgs.Empty);
 
             // Load overlay appearance settings
             _overlayFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);
@@ -164,6 +188,18 @@ namespace EliteDataRelay.UI
             AppConfiguration.HideOverlayHotkey = _hideOverlayHotkey;
             AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
 
+            // Save Twitch Settings
+            AppConfiguration.EnableTwitchIntegration = _chkEnableTwitchIntegration.Checked;
+            AppConfiguration.EnableTwitchChatBubbles = _chkEnableTwitchChatBubbles.Checked;
+            AppConfiguration.EnableTwitchFollowerAlerts = _chkEnableTwitchFollowerAlerts.Checked;
+            AppConfiguration.EnableTwitchRaidAlerts = _chkEnableTwitchRaidAlerts.Checked;
+            AppConfiguration.EnableTwitchSubAlerts = _chkEnableTwitchSubAlerts.Checked;
+            AppConfiguration.TwitchChannelName = _txtTwitchChannel.Text;
+            AppConfiguration.TwitchClientSecret = _txtTwitchClientSecret.Text;
+            // The tokens are saved by the TwitchAuthService, so we don't need to save them here.
+            // AppConfiguration.TwitchOAuthToken = _txtTwitchOAuthToken.Text;
+            // AppConfiguration.TwitchRefreshToken = ...
+
             // Save appearance settings
             AppConfiguration.OverlayFontName = _overlayFont.Name;
             AppConfiguration.OverlayFontSize = _overlayFont.Size;
@@ -172,6 +208,26 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayOpacity = _overlayOpacity;
 
             AppConfiguration.Save();
+        }
+
+        private void UpdateTwitchLoginStatus()
+        {
+            if (!string.IsNullOrEmpty(AppConfiguration.TwitchUsername))
+            {
+                _lblTwitchLoginStatus.Text = $"Logged in as: {AppConfiguration.TwitchUsername}";
+                _lblTwitchLoginStatus.ForeColor = Color.Green;
+                _btnLoginToTwitch.Visible = false;
+                _btnLogoutOfTwitch.Enabled = true;
+                _btnLogoutOfTwitch.Visible = true;
+            }
+            else
+            {
+                _lblTwitchLoginStatus.Text = "Not Logged In";
+                _lblTwitchLoginStatus.ForeColor = Color.Red;
+                _btnLoginToTwitch.Visible = true;
+                _btnLogoutOfTwitch.Enabled = false;
+                _btnLogoutOfTwitch.Visible = false;
+            }
         }
 
         private void OnRepositionOverlaysClicked(object? sender, EventArgs e)
