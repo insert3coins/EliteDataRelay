@@ -211,12 +211,14 @@ namespace EliteDataRelay.Services
         private void UpdateShipInformation(string? shipName, string? shipIdent, string? shipType, string? internalShipName)
         {
             // Only raise an update event if something has actually changed.
-            if (!string.IsNullOrEmpty(shipType) &&
-                (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType))
+            // The internalShipName is the most reliable indicator of a ship change.
+            if (!string.IsNullOrEmpty(internalShipName) &&
+                (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType || internalShipName != _lastInternalShipName))
             {
                 _lastShipName = shipName;
                 _lastShipIdent = shipIdent;
                 _lastShipType = shipType;
+                _lastInternalShipName = internalShipName;
                 Debug.WriteLine($"[JournalWatcherService] Ship Info Updated. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
                 ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", internalShipName ?? "unknown"));
             }

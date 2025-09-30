@@ -16,9 +16,9 @@ namespace EliteDataRelay.UI
             };
 
             var cargoPage = CreateCargoTabPage(fontManager);
-            //var shipPage = CreateShipTabPage(fontManager);
+            var shipPage = CreateShipTabPage(fontManager);
 
-            TabControl.TabPages.AddRange(new[] { cargoPage /*, shipPage*/ });
+            TabControl.TabPages.AddRange(new[] { cargoPage , shipPage });
         }
 
         private void DisposeTabControls()

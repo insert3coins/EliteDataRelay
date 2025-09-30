@@ -12,6 +12,9 @@ namespace EliteDataRelay
     {
         #region Service Event Handlers
 
+        // A helper to check if the form can safely process an Invoke call.
+        private bool CanInvoke() => !IsDisposed && !Disposing && IsHandleCreated;
+
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
@@ -42,6 +45,8 @@ namespace EliteDataRelay
 
             // After updating capacity, we must invoke on the UI thread to update the display.
             // This ensures the UI reflects the new capacity immediately.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 if (_lastCargoSnapshot != null)
@@ -60,6 +65,8 @@ namespace EliteDataRelay
         private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 _lastBalance = e.Balance;
@@ -70,6 +77,8 @@ namespace EliteDataRelay
         private void OnCommanderNameChanged(object? sender, CommanderNameChangedEventArgs e)
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 _lastCommanderName = e.CommanderName;
@@ -80,19 +89,23 @@ namespace EliteDataRelay
         private void OnShipInfoChanged(object? sender, ShipInfoChangedEventArgs e)
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 _lastShipName = e.ShipName;
                 _lastShipIdent = e.ShipIdent;
                 _lastShipType = e.ShipType;
                 _lastInternalShipName = e.InternalShipName;
-                _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName);
+                _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName); // Pass internal name
             }));
         }
 
         private void OnLoadoutChanged(object? sender, LoadoutChangedEventArgs e)
         {
             // The event is raised from a background thread, so we must invoke on the UI thread.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 var newLoadout = e.Loadout;
@@ -127,6 +140,8 @@ namespace EliteDataRelay
             // At this point, a 'Loadout' event may have cleared our cargo display.
             // We now force a re-read of Cargo.json to ensure the UI is synchronized with the
             // actual cargo contents, resolving the "empty on start" issue.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 System.Diagnostics.Debug.WriteLine("[CargoForm] Journal initial scan complete. Re-reading cargo file to ensure sync.");
@@ -138,6 +153,8 @@ namespace EliteDataRelay
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
             // It provides live updates for fuel, cargo, hull, etc.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 _cargoFormUI.UpdateShipStatus(e.Status);
@@ -150,6 +167,8 @@ namespace EliteDataRelay
 
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
             {
+                if (!CanInvoke()) return;
+
                 Invoke(new Action(() =>
                 {
                     _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
@@ -161,6 +180,8 @@ namespace EliteDataRelay
         {
             _lastLocation = e.StarSystem;
 
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 _cargoFormUI.UpdateLocation(_lastLocation);
@@ -170,6 +191,8 @@ namespace EliteDataRelay
         private void OnStationInfoUpdated(object? sender, StationInfoData e)
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 _lastStationInfoData = e;
@@ -180,6 +203,8 @@ namespace EliteDataRelay
         private void OnSystemInfoUpdated(object? sender, SystemInfoData e)
         {
             // This event is raised from a background thread, so we must invoke on the UI thread.
+            if (!CanInvoke()) return;
+
             Invoke(new Action(() =>
             {
                 // _lastSystemInfoData = e;

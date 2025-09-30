@@ -15,7 +15,8 @@ namespace EliteDataRelay.UI
         public enum OverlayPosition
         {
             Info,
-            Cargo
+        Cargo,
+        ShipIcon
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -31,6 +32,12 @@ namespace EliteDataRelay.UI
         private Label _sessionCreditsValueLabel = null!;
         private Panel _cargoListPanel = null!;
         private Label _cargoSizeLabel = null!;
+    private PictureBox _shipIconPictureBox = null!;
+        private System.Windows.Forms.Timer? _animationTimer;
+        private double _animationPhase;
+        private const int ANIMATION_AMPLITUDE = 5; // How many pixels up/down it will move
+        private const double ANIMATION_SPEED = 0.05; // How fast it will move
+
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
 
         private readonly bool _allowDrag;
@@ -69,6 +76,9 @@ namespace EliteDataRelay.UI
                 case OverlayPosition.Cargo:
                     this.Text = "Elite Data Relay: Cargo";
                     break;
+                case OverlayPosition.ShipIcon:
+                    this.Text = "Elite Data Relay: Ship Icon";
+                    break;
                 default:
                     this.Text = "Elite Data Relay Overlay";
                     break;
@@ -81,6 +91,12 @@ namespace EliteDataRelay.UI
 
             // Wire up dragging for the form and all its children, recursively.
             AttachDragHandlers(this);
+
+            if (_position == OverlayPosition.ShipIcon)
+            {
+                _animationTimer = new System.Windows.Forms.Timer { Interval = 30 }; // Approx 33 FPS
+                _animationTimer.Tick += AnimationTimer_Tick;
+            }
         }
 
         protected override void OnLoad(EventArgs e)
@@ -90,6 +106,7 @@ namespace EliteDataRelay.UI
             // Now that the form is fully initialized and invisible, set opacity to 1 to show it.
             // This prevents the user from seeing any part of the form's construction.
             this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+            _animationTimer?.Start();
         }
 
         private void AttachDragHandlers(Control control)
@@ -139,11 +156,26 @@ namespace EliteDataRelay.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            // Draw a border to match the new design aesthetic
+
+            // Draw a standard border for all overlays
             using (var pen = new Pen(Color.FromArgb(100, 100, 100)))
             {
                 e.Graphics.DrawRectangle(pen, 0, 0, this.ClientSize.Width - 1, this.ClientSize.Height - 1);
             }
+        }
+
+        private void AnimationTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_shipIconPictureBox == null || _shipIconPictureBox.IsDisposed)
+            {
+                _animationTimer?.Stop();
+                return;
+            }
+
+            // Calculate the vertical offset using a sine wave for smooth oscillation
+            _animationPhase += ANIMATION_SPEED;
+            int offsetY = (int)(Math.Sin(_animationPhase) * ANIMATION_AMPLITUDE);
+            _shipIconPictureBox.Top = (this.ClientSize.Height - _shipIconPictureBox.Height) / 2 + offsetY;
         }
 
          // Clean up any resources being used.
@@ -154,6 +186,7 @@ namespace EliteDataRelay.UI
             {
                 _labelFont?.Dispose();
                 _listFont?.Dispose();
+                _animationTimer?.Dispose();
             }
             base.Dispose(disposing);
         }

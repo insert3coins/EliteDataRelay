@@ -11,6 +11,7 @@ namespace EliteDataRelay.Services
     {
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
+        private OverlayForm? _shipIconOverlayForm;
 
         public void Start()
         {
@@ -56,6 +57,11 @@ namespace EliteDataRelay.Services
                 _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
+            if (AppConfiguration.EnableShipIconOverlay)
+            {
+                _shipIconOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.ShipIcon, AppConfiguration.AllowOverlayDrag);
+                _shipIconOverlayForm.PositionChanged += OnOverlayPositionChanged;
+            }
 
             // Default for Cargo overlay (middle right)
             Point defaultRightLocation = Point.Empty;
@@ -65,13 +71,27 @@ namespace EliteDataRelay.Services
                 defaultRightLocation = new Point(screen.Width - _rightOverlayForm.Width - screenEdgePadding, y);
             }
 
-            // Default for Info overlay (above System Info)
-            Point defaultLeftLocation = Point.Empty;
-            if (_leftOverlayForm != null)
+            // Default for Ship Icon overlay (bottom left)
+            Point defaultShipIconLocation = Point.Empty;
+            if (_shipIconOverlayForm != null)
             {
-                int x = screen.Width - _leftOverlayForm.Width - screenEdgePadding;
-                int y = screen.Height - _leftOverlayForm.Height - screenEdgePadding - overlaySpacing;
-                defaultLeftLocation = new Point(x, y);
+                int y = screen.Height - _shipIconOverlayForm.Height - screenEdgePadding;
+                defaultShipIconLocation = new Point(screenEdgePadding, y);
+            }
+            
+            // Default for Info overlay (above Ship Icon overlay)
+            Point defaultLeftLocation = Point.Empty;
+            if (_leftOverlayForm != null && _shipIconOverlayForm != null)
+            {
+                // If both are enabled, position Info above Ship Icon.
+                int y = defaultShipIconLocation.Y - _leftOverlayForm.Height - overlaySpacing;
+                defaultLeftLocation = new Point(screenEdgePadding, y);
+            }
+            else if (_leftOverlayForm != null)
+            {
+                // If only Info is enabled, give it a default bottom-left position.
+                int y = screen.Height - _leftOverlayForm.Height - screenEdgePadding;
+                defaultLeftLocation = new Point(screenEdgePadding, y);
             }
 
             if (_leftOverlayForm != null)
@@ -98,12 +118,25 @@ namespace EliteDataRelay.Services
                 }
                 _rightOverlayForm.Show();
             }
+            if (_shipIconOverlayForm != null)
+            {
+                if (AppConfiguration.ShipIconOverlayLocation != Point.Empty)
+                {
+                    _shipIconOverlayForm.Location = AppConfiguration.ShipIconOverlayLocation;
+                }
+                else
+                {
+                    _shipIconOverlayForm.Location = defaultShipIconLocation;
+                }
+                _shipIconOverlayForm.Show();
+            }
         }
 
         public void Stop()
         {
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
+            _shipIconOverlayForm?.Close();
             _leftOverlayForm = null;
             _rightOverlayForm = null;
         }
@@ -112,12 +145,14 @@ namespace EliteDataRelay.Services
         {
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
+            _shipIconOverlayForm?.Show();
         }
 
         public void Hide()
         {
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
+            _shipIconOverlayForm?.Hide();
         }
 
         private void OnOverlayPositionChanged(object? sender, Point newLocation)
@@ -129,6 +164,10 @@ namespace EliteDataRelay.Services
             else if (sender == _rightOverlayForm)
             {
                 AppConfiguration.CargoOverlayLocation = newLocation;
+            }
+            else if (sender == _shipIconOverlayForm)
+            {
+                AppConfiguration.ShipIconOverlayLocation = newLocation;
             }
             AppConfiguration.Save();
         }
@@ -145,6 +184,11 @@ namespace EliteDataRelay.Services
         public void UpdateShip(string shipName, string shipIdent, string shipType)
         {
             _leftOverlayForm?.UpdateShip(shipType);
+        }
+
+        public void UpdateShipIcon(Image? shipIcon)
+        {
+            _shipIconOverlayForm?.UpdateShipIcon(shipIcon);
         }
 
         public void UpdateBalance(long balance)

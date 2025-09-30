@@ -26,6 +26,7 @@ namespace EliteDataRelay.UI
         private Label _lblOutputFileName = null!;
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
+        private CheckBox _chkEnableShipIconOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
         private GroupBox _grpSessionTracking = null!;
@@ -62,6 +63,7 @@ namespace EliteDataRelay.UI
         private int _originalOverlayOpacity;
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
+        private Point _originalShipIconOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
 
@@ -84,7 +86,8 @@ namespace EliteDataRelay.UI
             _chkEnableSessionTracking.Checked = AppConfiguration.EnableSessionTracking;
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableInfoOverlay;
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
-            _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;            
+            _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
+            _chkEnableShipIconOverlay.Checked = AppConfiguration.EnableShipIconOverlay;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -109,6 +112,7 @@ namespace EliteDataRelay.UI
             _originalOverlayOpacity = _overlayOpacity;
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
+            _originalShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation;
 
             UpdateAppearanceControls();
         }
@@ -151,7 +155,8 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableSessionTracking = _chkEnableSessionTracking.Checked;
             AppConfiguration.EnableInfoOverlay = _chkEnableLeftOverlay.Checked;
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
-            AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;            
+            AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
+            AppConfiguration.EnableShipIconOverlay = _chkEnableShipIconOverlay.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
@@ -219,6 +224,7 @@ namespace EliteDataRelay.UI
 
             AppConfiguration.InfoOverlayLocation = _originalInfoOverlayLocation;
             AppConfiguration.CargoOverlayLocation = _originalCargoOverlayLocation;
+            AppConfiguration.ShipIconOverlayLocation = _originalShipIconOverlayLocation;
 
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }

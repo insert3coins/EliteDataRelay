@@ -46,6 +46,12 @@ namespace EliteDataRelay.UI
             _cargoListPanel?.Invalidate();
         }
 
+        public void UpdateShipIcon(Image? shipIcon)
+        {
+            if (InvokeRequired) { Invoke(new Action(() => _shipIconPictureBox.Image = shipIcon)); }
+            else { _shipIconPictureBox.Image = shipIcon; }
+        }
+
         private void UpdateLabel(Label label, string text)
         {
             if (InvokeRequired) { Invoke(new Action(() => label.Text = text)); }

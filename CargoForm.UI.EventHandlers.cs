@@ -86,14 +86,6 @@ namespace EliteDataRelay
         // such as hotkeys and overlay visibility.
         private void ApplyLiveSettingsChanges()
         {
-            // Update button states and monitoring visuals to reflect any changes.
-            // This is done first to ensure services like the overlay are started if needed.
-            _cargoFormUI.SetButtonStates(
-                startEnabled: !_fileMonitoringService.IsMonitoring,
-                stopEnabled: _fileMonitoringService.IsMonitoring
-            );
-            _cargoFormUI.UpdateMonitoringVisuals(_fileMonitoringService.IsMonitoring);
-
             // Unregister any existing hotkeys before re-registering, to handle changes.
             UnregisterHotkeys();
             if (AppConfiguration.EnableHotkeys)
@@ -101,9 +93,16 @@ namespace EliteDataRelay
                 RegisterHotkeys();
             }
 
-            // If monitoring is active, refresh the overlay to apply visibility changes.
+            // Update button states and monitoring visuals to reflect any changes.
+            _cargoFormUI.SetButtonStates(
+                startEnabled: !_fileMonitoringService.IsMonitoring,
+                stopEnabled: _fileMonitoringService.IsMonitoring
+            );
+
+            // If monitoring is active, we need to refresh everything.
             if (_fileMonitoringService.IsMonitoring)
             {
+                _cargoFormUI.UpdateMonitoringVisuals(true);
                 // Handle session tracking state change. If the user just enabled it,
                 // we need to start the service. If they disabled it, we stop it.
                 if (AppConfiguration.EnableSessionTracking)
@@ -115,13 +114,15 @@ namespace EliteDataRelay
                     _sessionTrackingService.StopSession();
                 }
 
-                // Restart the overlay service to apply changes like font, color, opacity, or drag mode.
-                _overlayService.Start();
-
                 // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
                 // windows have fully processed their creation messages and are ready to be
                 // updated before we try to send them data, preventing a race condition.
                 this.BeginInvoke(new Action(RepopulateOverlay));
+            }
+            else
+            {
+                // If not monitoring, just update the visuals which will hide any overlays.
+                _cargoFormUI.UpdateMonitoringVisuals(false);
             }
         }
 

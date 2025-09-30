@@ -54,6 +54,7 @@ namespace EliteDataRelay.Services
         public string ShipIdent { get; set; } = string.Empty;
         [JsonPropertyName("Ship_Localised")]
         public string? ShipLocalised { get; set; }
+        public long Credits { get; set; }
     }
 
     public class ShipyardSwapEvent

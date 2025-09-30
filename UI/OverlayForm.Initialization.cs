@@ -112,6 +112,24 @@ namespace EliteDataRelay.UI
                 contentPanel.Controls.Add(_cargoListPanel); // Add last to fill remaining space
                 Controls.Add(contentPanel);
             }
+            else if (_position == OverlayPosition.ShipIcon)
+            {
+                this.Padding = new Padding(1); // Add padding to allow the form's border to be visible.
+                this.Size = new Size(320, 320); // Match the width of the Info overlay and keep it square
+                _shipIconPictureBox = new PictureBox
+                {
+                    // Undock the picture box to allow for manual positioning for animation.
+                    Dock = DockStyle.None,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    Size = new Size(this.ClientSize.Width - 20, this.ClientSize.Height - 20),
+                    Location = new Point(10, 10),
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    // Set the background of the PictureBox itself to be semi-transparent.
+                    // The image will be drawn opaquely on top of this background.
+                    BackColor = Color.FromArgb(AppConfiguration.OverlayOpacity * 255 / 100, AppConfiguration.OverlayBackgroundColor),
+                };
+                Controls.Add(_shipIconPictureBox);
+            }
         }
 
         private Label CreateOverlayLabel(Point location, Font? font = null)
