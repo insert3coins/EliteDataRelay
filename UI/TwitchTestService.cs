@@ -33,7 +33,7 @@ namespace EliteDataRelay.Services
             _overlayManager.ShowAlert("Incoming Raid!", "Test_Raider (42)");
         }
 
-        public async void TestChatMessage()
+        public void TestChatMessage()
         {
             // To test the chat ticker, we need to call the public AddMessage method.
             // This requires making a small change to TwitchOverlayManager to expose it.
@@ -48,7 +48,7 @@ namespace EliteDataRelay.Services
                 new KeyValuePair<string, string>("subscriber/6", "https://static-cdn.jtvnw.net/badges/v1/521973f3-3373-4705-aebb-a999a4e97333/1"),
                 new KeyValuePair<string, string>("premium/1", "https://static-cdn.jtvnw.net/badges/v1/bbbe0db4-a5ce-4493-9919-253795915229/1")
             };
-            await _overlayManager.AddChatMessage("Test_Chatter", "This is a test message with badges! o7", testBadges, testBadgeInfo);
+            _overlayManager.AddChatMessage("Test_Chatter", "This is a test message with badges! o7", testBadges, testBadgeInfo);
         }
     }
 }

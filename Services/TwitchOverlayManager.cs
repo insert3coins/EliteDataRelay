@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace EliteDataRelay.Services
 {
@@ -14,7 +15,7 @@ namespace EliteDataRelay.Services
         private readonly ITwitchService _twitchService;
         private readonly OverlayService _overlayService;
         private readonly TwitchBadgeService _badgeService;
-        private readonly List<TwitchChatBubbleForm> _activeChatForms = new();
+        private TwitchChatOverlayForm? _chatOverlayForm;
 
         public TwitchOverlayManager(ITwitchService twitchService, OverlayService overlayService, TwitchBadgeService badgeService)
         {
@@ -30,71 +31,63 @@ namespace EliteDataRelay.Services
 
         private void OnChatMessageReceived(object? sender, TwitchChatMessageEventArgs e)
         {
-            // The check for whether the feature is enabled is now inside AddChatMessage.
-            _ = AddChatMessage(e.Username, e.Message, e.Badges, e.BadgeInfo);
+            try
+            {
+                // The check for whether the feature is enabled is now inside AddChatMessage.
+                AddChatMessage(e.Username, e.Message, e.Badges, e.BadgeInfo);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[TwitchOverlayManager] Failed to show chat message: {ex.Message}");
+            }
         }
 
-        public async Task AddChatMessage(string username, string message, List<KeyValuePair<string, string>>? badges = null, List<KeyValuePair<string, string>>? badgeInfo = null)
+        public void AddChatMessage(string username, string message, List<KeyValuePair<string, string>>? badges = null, List<KeyValuePair<string, string>>? badgeInfo = null)
         {
             if (!AppConfiguration.EnableTwitchChatOverlay) return;
 
             var mainForm = Application.OpenForms.OfType<CargoForm>().FirstOrDefault();
             if (mainForm == null || mainForm.IsDisposed) return;
 
-            // Use a TaskCompletionSource to bridge the gap between the older BeginInvoke
-            // and the modern async/await pattern. This is necessary because Control.InvokeAsync
-            // is not available in all .NET Framework versions.
-            var tcs = new TaskCompletionSource<object?>();
-            mainForm.BeginInvoke(new Func<Task>(async () =>
-            { // Note: This lambda will now capture the result of the async operation.
+            // We must ensure that the UI-related work is done on the main UI thread.
+            // BeginInvoke queues the action and returns immediately. The 'async' lambda
+            // ensures that work is correctly marshaled between UI and background threads.
+            mainForm.BeginInvoke(new Action(async () =>
+            {
                 try
                 {
-                    // Clean up any closed forms from the list
-                    _activeChatForms.RemoveAll(f => f.IsDisposed);
-
-                    var infoOverlay = _overlayService.GetOverlay(OverlayForm.OverlayPosition.Info);
-
-                    const int spacing = 5;
-                    int startX, startY, width;
-
-                    if (infoOverlay != null && infoOverlay.Visible)
+                    if (_chatOverlayForm == null || _chatOverlayForm.IsDisposed)
                     {
-                        startX = infoOverlay.Left;
-                        startY = infoOverlay.Top - 70; // A bit above the info overlay
-                        width = infoOverlay.Width;
+                        var infoOverlay = _overlayService.GetOverlay(OverlayForm.OverlayPosition.Info);
+                        int startX, startY, width, height;
+                        if (infoOverlay != null && infoOverlay.Visible)
+                        {
+                            startX = infoOverlay.Left;
+                            width = infoOverlay.Width;
+                            height = 400;
+                            startY = infoOverlay.Top - height - 10; // Position above the info overlay
+                        }
+                        else
+                        {
+                            var screen = Screen.FromControl(mainForm).WorkingArea;
+                            width = 320;
+                            height = 400;
+                            startX = screen.Left + 20;
+                            startY = screen.Bottom - height - 70;
+                        }
+                        _chatOverlayForm = new TwitchChatOverlayForm { Location = new Point(startX, startY), Size = new Size(width, height) };
+                        _chatOverlayForm.Show();
                     }
-                    else
-                    {
-                        var screen = Screen.FromControl(mainForm).WorkingArea;
-                        startX = screen.Left + 20;
-                        startY = screen.Bottom - 70; // 10px from bottom edge
-                        width = 320; // Default width if info overlay isn't visible
-                    }
-
-                    // Get badge images. This is done inside the BeginInvoke to ensure the result is used on the UI thread.
+                    // Fetching badges is I/O bound, so we await it here. The UI thread is freed up during the await.
                     var badgeImages = await _badgeService.GetBadgesForUser(badgeInfo);
-
-                    // Create the new chat form
-                    var newChatForm = new TwitchChatBubbleForm(username, message, startX, startY, width, badgeImages);
-                    newChatForm.FormClosed += (s, a) => _activeChatForms.Remove(newChatForm);
-
-                    // Move existing forms up
-                    int yOffset = newChatForm.Height + spacing;
-                    foreach (var form in _activeChatForms)
-                    {
-                        form.SetTargetY(form.Top - yOffset);
-                    }
-
-                    _activeChatForms.Add(newChatForm);
-                    newChatForm.Show();
-                    tcs.SetResult(null);
+                    // The code continues on the UI thread, so it's safe to call AddMessage.
+                    _chatOverlayForm?.AddMessage(username, message, badgeImages);
                 }
                 catch (Exception ex)
                 {
-                    tcs.SetException(ex);
+                    Debug.WriteLine($"[TwitchOverlayManager] Error in AddChatMessage UI Action: {ex.Message}");
                 }
             }));
-            await tcs.Task;
         }
 
         private void OnFollowerReceived(object? sender, TwitchFollowerEventArgs e)
@@ -147,14 +140,9 @@ namespace EliteDataRelay.Services
             _twitchService.FollowerReceived -= OnFollowerReceived;
             _twitchService.RaidReceived -= OnRaidReceived;
             _twitchService.SubscriptionReceived -= OnSubscriptionReceived;
-            
-            // Create a copy of the list to iterate over. Calling form.Close() triggers an
-            // event that modifies the original _activeChatForms collection, which would
-            // otherwise cause a "Collection was modified" exception.
-            foreach (var form in _activeChatForms.ToList())
-            {
-                form.Close();
-            }
+
+            _chatOverlayForm?.Close();
+            _chatOverlayForm = null;
         }
     }
 }
