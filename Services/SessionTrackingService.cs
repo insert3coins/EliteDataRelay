@@ -46,6 +46,7 @@ namespace EliteDataRelay.Services
             // Subscribe to events
             _cargoProcessor.CargoProcessed += OnCargoProcessed;
             _journalWatcher.BalanceChanged += OnBalanceChanged;
+
             _timer.Start();
 
             SessionUpdated?.Invoke(this, EventArgs.Empty);

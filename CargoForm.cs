@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -83,6 +83,7 @@ namespace EliteDataRelay
             _cargoFormUI.StopClicked += OnStopClicked;
             _cargoFormUI.ExitClicked += OnExitClicked;
             _cargoFormUI.AboutClicked += OnAboutClicked;
+            _cargoFormUI.SettingsClicked += OnSettingsClicked;
             _cargoFormUI.SessionClicked += OnSessionClicked;
 
             // Timer to periodically check if the game process is still running

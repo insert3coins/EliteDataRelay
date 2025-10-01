@@ -53,7 +53,7 @@ namespace EliteDataRelay.UI
                 _cargoListPanel = new Panel
                 {
                     Dock = DockStyle.Fill,
-                    BackColor = this.BackColor,
+                    BackColor = Color.Transparent,
                     Font = _listFont
                 };
                 _cargoListPanel.Paint += OnCargoListPanelPaint;
@@ -126,7 +126,7 @@ namespace EliteDataRelay.UI
                     SizeMode = PictureBoxSizeMode.Zoom,
                     // Set the background of the PictureBox itself to be semi-transparent.
                     // The image will be drawn opaquely on top of this background.
-                    BackColor = Color.FromArgb(AppConfiguration.OverlayOpacity * 255 / 100, AppConfiguration.OverlayBackgroundColor),
+                    BackColor = Color.Transparent,
                 };
                 Controls.Add(_shipIconPictureBox);
             }
