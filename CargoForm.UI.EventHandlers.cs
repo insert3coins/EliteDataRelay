@@ -68,17 +68,9 @@ namespace EliteDataRelay
             }
         }
 
-        private void OnTestClicked(object? sender, EventArgs e)
-        {
-            using (var testForm = new TestAlertsForm(_twitchTestService))
-            {
-                testForm.ShowDialog(this);
-            }
-        }
-
         private void OnSettingsClicked(object? sender, EventArgs e)
         {
-            using (var settingsForm = new SettingsForm(_twitchTestService))
+            using (var settingsForm = new SettingsForm())
             {
                 // Subscribe to the event that fires when a live setting (like repositioning) is changed.
                 settingsForm.LiveSettingsChanged += (s, a) => ApplyLiveSettingsChanges();

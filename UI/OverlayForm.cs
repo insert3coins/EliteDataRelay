@@ -52,9 +52,6 @@ namespace EliteDataRelay.UI
             _position = position;
             _allowDrag = allowDrag;
 
-            // Start with zero opacity to prevent flickering/flashing during initialization.
-            this.Opacity = 0;
-
             // Enable double buffering to reduce flicker and rendering artifacts. This is a standard
             // technique to prevent visual glitches like stray lines or bars on transparent forms.
             DoubleBuffered = true;
@@ -64,8 +61,7 @@ namespace EliteDataRelay.UI
             StartPosition = FormStartPosition.Manual;
 
             // Apply appearance settings from configuration for semi-transparent background.
-            // A form's BackColor cannot have an alpha component. We use the opaque version of the color
-            // and rely on the form's Opacity property to handle the transparency.
+            // The BackColor property does not support an alpha channel. We set an opaque color and use the form's Opacity property for transparency.
             this.BackColor = Color.FromArgb(255, AppConfiguration.OverlayBackgroundColor);
 
             switch (_position)
@@ -103,9 +99,9 @@ namespace EliteDataRelay.UI
         {
             base.OnLoad(e);
 
-            // Now that the form is fully initialized and invisible, set opacity to 1 to show it.
-            // This prevents the user from seeing any part of the form's construction.
+            // Set the form's opacity to achieve a semi-transparent effect.
             this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+
             _animationTimer?.Start();
         }
 
