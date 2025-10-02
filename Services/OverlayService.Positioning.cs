@@ -54,30 +54,6 @@ namespace EliteDataRelay.Services
                 _shipIconOverlayForm.Location = AppConfiguration.ShipIconOverlayLocation != Point.Empty ? AppConfiguration.ShipIconOverlayLocation : defaultShipIconLocation;
         }
 
-        private void PositionMiningOverlay()
-        {
-            if (_miningOverlayForm == null)
-            {
-                return;
-            }
-
-            var primaryScreen = Screen.PrimaryScreen;
-            if (primaryScreen == null)
-            {
-                // Cannot position the overlay without a screen.
-                return;
-            }
-            var screen = primaryScreen.WorkingArea;
-            const int screenEdgePadding = 20;
-
-            // Calculate default position for the top-right corner.
-            int xPos = screen.Width - _miningOverlayForm.Width - screenEdgePadding; // Right side
-            int yPos = screenEdgePadding; // Top side
-
-            var defaultLocation = new Point(xPos, yPos);
-            _miningOverlayForm.Location = AppConfiguration.MiningOverlayLocation != Point.Empty ? AppConfiguration.MiningOverlayLocation : defaultLocation;
-        }
-
         private void OnOverlayPositionChanged(object? sender, Point newLocation)
         {
             if (sender == _leftOverlayForm)
