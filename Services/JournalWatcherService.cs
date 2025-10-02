@@ -89,6 +89,26 @@ namespace EliteDataRelay.Services
         public event EventHandler<CargoCollectedEventArgs>? CargoCollected;
 
         /// <summary>
+        /// Event raised when a commodity is refined.
+        /// </summary>
+        public event EventHandler<MiningRefinedEventArgs>? MiningRefined;
+
+        /// <summary>
+        /// Event raised when a limpet drone is launched.
+        /// </summary>
+        public event EventHandler<LaunchDroneEventArgs>? LaunchDrone;
+
+        /// <summary>
+        /// Event raised when commodities are sold on the market.
+        /// </summary>
+        public event EventHandler<MarketSellEventArgs>? MarketSell;
+
+        /// <summary>
+        /// Event raised when limpet drones are purchased.
+        /// </summary>
+        public event EventHandler<BuyDronesEventArgs>? BuyDrones;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;

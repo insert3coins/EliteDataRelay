@@ -170,6 +170,41 @@ namespace EliteDataRelay.Services
                         {
                             CargoCollected?.Invoke(this, new CargoCollectedEventArgs(1));
                         }
+                        else if (eventType == "MiningRefined")
+                        {
+                            // Prefer the human-readable name, but fall back to the internal name if it's not available.
+                            var commodity = jsonDoc.RootElement.TryGetProperty("Type_Localised", out var locElement) && !string.IsNullOrEmpty(locElement.GetString())
+                                ? locElement.GetString()
+                                : (jsonDoc.RootElement.TryGetProperty("Type", out var typeElement) ? typeElement.GetString() : null);
+                            if (commodity != null)
+                            {
+                                MiningRefined?.Invoke(this, new MiningRefinedEventArgs(commodity));
+                            }
+                        }
+                        else if (eventType == "LaunchDrone")
+                        {
+                            var type = jsonDoc.RootElement.TryGetProperty("Type", out var typeElement) ? typeElement.GetString() : null;
+                            if (type != null)
+                            {
+                                LaunchDrone?.Invoke(this, new LaunchDroneEventArgs(type));
+                            }
+                        }
+                        else if (eventType == "MarketSell")
+                        {
+                            var sellEvent = JsonSerializer.Deserialize<MarketSellEvent>(journalLine, options);
+                            if (sellEvent != null)
+                            {
+                                MarketSell?.Invoke(this, new MarketSellEventArgs(sellEvent.Type, sellEvent.Count, sellEvent.TotalSale));
+                            }
+                        }
+                        else if (eventType == "BuyDrones")
+                        {
+                            var buyEvent = JsonSerializer.Deserialize<BuyDronesEvent>(journalLine, options);
+                            if (buyEvent != null)
+                            {
+                                BuyDrones?.Invoke(this, new BuyDronesEventArgs(buyEvent.Count, buyEvent.TotalCost));
+                            }
+                        }
                         else if (eventType == "Docked")
                         {
                             var dockedEvent = JsonSerializer.Deserialize<DockedEvent>(journalLine, options);

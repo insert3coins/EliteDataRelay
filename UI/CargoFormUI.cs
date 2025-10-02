@@ -17,7 +17,8 @@ namespace EliteDataRelay.UI
         private TrayIconManager? _trayIconManager;
         private Icon? _appIcon;
         private LayoutManager? _layoutManager;
-    private readonly OverlayService _overlayService;
+        private readonly OverlayService _overlayService;
+        private readonly SessionTrackingService _sessionTrackingService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";        
@@ -36,17 +37,18 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SessionClicked;
 
-    public CargoFormUI(OverlayService overlayService)
+        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService)
         {
-        _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
-    }
+            _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
+            _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
+        }
 
-    public void InitializeUI(Form form)
-    {
-        _form = form ?? throw new ArgumentNullException(nameof(form));
+        public void InitializeUI(Form form)
+        {
+            _form = form ?? throw new ArgumentNullException(nameof(form));
             InitializeIcon();
             _fontManager = new FontManager();
-            _controlFactory = new ControlFactory(_fontManager);
+            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService);
 
             if (_controlFactory.WatchingLabel != null)
             {
@@ -55,15 +57,15 @@ namespace EliteDataRelay.UI
 
             // The layout manager now adds the TabControl instead of the ListView directly.
             // Assuming LayoutManager is adapted to add _controlFactory.TabControl to the form's main panel.
-            _layoutManager = new LayoutManager(_form, _controlFactory); 
+            _layoutManager = new LayoutManager(_form, _controlFactory);
 
-        _form.Resize += OnFormResize;
-        _form.Load += OnFormLoad;
-        _trayIconManager = new TrayIconManager(_appIcon);
+            _form.Resize += OnFormResize;
+            _form.Load += OnFormLoad;
+            _trayIconManager = new TrayIconManager(_appIcon);
             SetupFormProperties();
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
-            DisplayWelcomeMessage();            
+            DisplayWelcomeMessage();
         }
 
         private void OnFormLoad(object? sender, EventArgs e)
@@ -164,6 +166,11 @@ namespace EliteDataRelay.UI
         public void UpdateStationInfo(StationInfoData data)
         {
             _overlayService?.UpdateStationInfo(data);
+        }
+
+        public void UpdateMiningStats()
+        {
+            _controlFactory?.MiningStatsControl?.UpdateLabels();
         }
 
         public void Dispose()

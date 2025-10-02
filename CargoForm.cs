@@ -41,7 +41,7 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
-            _cargoFormUI = new CargoFormUI(_overlayService);
+            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService);
 
             InitializeComponent();
 

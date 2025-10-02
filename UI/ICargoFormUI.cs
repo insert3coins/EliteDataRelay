@@ -36,5 +36,6 @@ namespace EliteDataRelay.UI
         void UpdateSessionOverlay(long cargo, long credits);
         void UpdateSystemInfo(SystemInfoData data);
         void UpdateStationInfo(StationInfoData data);
+        void UpdateMiningStats();
     }
 }

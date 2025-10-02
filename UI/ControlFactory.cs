@@ -26,10 +26,11 @@ namespace EliteDataRelay.UI
         public Button ShipLabel { get; private set; } = null!;
         public Button BalanceLabel { get; private set; } = null!;
         public ToolTip ToolTip { get; private set; } = null!;
+        public MiningStatsControl MiningStatsControl { get; private set; } = null!;
 
-        public ControlFactory(FontManager fontManager)
+        public ControlFactory(FontManager fontManager, Services.SessionTrackingService sessionTracker)
         {
-            CreateTabControls(fontManager);
+            CreateTabControls(fontManager, sessionTracker);
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);
             CreateToolTips();

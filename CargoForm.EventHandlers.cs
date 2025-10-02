@@ -175,6 +175,7 @@ namespace EliteDataRelay
                 Invoke(new Action(() =>
                 {
                     _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
+                    _cargoFormUI.UpdateMiningStats();
                 }));
             }
         }

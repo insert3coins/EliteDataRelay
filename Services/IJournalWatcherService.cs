@@ -17,6 +17,10 @@ namespace EliteDataRelay.Services
         event EventHandler<CargoCollectedEventArgs>? CargoCollected;
         event EventHandler<DockedEventArgs>? Docked;
         event EventHandler<UndockedEventArgs>? Undocked;
+        event EventHandler<MiningRefinedEventArgs>? MiningRefined;
+        event EventHandler<LaunchDroneEventArgs>? LaunchDrone;
+        event EventHandler<MarketSellEventArgs>? MarketSell;
+        event EventHandler<BuyDronesEventArgs>? BuyDrones;
 
         void StartMonitoring();
         void StopMonitoring();

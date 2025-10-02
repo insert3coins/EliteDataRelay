@@ -20,6 +20,7 @@ namespace EliteDataRelay.UI
         private Label _lblDurationValue = null!;
         private Label _lblCargoCollectedValue = null!;
         private Label _lblCreditsEarnedValue = null!;
+        private MiningStatsControl _miningStatsControl = null!;
         private readonly SessionTrackingService _sessionTracker;
 
         public SessionSummaryForm(SessionTrackingService sessionTracker)
@@ -38,7 +39,7 @@ namespace EliteDataRelay.UI
             this.FormBorderStyle = FormBorderStyle.None;
             this.StartPosition = FormStartPosition.CenterParent;
             this.ShowInTaskbar = false;
-            this.ClientSize = new Size(350, 155);
+            this.ClientSize = new Size(380, 260);
             this.DoubleBuffered = true;
 
             // Fonts
@@ -105,8 +106,16 @@ namespace EliteDataRelay.UI
             _tlpStats.Controls.Add(lblCreditsEarnedHeader, 0, 2);
             _tlpStats.Controls.Add(_lblCreditsEarnedValue, 1, 2);
 
+            // Mining Stats Control
+            _miningStatsControl = new MiningStatsControl(_sessionTracker)
+            {
+                Dock = DockStyle.Bottom,
+                Padding = new Padding(15, 10, 15, 15)
+            };
+
             // Add controls to form
             this.Controls.Add(_tlpStats);
+            this.Controls.Add(_miningStatsControl);
             this.Controls.Add(_pnlTitleBar);
 
             UpdateLabels();
@@ -166,6 +175,7 @@ namespace EliteDataRelay.UI
             _lblDurationValue.Text = $"{_sessionTracker.SessionDuration:hh\\:mm\\:ss}";
             _lblCargoCollectedValue.Text = $"{_sessionTracker.TotalCargoCollected} units";
             _lblCreditsEarnedValue.Text = $"{_sessionTracker.CreditsEarned:N0} CR";
+            _miningStatsControl.UpdateLabels();
         }
 
         private void OnFormClosing(object? sender, FormClosingEventArgs e)

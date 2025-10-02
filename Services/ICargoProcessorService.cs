@@ -4,7 +4,7 @@ using EliteDataRelay.Models;
 namespace EliteDataRelay.Services
 {
     /// <summary>
-    /// Defines the contract for a service that processes cargo data.
+    /// Defines the contract for a service that processes cargo data from Cargo.json.
     /// </summary>
     public interface ICargoProcessorService
     {
