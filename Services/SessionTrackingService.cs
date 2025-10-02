@@ -23,8 +23,10 @@ namespace EliteDataRelay.Services
         private int _limpetsUsed;
         private int _lastLimpetCount = -1; // Use -1 to indicate it's not yet initialized for the session.
         private DateTime? _miningStartTime;
+        private DateTime? _miningStopTime;
 
         public bool IsSessionActive { get; private set; }
+        public bool IsMiningSessionActive { get; private set; }
 
         /// <summary>
         /// The net credits earned or lost during the current session.
@@ -55,7 +57,15 @@ namespace EliteDataRelay.Services
         /// <summary>
         /// The duration of active mining (from first refinement to last).
         /// </summary>
-        public TimeSpan MiningDuration => IsSessionActive && _miningStartTime.HasValue ? DateTime.UtcNow - _miningStartTime.Value : TimeSpan.Zero;
+        public TimeSpan MiningDuration
+        {
+            get
+            {
+                if (!_miningStartTime.HasValue) return TimeSpan.Zero;
+                var endTime = IsMiningSessionActive ? DateTime.UtcNow : (_miningStopTime ?? _miningStartTime.Value);
+                return endTime - _miningStartTime.Value;
+            }
+        }
 
         /// <summary>
         /// A dictionary of commodities refined during this session and their quantities.
@@ -83,23 +93,11 @@ namespace EliteDataRelay.Services
             _startingCargoCount = initialCargoCount;
             TotalCargoCollected = 0;
             _sessionStartTime = DateTime.UtcNow;
-            
-            // Reset mining stats
-            _miningProfit = 0;
-            _limpetsUsed = 0;
-            _miningStartTime = null;
-            _refinedCommodities.Clear();
-            _lastLimpetCount = -1;
-            _pendingRefined.Clear();
 
             IsSessionActive = true;
 
             // Subscribe to events now that the session is active
             _journalWatcherService.CargoCollected += OnCargoCollected;
-            _journalWatcherService.MiningRefined += OnMiningRefined;
-            _cargoProcessorService.CargoProcessed += OnCargoProcessed;
-            _journalWatcherService.MarketSell += OnMarketSell;
-            _journalWatcherService.BuyDrones += OnBuyDrones;
 
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -113,10 +111,45 @@ namespace EliteDataRelay.Services
 
             // Unsubscribe from events
             _journalWatcherService.CargoCollected -= OnCargoCollected;
+
+            // Also ensure the mining session is stopped.
+            if (IsMiningSessionActive)
+            {
+                StopMiningSession();
+            }
+        }
+
+        public void StartMiningSession()
+        {
+            if (!IsSessionActive || IsMiningSessionActive) return;
+
+            // Reset mining stats
+            _miningProfit = 0;
+            _limpetsUsed = 0;
+            _miningStartTime = DateTime.UtcNow;
+            _refinedCommodities.Clear();
+            _miningStopTime = null;
+            _lastLimpetCount = -1;
+            _pendingRefined.Clear();
+
+            IsMiningSessionActive = true;
+
+            _journalWatcherService.MiningRefined += OnMiningRefined;
+            _cargoProcessorService.CargoProcessed += OnCargoProcessed;
+            _journalWatcherService.MarketSell += OnMarketSell;
+            _journalWatcherService.BuyDrones += OnBuyDrones;
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void StopMiningSession()
+        {
+            IsMiningSessionActive = false;
+            _miningStopTime = DateTime.UtcNow;
             _journalWatcherService.MiningRefined -= OnMiningRefined;
             _cargoProcessorService.CargoProcessed -= OnCargoProcessed;
             _journalWatcherService.MarketSell -= OnMarketSell;
             _journalWatcherService.BuyDrones -= OnBuyDrones;
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -139,8 +172,7 @@ namespace EliteDataRelay.Services
 
         private void OnMiningRefined(object? sender, MiningRefinedEventArgs e)
         {
-            if (!IsSessionActive) return;
-            if (_miningStartTime == null) _miningStartTime = DateTime.UtcNow;
+            if (!IsMiningSessionActive) return;
 
             var commodity = e.CommodityType.ToLowerInvariant();
             // Add to a pending list. It will be confirmed once it appears in Cargo.json
@@ -157,7 +189,7 @@ namespace EliteDataRelay.Services
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
-            if (!IsSessionActive) return;
+            if (!IsMiningSessionActive) return;
 
             bool sessionWasUpdated = false;
             
@@ -207,7 +239,7 @@ namespace EliteDataRelay.Services
 
         private void OnMarketSell(object? sender, MarketSellEventArgs e)
         {
-            if (!IsSessionActive) return;
+            if (!IsMiningSessionActive) return;
 
             var commodity = e.Commodity.ToLowerInvariant();
             // Check if the commodity sold was one we refined in this session
@@ -235,7 +267,7 @@ namespace EliteDataRelay.Services
 
         private void OnBuyDrones(object? sender, BuyDronesEventArgs e)
         {
-            // This event can be used in the future to track limpet costs
+            if (!IsMiningSessionActive) return;
         }
 
         public void Dispose() => StopSession();
