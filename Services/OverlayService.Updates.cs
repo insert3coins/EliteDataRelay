@@ -49,7 +49,7 @@ namespace EliteDataRelay.Services
 
         public void UpdateMiningSession(SessionTrackingService tracker)
         {
-            bool shouldBeVisible = AppConfiguration.EnableMiningOverlay && (tracker.IsMiningSessionActive || tracker.MiningDuration > System.TimeSpan.Zero);
+            bool shouldBeVisible = AppConfiguration.EnableMiningOverlay && tracker.IsMiningSessionActive;
 
             if (shouldBeVisible)
             {

@@ -119,6 +119,9 @@ namespace EliteDataRelay
                 // windows have fully processed their creation messages and are ready to be
                 // updated before we try to send them data, preventing a race condition.
                 this.BeginInvoke(new Action(RepopulateOverlay));
+
+                // Also force a session update to ensure the mining overlay is recreated if it was closed.
+                OnSessionUpdated(_sessionTrackingService, EventArgs.Empty);
             }
             else
             {
