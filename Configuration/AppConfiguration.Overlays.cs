@@ -7,6 +7,7 @@ namespace EliteDataRelay.Configuration
         // Overlay Settings
         public static bool EnableInfoOverlay { get => _settings.EnableInfoOverlay; set => _settings.EnableInfoOverlay = value; }
         public static bool EnableCargoOverlay { get => _settings.EnableCargoOverlay; set => _settings.EnableCargoOverlay = value; }
+        public static bool EnableMiningOverlay { get => _settings.EnableMiningOverlay; set => _settings.EnableMiningOverlay = value; }
         public static bool EnableShipIconOverlay { get => _settings.EnableShipIconOverlay; set => _settings.EnableShipIconOverlay = value; }
         public static bool ShowSessionOnOverlay { get => _settings.ShowSessionOnOverlay; set => _settings.ShowSessionOnOverlay = value; }
         public static bool AllowOverlayDrag { get => _settings.AllowOverlayDrag; set => _settings.AllowOverlayDrag = value; }
@@ -17,12 +18,14 @@ namespace EliteDataRelay.Configuration
         public static int OverlayOpacity { get => _settings.OverlayOpacity; set => _settings.OverlayOpacity = value; }
         public static Point InfoOverlayLocation { get => _settings.InfoOverlayLocation; set => _settings.InfoOverlayLocation = value; }
         public static Point CargoOverlayLocation { get => _settings.CargoOverlayLocation; set => _settings.CargoOverlayLocation = value; }
+        public static Point MiningOverlayLocation { get => _settings.MiningOverlayLocation; set => _settings.MiningOverlayLocation = value; }
         public static Point ShipIconOverlayLocation { get => _settings.ShipIconOverlayLocation; set => _settings.ShipIconOverlayLocation = value; }
 
         private partial class AppSettings
         {
             public bool EnableInfoOverlay { get; set; } = false;
             public bool EnableCargoOverlay { get; set; } = false;
+            public bool EnableMiningOverlay { get; set; } = true;
             public bool EnableShipIconOverlay { get; set; } = true;
             public bool ShowSessionOnOverlay { get; set; } = true;
             public bool AllowOverlayDrag { get; set; } = false;
@@ -33,6 +36,7 @@ namespace EliteDataRelay.Configuration
             public int OverlayOpacity { get; set; } = 70;
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
+            public Point MiningOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
         }
     }

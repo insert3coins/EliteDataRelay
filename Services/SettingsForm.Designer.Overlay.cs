@@ -20,7 +20,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Overlay Functionality",
                 Location = new Point(12, 12),
-                Size = new Size(440, 210),
+                Size = new Size(440, 240),
             };
 
             // Enable Right Overlay CheckBox
@@ -40,10 +40,17 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            _chkEnableMiningOverlay = new CheckBox
+            {
+                Text = "Enable mining session overlay",
+                Location = new Point(15, 95),
+                AutoSize = true
+            };
+
             _chkShowSessionOnOverlay = new CheckBox
             {
                 Text = "Show session stats on cargo overlay",
-                Location = new Point(15, 145),
+                Location = new Point(15, 180),
                 AutoSize = true
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
@@ -52,7 +59,7 @@ namespace EliteDataRelay.UI
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(15, 175),
+                Location = new Point(15, 205),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -61,11 +68,12 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableShipIconOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableMiningOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 
             // Font GroupBox
-            var grpFont = new GroupBox { Text = "Appearance: Font", Location = new Point(12, 225), Size = new Size(410, 80) };
+            var grpFont = new GroupBox { Text = "Appearance: Font", Location = new Point(12, 255), Size = new Size(410, 80) };
             var lblCurrentFontHeader = new Label { Text = "Current Font:", Location = new Point(15, 25), AutoSize = true };
             _lblCurrentFont = new Label { Text = "Consolas, 11pt", Font = new Font(this.Font, FontStyle.Bold), Location = new Point(100, 25), AutoSize = true };
             var btnChangeFont = new Button { Text = "Change Font...", Location = new Point(15, 45), Size = new Size(100, 23) };
@@ -75,7 +83,7 @@ namespace EliteDataRelay.UI
             grpFont.Controls.Add(btnChangeFont);
 
             // Colors GroupBox
-            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 310), Size = new Size(410, 140) };
+            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 340), Size = new Size(410, 140) };
             var lblTextColor = new Label { Text = "Text Color:", Location = new Point(15, 25), AutoSize = true };
             _pnlTextColor = new Panel { Location = new Point(130, 25), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
             var btnChangeTextColor = new Button { Text = "...", Location = new Point(160, 25), Size = new Size(23, 23) };
@@ -99,7 +107,7 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(_lblOpacityValue);
 
             // Reset Button
-            _btnResetOverlaySettings = new Button { Text = "Reset All Overlay Settings", Location = new Point(12, 435), Size = new Size(180, 23) };
+            _btnResetOverlaySettings = new Button { Text = "Reset All Overlay Settings", Location = new Point(12, 485), Size = new Size(180, 23) };
             _btnResetOverlaySettings.Click += OnResetOverlaySettingsClicked;
 
             // Add controls to the Overlay tab

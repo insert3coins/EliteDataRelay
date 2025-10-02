@@ -130,6 +130,10 @@ namespace EliteDataRelay.UI
                 };
                 Controls.Add(_shipIconPictureBox);
             }
+            else if (_position == OverlayPosition.MiningSession)
+            {
+                InitializeMiningControls();
+            }
         }
 
         private Label CreateOverlayLabel(Point location, Font? font = null)

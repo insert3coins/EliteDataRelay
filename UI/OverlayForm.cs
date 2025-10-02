@@ -16,7 +16,8 @@ namespace EliteDataRelay.UI
         {
             Info,
             Cargo,
-            ShipIcon
+            ShipIcon,
+            MiningSession
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -34,6 +35,8 @@ namespace EliteDataRelay.UI
         private Label _cargoSizeLabel = null!;
     private PictureBox _shipIconPictureBox = null!;
         private System.Windows.Forms.Timer? _animationTimer;
+        private System.Windows.Forms.Timer? _miningUpdateTimer;
+        private SessionTrackingService? _sessionTracker;
         private double _animationPhase;
         private const int ANIMATION_AMPLITUDE = 5; // How many pixels up/down it will move
         private const double ANIMATION_SPEED = 0.05; // How fast it will move
@@ -92,6 +95,15 @@ namespace EliteDataRelay.UI
             {
                 _animationTimer = new System.Windows.Forms.Timer { Interval = 30 }; // Approx 33 FPS
                 _animationTimer.Tick += AnimationTimer_Tick;
+            }
+            else if (_position == OverlayPosition.MiningSession)
+            {
+                _miningUpdateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+                _miningUpdateTimer.Tick += (s, e) =>
+                {
+                    if (_sessionTracker != null)
+                        UpdateMiningSession(_sessionTracker);
+                };
             }
         }
 
@@ -182,6 +194,7 @@ namespace EliteDataRelay.UI
             {
                 _labelFont?.Dispose();
                 _listFont?.Dispose();
+                _miningUpdateTimer?.Dispose();
                 _animationTimer?.Dispose();
             }
             base.Dispose(disposing);

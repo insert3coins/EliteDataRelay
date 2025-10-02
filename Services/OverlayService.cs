@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
@@ -7,33 +8,29 @@ using EliteDataRelay.UI;
 
 namespace EliteDataRelay.Services
 {
-    public class OverlayService : IDisposable
+    public partial class OverlayService : IDisposable
     {
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
         private OverlayForm? _shipIconOverlayForm;
+        private OverlayForm? _miningOverlayForm;
 
         public void Start()
         {
             Stop(); // Ensure any existing overlays are closed
-            var gameProcesses = System.Diagnostics.Process.GetProcessesByName("EliteDangerous64");
 
             try
             {
+                var gameProcesses = System.Diagnostics.Process.GetProcessesByName("EliteDangerous64");
                 // Only show overlays if the game process is actually running.
                 if (!gameProcesses.Any())
                 {
                     System.Diagnostics.Debug.WriteLine("[OverlayService] Elite Dangerous not running. Overlays will not be shown.");
                     return;
                 }
+                foreach (var p in gameProcesses) { p.Dispose(); }
             }
-            finally
-            {
-                if (gameProcesses != null)
-                {
-                    foreach (var p in gameProcesses) { p.Dispose(); }
-                }
-            }
+            catch { /* Ignore potential access denied errors */ }
 
             var primaryScreen = Screen.PrimaryScreen;
             if (primaryScreen == null)
@@ -43,10 +40,7 @@ namespace EliteDataRelay.Services
             }
 
             var screen = primaryScreen.WorkingArea;
-            const int screenEdgePadding = 20;
-            const int overlaySpacing = 10;
 
-            // Create form instances first to get their actual dimensions.
             if (AppConfiguration.EnableInfoOverlay)
             {
                 _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag);
@@ -63,76 +57,11 @@ namespace EliteDataRelay.Services
                 _shipIconOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
 
-            // Default for Cargo overlay (middle right)
-            Point defaultRightLocation = Point.Empty;
-            if (_rightOverlayForm != null)
-            {
-                int y = (screen.Height / 2) - (_rightOverlayForm.Height / 2);
-                defaultRightLocation = new Point(screen.Width - _rightOverlayForm.Width - screenEdgePadding, y);
-            }
+            PositionOverlays(screen);
 
-            // --- Calculate positions for the bottom-left overlay stack ---
-            // This new logic correctly handles any combination of Info, Ship, and Chat overlays.
-
-            // 1. Calculate the total height of the stack.
-            int totalStackHeight = 0;
-            if (_leftOverlayForm != null) totalStackHeight += _leftOverlayForm.Height;
-            if (_shipIconOverlayForm != null) totalStackHeight += (totalStackHeight > 0 ? overlaySpacing : 0) + _shipIconOverlayForm.Height;
-
-            // 2. Determine the starting Y position for the entire stack (bottom-aligned).
-            int currentY = screen.Height - totalStackHeight - screenEdgePadding;
-
-            // 3. Assign positions to each overlay in the stack from top to bottom.
-            Point defaultLeftLocation = Point.Empty;
-            if (_leftOverlayForm != null)
-            {
-                defaultLeftLocation = new Point(screenEdgePadding, currentY);
-                currentY += _leftOverlayForm.Height + overlaySpacing;
-            }
-
-            Point defaultShipIconLocation = Point.Empty;
-            if (_shipIconOverlayForm != null)
-            {
-                defaultShipIconLocation = new Point(screenEdgePadding, currentY);
-                currentY += _shipIconOverlayForm.Height + overlaySpacing;
-            }
-
-            if (_leftOverlayForm != null)
-            {
-                if (AppConfiguration.InfoOverlayLocation != Point.Empty)
-                {
-                    _leftOverlayForm.Location = AppConfiguration.InfoOverlayLocation;
-                }
-                else
-                {
-                    _leftOverlayForm.Location = defaultLeftLocation;
-                }
-                _leftOverlayForm.Show();
-            }
-            if (_rightOverlayForm != null)
-            {
-                if (AppConfiguration.CargoOverlayLocation != Point.Empty)
-                {
-                    _rightOverlayForm.Location = AppConfiguration.CargoOverlayLocation;
-                }
-                else
-                {
-                    _rightOverlayForm.Location = defaultRightLocation;
-                }
-                _rightOverlayForm.Show();
-            }
-            if (_shipIconOverlayForm != null)
-            {
-                if (AppConfiguration.ShipIconOverlayLocation != Point.Empty)
-                {
-                    _shipIconOverlayForm.Location = AppConfiguration.ShipIconOverlayLocation;
-                }
-                else
-                {
-                    _shipIconOverlayForm.Location = defaultShipIconLocation;
-                }
-                _shipIconOverlayForm.Show();
-            }
+            _leftOverlayForm?.Show();
+            _rightOverlayForm?.Show();
+            _shipIconOverlayForm?.Show();
         }
 
         public void Stop()
@@ -140,8 +69,12 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
             _shipIconOverlayForm?.Close();
+            _miningOverlayForm?.Close();
+
             _leftOverlayForm = null;
             _rightOverlayForm = null;
+            _shipIconOverlayForm = null;
+            _miningOverlayForm = null;
         }
 
         public void Show()
@@ -149,6 +82,7 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
+            _miningOverlayForm?.Show();
         }
 
         public void Hide()
@@ -156,23 +90,7 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
             _shipIconOverlayForm?.Hide();
-        }
-
-        private void OnOverlayPositionChanged(object? sender, Point newLocation)
-        {
-            if (sender == _leftOverlayForm)
-            {
-                AppConfiguration.InfoOverlayLocation = newLocation;
-            }
-            else if (sender == _rightOverlayForm)
-            {
-                AppConfiguration.CargoOverlayLocation = newLocation;
-            }
-            else if (sender == _shipIconOverlayForm)
-            {
-                AppConfiguration.ShipIconOverlayLocation = newLocation;
-            }
-            AppConfiguration.Save();
+            _miningOverlayForm?.Hide();
         }
 
         /// <summary>
@@ -187,61 +105,10 @@ namespace EliteDataRelay.Services
                 OverlayForm.OverlayPosition.Info => _leftOverlayForm,
                 OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
                 OverlayForm.OverlayPosition.ShipIcon => _shipIconOverlayForm,
+                OverlayForm.OverlayPosition.MiningSession => _miningOverlayForm,
                 _ => null
             };
         }
-
-        #region Data Update Methods
-        // These methods update the UI controls on the specific overlay forms.
-        // The OverlayForm itself handles thread safety with InvokeRequired checks.
-
-        public void UpdateCommander(string name)
-        {
-            _leftOverlayForm?.UpdateCommander(name);
-        }
-
-        public void UpdateShip(string shipName, string shipIdent, string shipType)
-        {
-            _leftOverlayForm?.UpdateShip(shipType);
-        }
-
-        public void UpdateShipIcon(Image? shipIcon)
-        {
-            _shipIconOverlayForm?.UpdateShipIcon(shipIcon);
-        }
-
-        public void UpdateBalance(long balance)
-        {
-            _leftOverlayForm?.UpdateBalance(balance);
-        }
-
-        public void UpdateCargo(int count, int? capacity)
-        {
-            string headerText = capacity.HasValue ? $"Cargo: {count}/{capacity.Value}" : $"Cargo: {count}";
-            _rightOverlayForm?.UpdateCargo(count, capacity);
-        }
-
-        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.UpdateCargoList(snapshot.Inventory);
-
-        public void UpdateCargoSize(string size) => _rightOverlayForm?.UpdateCargoSize(size);
-
-        public void UpdateSessionOverlay(long cargo, long credits)
-        {
-            _rightOverlayForm?.UpdateSessionCreditsEarned(credits);
-            _rightOverlayForm?.UpdateSessionCargoCollected(cargo);
-        }
-
-        public void UpdateSystemInfo(SystemInfoData data)
-        {
-            // _systemInfoOverlay?.UpdateSystemInfo(data);
-        }
-
-        public void UpdateStationInfo(StationInfoData data)
-        {
-            // _stationInfoOverlay?.UpdateStationInfo(data);
-        }
-
-        #endregion
 
         public void Dispose()
         {

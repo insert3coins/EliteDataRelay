@@ -168,16 +168,20 @@ namespace EliteDataRelay
         {
             if (sender is not SessionTrackingService tracker) return;
 
-            if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
-            {
-                if (!CanInvoke()) return;
+            if (!CanInvoke()) return;
 
-                Invoke(new Action(() =>
+            Invoke(new Action(() =>
+            {
+                // Update the general session stats on the cargo overlay if enabled
+                if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
                 {
                     _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
-                    _cargoFormUI.UpdateMiningStats();
-                }));
-            }
+                }
+
+                // Always update the mining tab on the main UI and the dedicated mining overlay
+                _cargoFormUI.UpdateMiningStats();
+                _overlayService.UpdateMiningSession(tracker);
+            }));
         }
 
         private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
