@@ -71,6 +71,9 @@ namespace EliteDataRelay
             {
                 _lastBalance = e.Balance;
                 _cargoFormUI.UpdateBalance(e.Balance);
+
+                // Notify the session tracker of the new balance to update session stats.
+                _sessionTrackingService.UpdateBalance(e.Balance);
             }));
         }
 

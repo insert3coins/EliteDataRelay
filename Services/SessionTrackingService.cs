@@ -1,121 +1,96 @@
-using System;
-using System.Windows.Forms;
-using System.Linq;
 using EliteDataRelay.Models;
+using System;
 
 namespace EliteDataRelay.Services
 {
+    /// <summary>
+    /// Tracks statistics for a single play session, such as credits earned and cargo collected.
+    /// </summary>
     public class SessionTrackingService : IDisposable
     {
-        private readonly ICargoProcessorService _cargoProcessor;
-        private readonly IJournalWatcherService _journalWatcher;
-        private readonly System.Windows.Forms.Timer _timer;
+        private readonly ICargoProcessorService _cargoProcessorService;
+        private readonly IJournalWatcherService _journalWatcherService;
 
         private long _startingBalance;
-        private CargoSnapshot? _previousSnapshot;
-        private DateTime _sessionStartTime;
-        private bool _sessionActive;
+        private long _currentBalance;
+        private int _startingCargoCount;
+        private DateTime? _sessionStartTime;
 
-        public long CreditsEarned { get; private set; }
-        public long TotalCargoCollected { get; private set; }
-        public TimeSpan SessionDuration { get; private set; }
+        public bool IsSessionActive { get; private set; }
 
+        /// <summary>
+        /// The net credits earned or lost during the current session.
+        /// </summary>
+        public long CreditsEarned => IsSessionActive ? _currentBalance - _startingBalance : 0;
+
+        /// <summary>
+        /// The total amount of cargo units collected during the session.
+        /// </summary>
+        public int TotalCargoCollected { get; private set; }
+
+        /// <summary>
+        /// The duration of the current active session.
+        /// </summary>
+        public TimeSpan SessionDuration => IsSessionActive && _sessionStartTime.HasValue ? DateTime.UtcNow - _sessionStartTime.Value : TimeSpan.Zero;
+
+        /// <summary>
+        /// Fires whenever session data (like credits or cargo) is updated.
+        /// </summary>
         public event EventHandler? SessionUpdated;
 
-        public SessionTrackingService(ICargoProcessorService cargoProcessor, IJournalWatcherService journalWatcher)
+        public SessionTrackingService(ICargoProcessorService cargoProcessorService, IJournalWatcherService journalWatcherService)
         {
-            _cargoProcessor = cargoProcessor ?? throw new ArgumentNullException(nameof(cargoProcessor));
-            _journalWatcher = journalWatcher ?? throw new ArgumentNullException(nameof(journalWatcher));
-            _timer = new System.Windows.Forms.Timer { Interval = 1000 };
-            _timer.Tick += OnTimerTick;
+            _cargoProcessorService = cargoProcessorService;
+            _journalWatcherService = journalWatcherService;
         }
 
-        public void StartSession()
+        public void StartSession(long initialBalance, int initialCargoCount)
         {
-            if (_sessionActive) return;
+            if (IsSessionActive) return;
 
-            // Reset stats
-            CreditsEarned = 0;
+            _startingBalance = initialBalance;
+            _currentBalance = initialBalance;
+            _startingCargoCount = initialCargoCount;
             TotalCargoCollected = 0;
-            SessionDuration = TimeSpan.Zero;
-            _startingBalance = -1;
-            _previousSnapshot = null;
             _sessionStartTime = DateTime.UtcNow;
-            _sessionActive = true;
 
-            // Subscribe to events
-            _cargoProcessor.CargoProcessed += OnCargoProcessed;
-            _journalWatcher.BalanceChanged += OnBalanceChanged;
+            IsSessionActive = true;
 
-            _timer.Start();
+            // Subscribe to events now that the session is active
+            _journalWatcherService.CargoCollected += OnCargoCollected;
 
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void StopSession()
         {
-            if (!_sessionActive) return;
+            if (!IsSessionActive) return;
 
-            // Unsubscribe to prevent memory leaks
-            _cargoProcessor.CargoProcessed -= OnCargoProcessed;
-            _journalWatcher.BalanceChanged -= OnBalanceChanged;
-            _timer.Stop();
-            _sessionActive = false;
+            IsSessionActive = false;
+            _sessionStartTime = null;
+
+            // Unsubscribe from events
+            _journalWatcherService.CargoCollected -= OnCargoCollected;
         }
 
-        private void OnTimerTick(object? sender, EventArgs e)
+        /// <summary>
+        /// Updates the session's current credit balance.
+        /// </summary>
+        /// <param name="newBalance">The new total credit balance.</param>
+        public void UpdateBalance(long newBalance)
         {
-            SessionDuration = DateTime.UtcNow - _sessionStartTime;
+            if (!IsSessionActive) return;
+
+            _currentBalance = newBalance;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
+        private void OnCargoCollected(object? sender, CargoCollectedEventArgs e)
         {
-            if (_startingBalance == -1)
-            {
-                _startingBalance = e.Balance;
-            }
-
-            CreditsEarned = e.Balance - _startingBalance;
+            TotalCargoCollected += e.Quantity;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
-        {
-            var newSnapshot = e.Snapshot;
-
-            if (_previousSnapshot != null)
-            {
-                // Create dictionaries for quick lookups. Using OrdinalIgnoreCase for safety.
-                var newInventory = newSnapshot.Inventory.ToDictionary(i => i.Name, i => i.Count, StringComparer.OrdinalIgnoreCase);
-                var oldInventory = _previousSnapshot.Inventory.ToDictionary(i => i.Name, i => i.Count, StringComparer.OrdinalIgnoreCase);
-
-                foreach (var item in newInventory)
-                {
-                    // The internal name for limpets is 'drones'.
-                    if (item.Key.Equals("drones", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue; // Skip limpets, do not count them in session cargo.
-                    }
-
-                    oldInventory.TryGetValue(item.Key, out int oldCount);
-                    long newCount = item.Value;
-
-                    if (newCount > oldCount)
-                    {
-                        TotalCargoCollected += (newCount - oldCount);
-                    }
-                }
-            }
-
-            _previousSnapshot = newSnapshot;
-            SessionUpdated?.Invoke(this, EventArgs.Empty);
-        }
-
-        public void Dispose()
-        {
-            StopSession();
-            _timer.Dispose();
-        }
+        public void Dispose() => StopSession();
     }
 }

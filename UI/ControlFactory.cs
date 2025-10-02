@@ -15,9 +15,8 @@ namespace EliteDataRelay.UI
         public TabControl TabControl { get; private set; } = null!;
         public Button StartBtn { get; private set; } = null!;
         public Button StopBtn { get; private set; } = null!;
-        public Button ExitBtn { get; private set; } = null!;
-        public Button AboutBtn { get; private set; } = null!;
-        public Button TestBtn { get; private set; } = null!;
+        public Button ExitBtn { get; private set; } = null!;        
+        public Button AboutBtn { get; private set; } = null!;        
         public Button SessionBtn { get; private set; } = null!;
         public Button SettingsBtn { get; private set; } = null!;
         public Button WatchingLabel { get; private set; } = null!;

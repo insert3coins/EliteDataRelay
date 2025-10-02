@@ -74,6 +74,10 @@ namespace EliteDataRelay.Services
                         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         string? eventType = eventElement.GetString();
 
+                        if (eventType == "LoadGame")
+                        {
+                            ProcessLoadGameEvent(jsonDoc, journalLine, options);
+                        }
                         // Handle the case where we load into the game already docked.
                         // The 'Location' event will contain all the necessary station info.
                         if (eventType == "Location" &&
@@ -86,12 +90,6 @@ namespace EliteDataRelay.Services
                                 _lastDockedEventArgs = new DockedEventArgs(dockedEvent);
                                 Docked?.Invoke(this, _lastDockedEventArgs);
                             }
-                        }
-
-                        // We only care about location-changing events in this pass.
-                        if (eventType != "Location" && eventType != "FSDJump" && eventType != "CarrierJump")
-                        {
-                            continue;
                         }
 
                         if (jsonDoc.RootElement.TryGetProperty("StarSystem", out var starSystemElement) && starSystemElement.GetString() is string starSystem && !string.IsNullOrEmpty(starSystem))
@@ -149,13 +147,10 @@ namespace EliteDataRelay.Services
                         string? eventType = eventElement.GetString();
 
                         // Skip location events as they were handled in the first pass
-                        if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
+                        // Also skip LoadGame as it was handled in the first pass.
+                        if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump" || eventType == "LoadGame")
                         {
                             continue;
-                        }
-                        else if (eventType == "LoadGame")
-                        {
-                            ProcessLoadGameEvent(jsonDoc, journalLine, options);
                         }
                         else if (eventType == "Loadout")
                         {
@@ -171,10 +166,9 @@ namespace EliteDataRelay.Services
                             // We don't need to take action here, but acknowledging the event is useful for debugging.
                             Debug.WriteLine($"[JournalWatcherService] Detected module change event: {eventType}. Awaiting next Loadout.");
                         }
-                        else if (IsFinancialEvent(eventType))
+                        else if (eventType == "CollectCargo")
                         {
-                            // Process events that directly affect the player's credit balance.
-                            ProcessFinancialEvent(jsonDoc);
+                            CargoCollected?.Invoke(this, new CargoCollectedEventArgs(1));
                         }
                         else if (eventType == "Docked")
                         {
@@ -210,28 +204,6 @@ namespace EliteDataRelay.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"[JournalWatcherService] Error polling journal file: {ex}");
-            }
-        }
-
-        private bool IsFinancialEvent(string? eventType)
-        {
-            return eventType switch
-            {
-                "MarketSell" or "MissionCompleted" or "SellExplorationData" or "RedeemVoucher" or "PayFines" or "PayBounties" or "RebuyShip" or "SellDrones" => true,
-                _ => false,
-            };
-        }
-
-        private void ProcessFinancialEvent(JsonDocument jsonDoc)
-        {
-            // Most financial events have a 'Balance' property after the transaction.
-            if (jsonDoc.RootElement.TryGetProperty("Balance", out var balanceElement) && balanceElement.TryGetInt64(out var newBalance))
-            {
-                if (newBalance != _lastKnownBalance)
-                {
-                    _lastKnownBalance = newBalance;
-                    BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(_lastKnownBalance));
-                }
             }
         }
 

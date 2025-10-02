@@ -12,7 +12,7 @@ namespace EliteDataRelay.Services
             var loadGameEvent = JsonSerializer.Deserialize<LoadGameEvent>(journalLine, options);
             if (loadGameEvent == null) return;
 
-            // Check and update ship info
+            // Check and update commander name
             if (!string.IsNullOrEmpty(loadGameEvent.Commander) && loadGameEvent.Commander != _lastCommanderName)
             {
                 _lastCommanderName = loadGameEvent.Commander;
@@ -29,13 +29,6 @@ namespace EliteDataRelay.Services
             var shipName = loadGameEvent.ShipName;
             var shipIdent = loadGameEvent.ShipIdent;
             UpdateShipInformation(shipName, shipIdent, shipType, internalShipName);
-
-            // Also update the balance from the LoadGame event
-            if (loadGameEvent.Credits != _lastKnownBalance)
-            {
-                _lastKnownBalance = loadGameEvent.Credits;
-                BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(_lastKnownBalance));
-            }
         }
 
         private void ProcessLoadoutEvent(string journalLine, JsonSerializerOptions options)

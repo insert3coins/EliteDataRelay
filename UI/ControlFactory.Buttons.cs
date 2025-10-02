@@ -15,13 +15,12 @@ namespace EliteDataRelay.UI
             StartBtn = new Button { Text = "Start", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             StopBtn = new Button { Text = "Stop", Enabled = false, Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             ExitBtn = new Button { Text = "Exit", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
-            SettingsBtn = new Button { Text = "Settings", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
-            TestBtn = new Button { Text = "Test", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
+            SettingsBtn = new Button { Text = "Settings", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };            
             SessionBtn = new Button { Text = "Session", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             AboutBtn = new Button { Text = "About", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
 
             // Apply a modern, flat style to the buttons to make them "pop"
-            var buttonsToStyle = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn, TestBtn };
+            var buttonsToStyle = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn };
             foreach (var btn in buttonsToStyle)
             {
                 btn.FlatStyle = FlatStyle.Flat;
@@ -52,8 +51,7 @@ namespace EliteDataRelay.UI
             ToolTip.SetToolTip(StopBtn, "Stop monitoring for cargo changes");
             ToolTip.SetToolTip(ExitBtn, "Exit the application");
             ToolTip.SetToolTip(SettingsBtn, "Configure application settings");
-            ToolTip.SetToolTip(SessionBtn, "Show session summary statistics");
-            ToolTip.SetToolTip(TestBtn, "Test Twitch alerts and chat");
+            ToolTip.SetToolTip(SessionBtn, "Show session summary statistics");            
             ToolTip.SetToolTip(AboutBtn, "Show information about the application");
         }
 
@@ -71,7 +69,7 @@ namespace EliteDataRelay.UI
 
         private void DisposeButtons()
         {
-            var buttonsToUnsubscribe = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn, TestBtn };
+            var buttonsToUnsubscribe = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn };
             foreach (var btn in buttonsToUnsubscribe)
             {
                 ToolTip.SetToolTip(btn, null);

@@ -115,17 +115,6 @@ namespace EliteDataRelay.Configuration
             }
         }
 
-        public static void ClearTwitchCredentials()
-        {
-            _settings.TwitchUsername = string.Empty;
-            _settings.TwitchOAuthToken = string.Empty;
-            _settings.TwitchRefreshToken = string.Empty;
-            // We don't clear Client ID or Secret as they are not user-specific credentials.
-            // We can leave the channel name as it might be useful.
-            Save();
-            Debug.WriteLine("[AppConfiguration] Twitch credentials cleared.");
-        }
-
 
         /// <summary>
         /// A private class to hold all settings for easy serialization.

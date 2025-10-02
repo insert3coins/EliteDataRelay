@@ -49,6 +49,7 @@ namespace EliteDataRelay.Services
                     // Also handle balance changes to replace StatusWatcherService
                     if (statusEvent.Balance.HasValue && statusEvent.Balance.Value != _lastKnownBalance)
                     {
+                        Debug.WriteLine($"[JournalWatcherService] Balance changed. Old: {_lastKnownBalance}, New: {statusEvent.Balance.Value}. Firing event.");
                         _lastKnownBalance = statusEvent.Balance.Value;
                         BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(_lastKnownBalance));
                     }

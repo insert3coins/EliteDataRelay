@@ -84,6 +84,11 @@ namespace EliteDataRelay.Services
         public event EventHandler? InitialScanComplete;
 
         /// <summary>
+        /// Event raised when cargo is collected.
+        /// </summary>
+        public event EventHandler<CargoCollectedEventArgs>? CargoCollected;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;

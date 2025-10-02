@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -84,6 +84,11 @@ namespace EliteDataRelay
             _cargoFormUI.ExitClicked += OnExitClicked;
             _cargoFormUI.AboutClicked += OnAboutClicked;
             _cargoFormUI.SettingsClicked += OnSettingsClicked;
+
+            // The session button is now handled inside the settings form logic,
+            // but we can still handle it here if needed for other purposes.
+            // For now, we'll use the settings form to show it.
+            // If you want a dedicated button, you can re-add this.
             _cargoFormUI.SessionClicked += OnSessionClicked;
 
             // Timer to periodically check if the game process is still running

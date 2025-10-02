@@ -13,8 +13,8 @@ namespace EliteDataRelay.Services
     public class FileMonitoringService : IFileMonitoringService
     {
         private FileSystemWatcher? _watcher;
-        private readonly string _filePath;
-        private readonly string _fileDir;
+        private readonly string? _filePath;
+        private readonly string? _fileDir;
         private readonly string _fileName;
         private bool _isMonitoring;
         private System.Threading.Timer? _debounceTimer;
@@ -28,16 +28,18 @@ namespace EliteDataRelay.Services
         public FileMonitoringService(IJournalWatcherService journalWatcher)
         {
             _fileDir = journalWatcher.JournalDirectoryPath;
-            _fileName = "Cargo.json";
-            _filePath = Path.Combine(_fileDir, _fileName);
+            _fileName = "Cargo.json"; // The file we are interested in.
+
+            // Only set the full path if the directory is known.
+            if (!string.IsNullOrEmpty(_fileDir))
+            {
+                _filePath = Path.Combine(_fileDir, _fileName);
+            }
         }
 
         public void StartMonitoring()
         {
-            if (_isMonitoring)
-            {
-                return;
-            }
+            if (_isMonitoring || string.IsNullOrEmpty(_filePath)) return;
 
             _isMonitoring = true;
             Debug.WriteLine($"[FileMonitoringService] Starting monitoring for {_filePath}");
