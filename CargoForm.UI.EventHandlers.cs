@@ -82,52 +82,74 @@ namespace EliteDataRelay
             }
         }
 
-        // Applies settings changes that need to take effect immediately,
-        // such as hotkeys and overlay visibility.
+        /// <summary>
+        /// Applies settings changes that need to take effect immediately, such as hotkeys and overlay visibility.
+        /// </summary>
         private void ApplyLiveSettingsChanges()
         {
-            // Unregister any existing hotkeys before re-registering, to handle changes.
+            UpdateHotkeysFromSettings();
+
+            // If monitoring is active, we need to refresh services and UI.
+            if (_fileMonitoringService.IsMonitoring)
+            {
+                UpdateSessionTrackingFromSettings();
+                RefreshUIAndOverlays();
+            }
+            else
+            {
+                // If not monitoring, just update the main window visuals, which will hide any overlays.
+                _cargoFormUI.UpdateMonitoringVisuals(false);
+            }
+
+            // Always update button states regardless of monitoring status.
+            _cargoFormUI.SetButtonStates(
+                startEnabled: !_fileMonitoringService.IsMonitoring,
+                stopEnabled: _fileMonitoringService.IsMonitoring
+            );
+        }
+
+        /// <summary>
+        /// Registers or unregisters global hotkeys based on the current application settings.
+        /// </summary>
+        private void UpdateHotkeysFromSettings()
+        {
             UnregisterHotkeys();
             if (AppConfiguration.EnableHotkeys)
             {
                 RegisterHotkeys();
             }
+        }
 
-            // Update button states and monitoring visuals to reflect any changes.
-            _cargoFormUI.SetButtonStates(
-                startEnabled: !_fileMonitoringService.IsMonitoring,
-                stopEnabled: _fileMonitoringService.IsMonitoring
-            );
-
-            // If monitoring is active, we need to refresh everything.
-            if (_fileMonitoringService.IsMonitoring)
+        /// <summary>
+        /// Starts or stops the session tracking service based on the current application settings.
+        /// </summary>
+        private void UpdateSessionTrackingFromSettings()
+        {
+            if (AppConfiguration.EnableSessionTracking)
             {
-                _cargoFormUI.UpdateMonitoringVisuals(true);
-                // Handle session tracking state change. If the user just enabled it,
-                // we need to start the service. If they disabled it, we stop it.
-                if (AppConfiguration.EnableSessionTracking)
-                {
-                    var initialCargo = _lastCargoSnapshot?.Count ?? 0;
-                    _sessionTrackingService.StartSession(_lastBalance ?? 0, initialCargo);
-                }
-                else
-                {
-                    _sessionTrackingService.StopSession();
-                }
-
-                // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
-                // windows have fully processed their creation messages and are ready to be
-                // updated before we try to send them data, preventing a race condition.
-                this.BeginInvoke(new Action(RepopulateOverlay));
-
-                // Also force a session update to ensure the mining overlay is recreated if it was closed.
-                OnSessionUpdated(_sessionTrackingService, EventArgs.Empty);
+                var initialCargo = _lastCargoSnapshot?.Count ?? 0;
+                _sessionTrackingService.StartSession(_lastBalance ?? 0, initialCargo);
             }
             else
             {
-                // If not monitoring, just update the visuals which will hide any overlays.
-                _cargoFormUI.UpdateMonitoringVisuals(false);
+                _sessionTrackingService.StopSession();
             }
+        }
+
+        /// <summary>
+        /// Refreshes the main UI visuals and repopulates all overlays with the latest data.
+        /// </summary>
+        private void RefreshUIAndOverlays()
+        {
+            _cargoFormUI.UpdateMonitoringVisuals(true);
+
+            // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
+            // windows have fully processed their creation messages and are ready to be
+            // updated before we try to send them data, preventing a race condition.
+            this.BeginInvoke(new Action(RepopulateOverlay));
+
+            // Also force a session update to ensure the mining overlay is created/destroyed as needed.
+            OnSessionUpdated(_sessionTrackingService, EventArgs.Empty);
         }
 
         private void OnSessionClicked(object? sender, EventArgs e)

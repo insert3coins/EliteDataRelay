@@ -47,43 +47,33 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.UpdateSessionCargoCollected(cargo);
         }
 
-        public void UpdateMiningSession(SessionTrackingService tracker)
+        public void ManageMiningOverlay(SessionTrackingService tracker)
         {
             bool shouldBeVisible = AppConfiguration.EnableMiningOverlay && tracker.IsMiningSessionActive;
 
-            if (shouldBeVisible)
+            if (shouldBeVisible && _miningOverlayForm == null)
             {
-                if (_miningOverlayForm == null)
-                {
-                    var newMiningOverlay = new OverlayForm(OverlayForm.OverlayPosition.MiningSession, AppConfiguration.AllowOverlayDrag);
-                    newMiningOverlay.PositionChanged += OnOverlayPositionChanged;
+                // Create and show the form
+                _miningOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.MiningSession, AppConfiguration.AllowOverlayDrag);
+                _miningOverlayForm.PositionChanged += OnOverlayPositionChanged;
 
-                    var primaryScreen = Screen.PrimaryScreen;
-                    if (primaryScreen == null)
-                    {
-                        // Cannot position the overlay without a screen.
-                        return;
-                    }
-                    var screen = primaryScreen.WorkingArea;
-                    const int screenEdgePadding = 20;
-
-                    // Calculate default position for the bottom-right corner.
-                    int xPos = screen.Width - newMiningOverlay.Width - screenEdgePadding; // Right side
-                    int yPos = screenEdgePadding; // Top side
-
-                    var defaultLocation = new Point(xPos, yPos);
-                    newMiningOverlay.Location = AppConfiguration.MiningOverlayLocation != Point.Empty ? AppConfiguration.MiningOverlayLocation : defaultLocation;
-                    newMiningOverlay.Show();
-
-                    _miningOverlayForm = newMiningOverlay;
-                }
-                _miningOverlayForm.UpdateMiningSession(tracker);
+                // Position and show
+                PositionMiningOverlay();
+                _miningOverlayForm.Show();
             }
-            else
+            else if (!shouldBeVisible && _miningOverlayForm != null)
             {
-                _miningOverlayForm?.Close();
+                // Close and dispose the form
+                _miningOverlayForm.Close();
                 _miningOverlayForm = null;
             }
+        }
+
+        public void UpdateMiningSession(SessionTrackingService tracker)
+        {
+            // This method is now only responsible for updating the data on an existing form.
+            // The creation and visibility are handled by ManageMiningOverlay.
+            _miningOverlayForm?.UpdateMiningSession(tracker);
         }
 
         public void UpdateSystemInfo(SystemInfoData data) { }
