@@ -69,7 +69,7 @@ namespace EliteDataRelay.UI
 
         private void DisposeButtons()
         {
-            var buttonsToUnsubscribe = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn };
+            var buttonsToUnsubscribe = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn};
             foreach (var btn in buttonsToUnsubscribe)
             {
                 ToolTip.SetToolTip(btn, null);

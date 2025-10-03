@@ -13,6 +13,7 @@ namespace EliteDataRelay.UI
         public Label ShipIdentLabel { get; private set; } = null!;
         public TreeView ShipModulesTreeView { get; private set; } = null!;
         public TabControl TabControl { get; private set; } = null!;
+        public MiningSessionPanel MiningSessionPanel { get; private set; } = null!;
         public Button StartBtn { get; private set; } = null!;
         public Button StopBtn { get; private set; } = null!;
         public Button ExitBtn { get; private set; } = null!;        
@@ -26,10 +27,10 @@ namespace EliteDataRelay.UI
         public Button ShipLabel { get; private set; } = null!;
         public Button BalanceLabel { get; private set; } = null!;
         public ToolTip ToolTip { get; private set; } = null!;
-        public MiningStatsControl MiningStatsControl { get; private set; } = null!;
 
         public ControlFactory(FontManager fontManager, Services.SessionTrackingService sessionTracker, CargoFormUI cargoFormUI)
         {
+            _cargoFormUI = cargoFormUI;
             _cargoFormUI = cargoFormUI; // This was missing
 
             CreateTabControls(fontManager, sessionTracker);
@@ -42,6 +43,7 @@ namespace EliteDataRelay.UI
         {
             DisposeButtons();
             DisposeTabControls();
+            DisposeMiningTabControls();
             DisposeLabels();
         }
     }

@@ -165,7 +165,7 @@ namespace EliteDataRelay.UI
             _form.Text = $"{_baseTitle} - Location: {_currentLocation}";
         }
 
-        private void DisplayWelcomeMessage()
+        public void DisplayWelcomeMessage()
         {
             if (_controlFactory == null) return;
             var listView = _controlFactory.ListView;
@@ -180,7 +180,7 @@ namespace EliteDataRelay.UI
             // will handle the initial layout adjustment.
             _controlFactory.CargoHeaderLabel.Text = "Cargo: 0";
         }
-        private void AdjustMessageColumnLayout()
+        public void AdjustMessageColumnLayout()
         {
             if (_controlFactory == null) return;
             var listView = _controlFactory.ListView;
@@ -190,7 +190,7 @@ namespace EliteDataRelay.UI
             listView.Columns[2].Width = 0;
         }
 
-        private void RestoreDataColumnLayout()
+        public void RestoreDataColumnLayout()
         {
             if (_controlFactory == null) return;
             var listView = _controlFactory.ListView;

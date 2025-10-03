@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -92,6 +92,9 @@ namespace EliteDataRelay
             // For now, we'll use the settings form to show it.
             // If you want a dedicated button, you can re-add this.
             _cargoFormUI.SessionClicked += OnSessionClicked;
+
+            _cargoFormUI.MiningStartClicked += OnMiningStartClicked;
+            _cargoFormUI.MiningStopClicked += OnMiningStopClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer

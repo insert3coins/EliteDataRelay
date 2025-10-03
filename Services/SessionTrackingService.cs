@@ -71,6 +71,11 @@ namespace EliteDataRelay.Services
         /// A dictionary of commodities refined during this session and their quantities.
         /// </summary>
         public IReadOnlyDictionary<string, int> RefinedCommodities => _refinedCommodities;
+
+        /// <summary>
+        /// The total number of tons of all commodities refined during this session.
+        /// </summary>
+        public int TotalRefinedCount => _refinedCommodities.Values.Sum();
         #endregion
 
         /// <summary>

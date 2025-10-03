@@ -37,6 +37,10 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SessionClicked;
 
+        public event EventHandler? MiningStartClicked;
+
+        public event EventHandler? MiningStopClicked;
+
         public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService)
         {
             _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
@@ -69,7 +73,7 @@ namespace EliteDataRelay.UI
             InitializeShipTab(); // This was the missing call
         }
 
-        private void OnFormLoad(object? sender, EventArgs e)
+        public void OnFormLoad(object? sender, EventArgs e)
         {
             // The form is now loaded and has its final initial size.
             // We can now correctly adjust the column widths for the welcome message.
@@ -143,6 +147,8 @@ namespace EliteDataRelay.UI
             _controlFactory.SettingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
             _controlFactory.SessionBtn.Click += (s, e) => SessionClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
+            _controlFactory.MiningSessionPanel.StartMiningClicked += OnMiningStartClicked;
+            _controlFactory.MiningSessionPanel.StopMiningClicked += OnMiningStopClicked;
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -154,12 +160,12 @@ namespace EliteDataRelay.UI
             }
         }
 
-        private void OnShowApplication(object? sender, EventArgs e)
+        public void OnShowApplication(object? sender, EventArgs e)
         {
             ShowForm();
         }
 
-        private void ShowForm()
+        public void ShowForm()
         {
             if (_form == null) return;
 
@@ -167,6 +173,10 @@ namespace EliteDataRelay.UI
             _form.WindowState = FormWindowState.Normal;
             _form.Activate();
         }
+
+        public void OnMiningStartClicked(object? sender, EventArgs e) => MiningStartClicked?.Invoke(sender, e);
+
+        public void OnMiningStopClicked(object? sender, EventArgs e) => MiningStopClicked?.Invoke(sender, e);
 
         public void UpdateSystemInfo(SystemInfoData data)
         {
@@ -180,7 +190,7 @@ namespace EliteDataRelay.UI
 
         public void UpdateMiningStats()
         {
-            _controlFactory?.MiningStatsControl?.UpdateLabels();
+            _controlFactory?.MiningSessionPanel?.UpdateStats();
         }
 
         public void Dispose()

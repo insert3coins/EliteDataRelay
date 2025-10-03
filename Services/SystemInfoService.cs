@@ -21,8 +21,9 @@ namespace EliteDataRelay.Services
 
         private readonly IJournalWatcherService _journalWatcher;
         private bool _isStarted;
-        private SystemInfoData? _lastSystemInfo;
-        private CancellationTokenSource? _cancellationTokenSource;
+        private SystemInfoData? _lastSystemInfo; // Stores the last successfully fetched system info
+        private CancellationTokenSource? _fetchCancellationTokenSource; // Manages cancellation for the actual API fetch
+        private CancellationTokenSource? _debounceCancellationTokenSource; // Manages cancellation for the debounce delay
 
         public event EventHandler<SystemInfoData>? SystemInfoUpdated;
 
@@ -51,32 +52,50 @@ namespace EliteDataRelay.Services
         {
             if (!_isStarted) return;
             // Cancel any pending operations when stopping the service.
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
+            _debounceCancellationTokenSource?.Cancel();
+            _fetchCancellationTokenSource?.Cancel();
+
             _journalWatcher.LocationChanged -= OnLocationChanged;
             _isStarted = false;
         }
 
         private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
-            // We want to fetch data if it's a new system OR if this is the very first location event
-            // we've received since starting. The `_lastSystemInfo` will be null in that case.
-            // This ensures we populate the overlay on startup.
             if (e.IsNewSystem || _lastSystemInfo == null)
             {
+                // Always cancel any previous debounce operation
+                _debounceCancellationTokenSource?.Cancel(); // Cancel previous debounce
+                _debounceCancellationTokenSource = new CancellationTokenSource();
+                var currentDebounceToken = _debounceCancellationTokenSource.Token;
+
                 try
                 {
-                    // Cancel any previously running fetch operation.
-                    _cancellationTokenSource?.Cancel();
-                    _cancellationTokenSource = new CancellationTokenSource();
-                    var token = _cancellationTokenSource.Token;
+                    // If it's the very first fetch, don't debounce.
+                    // Otherwise, debounce to avoid excessive API calls during rapid jumps.
+                    if (_lastSystemInfo != null)
+                    {
+                        await Task.Delay(500, currentDebounceToken); // Debounce for 500ms
+                    }
 
-                    var systemInfo = await FetchSystemInfoAsync(e.StarSystem, token) ?? new SystemInfoData { SystemName = e.StarSystem };
+                    // If we reach here, either it's the first fetch or the debounce completed.
+                    // Cancel any *previous* actual fetch operation.
+                    _fetchCancellationTokenSource?.Cancel(); // Cancel previous fetch
+                    _fetchCancellationTokenSource = new CancellationTokenSource();
+                    var currentFetchToken = _fetchCancellationTokenSource.Token;
+
+                    var systemInfo = await FetchSystemInfoAsync(e.StarSystem, currentFetchToken) ?? new SystemInfoData { SystemName = e.StarSystem };
                     _lastSystemInfo = systemInfo;
                     SystemInfoUpdated?.Invoke(this, systemInfo);
                 }
-                catch (OperationCanceledException) { /* This is expected if a new jump happens, so we can ignore it. */ }
+                catch (OperationCanceledException ex)
+                {
+                    // This is expected. We only want to log a message if the *fetch* was cancelled,
+                    // not if the *debounce delay* was cancelled.
+                    if (_fetchCancellationTokenSource != null && ex.CancellationToken == _fetchCancellationTokenSource.Token)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SystemInfoService] System info fetch for '{e.StarSystem}' cancelled.");
+                    }
+                }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Error fetching system info: {ex.Message}");
@@ -166,8 +185,16 @@ namespace EliteDataRelay.Services
 
         public void Dispose()
         {
+            // First, stop listening to new events.
             Stop();
-            _cancellationTokenSource?.Dispose();
+
+            // Signal any ongoing async operations to cancel.
+            _fetchCancellationTokenSource?.Cancel();
+            _debounceCancellationTokenSource?.Cancel();
+
+            // Now, dispose of the resources.
+            _fetchCancellationTokenSource?.Dispose();
+            _debounceCancellationTokenSource?.Dispose();
         }
     }
 }

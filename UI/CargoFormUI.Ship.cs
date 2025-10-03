@@ -19,7 +19,7 @@ namespace EliteDataRelay.UI
         private readonly Color _darkOrangeColor = Color.FromArgb(153, 61, 0);
         private readonly Color _lightOrangeColor = Color.FromArgb(255, 153, 68);
 
-        private void InitializeShipTab()
+        public void InitializeShipTab()
         {
             // The ShipWireframeDrawer is no longer used.
             // The PictureBox is now updated directly with an image.

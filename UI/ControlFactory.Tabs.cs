@@ -18,15 +18,7 @@ namespace EliteDataRelay.UI
 
             var cargoPage = CreateCargoTabPage(fontManager);
             var shipPage = CreateShipTabPage(fontManager);
-            var miningPage = new TabPage("Mining");
-
-            MiningStatsControl = new MiningStatsControl(sessionTracker)
-            {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(15)
-            };
-
-            miningPage.Controls.Add(MiningStatsControl);
+            var miningPage = CreateMiningTabPage(fontManager, sessionTracker);
 
             TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage });
         }
