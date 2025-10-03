@@ -213,8 +213,9 @@ namespace EliteDataRelay.Services
                 _limpetsUsed += _lastLimpetCount - currentLimpetCount;
                 sessionWasUpdated = true;
             }
-            // Update the last known count for the next comparison.
+
             _lastLimpetCount = currentLimpetCount;
+
             // --- End of New Limpet Tracking Logic ---
 
             // --- Pending Refined Commodity Logic ---
@@ -234,6 +235,7 @@ namespace EliteDataRelay.Services
                         }
 
                         _refinedCommodities[commodityName] = _refinedCommodities.GetValueOrDefault(commodityName) + 1;
+                        TotalCargoCollected++; // Increment the total session cargo count
                         sessionWasUpdated = true;
                     }
                 }

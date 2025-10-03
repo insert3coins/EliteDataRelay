@@ -50,6 +50,7 @@ namespace EliteDataRelay
 
         private int? _cargoCapacity;
         private bool _isExiting;
+        private bool _isInitializing;
         private SessionSummaryForm? _sessionSummaryForm;
 
         // Cache for last known values to re-populate the overlay when it's restarted.

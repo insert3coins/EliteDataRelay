@@ -36,6 +36,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Images\Ships\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
   </ItemGroup>
 

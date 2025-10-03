@@ -21,11 +21,15 @@ namespace EliteDataRelay.Services
             }
 
             // Get the internal ship name first, as it's not in the strongly-typed model.
-            string? internalShipName = jsonDoc.RootElement.TryGetProperty("Ship", out var shipProp) ? shipProp.GetString() : null;
+    var root = jsonDoc.RootElement;
+    string? internalShipName = root.TryGetProperty("Ship", out var shipProp) ? shipProp.GetString() : null;
+
+    // The ship type is in "Ship_Localised". If it's missing, fall back to the last known type.
+    string? shipType = root.TryGetProperty("Ship_Localised", out var shipLocProp) ? shipLocProp.GetString() : _lastShipType;
 
             var shipName = loadGameEvent.ShipName;
             var shipIdent = loadGameEvent.ShipIdent;
-            UpdateShipInformation(shipName, shipIdent, _lastShipType, internalShipName);
+    UpdateShipInformation(shipName, shipIdent, shipType, internalShipName);
         }
 
         private void ProcessLoadoutEvent(string journalLine, JsonSerializerOptions options)

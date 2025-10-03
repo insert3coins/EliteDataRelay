@@ -21,21 +21,21 @@ namespace EliteDataRelay
             // This event is raised from a background thread, so we must invoke on the UI thread.
             Invoke(new Action(() =>
             {
-                _lastCargoSnapshot = e.Snapshot;
-                // --- File Output ---
-                if (AppConfiguration.EnableFileOutput)
+                _lastCargoSnapshot = e.Snapshot; // Always cache the latest data
+
+                // Only update the UI if we are not in the middle of the initial scan
+                if (!_isInitializing)
                 {
-                    _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+                    // --- File Output ---
+                    if (AppConfiguration.EnableFileOutput)
+                    {
+                        _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
+                    }
+
+                    _cargoFormUI.UpdateCargoHeader(e.Snapshot.Count, _cargoCapacity);
+                    _cargoFormUI.UpdateCargoList(e.Snapshot);
+                    _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
                 }
-
-                // Update the header label in the button panel
-                _cargoFormUI.UpdateCargoHeader(e.Snapshot.Count, _cargoCapacity);
-
-                // Update the main window display with the new list view
-                _cargoFormUI.UpdateCargoList(e.Snapshot);
-
-                // Update the visual cargo size indicator
-                _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
             }));
         }
 
@@ -43,24 +43,27 @@ namespace EliteDataRelay
         {
             // This event can be raised from a background thread.
             _cargoCapacity = e.CargoCapacity;
-
-            // After updating capacity, we must invoke on the UI thread to update the display.
-            // This ensures the UI reflects the new capacity immediately.
-            if (!CanInvoke()) return;
-
-            Invoke(new Action(() =>
+            
+            // Only update the UI if we are not in the middle of the initial scan
+            if (!_isInitializing)
             {
-                if (_lastCargoSnapshot != null)
+                // After updating capacity, we must invoke on the UI thread to update the display.
+                // This ensures the UI reflects the new capacity immediately.
+                if (!CanInvoke()) return;
+
+                Invoke(new Action(() =>
                 {
-                    _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
-                    _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
-                }
-                else
-                {
-                    // If we don't have cargo data yet, just update the header with 0 count.
-                    _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
-                }
-            }));
+                    if (_lastCargoSnapshot != null)
+                    {
+                        _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
+                        _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
+                    }
+                    else
+                    {
+                        _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
+                    }
+                }));
+            }
         }
 
         private void OnBalanceChanged(object? sender, BalanceChangedEventArgs e)
@@ -71,10 +74,13 @@ namespace EliteDataRelay
             Invoke(new Action(() =>
             {
                 _lastBalance = e.Balance;
-                _cargoFormUI.UpdateBalance(e.Balance);
+                if (!_isInitializing)
+                {
+                    _cargoFormUI.UpdateBalance(e.Balance);
 
-                // Notify the session tracker of the new balance to update session stats.
-                _sessionTrackingService.UpdateBalance(e.Balance);
+                    // Notify the session tracker of the new balance to update session stats.
+                    _sessionTrackingService.UpdateBalance(e.Balance);
+                }
             }));
         }
 
@@ -86,7 +92,10 @@ namespace EliteDataRelay
             Invoke(new Action(() =>
             {
                 _lastCommanderName = e.CommanderName;
-                _cargoFormUI.UpdateCommanderName(e.CommanderName);
+                if (!_isInitializing)
+                {
+                    _cargoFormUI.UpdateCommanderName(e.CommanderName);
+                }
             }));
         }
 
@@ -102,14 +111,17 @@ namespace EliteDataRelay
                 _lastShipType = e.ShipType;
                 _lastInternalShipName = e.InternalShipName;
 
-                // If we have a loadout, this is the most reliable time to update the ship UI,
-                // as it avoids being overwritten by other events like CargoProcessed.
-                if (_lastLoadout != null) 
+                if (!_isInitializing)
                 {
-                    _cargoFormUI.UpdateShipLoadout(_lastLoadout); // This call is now correct
-                    Trace.WriteLine($"[CargoForm] OnShipInfoChanged: Called UpdateShipLoadout with cached loadout for ship ID {_lastLoadout.ShipId}.");
+                    // If we have a loadout, this is the most reliable time to update the ship UI,
+                    // as it avoids being overwritten by other events like CargoProcessed.
+                    if (_lastLoadout != null)
+                    {
+                        _cargoFormUI.UpdateShipLoadout(_lastLoadout); // This call is now correct
+                        Trace.WriteLine($"[CargoForm] OnShipInfoChanged: Called UpdateShipLoadout with cached loadout for ship ID {_lastLoadout.ShipId}.");
+                    }
+                    _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName); // Pass internal name
                 }
-                _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName); // Pass internal name
             }));
         }
 
@@ -132,18 +144,22 @@ namespace EliteDataRelay
                 // We clear the cargo display and wait for the next 'Cargo' event.
                 if (_lastShipId.HasValue && newShipId != _lastShipId.Value)
                 {
-                    _lastCargoSnapshot = null;
-                    _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
-                    var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
-                    _cargoFormUI.UpdateCargoList(emptySnapshot);
-                    _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
+                    if (!_isInitializing)
+                    {
+                        _lastCargoSnapshot = null;
+                        _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
+                        var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
+                        _cargoFormUI.UpdateCargoList(emptySnapshot);
+                        _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
+                    }
                 }
 
                 _lastShipId = newShipId;
 
-                // Directly update the ship UI to ensure it reflects the latest loadout,
-                // preventing other UI events from leaving it in a stale state.
-                _cargoFormUI.UpdateShipLoadout(loadout);
+                if (!_isInitializing)
+                {
+                    _cargoFormUI.UpdateShipLoadout(loadout);
+                }
             }));
         }
 
@@ -157,8 +173,14 @@ namespace EliteDataRelay
             
             Invoke(new Action(() =>
             {
-                System.Diagnostics.Debug.WriteLine("[CargoForm] Journal initial scan complete. Re-reading cargo file to ensure sync.");
-                _ = _cargoProcessorService.ProcessCargoFile(force: true);
+                Debug.WriteLine("[CargoForm] Journal initial scan complete. Performing full UI refresh.");
+                _isInitializing = false; // Initial scan is done, allow normal UI updates now.
+
+                // Now that all initial data is cached, update the entire UI at once.
+                RefreshAllUIData();
+
+                // Finally, force a re-read of the cargo file to ensure it's perfectly in sync.
+                _ = _cargoProcessorService.ProcessCargoFile(force: true); // The result will update the UI via OnCargoProcessed
             }));
         }
 
@@ -171,7 +193,10 @@ namespace EliteDataRelay
             Invoke(new Action(() =>
             {
                 _lastStatus = e.Status;
-                _cargoFormUI.UpdateShipStatus(e.Status);
+                if (!_isInitializing)
+                {
+                    _cargoFormUI.UpdateShipStatus(e.Status);
+                }
             }));
         }
 
@@ -183,15 +208,17 @@ namespace EliteDataRelay
 
             Invoke(new Action(() =>
             {
-                // Update the general session stats on the cargo overlay if enabled
-                if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+                if (!_isInitializing)
                 {
-                    _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
-                }
+                    // Update the general session stats on the cargo overlay if enabled
+                    if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+                    {
+                        _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
+                    }
 
-                // Always update the mining tab on the main UI and the dedicated mining overlay
-                _cargoFormUI.UpdateMiningStats();
-                _overlayService.UpdateMiningSession(tracker);
+                    // Always update the mining tab on the main UI and the dedicated mining overlay
+                    _cargoFormUI.UpdateMiningStats();
+                }
             }));
         }
 
@@ -203,7 +230,10 @@ namespace EliteDataRelay
 
             Invoke(new Action(() =>
             {
-                _cargoFormUI.UpdateLocation(_lastLocation);
+                if (!_isInitializing)
+                {
+                    _cargoFormUI.UpdateLocation(_lastLocation);
+                }
             }));
         }
 
@@ -215,7 +245,10 @@ namespace EliteDataRelay
             Invoke(new Action(() =>
             {
                 _lastStationInfoData = e;
-                _cargoFormUI.UpdateStationInfo(e);
+                if (!_isInitializing)
+                {
+                    _cargoFormUI.UpdateStationInfo(e);
+                }
             }));
         }
 
@@ -226,8 +259,11 @@ namespace EliteDataRelay
 
             Invoke(new Action(() =>
             {
-                // _lastSystemInfoData = e;
-                _cargoFormUI.UpdateSystemInfo(e); // This call is preserved for future use
+                if (!_isInitializing)
+                {
+                    // _lastSystemInfoData = e;
+                    _cargoFormUI.UpdateSystemInfo(e); // This call is preserved for future use
+                }
             }));
         }
 

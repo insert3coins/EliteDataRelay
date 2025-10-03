@@ -62,8 +62,6 @@ namespace EliteDataRelay.Services
                 AppConfiguration.CargoOverlayLocation = newLocation;
             else if (sender == _shipIconOverlayForm)
                 AppConfiguration.ShipIconOverlayLocation = newLocation;
-            else if (sender == _miningOverlayForm)
-                AppConfiguration.MiningOverlayLocation = newLocation;
 
             AppConfiguration.Save();
         }

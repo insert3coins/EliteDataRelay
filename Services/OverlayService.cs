@@ -13,7 +13,6 @@ namespace EliteDataRelay.Services
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
         private OverlayForm? _shipIconOverlayForm;
-        private OverlayForm? _miningOverlayForm;
 
         public void Start()
         {
@@ -69,12 +68,10 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
             _shipIconOverlayForm?.Close();
-            _miningOverlayForm?.Close();
 
             _leftOverlayForm = null;
             _rightOverlayForm = null;
             _shipIconOverlayForm = null;
-            _miningOverlayForm = null;
         }
 
         public void Show()
@@ -82,7 +79,6 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
-            _miningOverlayForm?.Show();
         }
 
         public void Hide()
@@ -90,7 +86,6 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
             _shipIconOverlayForm?.Hide();
-            _miningOverlayForm?.Hide();
         }
 
         /// <summary>
@@ -105,7 +100,6 @@ namespace EliteDataRelay.Services
                 OverlayForm.OverlayPosition.Info => _leftOverlayForm,
                 OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
                 OverlayForm.OverlayPosition.ShipIcon => _shipIconOverlayForm,
-                OverlayForm.OverlayPosition.MiningSession => _miningOverlayForm,
                 _ => null
             };
         }

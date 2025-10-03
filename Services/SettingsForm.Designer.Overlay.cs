@@ -40,17 +40,10 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
-            _chkEnableMiningOverlay = new CheckBox
-            {
-                Text = "Enable mining session overlay",
-                Location = new Point(15, 95),
-                AutoSize = true
-            };
-
             _chkShowSessionOnOverlay = new CheckBox
             {
                 Text = "Show session stats on cargo overlay",
-                Location = new Point(15, 180),
+                Location = new Point(15, 95),
                 AutoSize = true
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
@@ -68,7 +61,6 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableShipIconOverlay);
-            _grpOverlaySettings.Controls.Add(_chkEnableMiningOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 

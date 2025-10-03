@@ -6,22 +6,22 @@ namespace EliteDataRelay
     {
         #region Monitoring Control
 
-        private void RepopulateOverlay()
+        private void RefreshAllUIData()
         {
-            // Re-populate the UI (and the new overlay) with the last known data.
+            // Populate the entire UI with the last known data.
             if (_lastCommanderName != null) _cargoFormUI.UpdateCommanderName(_lastCommanderName);
             if (_lastShipName != null && _lastShipIdent != null && _lastShipType != null && _lastInternalShipName != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName);
             if (_lastBalance.HasValue) _cargoFormUI.UpdateBalance(_lastBalance.Value);
             if (_lastLocation != null) _cargoFormUI.UpdateLocation(_lastLocation);
+            if (_lastLoadout != null) _cargoFormUI.UpdateShipLoadout(_lastLoadout);
             if (_lastCargoSnapshot != null)
             {
                 _cargoFormUI.UpdateCargoList(_lastCargoSnapshot);
                 _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
-            
-            // Also repopulate system and station info
-            // if (_lastSystemInfoData != null) _cargoFormUI.UpdateSystemInfo(_lastSystemInfoData);
+
+            // Also populate system and station info
             if (_lastStationInfoData != null) _cargoFormUI.UpdateStationInfo(_lastStationInfoData);
 
             // Also repopulate session data if tracking is active and shown on the overlay.
@@ -33,6 +33,9 @@ namespace EliteDataRelay
 
         private void StartMonitoring()
         {
+            // Set a flag to prevent piecemeal UI updates during the initial scan.
+            _isInitializing = true;
+
             // Play start sound
             _soundService.PlayStartSound();
 

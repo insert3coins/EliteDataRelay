@@ -118,7 +118,7 @@ namespace EliteDataRelay
                 // Use BeginInvoke to queue the repopulation. This ensures that the new overlay
                 // windows have fully processed their creation messages and are ready to be
                 // updated before we try to send them data, preventing a race condition.
-                this.BeginInvoke(new Action(RepopulateOverlay));
+                this.BeginInvoke(new Action(RefreshAllUIData));
 
                 // Also force a session update to ensure the mining overlay is recreated if it was closed.
                 OnSessionUpdated(_sessionTrackingService, EventArgs.Empty);

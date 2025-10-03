@@ -49,10 +49,10 @@ namespace EliteDataRelay.UI
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 2,
-                Padding = new Padding(0, 0, 10, 0)
+                Padding = new Padding(0, 0, 0, 0)
             };
-            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 60F)); // Give less space to wireframe
-            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 40F)); // Give more space to stats
+            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70F)); // Give more space to wireframe
+            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 30F)); // Give less space to stats
 
             // Ship Wireframe
             ShipWireframePictureBox = new PictureBox

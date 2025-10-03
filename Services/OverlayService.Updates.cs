@@ -47,45 +47,6 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.UpdateSessionCargoCollected(cargo);
         }
 
-        public void UpdateMiningSession(SessionTrackingService tracker)
-        {
-            bool shouldBeVisible = AppConfiguration.EnableMiningOverlay && tracker.IsMiningSessionActive;
-
-            if (shouldBeVisible)
-            {
-                if (_miningOverlayForm == null)
-                {
-                    var newMiningOverlay = new OverlayForm(OverlayForm.OverlayPosition.MiningSession, AppConfiguration.AllowOverlayDrag);
-                    newMiningOverlay.PositionChanged += OnOverlayPositionChanged;
-
-                    var primaryScreen = Screen.PrimaryScreen;
-                    if (primaryScreen == null)
-                    {
-                        // Cannot position the overlay without a screen.
-                        return;
-                    }
-                    var screen = primaryScreen.WorkingArea;
-                    const int screenEdgePadding = 20;
-
-                    // Calculate default position for the bottom-right corner.
-                    int xPos = screen.Width - newMiningOverlay.Width - screenEdgePadding; // Right side
-                    int yPos = screenEdgePadding; // Top side
-
-                    var defaultLocation = new Point(xPos, yPos);
-                    newMiningOverlay.Location = AppConfiguration.MiningOverlayLocation != Point.Empty ? AppConfiguration.MiningOverlayLocation : defaultLocation;
-                    newMiningOverlay.Show();
-
-                    _miningOverlayForm = newMiningOverlay;
-                }
-                _miningOverlayForm.UpdateMiningSession(tracker);
-            }
-            else
-            {
-                _miningOverlayForm?.Close();
-                _miningOverlayForm = null;
-            }
-        }
-
         public void UpdateSystemInfo(SystemInfoData data) { }
         public void UpdateStationInfo(StationInfoData data) { }
 

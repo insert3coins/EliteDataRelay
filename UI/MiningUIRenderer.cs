@@ -23,26 +23,20 @@ namespace EliteDataRelay.UI
             // Header
             DrawHeader(g, mainRect);
 
-            // Main profit display - larger and more prominent
-            Rectangle profitRect = new Rectangle(mainRect.X + 30, mainRect.Y + 100, mainRect.Width - 60, 100);
-            DrawStatBox(g, profitRect, "◢ TOTAL MINING PROFIT ◣", $"{data.MiningProfit:N0} CR", true);
-
             // Stats grid - 2x2 layout with better spacing
-            int statY = profitRect.Bottom + 30;
+            int statY = mainRect.Y + 130;
             int statWidth = (mainRect.Width - 90) / 2;
             int statHeight = 100;
             int gap = 30;
 
             DrawStatBox(g, new Rectangle(mainRect.X + 30, statY, statWidth, statHeight),
                 "▸ LIMPETS USED", $"{data.LimpetsUsed} units", false);
+
+            DrawStatBox(g, new Rectangle(mainRect.X + 30, statY + statHeight + gap, statWidth, statHeight),
+                "▸ DURATION", $"{data.Duration.Hours}:{data.Duration.Minutes:D2} h", false);
+
             DrawStatBox(g, new Rectangle(mainRect.X + 30 + statWidth + gap, statY, statWidth, statHeight),
                 "▸ REFINED", $"{data.TonsRefined} tons", false);
-
-            statY += statHeight + gap;
-            DrawStatBox(g, new Rectangle(mainRect.X + 30, statY, statWidth, statHeight),
-                "▸ DURATION", $"{data.Duration.Hours}:{data.Duration.Minutes:D2} h", false);
-            DrawStatBox(g, new Rectangle(mainRect.X + 30 + statWidth + gap, statY, statWidth, statHeight),
-                "▸ PROFIT/HOUR", $"{data.ProfitPerHour / 1000000:F1}M CR/h", false);
 
             // Status bar
             DrawStatusBar(g, new Rectangle(mainRect.X + 30, mainRect.Bottom - 50, mainRect.Width - 60, 25), data.PulseValue, data.IsSessionActive);
