@@ -15,20 +15,17 @@ namespace EliteDataRelay.Services
             // Check and update commander name
             if (!string.IsNullOrEmpty(loadGameEvent.Commander) && loadGameEvent.Commander != _lastCommanderName)
             {
-                _lastCommanderName = loadGameEvent.Commander;
-                Debug.WriteLine($"[JournalWatcherService] Found Commander Name: {_lastCommanderName}");
+                _lastCommanderName = loadGameEvent.Commander; // This line was missing
+                Trace.WriteLine($"[JournalWatcherService] Found Commander Name: {_lastCommanderName}");
                 CommanderNameChanged?.Invoke(this, new CommanderNameChangedEventArgs(_lastCommanderName));
             }
 
             // Get the internal ship name first, as it's not in the strongly-typed model.
             string? internalShipName = jsonDoc.RootElement.TryGetProperty("Ship", out var shipProp) ? shipProp.GetString() : null;
 
-            // Get the ship type, fallback to the non-localised name if needed.
-            var shipType = !string.IsNullOrEmpty(loadGameEvent.ShipLocalised) ? loadGameEvent.ShipLocalised
-                : Capitalize(internalShipName);
             var shipName = loadGameEvent.ShipName;
             var shipIdent = loadGameEvent.ShipIdent;
-            UpdateShipInformation(shipName, shipIdent, shipType, internalShipName);
+            UpdateShipInformation(shipName, shipIdent, _lastShipType, internalShipName);
         }
 
         private void ProcessLoadoutEvent(string journalLine, JsonSerializerOptions options)
@@ -36,14 +33,19 @@ namespace EliteDataRelay.Services
             var loadoutEvent = JsonSerializer.Deserialize<ShipLoadout>(journalLine, options);
             if (loadoutEvent != null)
             {
+                Trace.WriteLine($"[JournalWatcher] Processed Loadout event. Ship: {loadoutEvent.Ship}, Mass: {loadoutEvent.UnladenMass}, Rebuy: {loadoutEvent.Rebuy}");
                 if (loadoutEvent.CargoCapacity > 0)
                 {
-                    Debug.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");
+                    Trace.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");
                     CargoCapacityChanged?.Invoke(this, new CargoCapacityEventArgs(loadoutEvent.CargoCapacity));
                 }
 
                 LoadoutChanged?.Invoke(this, new LoadoutChangedEventArgs(loadoutEvent));
-                UpdateShipInformation(loadoutEvent.ShipName, loadoutEvent.ShipIdent, _lastShipType, loadoutEvent.Ship);
+
+                // The Loadout event is the most reliable source for the current ship.
+                // We can derive the ship type from its internal name if _lastShipType is not set (e.g., on startup).
+                var shipType = _lastShipType ?? ShipIconService.GetShipDisplayName(loadoutEvent.Ship);
+                UpdateShipInformation(loadoutEvent.ShipName, loadoutEvent.ShipIdent, shipType, loadoutEvent.Ship);
             }
         }
 
@@ -54,7 +56,7 @@ namespace EliteDataRelay.Services
             {
                 var newShipType = !string.IsNullOrEmpty(swapEvent.ShipTypeLocalised) ? swapEvent.ShipTypeLocalised : Capitalize(swapEvent.ShipType);
                 _lastShipType = newShipType;
-                Debug.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. New ship type: {newShipType}");
+                Trace.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. New ship type: {newShipType}");
             }
         }
     }

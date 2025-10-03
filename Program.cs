@@ -1,5 +1,6 @@
 using EliteDataRelay.Configuration;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
@@ -21,6 +22,19 @@ namespace EliteDataRelay
             // To customize application configuration such as high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+
+            // Configure a trace listener to write all Debug.WriteLine output to a file.
+            // This is essential for capturing logs when not running with a debugger attached.
+            var logFilePath = Path.Combine(AppConfiguration.AppDataPath, "debug_log.txt");
+
+            // Overwrite/trim the log file on each application start to keep it clean.
+            try { File.Delete(logFilePath); }
+            catch (IOException) { /* Ignore if file is locked, logging will append */ }
+            catch (UnauthorizedAccessException) { /* Ignore if no permissions */ }
+
+            var listener = new TextWriterTraceListener(logFilePath);
+            Trace.Listeners.Add(listener);
+            Trace.AutoFlush = true; // Ensure messages are written to the file immediately.
 
             // Create and run the main form. The form itself is now responsible
             // for creating and managing its own services.

@@ -29,7 +29,7 @@ namespace EliteDataRelay.Services
         public void Reset()
         {
             _lastInventoryHash = null;
-            Debug.WriteLine("[CargoProcessorService] State has been reset.");
+            Trace.WriteLine("[CargoProcessorService] State has been reset.");
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace EliteDataRelay.Services
                     if (!File.Exists(AppConfiguration.CargoPath))
                     {
                         // On the last attempt, if the file still doesn't exist, log it.
-                        if (attempt == AppConfiguration.FileReadMaxAttempts) Debug.WriteLine($"[CargoProcessorService] Cargo.json not found after {attempt} attempts.");
+                        if (attempt == AppConfiguration.FileReadMaxAttempts) Trace.WriteLine($"[CargoProcessorService] Cargo.json not found after {attempt} attempts.");
                         return false;
                     }
 
@@ -73,19 +73,19 @@ namespace EliteDataRelay.Services
                     // Notify subscribers of successful processing
                     CargoProcessed?.Invoke(this, new CargoProcessedEventArgs(snapshot, hash));
                     
-                    Debug.WriteLine($"[CargoProcessorService] Successfully processed cargo snapshot with hash: {hash[..8]}...");
+                    Trace.WriteLine($"[CargoProcessorService] Successfully processed cargo snapshot with hash: {hash[..8]}...");
                     return true; // Success
                 }
                 catch (IOException) when (attempt < AppConfiguration.FileReadMaxAttempts)
                 {
                     // File still locked – wait before retrying
-                    Debug.WriteLine($"[CargoProcessorService] File locked, retry attempt {attempt}/{AppConfiguration.FileReadMaxAttempts}");
+                    Trace.WriteLine($"[CargoProcessorService] File locked, retry attempt {attempt}/{AppConfiguration.FileReadMaxAttempts}");
                     Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                 }
                 catch (JsonException jsonEx)
                 {
                     // Malformed JSON – ignore for now and try again later
-                    Debug.WriteLine($"[CargoProcessorService] JSON parsing error: {jsonEx.Message}");
+                    Trace.WriteLine($"[CargoProcessorService] JSON parsing error: {jsonEx.Message}");
                     Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                 }
                 catch (Exception ex)
@@ -113,7 +113,7 @@ namespace EliteDataRelay.Services
                 new JsonSerializerOptions { WriteIndented = false, PropertyNameCaseInsensitive = true });
 
             using var sha = SHA256.Create();
-            byte[] bytes = Encoding.UTF8.GetBytes(json);
+            byte[] bytes = Encoding.UTF8.GetBytes(json); // This line was missing
             byte[] hashBytes = sha.ComputeHash(bytes);
             return Convert.ToBase64String(hashBytes);
         }

@@ -28,7 +28,7 @@ namespace EliteDataRelay.Services
                 if (!Directory.Exists(AppConfiguration.OutputDirectory))
                 {
                     Directory.CreateDirectory(AppConfiguration.OutputDirectory);
-                    Debug.WriteLine($"[FileOutputService] Created output directory: {AppConfiguration.OutputDirectory}");
+                    Trace.WriteLine($"[FileOutputService] Created output directory: {AppConfiguration.OutputDirectory}");
                 }
 
                 // Format cargo string similar to original implementation
@@ -37,12 +37,12 @@ namespace EliteDataRelay.Services
                 // Write to file
                 File.WriteAllText(outputPath, cargoString);
                 
-                Debug.WriteLine($"[FileOutputService] Written cargo data to: {outputPath}");
+                Trace.WriteLine($"[FileOutputService] Written cargo data to: {outputPath}");
                 return cargoString;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[FileOutputService] Error writing cargo snapshot: {ex}");
+                Trace.WriteLine($"[FileOutputService] Error writing cargo snapshot: {ex}");
             }
             return string.Empty;
         }

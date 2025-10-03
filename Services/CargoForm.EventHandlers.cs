@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
@@ -100,6 +101,14 @@ namespace EliteDataRelay
                 _lastShipIdent = e.ShipIdent;
                 _lastShipType = e.ShipType;
                 _lastInternalShipName = e.InternalShipName;
+
+                // If we have a loadout, this is the most reliable time to update the ship UI,
+                // as it avoids being overwritten by other events like CargoProcessed.
+                if (_lastLoadout != null) 
+                {
+                    _cargoFormUI.UpdateShipLoadout(_lastLoadout);
+                    Trace.WriteLine($"[CargoForm] OnShipInfoChanged: Called UpdateShipLoadout with cached loadout for ship ID {_lastLoadout.ShipId}.");
+                }
                 _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName); // Pass internal name
             }));
         }
@@ -111,29 +120,30 @@ namespace EliteDataRelay
 
             Invoke(new Action(() =>
             {
-                var newLoadout = e.Loadout;
-                _cargoFormUI.UpdateShipLoadout(newLoadout);
+                var loadout = e.Loadout;
+                _lastLoadout = loadout; // Store the latest loadout
+                Trace.WriteLine($"[CargoForm] OnLoadoutChanged: Received and cached loadout for ship ID {loadout.ShipId}.");
+                var newShipId = (uint)loadout.ShipId;
 
                 // The Loadout event is a primary source for cargo capacity.
-                _cargoCapacity = newLoadout.CargoCapacity;
+                _cargoCapacity = loadout.CargoCapacity;
 
-                // Only clear the cargo hold if the ship has actually changed (e.g., ShipyardSwap).
-                // If it's the same ship, this is likely a re-scan on startup, and we should preserve the cargo data.
-                if (_lastShipId.HasValue && newLoadout.ShipId != _lastShipId.Value)
+                // If the ship has changed (e.g., after a ShipyardSwap), the old cargo data is invalid.
+                // We clear the cargo display and wait for the next 'Cargo' event.
+                if (_lastShipId.HasValue && newShipId != _lastShipId.Value)
                 {
-                    // After a loadout change, the previous cargo snapshot (count and items) is stale.
-                    // We must clear it and wait for the next 'Cargo' event to provide the new state.
                     _lastCargoSnapshot = null;
-
-                    // Update the UI to reflect the new capacity and the now-empty cargo state.
                     _cargoFormUI.UpdateCargoHeader(0, _cargoCapacity);
-
-                    // Create a new, empty snapshot to clear the UI list and visualizer.
                     var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
                     _cargoFormUI.UpdateCargoList(emptySnapshot);
                     _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
                 }
-                _lastShipId = (uint)newLoadout.ShipId;
+
+                _lastShipId = newShipId;
+
+                // Directly update the ship UI to ensure it reflects the latest loadout,
+                // preventing other UI events from leaving it in a stale state.
+                _cargoFormUI.UpdateShipLoadout(loadout);
             }));
         }
 
@@ -144,7 +154,7 @@ namespace EliteDataRelay
             // We now force a re-read of Cargo.json to ensure the UI is synchronized with the
             // actual cargo contents, resolving the "empty on start" issue.
             if (!CanInvoke()) return;
-
+            
             Invoke(new Action(() =>
             {
                 System.Diagnostics.Debug.WriteLine("[CargoForm] Journal initial scan complete. Re-reading cargo file to ensure sync.");
@@ -160,6 +170,7 @@ namespace EliteDataRelay
 
             Invoke(new Action(() =>
             {
+                _lastStatus = e.Status;
                 _cargoFormUI.UpdateShipStatus(e.Status);
             }));
         }

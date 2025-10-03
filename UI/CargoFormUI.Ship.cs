@@ -12,6 +12,7 @@ namespace EliteDataRelay.UI
     {
         private ShipLoadout? _currentLoadout;
         private string _activeModuleTab = "hardpoints";
+        private StatusFile? _currentStatus;
 
         // Elite Orange color scheme
         private readonly Color _orangeColor = Color.FromArgb(255, 102, 0);
@@ -25,18 +26,22 @@ namespace EliteDataRelay.UI
             CreateModuleTabButtons();
         }
 
+        public ShipLoadout? GetCurrentLoadout() => _currentLoadout;
+
         public void UpdateShipStatus(StatusFile status)
         {
             if (_controlFactory == null) return;
+            _currentStatus = status;
 
-            // This method can be used to update live stats on the ship panel in the future.
-            // For now, most data comes from the Loadout event.
+            // This method is now only responsible for caching the status.
+            // All stats that depend on the loadout are updated in UpdateShipLoadout.
         }
 
         public void UpdateShipLoadout(ShipLoadout loadout)
         {
             if (_controlFactory == null) return;
             _currentLoadout = loadout;
+            System.Diagnostics.Debug.WriteLine($"[CargoFormUI] UpdateShipLoadout called for ship: {loadout.Ship}, Mass: {loadout.UnladenMass}");
 
             UpdateShipStatsPanel(loadout);
             UpdateModuleList();
@@ -48,6 +53,7 @@ namespace EliteDataRelay.UI
             var statsPanel = _controlFactory?.ShipStatsPanel;
             if (statsPanel is null) return;
 
+            System.Diagnostics.Debug.WriteLine("[CargoFormUI] Updating ship stats panel...");
             statsPanel.SuspendLayout();
             statsPanel.Controls.Clear();
 
@@ -56,42 +62,119 @@ namespace EliteDataRelay.UI
             double powerCapacity = 0;
             if (powerPlant?.Engineering?.Modifiers != null)
             {
+                // For engineered modules, the 'PowerCapacity' modifier is the source of truth.
                 var powerCapModifier = powerPlant.Engineering.Modifiers.FirstOrDefault(mod => mod.Label.Equals("PowerCapacity", StringComparison.OrdinalIgnoreCase));
                 if (powerCapModifier != null)
                 {
                     powerCapacity = powerCapModifier.Value;
                 }
             }
+            else if (powerPlant != null)
+            {
+                // For stock modules, we get the base capacity from our static data service.
+                powerCapacity = ModuleDataService.GetPowerPlantCapacity(powerPlant.Item);
+            }
+
+            // Calculate current and laden jump ranges using the dedicated calculator service.
+            var jumpRangeResult = JumpRangeCalculator.Calculate(loadout, _currentStatus);
+            string jumpText = jumpRangeResult != null
+                ? $"{jumpRangeResult.Current:F2} / {jumpRangeResult.Laden:F2} LY"
+                : $"{loadout.MaxJumpRange:F2} LY";
 
             var stats = new[]
             {
                 ("MASS", $"{loadout.UnladenMass:N1} T"),
                 ("ARMOR", $"{(loadout.HullHealth * 100):N0}%"),
                 ("CARGO", $"{loadout.CargoCapacity}T"),
-                ("JUMP", $"{loadout.MaxJumpRange:F2} LY"),
+                ("JUMP", jumpText),
                 ("REBUY", $"{loadout.Rebuy:N0} CR"),
                 ("POWER", $"{powerCapacity:F2} MW")
             };
 
             for (int i = 0; i < stats.Length; i++)
             {
-                var statPanel = CreateStatItem(stats[i].Item1, stats[i].Item2);
+                var statPanel = new StatPanel(stats[i].Item1, stats[i].Item2, _lightOrangeColor);
+                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Creating stat item: {stats[i].Item1} = {stats[i].Item2}");
                 statsPanel.Controls.Add(statPanel, i % 3, i / 3);
             }
 
             statsPanel.ResumeLayout();
         }
 
-        private Panel CreateStatItem(string label, string value)
+        /// <summary>
+        /// A custom-drawn panel to display a single ship statistic, avoiding complex control nesting.
+        /// </summary>
+        private class StatPanel : Panel
         {
-            var panel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
-            var lbl = new Label { Text = label, Dock = DockStyle.Top, Font = new Font("Consolas", 8), ForeColor = _lightOrangeColor };
-            var val = new Label { Text = value, Dock = DockStyle.Fill, Font = new Font("Consolas", 12, FontStyle.Bold), ForeColor = Color.White, TextAlign = ContentAlignment.MiddleCenter };
-            panel.Controls.Add(lbl);
-            panel.Controls.Add(val);
-            return panel;
-        }
+            private readonly string _label;
+            private readonly string _value;
+            private readonly Color _labelColor;
+            
+            // Re-usable drawing resources
+            private readonly Font _labelFont;
+            private readonly Font _valueFont;
+            private readonly SolidBrush _labelBrush;
+            private readonly SolidBrush _valueBrush;
 
+            public StatPanel(string label, string value, Color labelColor)
+            {
+                _label = label;
+                _value = value;
+                _labelColor = labelColor;
+                
+                _labelFont = new Font("Consolas", 9);
+                _valueFont = new Font("Consolas", 9, FontStyle.Bold);
+                _labelBrush = new SolidBrush(_labelColor);
+                _valueBrush = new SolidBrush(Color.White);
+
+                Dock = DockStyle.Fill;
+                Margin = new Padding(2);
+                BackColor = Color.FromArgb(20, 20, 20);
+                DoubleBuffered = true; // Prevents flicker
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+
+                // Use high-quality rendering for text
+                e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+                string labelText = _label + ": ";
+                string valueText = _value;
+
+                // Measure the size of both parts of the text
+                SizeF labelSize = e.Graphics.MeasureString(labelText, _labelFont);
+                SizeF valueSize = e.Graphics.MeasureString(valueText, _valueFont);
+
+                // Calculate the total width and the starting X position to center the combined text
+                float totalWidth = labelSize.Width + valueSize.Width;
+                float startX = (ClientRectangle.Width - totalWidth) / 2;
+
+                // Calculate the Y position to center the text vertically
+                float startY = (ClientRectangle.Height - _labelFont.Height) / 2;
+
+                // Draw the label part
+                e.Graphics.DrawString(labelText, _labelFont, _labelBrush, new PointF(startX, startY));
+
+                // Draw the value part immediately after the label
+                e.Graphics.DrawString(valueText, _valueFont, _valueBrush, new PointF(startX + labelSize.Width, startY));
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    // Dispose of the GDI resources we created
+                    _labelFont.Dispose();
+                    _valueFont.Dispose();
+                    _labelBrush.Dispose();
+                    _valueBrush.Dispose();
+                }
+                base.Dispose(disposing);
+            }
+        }
+        
         private void CreateModuleTabButtons()
         {
             var tabPanel = _controlFactory!.ModuleTabPanel;
@@ -160,7 +243,7 @@ namespace EliteDataRelay.UI
             {
                 var item = new ListViewItem
                 {
-                    Tag = module,
+                    Tag = module.Slot, // Store the slot name, not the stale object
                     // Text is set via custom drawing, but we can set it for accessibility
                     Text = ItemNameService.TranslateModuleName(module.Item) ?? "Empty"
                 };

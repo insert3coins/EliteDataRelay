@@ -56,6 +56,7 @@ namespace EliteDataRelay
         private string? _lastCommanderName;
         private string? _lastShipName;
         private string? _lastShipType;
+        private ShipLoadout? _lastLoadout;
         private string? _lastShipIdent;
         private string? _lastInternalShipName;
         private long? _lastBalance;
@@ -63,6 +64,7 @@ namespace EliteDataRelay
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
         private StationInfoData? _lastStationInfoData;
+        private StatusFile? _lastStatus;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 

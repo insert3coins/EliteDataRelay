@@ -18,7 +18,7 @@ namespace EliteDataRelay.Services
             var latestJournal = FindLatestJournalFile();
             if (latestJournal != null && latestJournal != _currentJournalFile)
             {
-                Debug.WriteLine($"[JournalWatcherService] New journal file detected: {Path.GetFileName(latestJournal)}. Switching.");
+                Trace.WriteLine($"[JournalWatcherService] New journal file detected: {Path.GetFileName(latestJournal)}. Switching.");
                 _currentJournalFile = latestJournal;
                 _lastPosition = 0; // Reset position for the new file.
             }
@@ -113,7 +113,7 @@ namespace EliteDataRelay.Services
                             if (isNewSystem)
                             {
                                 _lastStarSystem = starSystem;
-                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), true, systemAddress);
+                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), true, systemAddress); // This line was missing
                                 Debug.WriteLine($"[JournalWatcherService] Found new system event ({eventType}). StarSystem: {starSystem}");
                                 LocationChanged?.Invoke(this, _lastLocationArgs);
                             }
@@ -126,7 +126,7 @@ namespace EliteDataRelay.Services
                     }
                     catch (JsonException ex)
                     {
-                        Debug.WriteLine($"[JournalWatcherService] Failed to parse journal line in location pass: {journalLine}. Error: {ex.Message}");
+                        Trace.WriteLine($"[JournalWatcherService] Failed to parse journal line in location pass: {journalLine}. Error: {ex.Message}");
                     }
                 }
 
@@ -147,8 +147,7 @@ namespace EliteDataRelay.Services
                         string? eventType = eventElement.GetString();
 
                         // Skip location events as they were handled in the first pass
-                        // Also skip LoadGame as it was handled in the first pass.
-                        if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump" || eventType == "LoadGame")
+                        if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
                         {
                             continue;
                         }
@@ -164,7 +163,7 @@ namespace EliteDataRelay.Services
                         {
                             // These events indicate a loadout change. The subsequent 'Loadout' event is the source of truth.
                             // We don't need to take action here, but acknowledging the event is useful for debugging.
-                            Debug.WriteLine($"[JournalWatcherService] Detected module change event: {eventType}. Awaiting next Loadout.");
+                            Trace.WriteLine($"[JournalWatcherService] Detected module change event: {eventType}. Awaiting next Loadout.");
                         }
                         else if (eventType == "CollectCargo")
                         {
@@ -221,7 +220,7 @@ namespace EliteDataRelay.Services
                             // Clear the last docked state when we undock.
                             // This is crucial for the initial scan to correctly determine the player is no longer docked.
                             if (_lastDockedEventArgs != null)
-                            {
+                            { // This line was missing
                                 Debug.WriteLine($"[JournalWatcherService] Undocked from {_lastDockedEventArgs.DockedEvent.StationName}. Clearing docked state.");
                             }
                             _lastDockedEventArgs = null;
@@ -230,7 +229,7 @@ namespace EliteDataRelay.Services
                     }
                     catch (JsonException ex)
                     {
-                        Debug.WriteLine($"[JournalWatcherService] Failed to parse journal line: {journalLine}. Error: {ex.Message}");
+                        Trace.WriteLine($"[JournalWatcherService] Failed to parse journal line: {journalLine}. Error: {ex.Message}");
                         // Continue to the next line instead of breaking the loop.
                     }
                 }
@@ -238,7 +237,7 @@ namespace EliteDataRelay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[JournalWatcherService] Error polling journal file: {ex}");
+                Trace.WriteLine($"[JournalWatcherService] Error polling journal file: {ex}");
             }
         }
 
@@ -252,7 +251,7 @@ namespace EliteDataRelay.Services
                 _lastShipName = shipName;
                 _lastShipIdent = shipIdent;
                 _lastShipType = shipType;
-                _lastInternalShipName = internalShipName;
+                _lastInternalShipName = internalShipName; // This line was missing
                 Debug.WriteLine($"[JournalWatcherService] Ship Info Updated. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
                 ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", internalShipName ?? "unknown"));
             }

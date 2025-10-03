@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using System.Text;
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 
@@ -13,18 +14,9 @@ namespace EliteDataRelay.UI
         public FlowLayoutPanel ModuleTabPanel { get; private set; } = null!;
         public ListView ModulesListView { get; private set; } = null!;
 
-        // Old controls that are being replaced or removed
-        // public PictureBox ShipIconPictureBox { get; private set; } = null!;
-        // public Label HullHealthValueLabel { get; private set; } = null!;
-        /*
-        public Label MassValueLabel { get; private set; } = null!;
-        public Label FuelValueLabel { get; private set; } = null!;
-        public Label CargoValueLabel { get; private set; } = null!;
-        public Label JumpRangeValueLabel { get; private set; } = null!;
-        public Label RebuyValueLabel { get; private set; } = null!;
-        private TreeNode? _lastHoveredNode;
-        */
-
+        private readonly CargoFormUI _cargoFormUI;
+        private readonly ToolTip _moduleToolTip = new ToolTip();
+        private ListViewItem? _lastHoveredItem;
         private TabPage CreateShipTabPage(FontManager fontManager)
         {
             var shipPage = new TabPage("Ship");
@@ -36,8 +28,8 @@ namespace EliteDataRelay.UI
                 ColumnCount = 2,
                 RowCount = 1,
             };
-            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 66F));
-            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34F));
+            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
 
             var leftPanel = CreateShipLeftPanel(fontManager);
             var rightPanel = CreateShipRightPanel(fontManager);
@@ -59,8 +51,8 @@ namespace EliteDataRelay.UI
                 RowCount = 2,
                 Padding = new Padding(0, 0, 10, 0)
             };
-            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70F));
-            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 60F)); // Give less space to wireframe
+            leftPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 40F)); // Give more space to stats
 
             // Ship Wireframe
             ShipWireframePictureBox = new PictureBox
@@ -78,8 +70,8 @@ namespace EliteDataRelay.UI
                 ColumnCount = 3,
                 RowCount = 2,
                 Padding = new Padding(10),
-                CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
-                BackColor = Color.FromArgb(10, 10, 10), // Use a solid, dark color
+                CellBorderStyle = TableLayoutPanelCellBorderStyle.None, // Set to None to prevent borders from hiding content
+                BackColor = Color.FromArgb(10, 10, 10)
             };
             for (int i = 0; i < 3; i++) ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
             for (int i = 0; i < 2; i++) ShipStatsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
@@ -132,6 +124,8 @@ namespace EliteDataRelay.UI
             };
             ModulesListView.DrawItem += ModulesListView_DrawItem;
             ModulesListView.DrawSubItem += ModulesListView_DrawSubItem;
+            ModulesListView.MouseMove += ModulesListView_MouseMove;
+            ModulesListView.MouseLeave += ModulesListView_MouseLeave;
             ModulesListView.Columns.Add("Module", -2);
 
             rightPanel.Controls.Add(ModuleTabPanel, 0, 0);
@@ -152,6 +146,9 @@ namespace EliteDataRelay.UI
                 listView.DrawItem -= ModulesListView_DrawItem;
                 listView.DrawSubItem -= ModulesListView_DrawSubItem;
                 listView.Dispose();
+                _moduleToolTip.Dispose();
+                ModulesListView.MouseMove -= ModulesListView_MouseMove;
+                ModulesListView.MouseLeave -= ModulesListView_MouseLeave;
             }
         }
 
@@ -205,7 +202,15 @@ namespace EliteDataRelay.UI
             var textFormat = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding;
 
             // Get the module from the tag
-            if (e.Item.Tag is not ShipModule module)
+            if (e.Item.Tag is not string slotName)
+            {
+                e.DrawText();
+                return;
+            }
+
+            // Find the fresh module object from the UI's current loadout
+            var module = _cargoFormUI.GetCurrentLoadout()?.Modules.FirstOrDefault(m => m.Slot == slotName);
+            if (module == null)
             {
                 e.DrawText();
                 return;
@@ -259,6 +264,86 @@ namespace EliteDataRelay.UI
             {
                 e.Graphics.DrawLine(pen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
             }
+        }
+
+        private void ModulesListView_MouseMove(object? sender, MouseEventArgs e)
+        {
+            if (sender is not ListView listView) return;
+
+            // Manually find the item under the cursor by checking its bounds.
+            // This is more reliable for owner-drawn listviews than GetItemAt().
+            ListViewItem? item = null;
+            for (int i = 0; i < listView.Items.Count; i++)
+            {
+                if (listView.Items[i].Bounds.Contains(e.Location))
+                {
+                    item = listView.Items[i];
+                    break;
+                }
+            }
+
+            // Always re-evaluate the tooltip on mouse move to prevent race conditions
+            // where the module data updates after the first mouse-over.
+            if (item != _lastHoveredItem)
+            {
+                _lastHoveredItem = item;
+            }
+
+            if (item?.Tag is not string slotName)
+            {
+                _moduleToolTip.SetToolTip(listView, string.Empty);
+                return;
+            }
+
+            // Find the fresh module object from the UI's current loadout
+            var module = _cargoFormUI.GetCurrentLoadout()?.Modules.FirstOrDefault(m => m.Slot == slotName);
+            if (module?.Engineering != null)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine($"{module.Engineering.Engineer} - {module.Engineering.BlueprintName} (G{module.Engineering.Level})");
+                sb.AppendLine("--------------------");
+
+                foreach (var modifier in module.Engineering.Modifiers.OrderBy(m => m.Label))
+                {
+                    bool isPercentage = IsPercentageModifier(modifier.Label);
+                    string valueStr = isPercentage ? $"{modifier.Value:P1}" : $"{modifier.Value:N2}";
+                    string originalValueStr = isPercentage ? $"{modifier.OriginalValue:P1}" : $"{modifier.OriginalValue:N2}";
+
+                    sb.AppendLine($"{modifier.Label}: {valueStr} (was {originalValueStr})");
+                }
+
+                if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffect_Localised))
+                {
+                    sb.AppendLine("--------------------");
+                    sb.AppendLine($"Experimental: {module.Engineering.ExperimentalEffect_Localised}");
+                }
+                
+                _moduleToolTip.SetToolTip(listView, sb.ToString());
+            }
+            else
+            {
+                _moduleToolTip.SetToolTip(listView, string.Empty);
+            }
+        }
+
+        private void ModulesListView_MouseLeave(object? sender, System.EventArgs e)
+        {
+            _lastHoveredItem = null;
+            if (sender is Control control)
+            {
+                _moduleToolTip.SetToolTip(control, string.Empty);
+            }
+        }
+
+        private bool IsPercentageModifier(string label)
+        {
+            // A list of common modifier labels that represent percentage values.
+            var percentageLabels = new[]
+            {
+                "Resistance", "DistroDraw", "Damage", "Penetration", "Jitter", "ThermalLoad"
+            };
+
+            return percentageLabels.Any(l => label.Contains(l, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

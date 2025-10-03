@@ -48,7 +48,7 @@ namespace EliteDataRelay.UI
             _form = form ?? throw new ArgumentNullException(nameof(form));
             InitializeIcon();
             _fontManager = new FontManager();
-            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService);
+            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService, this);
 
             if (_controlFactory.WatchingLabel != null)
             {

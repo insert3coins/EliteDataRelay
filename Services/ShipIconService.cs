@@ -78,7 +78,7 @@ namespace EliteDataRelay.Services
 
             if (_iconCache.TryGetValue(internalShipName, out var cachedIcon))
             {
-                Debug.WriteLine($"[ShipIconService] Returning cached icon for '{internalShipName}'.");
+                Trace.WriteLine($"[ShipIconService] Returning cached icon for '{internalShipName}'.");
                 return cachedIcon;
             }
 
@@ -87,18 +87,18 @@ namespace EliteDataRelay.Services
             {
                 string fullPath = Path.Combine(_iconDirectory, $"{fileName}.png");
                 Debug.WriteLine($"[ShipIconService] Mapped '{internalShipName}' to file '{fileName}.png'. Attempting to load from: {fullPath}");
-                if (File.Exists(fullPath))
+                if (File.Exists(fullPath)) // This line was missing
                 {
                     try
                     {
                         var icon = Image.FromFile(fullPath);
                         _iconCache[internalShipName] = icon; // Cache under the original name for performance
-                        Debug.WriteLine($"[ShipIconService] Successfully loaded and cached icon for '{internalShipName}'.");
+                        Trace.WriteLine($"[ShipIconService] Successfully loaded and cached icon for '{internalShipName}'.");
                         return icon;
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[ShipIconService] Failed to load icon '{fullPath}': {ex.Message}");
+                        Trace.WriteLine($"[ShipIconService] Failed to load icon '{fullPath}': {ex.Message}");
                     }
                 }
                 else
@@ -107,10 +107,26 @@ namespace EliteDataRelay.Services
                 }
             }
             else
-            {
+            { // This line was missing
                 Debug.WriteLine($"[ShipIconService] No mapping found for ship '{internalShipName}'.");
             }
             return GetDefaultIcon();
+        }
+
+        /// <summary>
+        /// Gets the display name for a given ship's internal name.
+        /// </summary>
+        /// <param name="internalShipName">The internal name of the ship (e.g., "CobraMkIII").</param>
+        /// <returns>A user-friendly display name (e.g., "Cobra Mk III"), or the capitalized internal name as a fallback.</returns>
+        public static string GetShipDisplayName(string? internalShipName)
+        {
+            if (string.IsNullOrEmpty(internalShipName))
+            {
+                return "Unknown";
+            }
+
+            // Use the mapping to find the correct file name, which is also the display name.
+            return _shipToFileNameMap.TryGetValue(internalShipName, out var displayName) ? displayName : (char.ToUpperInvariant(internalShipName[0]) + internalShipName.Substring(1));
         }
 
         /// <summary>
@@ -121,7 +137,7 @@ namespace EliteDataRelay.Services
         {
             if (_defaultIcon != null)
             {
-                Debug.WriteLine("[ShipIconService] Returning cached default icon.");
+                Trace.WriteLine("[ShipIconService] Returning cached default icon.");
                 return _defaultIcon;
             }
 
@@ -131,12 +147,12 @@ namespace EliteDataRelay.Services
                 try
                 {
                     _defaultIcon = Image.FromFile(defaultIconPath);
-                    Debug.WriteLine($"[ShipIconService] Successfully loaded and cached default icon from '{defaultIconPath}'.");
+                    Trace.WriteLine($"[ShipIconService] Successfully loaded and cached default icon from '{defaultIconPath}'.");
                     return _defaultIcon;
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ShipIconService] Failed to load default icon '{defaultIconPath}': {ex.Message}");
+                    Trace.WriteLine($"[ShipIconService] Failed to load default icon '{defaultIconPath}': {ex.Message}");
                 }
             }
             else

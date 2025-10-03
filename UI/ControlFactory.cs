@@ -28,8 +28,10 @@ namespace EliteDataRelay.UI
         public ToolTip ToolTip { get; private set; } = null!;
         public MiningStatsControl MiningStatsControl { get; private set; } = null!;
 
-        public ControlFactory(FontManager fontManager, Services.SessionTrackingService sessionTracker)
+        public ControlFactory(FontManager fontManager, Services.SessionTrackingService sessionTracker, CargoFormUI cargoFormUI)
         {
+            _cargoFormUI = cargoFormUI; // This was missing
+
             CreateTabControls(fontManager, sessionTracker);
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);
