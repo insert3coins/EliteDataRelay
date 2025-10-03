@@ -1,122 +1,212 @@
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
-
 {
     public partial class CargoFormUI
     {
+        private ShipLoadout? _currentLoadout;
+        private string _activeModuleTab = "hardpoints";
+        private ShipModule? _selectedModule;
+
+        // Elite Orange color scheme
+        private readonly Color _orangeColor = Color.FromArgb(255, 102, 0);
+        private readonly Color _darkOrangeColor = Color.FromArgb(153, 61, 0);
+        private readonly Color _lightOrangeColor = Color.FromArgb(255, 153, 68);
+
+        private void InitializeShipTab()
+        {
+            if (_controlFactory?.ShipWireframePictureBox != null)
+            {
+                _shipWireframeDrawer = new ShipWireframeDrawer(_controlFactory.ShipWireframePictureBox);
+                _shipWireframeDrawer.HardpointClicked += OnHardpointClicked;
+            }
+            CreateModuleTabButtons();
+        }
+
         public void UpdateShipStatus(StatusFile status)
         {
             if (_controlFactory == null) return;
 
-            // Update hull health from real-time status file
-            _controlFactory.HullHealthValueLabel.Text = $"{status.HullHealth:P0}";
+            // This method can be used to update live stats on the ship panel in the future.
+            // For now, most data comes from the Loadout event.
         }
 
         public void UpdateShipLoadout(ShipLoadout loadout)
         {
             if (_controlFactory == null) return;
+            _currentLoadout = loadout;
 
-            var modulesListView = _controlFactory.ShipModulesTreeView;
+            UpdateShipStatsPanel(loadout);
+            UpdateModuleList();
+            _controlFactory.ShipWireframePictureBox.Invalidate(); // Force a repaint
+        }
 
-            modulesListView.BeginUpdate(); // Use TreeView's BeginUpdate
-            modulesListView.Nodes.Clear(); // Use Nodes collection instead of Items
+        private void UpdateShipStatsPanel(ShipLoadout loadout)
+        {
+            var statsPanel = _controlFactory.ShipStatsPanel;
+            if (statsPanel == null) return;
 
-            // Group modules by their slot name for organized display
-            var groupedModules = loadout.Modules
-                                        .OrderBy(m => GetSlotSortOrder(m.Slot))
-                                        .ThenBy(m => m.Slot)
-                                        .GroupBy(m => GetFriendlySlotName(m.Slot));
-            
-            foreach (var group in groupedModules)
+            statsPanel.SuspendLayout();
+            statsPanel.Controls.Clear();
+
+            // Calculate total power usage
+            double totalPowerDraw = loadout.Modules
+                .Where(m => m.Engineering?.Modifiers != null)
+                .SelectMany(m => m.Engineering.Modifiers)
+                .Where(mod => mod.Label.Equals("PowerDraw", StringComparison.OrdinalIgnoreCase))
+                .Sum(mod => mod.Value);
+
+            var stats = new[]
             {
-                // Create a top-level node for the group (e.g., "Hardpoints")
-                var groupNode = new TreeNode($"{group.Key} ({group.Count()})");
-                modulesListView.Nodes.Add(groupNode);
+                ("MASS", $"{loadout.UnladenMass:N1}T"),
+                ("SHIELDS", "N/A"), // This info isn't in ShipLoadout model
+                ("ARMOR", "N/A"), // This info isn't in ShipLoadout model
+                ("CARGO", $"{loadout.CargoCapacity}T"),
+                ("JUMP", $"{loadout.MaxJumpRange:F2} LY"),
+                ("SPEED", "N/A"), // This info isn't in ShipLoadout model
+                ("BOOST", "N/A"), // This info isn't in ShipLoadout model
+                ("POWER", $"{totalPowerDraw:F2} MW")
+            };
 
-                foreach (var module in group)
-                {
-                    // Create a child node for each module in the group.
-                    // The actual text will be drawn by the OwnerDraw event, but we set it for clarity.
-                    var moduleNode = new TreeNode(ItemNameService.TranslateModuleName(module.Item))
-                    {
-                        // Store the full module object in the Tag for the custom drawing and tooltip logic.
-                        Tag = module,
-                        ToolTipText = CreateModuleToolTip(module)
-                    };
-                    groupNode.Nodes.Add(moduleNode);
-                }
-                // Automatically expand the group nodes to show the modules.
-                groupNode.Expand();
+            for (int i = 0; i < stats.Length; i++)
+            {
+                var statPanel = CreateStatItem(stats[i].Item1, stats[i].Item2);
+                statsPanel.Controls.Add(statPanel, i % 4, i / 4);
             }
 
-            modulesListView.EndUpdate();
+            statsPanel.ResumeLayout();
+        }
 
-            // Update ship stats
-            _controlFactory.HullHealthValueLabel.Text = $"{loadout.HullHealth:P0}";
-            _controlFactory.MassValueLabel.Text = $"{loadout.UnladenMass:N2} T";
-            _controlFactory.CargoValueLabel.Text = $"{loadout.CargoCapacity:N0} T";
+        private Panel CreateStatItem(string label, string value)
+        {
+            var panel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
+            var lbl = new Label { Text = label, Dock = DockStyle.Top, Font = new Font("Consolas", 8), ForeColor = _darkOrangeColor };
+            var val = new Label { Text = value, Dock = DockStyle.Fill, Font = new Font("Consolas", 12, FontStyle.Bold), ForeColor = _lightOrangeColor, TextAlign = ContentAlignment.MiddleCenter };
+            panel.Controls.Add(val);
+            panel.Controls.Add(lbl);
+            return panel;
+        }
 
-            // Correctly handle nullable double for jump range
-            double? maxJumpRange = loadout.MaxJumpRange;
-            if (maxJumpRange.HasValue)
+        private void CreateModuleTabButtons()
+        {
+            var tabPanel = _controlFactory!.ModuleTabPanel;
+            if (tabPanel == null) return;
+
+            tabPanel.Controls.Clear();
+            var tabs = new[] { "core", "hardpoints", "utility", "optional" };
+
+            foreach (var tab in tabs)
             {
-                _controlFactory.JumpRangeValueLabel.Text = $"{maxJumpRange.Value:N2} LY";
-                _controlFactory.RebuyValueLabel.Text = $"{loadout.Rebuy:N0} CR";
-                if (loadout.FuelCapacity != null)
+                var button = new Button
                 {
-                    _controlFactory.FuelValueLabel.Text = $"{loadout.FuelCapacity.Main:N2} T / {loadout.FuelCapacity.Reserve:N2} T";
-                }
-                else
-                {
-                    _controlFactory.FuelValueLabel.Text = "N/A";
-                }
+                    Text = tab.ToUpper(),
+                    Tag = tab,
+                    Font = new Font("Consolas", 9),
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                    Padding = new Padding(8),
+                    Margin = new Padding(0, 0, 1, 0),
+                    FlatStyle = FlatStyle.Flat,
+                };
+                button.FlatAppearance.BorderSize = 0;
+                button.Click += OnModuleTabClicked;
+                tabPanel.Controls.Add(button);
             }
-            else
+            UpdateTabStyles();
+        }
+
+        private void OnModuleTabClicked(object? sender, EventArgs e)
+        {
+            if (sender is Button button && button.Tag is string tabName)
             {
-                _controlFactory.JumpRangeValueLabel.Text = "N/A";
-                _controlFactory.RebuyValueLabel.Text = "N/A";
-                _controlFactory.FuelValueLabel.Text = "N/A";
+                _activeModuleTab = tabName;
+                UpdateTabStyles();
+                UpdateModuleList();
             }
         }
 
-        private string CreateModuleToolTip(ShipModule module)
+        private void OnHardpointClicked(object? sender, int index)
         {
-            if (module.Engineering == null)
-            {
-                return ItemNameService.TranslateModuleName(module.Item);
-            }
+            if (_currentLoadout == null) return;
 
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"Blueprint: {ItemNameService.TranslateBlueprintName(module.Engineering.BlueprintName)} (G{module.Engineering.Level})");
-
-            if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffect_Localised))
+            var hardpoints = _currentLoadout.Modules.Where(m => m.Slot.Contains("Hardpoint")).OrderBy(m => m.Slot).ToList();
+            if (index < hardpoints.Count)
             {
-                sb.AppendLine($"Experimental: {module.Engineering.ExperimentalEffect_Localised}");
-            }
+                _selectedModule = hardpoints[index];
+                _activeModuleTab = "hardpoints";
+                UpdateTabStyles();
+                UpdateModuleList();
 
-            if (module.Engineering.Modifiers.Any())
-            {
-                sb.AppendLine(); // Add a blank line for spacing
-                foreach (var mod in module.Engineering.Modifiers.OrderBy(m => m.Label))
+                // Also select the item in the list view for visual feedback
+                var listView = _controlFactory!.ModulesListView;
+                if (listView != null)
                 {
-                    string indicator = "";
-                    // The 'LessIsGood' property is an integer (0 or 1), not a nullable bool.
-                    // We check if it's 0 or 1 to determine the logic.
-                    if (mod.LessIsGood == 0 || mod.LessIsGood == 1)
+                    foreach (ListViewItem item in listView.Items)
                     {
-                        bool isGood = mod.Value > mod.OriginalValue ? (mod.LessIsGood == 0) : (mod.LessIsGood == 1);
-                        indicator = isGood ? " ▲" : " ▼";
+                        if (item.Tag == _selectedModule) { item.Selected = true; listView.Focus(); break; }
                     }
-                    sb.AppendLine($"{mod.Label}: {mod.Value:N2}{indicator}");
                 }
             }
+        }
 
-            return sb.ToString().Trim();
+        private void UpdateTabStyles()
+        {
+            var tabPanel = _controlFactory!.ModuleTabPanel;
+            if (tabPanel == null) return;
+
+            foreach (Control ctrl in tabPanel.Controls)
+            {
+                if (ctrl is Button button && button.Tag is string tabName)
+                {
+                    bool isActive = (tabName == _activeModuleTab);
+                    button.BackColor = isActive ? _orangeColor : Color.Transparent;
+                    button.ForeColor = isActive ? Color.Black : _darkOrangeColor;
+                }
+            }
+        }
+
+        private void UpdateModuleList()
+        {
+            var listView = _controlFactory!.ModulesListView;
+            if (listView == null || _currentLoadout == null) return;
+
+            listView.BeginUpdate();
+            listView.Items.Clear();
+
+            var modules = GetModulesForCurrentTab();
+
+            foreach (var module in modules)
+            {
+                var item = new ListViewItem
+                {
+                    Tag = module,
+                    // Text is set via custom drawing, but we can set it for accessibility
+                    Text = ItemNameService.TranslateModuleName(module.Item) ?? "Empty"
+                };
+                listView.Items.Add(item);
+            }
+
+            listView.EndUpdate();
+        }
+
+        private IEnumerable<ShipModule> GetModulesForCurrentTab()
+        {
+            if (_currentLoadout == null) return Enumerable.Empty<ShipModule>();
+
+            return _activeModuleTab switch
+            {
+                "core" => _currentLoadout.Modules.Where(m => IsCoreModule(m.Slot)).OrderBy(m => GetSlotSortOrder(m.Slot)),
+                "hardpoints" => _currentLoadout.Modules.Where(m => m.Slot.Contains("Hardpoint")).OrderBy(m => m.Slot),
+                "utility" => _currentLoadout.Modules.Where(m => m.Slot.Contains("Utility")).OrderBy(m => m.Slot),
+                "optional" => _currentLoadout.Modules.Where(m => m.Slot.Contains("Slot") || m.Slot.Contains("Military")).OrderBy(m => GetSlotSortOrder(m.Slot)).ThenBy(m => m.Slot),
+                _ => Enumerable.Empty<ShipModule>()
+            };
         }
 
         private string GetFriendlySlotName(string slot)
@@ -133,6 +223,11 @@ namespace EliteDataRelay.UI
             if (slot.Contains("Radar")) return "Sensors";
             if (slot.Contains("FuelTank")) return "Fuel Tank";
             return "Other";
+        }
+
+        private bool IsCoreModule(string slot)
+        {
+            return !slot.Contains("Hardpoint") && !slot.Contains("Utility") && !slot.Contains("Slot") && !slot.Contains("Military") && !slot.Contains("Armour");
         }
 
         private int GetSlotSortOrder(string slot)

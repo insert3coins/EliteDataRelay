@@ -21,6 +21,7 @@ namespace EliteDataRelay.UI
         private readonly SessionTrackingService _sessionTrackingService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
+        private ShipWireframeDrawer? _shipWireframeDrawer;
         private string _currentLocation = "Unknown";        
 
         private string _baseTitle = "";
@@ -66,12 +67,22 @@ namespace EliteDataRelay.UI
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
             DisplayWelcomeMessage();
+            InitializeShipTab(); // This was the missing call
         }
 
         private void OnFormLoad(object? sender, EventArgs e)
         {
             // The form is now loaded and has its final initial size.
             // We can now correctly adjust the column widths for the welcome message.
+            if (_controlFactory?.TabControl != null)
+            {
+                // Force the Ship tab to be created and have a handle by briefly selecting it.
+                // This ensures that controls on it (like the PictureBox) can be invalidated and painted
+                // even before the user clicks the tab for the first time.
+                var originalIndex = _controlFactory.TabControl.SelectedIndex;
+                _controlFactory.TabControl.SelectedIndex = 1; // Index of Ship tab
+                _controlFactory.TabControl.SelectedIndex = originalIndex;
+            }
             AdjustMessageColumnLayout();
         }
 
