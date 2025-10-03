@@ -133,8 +133,8 @@ namespace EliteDataRelay.UI
             // and needs to be populated with the current image.
             _overlayService?.UpdateShipIcon(shipImage);
 
-            // Update the wireframe drawer with the new ship type
-            _shipWireframeDrawer?.SetShipType(internalShipName);
+            // Update the picture box on the Ship tab with the new image.
+            _controlFactory.ShipWireframePictureBox.Image = shipImage;
 
             // The overlay does not show the image, so no change to this call is needed.
             _overlayService?.UpdateShip(shipName, shipIdent, shipType);

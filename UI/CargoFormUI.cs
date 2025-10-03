@@ -21,7 +21,6 @@ namespace EliteDataRelay.UI
         private readonly SessionTrackingService _sessionTrackingService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
-        private ShipWireframeDrawer? _shipWireframeDrawer;
         private string _currentLocation = "Unknown";        
 
         private string _baseTitle = "";
@@ -190,6 +189,7 @@ namespace EliteDataRelay.UI
             _layoutManager?.Dispose();
             _trayIconManager?.Dispose();
             _watchingAnimationManager?.Dispose();
+            // _shipWireframeDrawer is removed, no need to dispose.
             _fontManager?.Dispose(); // Dispose fonts after the controls that use them.
             _appIcon?.Dispose();
             _iconStream?.Dispose();

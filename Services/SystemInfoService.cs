@@ -96,6 +96,9 @@ namespace EliteDataRelay.Services
                 return null;
             }
 
+            // Check if cancellation has been requested before starting the operation.
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 // EDSM API endpoint for system information

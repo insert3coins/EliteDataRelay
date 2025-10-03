@@ -12,7 +12,6 @@ namespace EliteDataRelay.UI
     {
         private ShipLoadout? _currentLoadout;
         private string _activeModuleTab = "hardpoints";
-        private ShipModule? _selectedModule;
 
         // Elite Orange color scheme
         private readonly Color _orangeColor = Color.FromArgb(255, 102, 0);
@@ -21,11 +20,8 @@ namespace EliteDataRelay.UI
 
         private void InitializeShipTab()
         {
-            if (_controlFactory?.ShipWireframePictureBox != null)
-            {
-                _shipWireframeDrawer = new ShipWireframeDrawer(_controlFactory.ShipWireframePictureBox);
-                _shipWireframeDrawer.HardpointClicked += OnHardpointClicked;
-            }
+            // The ShipWireframeDrawer is no longer used.
+            // The PictureBox is now updated directly with an image.
             CreateModuleTabButtons();
         }
 
@@ -44,40 +40,43 @@ namespace EliteDataRelay.UI
 
             UpdateShipStatsPanel(loadout);
             UpdateModuleList();
-            _controlFactory.ShipWireframePictureBox.Invalidate(); // Force a repaint
+            // No longer need to invalidate, as the image is set directly.
         }
 
         private void UpdateShipStatsPanel(ShipLoadout loadout)
         {
-            var statsPanel = _controlFactory.ShipStatsPanel;
-            if (statsPanel == null) return;
+            var statsPanel = _controlFactory?.ShipStatsPanel;
+            if (statsPanel is null) return;
 
             statsPanel.SuspendLayout();
             statsPanel.Controls.Clear();
 
-            // Calculate total power usage
-            double totalPowerDraw = loadout.Modules
-                .Where(m => m.Engineering?.Modifiers != null)
-                .SelectMany(m => m.Engineering.Modifiers)
-                .Where(mod => mod.Label.Equals("PowerDraw", StringComparison.OrdinalIgnoreCase))
-                .Sum(mod => mod.Value);
+            // Find the power plant to get its capacity.
+            var powerPlant = loadout.Modules.FirstOrDefault(m => m.Slot.Equals("PowerPlant", StringComparison.OrdinalIgnoreCase));
+            double powerCapacity = 0;
+            if (powerPlant?.Engineering?.Modifiers != null)
+            {
+                var powerCapModifier = powerPlant.Engineering.Modifiers.FirstOrDefault(mod => mod.Label.Equals("PowerCapacity", StringComparison.OrdinalIgnoreCase));
+                if (powerCapModifier != null)
+                {
+                    powerCapacity = powerCapModifier.Value;
+                }
+            }
 
             var stats = new[]
             {
-                ("MASS", $"{loadout.UnladenMass:N1}T"),
-                ("SHIELDS", "N/A"), // This info isn't in ShipLoadout model
-                ("ARMOR", "N/A"), // This info isn't in ShipLoadout model
+                ("MASS", $"{loadout.UnladenMass:N1} T"),
+                ("ARMOR", $"{(loadout.HullHealth * 100):N0}%"),
                 ("CARGO", $"{loadout.CargoCapacity}T"),
                 ("JUMP", $"{loadout.MaxJumpRange:F2} LY"),
-                ("SPEED", "N/A"), // This info isn't in ShipLoadout model
-                ("BOOST", "N/A"), // This info isn't in ShipLoadout model
-                ("POWER", $"{totalPowerDraw:F2} MW")
+                ("REBUY", $"{loadout.Rebuy:N0} CR"),
+                ("POWER", $"{powerCapacity:F2} MW")
             };
 
             for (int i = 0; i < stats.Length; i++)
             {
                 var statPanel = CreateStatItem(stats[i].Item1, stats[i].Item2);
-                statsPanel.Controls.Add(statPanel, i % 4, i / 4);
+                statsPanel.Controls.Add(statPanel, i % 3, i / 3);
             }
 
             statsPanel.ResumeLayout();
@@ -86,10 +85,10 @@ namespace EliteDataRelay.UI
         private Panel CreateStatItem(string label, string value)
         {
             var panel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
-            var lbl = new Label { Text = label, Dock = DockStyle.Top, Font = new Font("Consolas", 8), ForeColor = _darkOrangeColor };
-            var val = new Label { Text = value, Dock = DockStyle.Fill, Font = new Font("Consolas", 12, FontStyle.Bold), ForeColor = _lightOrangeColor, TextAlign = ContentAlignment.MiddleCenter };
-            panel.Controls.Add(val);
+            var lbl = new Label { Text = label, Dock = DockStyle.Top, Font = new Font("Consolas", 8), ForeColor = _lightOrangeColor };
+            var val = new Label { Text = value, Dock = DockStyle.Fill, Font = new Font("Consolas", 12, FontStyle.Bold), ForeColor = Color.White, TextAlign = ContentAlignment.MiddleCenter };
             panel.Controls.Add(lbl);
+            panel.Controls.Add(val);
             return panel;
         }
 
@@ -131,30 +130,6 @@ namespace EliteDataRelay.UI
             }
         }
 
-        private void OnHardpointClicked(object? sender, int index)
-        {
-            if (_currentLoadout == null) return;
-
-            var hardpoints = _currentLoadout.Modules.Where(m => m.Slot.Contains("Hardpoint")).OrderBy(m => m.Slot).ToList();
-            if (index < hardpoints.Count)
-            {
-                _selectedModule = hardpoints[index];
-                _activeModuleTab = "hardpoints";
-                UpdateTabStyles();
-                UpdateModuleList();
-
-                // Also select the item in the list view for visual feedback
-                var listView = _controlFactory!.ModulesListView;
-                if (listView != null)
-                {
-                    foreach (ListViewItem item in listView.Items)
-                    {
-                        if (item.Tag == _selectedModule) { item.Selected = true; listView.Focus(); break; }
-                    }
-                }
-            }
-        }
-
         private void UpdateTabStyles()
         {
             var tabPanel = _controlFactory!.ModuleTabPanel;
@@ -173,8 +148,8 @@ namespace EliteDataRelay.UI
 
         private void UpdateModuleList()
         {
-            var listView = _controlFactory!.ModulesListView;
-            if (listView == null || _currentLoadout == null) return;
+            var listView = _controlFactory?.ModulesListView;
+            if (listView is null || _currentLoadout is null) return;
 
             listView.BeginUpdate();
             listView.Items.Clear();

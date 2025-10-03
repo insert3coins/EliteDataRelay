@@ -67,20 +67,21 @@ namespace EliteDataRelay.UI
             {
                 Dock = DockStyle.Fill,
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.FromArgb(10, 10, 10) // Use a solid, dark color to prevent crash
+                BackColor = Color.FromArgb(10, 10, 10), // Use a solid, dark color to prevent crash
+                SizeMode = PictureBoxSizeMode.Zoom
             };
 
             // Ship Stats
             ShipStatsPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 4,
+                ColumnCount = 3,
                 RowCount = 2,
                 Padding = new Padding(10),
                 CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
                 BackColor = Color.FromArgb(10, 10, 10), // Use a solid, dark color
             };
-            for (int i = 0; i < 4; i++) ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            for (int i = 0; i < 3; i++) ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
             for (int i = 0; i < 2; i++) ShipStatsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
             leftPanel.Controls.Add(ShipWireframePictureBox, 0, 0);
@@ -175,6 +176,8 @@ namespace EliteDataRelay.UI
 
         private void ModulesListView_DrawSubItem(object? sender, DrawListViewSubItemEventArgs e)
         {
+            if (e.Item is null) return;
+
             // We need to re-draw the background for the sub-item to respect selection state
             if (e.Item.Selected)
             {

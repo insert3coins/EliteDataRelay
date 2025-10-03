@@ -20,49 +20,47 @@ namespace EliteDataRelay.Services
         {
             // --- Small Ships ---
             { "sidewinder", "SideWinder" },
-            { "eagle", "Eagle" },
+            { "eagle", "Eagle Mk II" },
             { "hauler", "Hauler" },
             { "adder", "Adder" },
-            { "empire_eagle", "Imperial Eagle" },
-            { "viper", "Viper" },
+            { "empire_eagle", "Empire Eagle" },
+            { "viper", "Viper Mk III" },
             { "viper_mkiv", "Viper Mk IV" },
             { "cobramkiii", "Cobra Mk III" },
             { "cobramkiv", "Cobra Mk IV" },
-            { "diamondback", "Diamondback Scout" }, // Journal: "diamondback" -> Scout
+            { "diamondback", "Diamondback" }, // Journal: "diamondback" -> Scout
             { "dolphin", "Dolphin" },
-            { "empire_courier", "Imperial Courier" },
+            { "empire_courier", "Empire_Courier" },
             { "vulture", "Vulture" },
 
             // --- Medium Ships ---
-            { "diamondbackxl", "Diamondback XL" }, // Journal: "diamondbackxl" -> Explorer
+            { "diamondbackxl", "Diamondback Explorer" }, // Journal: "diamondbackxl" -> Explorer
             { "keelback", "Keelback" },
-            { "type6", "Type-6 Transporter" },
-            { "lakonminer", "Type-11 Prospector" }, // Lakon Type-11 Prospector
+            { "type6", "Type 6 Transporter" },
+            { "lakonminer", "Lakon_Miner" }, // Lakon Type-11 Prospector
             { "asp", "Asp Explorer" }, // Journal: "asp" -> Asp Explorer
             { "asp_scout", "Asp Scout" },
-            { "federation_dropship", "Federal Dropship" },
-            { "federation_dropship_mkii", "Federal Assault Ship" },
-            { "federation_gunship", "Federal Gunship" },
-            { "empire_trader", "Imperial Clipper" },
+            { "federation_dropship", "Federation Dropship" },
+            { "federation_dropship_mkii", "Federation Dropship Mk II" },
+            { "federation_gunship", "Federation_Gunship" },
+            { "empire_trader", "Empire Trader" },
             { "krait_mkii", "Krait Mk II" },
             { "krait_phantom", "Krait Phantom" },
             { "mamba", "Mamba" },
             { "ferdelance", "FerDeLance" },
             { "python", "Python" },
             { "orca", "Orca" },
-            { "typex", "Chieftain" }, // Alliance Chieftain
-            { "typex_2", "Crusader" }, // Alliance Crusader
-            { "typex_3", "Challenger" }, // Alliance Challenger
+            { "typex", "TypeX" }, // Alliance Chieftain
+            { "mandalay", "Mandalay" }, 
 
             // --- Large Ships ---
-            { "type7", "Type-7 Transporter" },
-            { "type9", "Type-9 Heavy" },
-            { "type9_military", "Type-10 Defender" },
-            { "belugaliner", "Beluga Liner" },
+            { "type7", "Type 7 Transporter" },
+            { "type9", "Type 9 Heavy" },
+            { "type9_military", "Type 9 Military" },
+            { "belugaliner", "BelugaLiner" },
             { "anaconda", "Anaconda" },
-            { "federation_corvette", "Federal Corvette" },
-            { "cutter", "Imperial Cutter" },
-            { "panthermkii", "panthermkii" },
+            { "federation_corvette", "Federation_Corvette" },
+            { "cutter", "Cutter" },
         };
         private static readonly string _iconDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "Ships");
 
@@ -101,7 +99,6 @@ namespace EliteDataRelay.Services
                     catch (Exception ex)
                     {
                         Debug.WriteLine($"[ShipIconService] Failed to load icon '{fullPath}': {ex.Message}");
-                        _iconCache[internalShipName] = null!; // Cache null to prevent repeated failed attempts
                     }
                 }
                 else
