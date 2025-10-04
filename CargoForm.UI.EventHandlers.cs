@@ -106,8 +106,7 @@ namespace EliteDataRelay
                 // we need to start the service. If they disabled it, we stop it.
                 if (AppConfiguration.EnableSessionTracking)
                 {
-                    var initialCargo = _lastCargoSnapshot?.Count ?? 0;
-                    _sessionTrackingService.StartSession(_lastBalance ?? 0, initialCargo);
+                    _sessionTrackingService.StartSession(_lastBalance ?? 0, _lastCargoSnapshot);
                 }
                 else
                 {

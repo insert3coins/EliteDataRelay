@@ -54,11 +54,13 @@ namespace EliteDataRelay
             // This initial poll is synchronous and will populate _lastBalance before we proceed.
             _journalWatcherService.StartMonitoring();
 
+            // Force one more read of the cargo file to ensure we have the absolute latest count before starting the session.
+            _cargoProcessorService.ProcessCargoFile(force: true);
+
             // Now that the initial poll is complete and _lastBalance is populated, start the session.
             if (AppConfiguration.EnableSessionTracking)
             {
-                var initialCargo = _lastCargoSnapshot?.Count ?? 0;
-                _sessionTrackingService.StartSession(_lastBalance ?? 0, initialCargo);
+                _sessionTrackingService.StartSession(_lastBalance ?? 0, _lastCargoSnapshot);
             }
 
             // Start the game process checker

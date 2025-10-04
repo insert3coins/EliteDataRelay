@@ -20,6 +20,7 @@ namespace EliteDataRelay.Services
         event EventHandler<MiningRefinedEventArgs>? MiningRefined;
         event EventHandler<LaunchDroneEventArgs>? LaunchDrone;
         event EventHandler<BuyDronesEventArgs>? BuyDrones;
+        event EventHandler<MarketBuyEventArgs>? MarketBuy;
 
         void StartMonitoring();
         void StopMonitoring();

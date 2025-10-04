@@ -15,7 +15,6 @@ namespace EliteDataRelay.UI
         public void UpdateCommander(string text) => UpdateLabel(_cmdrValueLabel, text);
         public void UpdateShip(string text) => UpdateLabel(_shipValueLabel, text);
         public void UpdateBalance(long balance) => UpdateLabel(_balanceValueLabel, $"{balance:N0} CR");
-        public void UpdateLocation(string text) => UpdateLabel(_locationValueLabel, text);
         public void UpdateCargo(int count, int? capacity)
         {
             UpdateLabel(_cargoHeaderLabel, "Cargo:");

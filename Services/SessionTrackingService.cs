@@ -14,6 +14,7 @@ namespace EliteDataRelay.Services
         private long _startingBalance;
         private long _currentBalance;
         private int _startingCargoCount;
+        private Dictionary<string, int> _sessionStartCargoState = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         private DateTime? _sessionStartTime;
 
         // Mining-specific tracking
@@ -89,20 +90,27 @@ namespace EliteDataRelay.Services
             _journalWatcherService = journalWatcherService;
         }
 
-        public void StartSession(long initialBalance, int initialCargoCount)
+        public void StartSession(long initialBalance, CargoSnapshot? initialCargo)
         {
             if (IsSessionActive) return;
 
             _startingBalance = initialBalance;
             _currentBalance = initialBalance;
-            _startingCargoCount = initialCargoCount;
+            _startingCargoCount = initialCargo?.Count ?? 0;
             TotalCargoCollected = 0;
             _sessionStartTime = DateTime.UtcNow;
+            _sessionStartCargoState.Clear(); // Clear any previous state
+            if (initialCargo != null && initialCargo.Items.Any())
+            {
+                _sessionStartCargoState = initialCargo.Items.ToDictionary(i => i.Name, i => i.Count, StringComparer.OrdinalIgnoreCase);
+            }
 
             IsSessionActive = true;
 
             // Subscribe to events now that the session is active
             _journalWatcherService.CargoCollected += OnCargoCollected;
+            _journalWatcherService.MarketBuy += OnMarketBuy;
+            _cargoProcessorService.CargoProcessed += OnCargoProcessed;
 
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -113,9 +121,12 @@ namespace EliteDataRelay.Services
 
             IsSessionActive = false;
             _sessionStartTime = null;
+            _sessionStartCargoState.Clear();
 
             // Unsubscribe from events
             _journalWatcherService.CargoCollected -= OnCargoCollected;
+            _journalWatcherService.MarketBuy -= OnMarketBuy;
+            _cargoProcessorService.CargoProcessed -= OnCargoProcessed;
 
             // Also ensure the mining session is stopped.
             if (IsMiningSessionActive)
@@ -173,6 +184,12 @@ namespace EliteDataRelay.Services
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
+        private void OnMarketBuy(object? sender, MarketBuyEventArgs e)
+        {
+            TotalCargoCollected += e.Count;
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
         private void OnMiningRefined(object? sender, MiningRefinedEventArgs e)
         {
             if (!IsMiningSessionActive) return;
@@ -192,7 +209,7 @@ namespace EliteDataRelay.Services
 
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
-            if (!IsMiningSessionActive) return;
+            if (!IsSessionActive) return;
 
             bool sessionWasUpdated = false;
             
@@ -216,25 +233,45 @@ namespace EliteDataRelay.Services
 
             // --- End of New Limpet Tracking Logic ---
 
-            // --- Pending Refined Commodity Logic ---
-            if (_pendingRefined.Any())
+            // --- Differential Cargo Tracking ---
+            int currentTotal = 0;
+            foreach (var item in e.Snapshot.Items)
             {
+                // Exclude limpets (drones) from the session cargo count.
+                if (item.Name.Equals("drones", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                _sessionStartCargoState.TryGetValue(item.Name, out int startCount);
+                if (item.Count > startCount)
+                {
+                    currentTotal += (item.Count - startCount);
+                }
+            }
+
+            if (currentTotal > TotalCargoCollected)
+            {
+                TotalCargoCollected = currentTotal;
+                sessionWasUpdated = true;
+            }
+
+            // --- Mining-Specific Logic (Refined items) ---
+            if (IsMiningSessionActive && _pendingRefined.Any())
+            {
+                // This logic is now simpler: we just confirm that a refined item exists in cargo.
+                // The differential logic above handles the actual session count.
                 foreach (var item in e.Snapshot.Items)
                 {
                     var commodityName = item.Name.ToLowerInvariant();
-                    if (_pendingRefined.TryGetValue(commodityName, out int pendingCount) && pendingCount > 0)
+                    if (_pendingRefined.ContainsKey(commodityName))
                     {
-                        // This commodity was pending refinement and is now in cargo.
-                        // Move it from pending to confirmed.
-                        _pendingRefined[commodityName]--;
-                        if (_pendingRefined[commodityName] == 0)
-                        {
-                            _pendingRefined.Remove(commodityName);
-                        }
-
-                        _refinedCommodities[commodityName] = _refinedCommodities.GetValueOrDefault(commodityName) + 1;
-                        TotalCargoCollected++; // Increment the total session cargo count
-                        sessionWasUpdated = true;
+                        // Item is confirmed in cargo. Add it to the mining session's refined list.
+                        // We use the full current count for the mining list display.
+                        _refinedCommodities[commodityName] = item.Count;
+                        // No need to increment TotalCargoCollected here, the diff logic does it.
+                        _pendingRefined.Remove(commodityName); // Remove from pending
+                        sessionWasUpdated = true; // Ensure UI updates
                     }
                 }
             }

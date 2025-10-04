@@ -107,7 +107,6 @@ namespace EliteDataRelay.UI
                 _controlFactory.LocationLabel.Text = locationText;
                 _controlFactory.ToolTip.SetToolTip(_controlFactory.LocationLabel, "Click to copy system name");
             }
-            _overlayService?.UpdateLocation(starSystem);
         }
 
         public void UpdateCommanderName(string commanderName)

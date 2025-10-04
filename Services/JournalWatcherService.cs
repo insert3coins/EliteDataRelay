@@ -104,6 +104,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<BuyDronesEventArgs>? BuyDrones;
 
         /// <summary>
+        /// Event raised when commodities are purchased from the market.
+        /// </summary>
+        public event EventHandler<MarketBuyEventArgs>? MarketBuy;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;

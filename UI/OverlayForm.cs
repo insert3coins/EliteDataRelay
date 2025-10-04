@@ -27,7 +27,6 @@ namespace EliteDataRelay.UI
         private Label _cmdrValueLabel = null!;
         private Label _shipValueLabel = null!;
         private Label _balanceValueLabel = null!;
-        private Label _locationValueLabel = null!;
         private Label _cargoHeaderLabel = null!;
         private Label _sessionCargoValueLabel = null!;
         private Label _sessionCreditsValueLabel = null!;

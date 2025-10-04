@@ -196,6 +196,14 @@ namespace EliteDataRelay.Services
                                 BuyDrones?.Invoke(this, new BuyDronesEventArgs(buyEvent.Count, buyEvent.TotalCost));
                             }
                         }
+                        else if (eventType == "MarketBuy")
+                        {
+                            var buyEvent = JsonSerializer.Deserialize<MarketBuyEvent>(journalLine, options);
+                            if (buyEvent != null)
+                            {
+                                MarketBuy?.Invoke(this, new MarketBuyEventArgs(buyEvent.Type, buyEvent.Count, buyEvent.TotalCost));
+                            }
+                        }
                         else if (eventType == "Docked")
                         {
                             var dockedEvent = JsonSerializer.Deserialize<DockedEvent>(journalLine, options);
