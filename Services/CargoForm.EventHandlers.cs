@@ -35,6 +35,14 @@ namespace EliteDataRelay
                     _cargoFormUI.UpdateCargoHeader(e.Snapshot.Count, _cargoCapacity);
                     _cargoFormUI.UpdateCargoList(e.Snapshot);
                     _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
+
+                    // Auto-populate the trade commodity dropdown with items currently in cargo
+                    // We must translate the internal names (e.g., "lowtemperaturediamonds") to friendly names ("Low Temperature Diamonds")
+                    // that the EDSM API expects.
+                    var cargoCommodities = e.Snapshot.Items.Select(i => ItemNameService.TranslateCommodityName(i.Name) ?? i.Name).Distinct();
+
+                    var allCommodities = cargoCommodities.Union(ItemNameService.GetAllCommodityNames()).OrderBy(c => c);
+                    _cargoFormUI.PopulateCommodities(allCommodities);
                 }
             }));
         }
@@ -233,8 +241,75 @@ namespace EliteDataRelay
                 if (!_isInitializing)
                 {
                     _cargoFormUI.UpdateLocation(_lastLocation);
+
+                    // When location changes, clear old trade results
+                    _cargoFormUI.UpdateTradeResults(new System.Collections.Generic.List<Models.Market.MarketInfo>(), true); // Clears the list
+                    _cargoFormUI.SetTradeStatus("Location changed. Select a commodity and search.");
+
                 }
             }));
+        }
+
+        private async void OnTradeFindBestSellClicked(object? sender, EventArgs e)
+        {
+            var commodity = _cargoFormUI.GetSelectedTradeCommodity();
+            if (string.IsNullOrWhiteSpace(commodity))
+            {
+                _cargoFormUI.SetTradeStatus("Please select a commodity to search for.");
+                return;
+            }
+
+            Trace.WriteLine($"[TradeSearch] 'Find Best Sell' clicked for commodity: {commodity}");
+            _cargoFormUI.StartTradeSearchAnimation();
+            _cargoFormUI.SetTradeStatus($"Searching for best sell price for {commodity} within 50 LY of {_lastLocation}...");
+
+            try
+            {
+                var results = await _marketDataService.FindBestSellLocationsAsync(_lastLocation, commodity);
+
+                Trace.WriteLine($"[TradeSearch] Service returned {results.Count} potential sell locations. Updating UI.");
+                if (CanInvoke())
+                {
+                    Invoke(new Action(() => _cargoFormUI.UpdateTradeResults(results, isSellSearch: true)));
+                }
+            }
+            finally
+            {
+                _cargoFormUI.StopTradeSearchAnimation();
+                // Re-enable buttons via the commodity selection logic
+                Invoke(new Action(() => _cargoFormUI.OnTradeCommodityChanged(null, EventArgs.Empty)));
+            }
+        }
+
+        private async void OnTradeFindBestBuyClicked(object? sender, EventArgs e)
+        {
+            var commodity = _cargoFormUI.GetSelectedTradeCommodity();
+            if (string.IsNullOrWhiteSpace(commodity))
+            {
+                _cargoFormUI.SetTradeStatus("Please select a commodity to search for.");
+                return;
+            }
+
+            Trace.WriteLine($"[TradeSearch] 'Find Best Buy' clicked for commodity: {commodity}");
+            _cargoFormUI.StartTradeSearchAnimation();
+            _cargoFormUI.SetTradeStatus($"Searching for best buy price for {commodity} within 50 LY of {_lastLocation}...");
+
+            try
+            {
+                var results = await _marketDataService.FindBestBuyLocationsAsync(_lastLocation, commodity);
+
+                Trace.WriteLine($"[TradeSearch] Service returned {results.Count} potential buy locations. Updating UI.");
+                if (CanInvoke())
+                {
+                    Invoke(new Action(() => _cargoFormUI.UpdateTradeResults(results, isSellSearch: false)));
+                }
+            }
+            finally
+            {
+                _cargoFormUI.StopTradeSearchAnimation();
+                // Re-enable buttons via the commodity selection logic
+                Invoke(new Action(() => _cargoFormUI.OnTradeCommodityChanged(null, EventArgs.Empty)));
+            }
         }
 
         private void OnStationInfoUpdated(object? sender, StationInfoData e)
@@ -261,8 +336,7 @@ namespace EliteDataRelay
             {
                 if (!_isInitializing)
                 {
-                    // _lastSystemInfoData = e;
-                    _cargoFormUI.UpdateSystemInfo(e); // This call is preserved for future use
+                    _cargoFormUI.UpdateSystemInfo(e);
                 }
             }));
         }

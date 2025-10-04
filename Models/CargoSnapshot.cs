@@ -3,10 +3,8 @@ using System.Text.Json.Serialization;
 
 namespace EliteDataRelay.Models
 {
-    /// <summary>
-    /// Represents a complete cargo inventory snapshot from Elite Dangerous
-    /// </summary>
-    public record CargoSnapshot(
-        [property: JsonPropertyName("Inventory")] List<CargoItem> Inventory,
-        [property: JsonPropertyName("Count")] int Count);
+    public record CargoSnapshot([property: JsonPropertyName("Inventory")] IReadOnlyList<CargoItem> Items, int Count)
+    {
+        public CargoSnapshot() : this(new List<CargoItem>(), 0) { }
+    }
 }

@@ -1,121 +1,114 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+using System.Linq;
 
 namespace EliteDataRelay.Services
-    {
-    /// <summary>
-    /// A static service to translate internal game item names (e.g., for modules) into human-readable strings.
-    /// </summary>
+{
     public static class ItemNameService
     {
-        private static readonly Dictionary<string, string> ModuleNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private static readonly Dictionary<string, string> BlueprintNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        static ItemNameService()
+        private static readonly Dictionary<string, string> CommodityNames = new Dictionary<string, string>
         {
-            LoadNamesFromResource("EliteDataRelay.Modules.txt", ModuleNames);
-            LoadNamesFromResource("EliteDataRelay.Blueprints.txt", BlueprintNames);
-        }
+            // Add commodity internal names and their friendly names here
+            // Example:
+            { "lowtemperaturediamonds", "Low Temperature Diamonds" },
+            { "painite", "Painite" },
+            { "tritium", "Tritium" },
+            { "gold", "Gold" },
+            { "silver", "Silver" },
+            { "platinum", "Platinum" },
+            { "palladium", "Palladium" },
+            { "monazite", "Monazite" },
+            { "musgravite", "Musgravite" },
+            { "grandidierite", "Grandidierite" },
+            { "alexandrite", "Alexandrite" },
+            { "voidopals", "Void Opals" },
+            { "benitoite", "Benitoite" },
+            { "serendibite", "Serendibite" },
+            { "rhodplumsite", "Rhodplumsite" },
+            { "osmium", "Osmium" },
+            { "bromellite", "Bromellite" },
+            { "hydrogenperoxide", "Hydrogen Peroxide" },
+            { "liquidoxygen", "Liquid Oxygen" },
+            { "water", "Water" },
+            { "mineraloil", "Mineral Oil" },
+            { "coltan", "Coltan" },
+            { "uraninite", "Uraninite" },
+            { "bauxite", "Bauxite" },
+            { "lepidolite", "Lepidolite" },
+            { "rutile", "Rutile" },
+            { "gallite", "Gallite" },
+            { "bertrandite", "Bertrandite" },
+            { "indite", "Indite" },
+            { "methanolmonohydratecrystals", "Methanol Monohydrate Crystals" },
+            // This list is not exhaustive. You can add more as needed.
+        };
 
-        /// <summary>
-        /// Translates an internal module name into a user-friendly display name.
-        /// </summary>
-        /// <param name="internalName">The internal name from the journal (e.g., "int_powerplant_size2_class1").</param>
-        /// <returns>A human-readable name (e.g., "2A Power Plant") or a formatted fallback.</returns>
-        public static string TranslateModuleName(string internalName)
+        private static readonly Dictionary<string, string> ModuleNames = new Dictionary<string, string>
+        {
+            // Example:
+            { "hpt_pulselaser_fixed_medium", "Medium Fixed Pulse Laser" },
+            { "int_cargorack_size5_class1", "Cargo Rack (16T)" },
+            // This would be populated with many more module names
+        };
+
+        public static string? TranslateCommodityName(string internalName)
         {
             if (string.IsNullOrEmpty(internalName))
-            {
-                return "Empty";
-            }
+                return null;
 
-            // The journal uses '_size0_' for utility mounts, but community data files often use '_tiny_'.
-            // We'll create a variant to check for this common discrepancy before doing a lookup.
-            string lookupName = internalName.Contains("_size0_") ? internalName.Replace("_size0_", "_tiny_") : internalName;
-
-            // First, try a direct match. This is fastest and handles non-engineered items.
-            if (ModuleNames.TryGetValue(lookupName, out string? friendlyName))
+            if (CommodityNames.TryGetValue(internalName.ToLower(), out var friendlyName))
             {
-                // If the lookup name was different, cache the result for the original name for faster access next time.
-                if (lookupName != internalName)
-                {
-                    ModuleNames[internalName] = friendlyName;
-                }
                 return friendlyName;
             }
 
-            // If direct match fails, it might be an engineered module (e.g., '..._sturdy').
-            // We can try stripping suffixes until we find a base module name.
-            // We use the lookupName here as well to handle engineered utility mounts correctly.
-            string tempName = lookupName;
-            while (true)
-            {
-                int lastUnderscore = tempName.LastIndexOf('_');
-                if (lastUnderscore <= 0)
-                {
-                    break; // No more parts to strip or we've reached the start of the string.
-                }
-
-                tempName = tempName.Substring(0, lastUnderscore);
-                if (ModuleNames.TryGetValue(tempName, out friendlyName))
-                {
-                    // Found a base name match. Cache the full engineered name for next time.
-                    ModuleNames[internalName] = friendlyName;
-                    return friendlyName;
-                }
-            }
-
-            // Fallback for completely unknown modules: try to make the internal name more readable.
-            string fallback = internalName.Replace("_", " ");
-            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(fallback.ToLower());
+            // Fallback for items not in our dictionary: capitalize the first letter.
+            return Capitalize(internalName);
         }
 
-        /// <summary>
-        /// Translates an internal blueprint name into a user-friendly display name.
-        /// </summary>
-        /// <param name="internalName">The internal name from the journal (e.g., "FSD_LongRange").</param>
-        /// <returns>A human-readable name (e.g., "Increased FSD Range") or a formatted fallback.</returns>
-        public static string TranslateBlueprintName(string internalName)
+        public static string? TranslateModuleName(string internalName)
+        {
+            if (string.IsNullOrEmpty(internalName))
+                return null;
+
+            if (ModuleNames.TryGetValue(internalName.ToLower(), out var friendlyName))
+            {
+                return friendlyName;
+            }
+
+            // A more complex fallback for module names could be implemented here.
+            // For now, just return a capitalized version.
+            return FormatInternalName(internalName);
+        }
+
+        public static IEnumerable<string> GetAllCommodityNames()
+        {
+            return CommodityNames.Values.Distinct();
+        }
+
+        private static string FormatInternalName(string internalName)
         {
             if (string.IsNullOrEmpty(internalName))
             {
                 return "Unknown";
             }
 
-            if (BlueprintNames.TryGetValue(internalName, out string? friendlyName))
+            // Simple formatter: "int_powerplant_size2_class5" -> "Int Powerplant Size2 Class5"
+            var parts = internalName.Split('_');
+            var formattedParts = parts.Select(p =>
             {
-                return friendlyName;
-            }
+                if (string.IsNullOrEmpty(p)) return "";
+                return char.ToUpper(p[0]) + p.Substring(1);
+            });
 
-            // Fallback for unknown blueprints: try to make the internal name more readable.
-            string fallback = internalName.Replace("Blueprint_", "").Replace("_", " ");
-            return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(fallback.ToLower());
+            return string.Join(" ", formattedParts);
         }
 
-        private static void LoadNamesFromResource(string resourceName, Dictionary<string, string> dictionary)
+        private static string? Capitalize(string? s)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
+            if (string.IsNullOrEmpty(s))
             {
-                if (stream == null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[ItemNameService] Could not find embedded resource: {resourceName}");
-                    return;
-                }
-
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    string? line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
-                        var parts = line.Split(new[] { '=' }, 2);
-                        if (parts.Length == 2) dictionary[parts[0].Trim()] = parts[1].Trim();
-                    }
-                }
+                return s;
             }
+            return char.ToUpperInvariant(s[0]) + s.Substring(1);
         }
     }
 }

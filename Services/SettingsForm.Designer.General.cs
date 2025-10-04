@@ -107,6 +107,7 @@ namespace EliteDataRelay.UI
             };
             _grpSessionTracking.Controls.Add(_chkEnableSessionTracking);
 
+
             // Add controls to the file output groupbox
             _grpOutputFormat.Controls.Add(_chkEnableFileOutput);
             _grpOutputFormat.Controls.Add(_lblDescription);

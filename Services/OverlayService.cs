@@ -89,6 +89,27 @@ namespace EliteDataRelay.Services
         }
 
         /// <summary>
+        /// Sets the visibility of the overlays based on the provided boolean.
+        /// Only shows overlays that are enabled in the application configuration.
+        /// </summary>
+        /// <param name="visible">True to show enabled overlays, false to hide all overlays.</param>
+        public void SetVisibility(bool visible)
+        {
+            if (visible)
+            {
+                if (AppConfiguration.EnableInfoOverlay) _leftOverlayForm?.Show();
+                if (AppConfiguration.EnableCargoOverlay) _rightOverlayForm?.Show();
+                if (AppConfiguration.EnableShipIconOverlay) _shipIconOverlayForm?.Show();
+            }
+            else
+            {
+                _leftOverlayForm?.Hide();
+                _rightOverlayForm?.Hide();
+                _shipIconOverlayForm?.Hide();
+            }
+        }
+
+        /// <summary>
         /// Gets a reference to a specific, active overlay form.
         /// </summary>
         /// <param name="position">The type of overlay to retrieve.</param>

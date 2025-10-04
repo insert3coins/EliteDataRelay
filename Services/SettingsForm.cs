@@ -84,6 +84,7 @@ namespace EliteDataRelay.UI
             _chkEnableFileOutput.Checked = AppConfiguration.EnableFileOutput;
             _txtOutputFormat.Text = AppConfiguration.OutputFileFormat;
             _txtOutputFileName.Text = AppConfiguration.OutputFileName;
+            _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             _chkEnableSessionTracking.Checked = AppConfiguration.EnableSessionTracking;
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableInfoOverlay;
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
@@ -95,7 +96,6 @@ namespace EliteDataRelay.UI
             _showOverlayHotkey = AppConfiguration.ShowOverlayHotkey;
             _hideOverlayHotkey = AppConfiguration.HideOverlayHotkey;
             UpdateHotkeyText();
-            _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
             OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
             OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);

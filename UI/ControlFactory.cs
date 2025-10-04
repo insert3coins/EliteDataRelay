@@ -19,8 +19,8 @@ namespace EliteDataRelay.UI
         public Button ExitBtn { get; private set; } = null!;        
         public Button AboutBtn { get; private set; } = null!;        
         public Button SessionBtn { get; private set; } = null!;
+        public Label WatchingLabel { get; private set; } = null!;
         public Button SettingsBtn { get; private set; } = null!;
-        public Button WatchingLabel { get; private set; } = null!;
         public Button CargoHeaderLabel { get; private set; } = null!;
         public Button CargoSizeLabel { get; private set; } = null!;
         public Button CommanderLabel { get; private set; } = null!;
@@ -31,12 +31,14 @@ namespace EliteDataRelay.UI
         public ControlFactory(FontManager fontManager, Services.SessionTrackingService sessionTracker, CargoFormUI cargoFormUI)
         {
             _cargoFormUI = cargoFormUI;
-            _cargoFormUI = cargoFormUI; // This was missing
 
             CreateTabControls(fontManager, sessionTracker);
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);
             CreateToolTips();
+
+            // Add the new Trade Tab
+            TabControl.TabPages.Add(CreateTradeTabPage(fontManager));
         }
 
         public void Dispose()
@@ -44,7 +46,9 @@ namespace EliteDataRelay.UI
             DisposeButtons();
             DisposeTabControls();
             DisposeMiningTabControls();
+            DisposeTradeTabControls();
             DisposeLabels();
+            ToolTip.Dispose();
         }
     }
 }

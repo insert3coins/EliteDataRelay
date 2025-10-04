@@ -1,11 +1,13 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 using EliteDataRelay.Configuration;
+using EliteDataRelay.Models.Market;
 
 namespace EliteDataRelay.UI
 {
@@ -41,6 +43,10 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? MiningStopClicked;
 
+        public event EventHandler? TradeFindBestSellClicked;
+
+        public event EventHandler? TradeFindBestBuyClicked;
+
         public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService)
         {
             _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
@@ -59,8 +65,6 @@ namespace EliteDataRelay.UI
                 _watchingAnimationManager = new WatchingAnimationManager(_controlFactory.WatchingLabel);
             }
 
-            // The layout manager now adds the TabControl instead of the ListView directly.
-            // Assuming LayoutManager is adapted to add _controlFactory.TabControl to the form's main panel.
             _layoutManager = new LayoutManager(_form, _controlFactory);
 
             _form.Resize += OnFormResize;
@@ -70,6 +74,7 @@ namespace EliteDataRelay.UI
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
             DisplayWelcomeMessage();
+            PopulateInitialCommodities();
             InitializeShipTab(); // This was the missing call
         }
 
@@ -124,7 +129,7 @@ namespace EliteDataRelay.UI
             if (_form == null) return;
 
             // Basic form properties
-            _form.Text = "Elite Data Relay – Stopped";
+            _form.Text = "Elite Data Relay";
             _form.Padding = Padding.Empty;
             _baseTitle = _form.Text;
             UpdateFullTitleText();
@@ -149,6 +154,10 @@ namespace EliteDataRelay.UI
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
             _controlFactory.MiningSessionPanel.StartMiningClicked += OnMiningStartClicked;
             _controlFactory.MiningSessionPanel.StopMiningClicked += OnMiningStopClicked;
+            _controlFactory.TradeFindBestSellButton.Click += (s, e) => TradeFindBestSellClicked?.Invoke(s, e); // This should call the SELL handler
+            _controlFactory.TradeFindBestBuyButton.Click += (s, e) => TradeFindBestBuyClicked?.Invoke(s, e);   // This should call the BUY handler
+
+            _controlFactory.TradeCommodityComboBox.TextChanged += OnTradeCommodityChanged;
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -158,6 +167,17 @@ namespace EliteDataRelay.UI
                 _trayIconManager.StopClicked += (s, e) => StopClicked?.Invoke(s, e);
                 _trayIconManager.ExitClicked += (s, e) => ExitClicked?.Invoke(s, e);
             }
+        }
+
+        public void OnTradeCommodityChanged(object? sender, EventArgs e)
+        {
+            if (_controlFactory == null) return;
+
+            // Buttons should only be enabled if a commodity is selected AND the location is known.
+            bool isCommoditySelected = !string.IsNullOrWhiteSpace(_controlFactory.TradeCommodityComboBox.Text);
+            bool isLocationKnown = _currentLocation != "Unknown";
+            _controlFactory.TradeFindBestSellButton.Enabled = isCommoditySelected && isLocationKnown;
+            _controlFactory.TradeFindBestBuyButton.Enabled = isCommoditySelected && isLocationKnown;
         }
 
         public void OnShowApplication(object? sender, EventArgs e)
@@ -191,6 +211,122 @@ namespace EliteDataRelay.UI
         public void UpdateMiningStats()
         {
             _controlFactory?.MiningSessionPanel?.UpdateStats();
+        }
+
+        public string? GetSelectedTradeCommodity() => _controlFactory?.TradeCommodityComboBox.Text;
+
+        public void PopulateCommodities(System.Collections.Generic.IEnumerable<string> commodities)
+        {
+            if (_controlFactory == null) return;
+
+            var comboBox = _controlFactory.TradeCommodityComboBox;
+            comboBox.Items.Clear();
+            comboBox.Items.AddRange(commodities.ToArray());
+        }
+
+        private void PopulateInitialCommodities()
+        {
+            var allCommodities = ItemNameService.GetAllCommodityNames().OrderBy(c => c);
+            PopulateCommodities(allCommodities);
+        }
+
+        public void UpdateTradeResults(System.Collections.Generic.List<MarketInfo> results, bool isSellSearch)
+        {
+            if (_controlFactory == null) return;
+            Trace.WriteLine($"[TradeUI] Received {results.Count} results to display.");
+
+            var listView = _controlFactory.TradeResultsListView;
+            listView.BeginUpdate();
+            listView.Items.Clear();
+
+            if (results.Any())
+            {
+                foreach (var result in results)
+                {
+                    // For a SELL search, we care about the station's BUY price and its DEMAND.
+                    // For a BUY search, we care about the station's SELL price and its STOCK.
+                    var price = result.Commodity?.SellPrice; // Per request, always show the sell price.
+                    var supplyDemand = isSellSearch ? result.Commodity?.Demand : result.Commodity?.Stock; // Keep demand for sell, stock for buy.
+
+                    var displayName = result.StationName;
+                    Trace.WriteLine($"[TradeUI]   -> Adding station: {displayName}, Price: {price}, Supply/Demand: {supplyDemand}");
+
+                    var item = new ListViewItem(displayName); // The first column is now just the station name.
+                    item.SubItems.Add($"{price:N0} cr");
+                    item.SubItems.Add($"{supplyDemand:N0}");
+                    item.SubItems.Add($"{result.DistanceToArrival:F2} LY");
+                    listView.Items.Add(item);
+                }
+                SetTradeStatus($"Found {results.Count} stations.");
+            }
+            else
+            {
+                if (isSellSearch)
+                {
+                    SetTradeStatus("No stations buying this commodity were found in this area.");
+                }
+                else
+                {
+                    SetTradeStatus("No stations selling this commodity were found in this area.");
+                }
+            }
+
+            listView.EndUpdate();
+        }
+
+        public void SetTradeStatus(string text)
+        {
+            if (_controlFactory?.TradeStatusLabel != null)
+            {
+                if (_currentLocation == "Unknown")
+                {
+                    _controlFactory.TradeStatusLabel.Text = "Waiting for location data... Start monitoring to update.";
+                }
+                else
+                {
+                    _controlFactory.TradeStatusLabel.Text = text;
+                }
+            }
+        }
+
+        public void StartTradeSearchAnimation()
+        {
+            _watchingAnimationManager?.Start();
+            if (_controlFactory != null)
+            {
+                _controlFactory.TradeFindBestSellButton.Enabled = false;
+                _controlFactory.TradeFindBestBuyButton.Enabled = false;
+            }
+        }
+
+        public void StopTradeSearchAnimation()
+        {
+            // Only stop the animation if the main file monitoring is not active.
+            // This prevents the trade search from stopping the "Watching..." animation
+            // if the main file monitoring is also running.
+            _watchingAnimationManager?.StopIfInactive();
+        }
+
+        public void UpdateSessionOverlay(int cargoCollected, long creditsEarned)
+        {
+            _overlayService?.UpdateSessionOverlay(cargoCollected, creditsEarned);
+        }
+
+        public void ShowOverlays()
+        {
+            _overlayService?.Show();
+        }
+
+        public void HideOverlays()
+        {
+            _overlayService?.Hide();
+        }
+
+        public void UpdateMonitoringVisuals(bool isMonitoring)
+        {
+            _trayIconManager?.SetMonitoringState(startEnabled: !isMonitoring, stopEnabled: isMonitoring);
+            _watchingAnimationManager?.SetMonitoringState(isMonitoring);
+            _overlayService?.SetVisibility(isMonitoring);
         }
 
         public void Dispose()

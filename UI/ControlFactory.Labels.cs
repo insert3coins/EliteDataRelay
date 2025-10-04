@@ -7,6 +7,21 @@ namespace EliteDataRelay.UI
     {
         private void CreateInfoLabels(FontManager fontManager)
         {
+            // Create a "label" for the watching animation.
+            // Calculate the max width needed for the animation to prevent layout shifts.
+            int animationWidth = WatchingAnimationManager.CalculateMaxWidth(fontManager.AnimationFont);
+
+            WatchingLabel = new Label
+            {
+                Text = "",
+                Font = fontManager.AnimationFont,
+                AutoSize = false, // Must be false to set a fixed size and prevent resizing
+                Width = animationWidth > 0 ? animationWidth : 20, // Set fixed width, with a fallback
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.DimGray,
+                Margin = new Padding(3),
+            };
+
             // Create a "label" for the cargo meter using a styled, disabled button for alignment.
             CargoSizeLabel = new Button
             {
@@ -23,28 +38,6 @@ namespace EliteDataRelay.UI
                     MouseOverBackColor = Color.Transparent
                 },
                 Margin = new Padding(5, 3, 3, 3),
-            };
-
-            // Create a "label" for the watching animation using a styled, disabled button.
-            // Calculate the max width needed for the animation to prevent layout shifts.
-            int animationWidth = WatchingAnimationManager.CalculateMaxWidth(fontManager.AnimationFont);
-
-            WatchingLabel = new Button
-            {
-                Text = "",
-                Font = fontManager.AnimationFont,
-                AutoSize = false, // Must be false to set a fixed size and prevent resizing
-                Width = animationWidth > 0 ? animationWidth : 20, // Set fixed width, with a fallback
-                TextAlign = ContentAlignment.MiddleCenter,
-                FlatStyle = FlatStyle.Flat,
-                Enabled = true, // Keep enabled to preserve color
-                Cursor = Cursors.Default, // Make it look non-interactive
-                FlatAppearance = {
-                    BorderSize = 0,
-                    MouseDownBackColor = Color.Transparent,
-                    MouseOverBackColor = Color.Transparent
-                },
-                Margin = new Padding(3),
             };
 
             // Create a "label" for the cargo count header using a styled, disabled button.

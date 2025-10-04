@@ -1,97 +1,38 @@
-using System;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using EliteDataRelay.Configuration;
-using EliteDataRelay.Services;
+using System;
+using System.Windows.Forms;
 
 namespace EliteDataRelay
 {
     public partial class CargoForm
     {
-        #region Form Events
-
         private void CargoForm_Load(object? sender, EventArgs e)
         {
-            // Force overlay dragging to be disabled on every application start.
-            // This ensures a predictable, non-draggable default state, regardless of saved settings.
-            AppConfiguration.AllowOverlayDrag = false;
-
-            if (AppConfiguration.EnableHotkeys)
-            {
-                RegisterHotkeys();
-            }
-
-            // Asynchronously check for updates on startup without blocking the UI.
-            _ = UpdateCheckService.CheckForUpdatesAsync();
-
-            // Ensure the form is not loaded off-screen
-            if (AppConfiguration.WindowLocation != Point.Empty)
-            {
-                bool isVisible = Screen.AllScreens.Any(s => s.WorkingArea.Contains(AppConfiguration.WindowLocation));
-
-                if (isVisible)
-                {
-                    this.StartPosition = FormStartPosition.Manual;
-                    this.Location = AppConfiguration.WindowLocation;
-                }
-            }
-
-            // Restore window state, but don't start minimized.
-            if (AppConfiguration.WindowState == FormWindowState.Maximized)
-            {
-                this.WindowState = FormWindowState.Maximized;
-            }
-            else
-            {
-                this.WindowState = FormWindowState.Normal;
-            }
+            // Load settings when the form loads
+            AppConfiguration.Load();
+            RegisterHotkeys();
         }
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            // Force overlay dragging to be disabled on every application start.
-            // This ensures a predictable, non-draggable default state, regardless of saved settings.
-            AppConfiguration.AllowOverlayDrag = false;
+            // Unregister hotkeys to clean up system resources.
+            UnregisterHotkeys();
 
-            if (AppConfiguration.EnableHotkeys)
+            // Save settings on exit, unless the user is canceling out of a prompt.
+            if (e.CloseReason != CloseReason.None && e.CloseReason != CloseReason.TaskManagerClosing)
             {
-                UnregisterHotkeys();
-            }
-
-            // Save window state before closing.
-            // Use RestoreBounds if the window is minimized or maximized.
-            switch (this.WindowState)
-            {
-                case FormWindowState.Maximized:
-                    AppConfiguration.WindowState = FormWindowState.Maximized;
-                    AppConfiguration.WindowLocation = this.RestoreBounds.Location;
-                    break;
-                case FormWindowState.Normal:
-                    AppConfiguration.WindowState = FormWindowState.Normal;
-                    AppConfiguration.WindowLocation = this.Location;
-                    break;
-                default: // Minimized
-                    AppConfiguration.WindowState = FormWindowState.Normal; // Don't save as minimized
-                    AppConfiguration.WindowLocation = this.RestoreBounds.Location;
-                    break;
-            }
-            AppConfiguration.Save();
-
-            // If user closes window, hide to tray instead of exiting
-            if (e.CloseReason == CloseReason.UserClosing && !_isExiting)
-            {
-                e.Cancel = true;
-                WindowState = FormWindowState.Minimized; // This will trigger the hide logic in CargoFormUI
-            }
-            else
-            {
-                // Stop monitoring and dispose services on actual exit
-                StopMonitoringInternal();
+                SaveOnExit();
             }
         }
 
-        #endregion
+        private void SaveOnExit()
+        {
+            // Save the window's current state and location before closing.
+            AppConfiguration.WindowState = this.WindowState;
+            AppConfiguration.WindowLocation = this.Location;
+
+            // Persist all settings to the settings.json file.
+            AppConfiguration.Save();
+        }
     }
 }

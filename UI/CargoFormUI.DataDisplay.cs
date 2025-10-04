@@ -32,10 +32,10 @@ namespace EliteDataRelay.UI
             listView.BeginUpdate();
             listView.Items.Clear();
 
-            if (snapshot.Inventory.Any())
+            if (snapshot.Items.Any())
             {
                 RestoreDataColumnLayout(); // Set columns for data view
-                var sortedInventory = snapshot.Inventory.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name);
+                var sortedInventory = snapshot.Items.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name);
                 foreach (var item in sortedInventory)
                 {
                     string displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
@@ -162,7 +162,7 @@ namespace EliteDataRelay.UI
         {
             if (_form == null) return;
 
-            _form.Text = $"{_baseTitle} - Location: {_currentLocation}";
+            _form.Text = $"{_baseTitle} – Location: {_currentLocation}";
         }
 
         public void DisplayWelcomeMessage()

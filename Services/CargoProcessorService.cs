@@ -62,7 +62,7 @@ namespace EliteDataRelay.Services
 
                     // Deserialize JSON directly from the stream for better performance.
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(stream, options) ?? new CargoSnapshot(new(), 0);
+                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(stream, options) ?? new CargoSnapshot();
 
                     // Fingerprint guard – skip duplicate snapshots
                     string hash = ComputeHash(snapshot);
@@ -108,7 +108,7 @@ namespace EliteDataRelay.Services
                 new
                 {
                     snapshot.Count,
-                    snapshot.Inventory
+                    snapshot.Items
                 },
                 new JsonSerializerOptions { WriteIndented = false, PropertyNameCaseInsensitive = true });
 

@@ -1,58 +1,68 @@
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
+
 {
-    // Manages the "watching" animation on a UI control.
     public class WatchingAnimationManager : IDisposable
     {
-        private readonly Button _animationLabel;
-        private readonly System.Windows.Forms.Timer _animationTimer;
-        private int _animationFrame = 0;
-
         private static readonly string[] WatchingCargoFrames = new[]
         {
             "⢄", "⢂", "⢁", " ", "⡈", "⡐", "⡠", "⡰", "⣠", "⣐", "⣈", "⣁", "⣂", "⣄", "⣆", "⣇", "⣧", "⣷", "⣾", "⣶", "⣼", "⣸", "⣙", "⣉", "⣁"
         };
 
-        public WatchingAnimationManager(Button animationLabel)
+        private readonly System.Windows.Forms.Timer _animationTimer;
+        private readonly Label _label;
+        private int _frameCount;
+        private bool _isMonitoringActive;
+
+        public WatchingAnimationManager(Label label)
         {
-            _animationLabel = animationLabel ?? throw new ArgumentNullException(nameof(animationLabel));
-            _animationTimer = new System.Windows.Forms.Timer { Interval = 100 };
-            _animationTimer.Tick += AnimationTimer_Tick;
+            _label = label;
+            _animationTimer = new System.Windows.Forms.Timer { Interval = 50 }; // Faster interval for smooth animation
+            _animationTimer.Tick += OnAnimationTick;
         }
 
-        public void Start()
+        public void SetMonitoringState(bool isActive)
         {
-            _animationFrame = 0;
-            _animationLabel.Text = WatchingCargoFrames[_animationFrame];
-            _animationLabel.ForeColor = Color.Black; // Use a distinct color for visibility
-            _animationTimer.Start();
+            _isMonitoringActive = isActive;
+            if (isActive)
+            {
+                Start();
+            }
+            else
+            {
+                Stop();
+                _label.Text = "";
+            }
         }
 
-        public void Stop()
+        public void Start() => _animationTimer.Start();
+
+        public void Stop() => _animationTimer.Stop();
+
+        public void StopIfInactive()
         {
-            _animationTimer.Stop();
-            _animationLabel.Text = "";
-            _animationLabel.ForeColor = SystemColors.ControlText; // Reset to default color
+            if (!_isMonitoringActive)
+            {
+                Stop();
+                _label.Text = "";
+            }
         }
 
-        private void AnimationTimer_Tick(object? sender, EventArgs e)
+        private void OnAnimationTick(object? sender, EventArgs e)
         {
-            _animationFrame = (_animationFrame + 1) % WatchingCargoFrames.Length;
-            _animationLabel.Text = WatchingCargoFrames[_animationFrame];
+            _frameCount = (_frameCount + 1) % WatchingCargoFrames.Length;
+            _label.Text = WatchingCargoFrames[_frameCount];
         }
 
-        public static int CalculateMaxWidth(Font animationFont)
+        public static int CalculateMaxWidth(Font font)
         {
-            return animationFont == null ? 20 : WatchingCargoFrames.Max(frame => TextRenderer.MeasureText(frame, animationFont).Width);
+            // All frames are single characters, so we just need the width of one.
+            return TextRenderer.MeasureText("W", font).Width + 5; // Add padding
         }
 
-        public void Dispose()
-        {
-            _animationTimer?.Dispose();
-        }
+        public void Dispose() => _animationTimer.Dispose();
     }
 }

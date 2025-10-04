@@ -23,6 +23,7 @@ namespace EliteDataRelay.Services
         private bool _isStarted;
         private SystemInfoData? _lastSystemInfo; // Stores the last successfully fetched system info
         private CancellationTokenSource? _fetchCancellationTokenSource; // Manages cancellation for the actual API fetch
+        private readonly object _lock = new object();
         private CancellationTokenSource? _debounceCancellationTokenSource; // Manages cancellation for the debounce delay
 
         public event EventHandler<SystemInfoData>? SystemInfoUpdated;
@@ -59,46 +60,51 @@ namespace EliteDataRelay.Services
             _isStarted = false;
         }
 
-        private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
-            if (e.IsNewSystem || _lastSystemInfo == null)
+            lock (_lock)
             {
-                // Always cancel any previous debounce operation
-                _debounceCancellationTokenSource?.Cancel(); // Cancel previous debounce
-                _debounceCancellationTokenSource = new CancellationTokenSource();
-                var currentDebounceToken = _debounceCancellationTokenSource.Token;
+                if (!_isStarted) return; // If we are stopping/stopped, do not process new events.
 
-                try
+                if (e.IsNewSystem || _lastSystemInfo == null)
                 {
-                    // If it's the very first fetch, don't debounce.
-                    // Otherwise, debounce to avoid excessive API calls during rapid jumps.
-                    if (_lastSystemInfo != null)
+                    // Always cancel any previous debounce operation
+                    _debounceCancellationTokenSource?.Cancel(); // Cancel previous debounce
+                    _debounceCancellationTokenSource = new CancellationTokenSource();
+                    var currentDebounceToken = _debounceCancellationTokenSource.Token;
+
+                    // Use Task.Run to offload the async work, allowing the lock to be released quickly.
+                    Task.Run(async () =>
                     {
-                        await Task.Delay(500, currentDebounceToken); // Debounce for 500ms
-                    }
+                        try
+                        {
+                            // If it's the very first fetch, don't debounce.
+                            // Otherwise, debounce to avoid excessive API calls during rapid jumps.
+                            if (_lastSystemInfo != null)
+                            {
+                                await Task.Delay(500, currentDebounceToken); // Debounce for 500ms
+                            }
 
-                    // If we reach here, either it's the first fetch or the debounce completed.
-                    // Cancel any *previous* actual fetch operation.
-                    _fetchCancellationTokenSource?.Cancel(); // Cancel previous fetch
-                    _fetchCancellationTokenSource = new CancellationTokenSource();
-                    var currentFetchToken = _fetchCancellationTokenSource.Token;
+                            // If we reach here, either it's the first fetch or the debounce completed.
+                            // Cancel any *previous* actual fetch operation.
+                            _fetchCancellationTokenSource?.Cancel(); // Cancel previous fetch
+                            _fetchCancellationTokenSource = new CancellationTokenSource();
+                            var currentFetchToken = _fetchCancellationTokenSource.Token;
 
-                    var systemInfo = await FetchSystemInfoAsync(e.StarSystem, currentFetchToken) ?? new SystemInfoData { SystemName = e.StarSystem };
-                    _lastSystemInfo = systemInfo;
-                    SystemInfoUpdated?.Invoke(this, systemInfo);
-                }
-                catch (OperationCanceledException ex)
-                {
-                    // This is expected. We only want to log a message if the *fetch* was cancelled,
-                    // not if the *debounce delay* was cancelled.
-                    if (_fetchCancellationTokenSource != null && ex.CancellationToken == _fetchCancellationTokenSource.Token)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[SystemInfoService] System info fetch for '{e.StarSystem}' cancelled.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Error fetching system info: {ex.Message}");
+                            var systemInfo = await FetchSystemInfoAsync(e.StarSystem, currentFetchToken) ?? new SystemInfoData { SystemName = e.StarSystem };
+                            _lastSystemInfo = systemInfo;
+                            SystemInfoUpdated?.Invoke(this, systemInfo);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // This is expected when a new jump happens quickly.
+                            System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Debounced or cancelled fetch for '{e.StarSystem}'.");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Error fetching system info: {ex.Message}");
+                        }
+                    });
                 }
             }
         }
@@ -185,16 +191,19 @@ namespace EliteDataRelay.Services
 
         public void Dispose()
         {
-            // First, stop listening to new events.
-            Stop();
+            lock (_lock)
+            {
+                // First, stop listening to new events.
+                Stop();
 
-            // Signal any ongoing async operations to cancel.
-            _fetchCancellationTokenSource?.Cancel();
-            _debounceCancellationTokenSource?.Cancel();
+                // Signal any ongoing async operations to cancel.
+                _fetchCancellationTokenSource?.Cancel();
+                _debounceCancellationTokenSource?.Cancel();
 
-            // Now, dispose of the resources.
-            _fetchCancellationTokenSource?.Dispose();
-            _debounceCancellationTokenSource?.Dispose();
+                // Now, dispose of the resources.
+                _fetchCancellationTokenSource?.Dispose();
+                _debounceCancellationTokenSource?.Dispose();
+            }
         }
     }
 }

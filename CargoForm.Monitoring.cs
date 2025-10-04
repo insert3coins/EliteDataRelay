@@ -42,7 +42,9 @@ namespace EliteDataRelay
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
             _cargoFormUI.UpdateMonitoringVisuals(isMonitoring: true);
-            _cargoFormUI.UpdateTitle("Elite Data Relay – Watching");
+
+            // Start the overlay service
+            _overlayService.Start();
 
             // Start file-based services first so they are ready.
             _fileMonitoringService.StartMonitoring();
@@ -71,10 +73,12 @@ namespace EliteDataRelay
             // Update UI state
             _cargoFormUI.SetButtonStates(startEnabled: true, stopEnabled: false);
             _cargoFormUI.UpdateMonitoringVisuals(isMonitoring: false);
-            _cargoFormUI.UpdateTitle("Elite Data Relay – Stopped");
 
             // Stop file monitoring
             _fileMonitoringService.StopMonitoring();
+
+            // Stop the overlay service
+            _overlayService.Stop();
 
             // Stop journal monitoring
             _journalWatcherService.StopMonitoring();

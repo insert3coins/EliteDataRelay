@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -26,6 +26,7 @@ namespace EliteDataRelay
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
         private readonly OverlayService _overlayService;
+        private readonly IMarketDataService _marketDataService;
 
         public CargoForm()
         {
@@ -41,6 +42,7 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
+            _marketDataService = new MarketDataService();
             _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService);
 
             InitializeComponent();
@@ -49,7 +51,6 @@ namespace EliteDataRelay
         }
 
         private int? _cargoCapacity;
-        private bool _isExiting;
         private bool _isInitializing;
         private SessionSummaryForm? _sessionSummaryForm;
 
@@ -78,7 +79,7 @@ namespace EliteDataRelay
         private void SetupEventHandlers()
         {
             // Wire up form events
-            Load += CargoForm_Load;
+            this.Load += CargoForm_Load;
             FormClosing += CargoForm_FormClosing;
 
             // Wire up UI events
@@ -96,6 +97,9 @@ namespace EliteDataRelay
 
             _cargoFormUI.MiningStartClicked += OnMiningStartClicked;
             _cargoFormUI.MiningStopClicked += OnMiningStopClicked;
+
+            _cargoFormUI.TradeFindBestSellClicked += OnTradeFindBestSellClicked;
+            _cargoFormUI.TradeFindBestBuyClicked += OnTradeFindBestBuyClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer

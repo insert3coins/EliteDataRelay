@@ -55,7 +55,6 @@ namespace EliteDataRelay
 
         private void OnExitClicked(object? sender, EventArgs e)
         {
-            _isExiting = true;
             Close();
         }
 
@@ -102,7 +101,7 @@ namespace EliteDataRelay
             // If monitoring is active, we need to refresh everything.
             if (_fileMonitoringService.IsMonitoring)
             {
-                _cargoFormUI.UpdateMonitoringVisuals(true);
+                _cargoFormUI.RefreshOverlay();
                 // Handle session tracking state change. If the user just enabled it,
                 // we need to start the service. If they disabled it, we stop it.
                 if (AppConfiguration.EnableSessionTracking)

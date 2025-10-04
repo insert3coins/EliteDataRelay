@@ -37,7 +37,7 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.UpdateCargo(count, capacity);
         }
 
-        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.UpdateCargoList(snapshot.Inventory);
+        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.UpdateCargoList(snapshot.Items);
 
         public void UpdateCargoSize(string size) => _rightOverlayForm?.UpdateCargoSize(size);
 

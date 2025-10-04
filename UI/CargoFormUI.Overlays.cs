@@ -14,16 +14,6 @@ namespace EliteDataRelay.UI
             }
         }
 
-        public void ShowOverlays()
-        {
-            _overlayService?.Show();
-        }
-
-        public void HideOverlays()
-        {
-            _overlayService?.Hide();
-        }
-
         public void UpdateSessionOverlay(long cargoCollected, long creditsEarned)
         {
             // This assumes the OverlayService has a corresponding method

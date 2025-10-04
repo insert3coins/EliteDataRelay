@@ -61,12 +61,12 @@ namespace EliteDataRelay.Services
     
             string singleLineItems = string.Join(
                 " ",
-                snapshot.Inventory.Select(item =>
+                snapshot.Items.Select(item =>
                     $"{(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)} ({item.Count})"));
     
             string multiLineItems = string.Join(
                 Environment.NewLine,
-                snapshot.Inventory.Select(item =>
+                snapshot.Items.Select(item =>
                     $"- {(string.IsNullOrEmpty(item.Localised) ? item.Name : item.Localised)}: {item.Count}"));
     
             var outputString = AppConfiguration.OutputFileFormat

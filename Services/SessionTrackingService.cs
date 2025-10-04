@@ -200,7 +200,7 @@ namespace EliteDataRelay.Services
             
             // --- New Limpet Tracking Logic ---
             // Find the current number of limpets (drones) in the cargo hold.
-            var currentLimpetCount = e.Snapshot.Inventory.FirstOrDefault(i => i.Name.Equals("drones", StringComparison.OrdinalIgnoreCase))?.Count ?? 0;
+            var currentLimpetCount = e.Snapshot.Items.FirstOrDefault(i => i.Name.Equals("drones", StringComparison.OrdinalIgnoreCase))?.Count ?? 0;
 
             if (_lastLimpetCount == -1)
             {
@@ -221,7 +221,7 @@ namespace EliteDataRelay.Services
             // --- Pending Refined Commodity Logic ---
             if (_pendingRefined.Any())
             {
-                foreach (var item in e.Snapshot.Inventory)
+                foreach (var item in e.Snapshot.Items)
                 {
                     var commodityName = item.Name.ToLowerInvariant();
                     if (_pendingRefined.TryGetValue(commodityName, out int pendingCount) && pendingCount > 0)

@@ -1,84 +1,73 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
-using System.Drawing;
 
 namespace EliteDataRelay.Configuration
+
 {
     public static partial class AppConfiguration
     {
-        private static readonly string _settingsPath;
-        private static AppSettings _settings = new AppSettings();
+        private static readonly string SettingsFilePath;
 
-        /// <summary>
-        /// Gets the path to the application's data directory in AppData.
-        /// </summary>
-        public static string AppDataPath { get; }
+        #region Properties
 
-        public static string StatusJsonPath => Path.Combine(JournalPath, "Status.json");
+        // General
 
-        // This path is usually found dynamically, but we provide a config setting for it.
-        public static string CargoPath { get => _settings.CargoPath; set => _settings.CargoPath = value; }
+        #endregion
 
-        public static string JournalPath
-        {
-            get => _settings.JournalPath;
-            set => _settings.JournalPath = value;
-        }
-
-        /// <summary>
-        /// Static constructor to set up paths and load settings on application start.
-        /// </summary>
         static AppConfiguration()
         {
-            AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EliteDataRelay");
-            Directory.CreateDirectory(AppDataPath); // Ensure the directory exists
-
-            // Define the full path for the settings file
-            _settingsPath = Path.Combine(AppDataPath, "settings.json");
-
-            Load();
+            // The static constructor ensures that all dependent properties are initialized
+            // in the correct order, resolving the CS8604 warning.
+            SettingsFilePath = Path.Combine(AppDataPath, "settings.json");
+            OutputDirectory = Path.Combine(AppDataPath, "output");
+            StartSoundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sounds/start.wav");
+            StopSoundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sounds/stop.wav");
+            // Any other properties that depend on AppDataPath or other static properties can be initialized here.
         }
 
         public static void Load()
         {
-            if (File.Exists(_settingsPath))
+            try
             {
-                try
+                if (File.Exists(SettingsFilePath))
                 {
-                    var json = File.ReadAllText(_settingsPath);
-                    _settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
-                    Debug.WriteLine($"[AppConfiguration] Settings loaded from {_settingsPath}");
-
-                    // Self-healing: If the loaded journal path is invalid, re-detect it and save.
-                    // This prevents issues if the settings file becomes corrupted or was saved with an empty path.
-                    if (string.IsNullOrWhiteSpace(_settings.JournalPath))
+                    var json = File.ReadAllText(SettingsFilePath);
+                    var config = JsonSerializer.Deserialize<ConfigData>(json);
+                    if (config != null)
                     {
-                        Debug.WriteLine("[AppConfiguration] Loaded JournalPath is empty. Re-detecting default path.");
-                        _settings.JournalPath = FindDefaultJournalPath();
-                        _settings.CargoPath = Path.Combine(_settings.JournalPath, "Cargo.json");
-                        Save(); // Save the corrected settings immediately.
+                        // Map all properties from the loaded config data
+                        WelcomeMessage = config.WelcomeMessage;
+                        OutputDirectory = config.OutputDirectory;
+                        OutputFileName = config.OutputFileName;
+                        CargoPath = config.CargoPath;
+                        EnableFileOutput = config.EnableFileOutput;
+                        OutputFileFormat = config.OutputFileFormat;
+                        EnableInfoOverlay = config.EnableInfoOverlay;
+                        EnableCargoOverlay = config.EnableCargoOverlay;
+                        EnableShipIconOverlay = config.EnableShipIconOverlay;
+                        AllowOverlayDrag = config.AllowOverlayDrag;
+                        EnableSessionTracking = config.EnableSessionTracking;
+                        ShowSessionOnOverlay = config.ShowSessionOnOverlay;
+                        EnableHotkeys = config.EnableHotkeys;
+                        StartMonitoringHotkey = config.StartMonitoringHotkey;
+                        StopMonitoringHotkey = config.StopMonitoringHotkey;
+                        ShowOverlayHotkey = config.ShowOverlayHotkey;
+                        HideOverlayHotkey = config.HideOverlayHotkey;
+                        FileReadMaxAttempts = config.FileReadMaxAttempts;
+                        FileReadRetryDelayMs = config.FileReadRetryDelayMs;
+                        WindowLocation = config.WindowLocation;
+                        WindowState = config.WindowState;
+                        DefaultFontSize = config.DefaultFontSize;
+                        PollingIntervalMs = config.PollingIntervalMs;
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error loading settings: {ex.Message}", "Settings Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    _settings = new AppSettings();
-                }
             }
-            else
+            catch (Exception ex)
             {
-                // If settings file doesn't exist, create a new one with defaults
-                _settings = new AppSettings();
-                // Auto-detect journal path on first run
-                _settings.JournalPath = FindDefaultJournalPath();
-                _settings.CargoPath = Path.Combine(_settings.JournalPath, "Cargo.json"); // Default assumption
-                Save();
-                Debug.WriteLine($"[AppConfiguration] Default settings created at {_settingsPath}");
+                Trace.WriteLine($"[AppConfiguration] Error loading settings: {ex.Message}");
             }
         }
 
@@ -86,43 +75,75 @@ namespace EliteDataRelay.Configuration
         {
             try
             {
+                // Ensure the AppData directory exists before trying to save the file.
+                if (!Directory.Exists(AppDataPath))
+                {
+                    Directory.CreateDirectory(AppDataPath);
+                }
+
+                var config = new ConfigData
+                {
+                    WelcomeMessage = AppConfiguration.WelcomeMessage,
+                    OutputDirectory = AppConfiguration.OutputDirectory,
+                    OutputFileName = AppConfiguration.OutputFileName,
+                    CargoPath = AppConfiguration.CargoPath,
+                    EnableFileOutput = AppConfiguration.EnableFileOutput,
+                    OutputFileFormat = AppConfiguration.OutputFileFormat,
+                    EnableInfoOverlay = AppConfiguration.EnableInfoOverlay,
+                    EnableCargoOverlay = AppConfiguration.EnableCargoOverlay,
+                    EnableShipIconOverlay = AppConfiguration.EnableShipIconOverlay,
+                    AllowOverlayDrag = AppConfiguration.AllowOverlayDrag,
+                    EnableSessionTracking = AppConfiguration.EnableSessionTracking,
+                    ShowSessionOnOverlay = AppConfiguration.ShowSessionOnOverlay,
+                    EnableHotkeys = AppConfiguration.EnableHotkeys,
+                    StartMonitoringHotkey = AppConfiguration.StartMonitoringHotkey,
+                    StopMonitoringHotkey = AppConfiguration.StopMonitoringHotkey,
+                    ShowOverlayHotkey = AppConfiguration.ShowOverlayHotkey,
+                    HideOverlayHotkey = AppConfiguration.HideOverlayHotkey,
+                    FileReadMaxAttempts = AppConfiguration.FileReadMaxAttempts,
+                    FileReadRetryDelayMs = AppConfiguration.FileReadRetryDelayMs,
+                    WindowLocation = AppConfiguration.WindowLocation,
+                    WindowState = AppConfiguration.WindowState,
+                    DefaultFontSize = AppConfiguration.DefaultFontSize,
+                    PollingIntervalMs = AppConfiguration.PollingIntervalMs,
+                };
+
                 var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(_settings, options);
-                File.WriteAllText(_settingsPath, json);
+                var json = JsonSerializer.Serialize(config, options);
+                File.WriteAllText(SettingsFilePath, json);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving settings: {ex.Message}", "Settings Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Trace.WriteLine($"[AppConfiguration] Error saving settings: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Attempts to find the default Elite Dangerous journal path.
-        /// </summary>
-        private static string FindDefaultJournalPath()
+        // A private class to hold the data for serialization
+        private class ConfigData
         {
-            try
-            {
-                string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                string savedGamesPath = Path.Combine(userProfile, "Saved Games", "Frontier Developments", "Elite Dangerous");
-                // Always return the expected default path. The check for its existence will happen when monitoring starts.
-                return savedGamesPath;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AppConfiguration] Error finding default journal path: {ex.Message}");
-                return string.Empty;
-            }
-        }
-
-
-        /// <summary>
-        /// A private class to hold all settings for easy serialization.
-        /// </summary>
-        private partial class AppSettings
-        {
-            public string CargoPath { get; set; } = string.Empty;
-            public string JournalPath { get; set; } = string.Empty;
+            public string WelcomeMessage { get; set; } = "Welcome, CMDR! Click 'Start' to begin monitoring.";
+            public string OutputDirectory { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "output");
+            public string OutputFileName { get; set; } = "cargo.txt";
+            public string CargoPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @"Saved Games\Frontier Developments\Elite Dangerous\Cargo.json");
+            public bool EnableFileOutput { get; set; } = false;
+            public string OutputFileFormat { get; set; } = "Cargo: {count_slash_capacity}\\n\\n{items_multiline}";
+            public bool EnableInfoOverlay { get; set; } = false;
+            public bool EnableCargoOverlay { get; set; } = false;
+            public bool EnableShipIconOverlay { get; set; } = false;
+            public bool AllowOverlayDrag { get; set; } = true;
+            public bool EnableSessionTracking { get; set; } = true;
+            public bool ShowSessionOnOverlay { get; set; } = false;
+            public bool EnableHotkeys { get; set; } = true;
+            public Keys StartMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F9;
+            public Keys StopMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F10;
+            public Keys ShowOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F11;
+            public Keys HideOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F12;
+            public int FileReadMaxAttempts { get; set; } = 5;
+            public int FileReadRetryDelayMs { get; set; } = 50;
+            public Point WindowLocation { get; set; } = Point.Empty;
+            public FormWindowState WindowState { get; set; } = FormWindowState.Normal;
+            public float DefaultFontSize { get; set; } = 9f;
+            public int PollingIntervalMs { get; set; } = 1000;
         }
     }
 }
