@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Models;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -45,29 +46,31 @@ namespace EliteDataRelay.UI
 
         public void UpdateRawMaterials(List<MaterialItem> materials)
         {
-            UpdateGrid(_rawMaterialsGrid, materials);
+            UpdateGrid(_rawMaterialsGrid, materials, MaterialDataService.GetAllRawMaterials());
         }
 
         public void UpdateManufacturedMaterials(List<MaterialItem> materials)
         {
-            UpdateGrid(_manufacturedMaterialsGrid, materials);
+            UpdateGrid(_manufacturedMaterialsGrid, materials, MaterialDataService.GetAllManufacturedMaterials());
         }
 
         public void UpdateEncodedData(List<MaterialItem> materials)
         {
-            UpdateGrid(_encodedDataGrid, materials);
+            UpdateGrid(_encodedDataGrid, materials, MaterialDataService.GetAllEncodedMaterials());
         }
 
-        private void UpdateGrid(DataGridView grid, List<MaterialItem> materials)
+        private void UpdateGrid(DataGridView grid, List<MaterialItem> currentMaterials, List<MaterialDefinition> allMaterials)
         {
             grid.Rows.Clear();
-            if (materials == null || !materials.Any()) return;
+            if (allMaterials == null || !allMaterials.Any()) return;
 
-            var sortedMaterials = materials.OrderBy(m => m.Localised ?? m.Name);
+            var currentMaterialsDict = currentMaterials?.ToDictionary(m => m.Name.ToLowerInvariant(), m => m.Count)
+                                       ?? new Dictionary<string, int>();
 
-            foreach (var material in sortedMaterials)
+            foreach (var materialDef in allMaterials)
             {
-                grid.Rows.Add(material.Localised ?? material.Name, material.Count);
+                currentMaterialsDict.TryGetValue(materialDef.Name.ToLowerInvariant(), out int count);
+                grid.Rows.Add(MaterialDataService.GetLocalisedName(materialDef.Name), count);
             }
         }
 
