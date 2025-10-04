@@ -125,6 +125,11 @@ namespace EliteDataRelay.Services
             };
         }
 
+        public void UpdateLocation(string location)
+        {
+            _leftOverlayForm?.UpdateLocation(location);
+        }
+
         public void Dispose()
         {
             Stop();

@@ -62,6 +62,7 @@ namespace EliteDataRelay.UI
             CommanderLabel = CreateInfoLabel("CMDR: Unknown", fontManager.VerdanaFont);
             ShipLabel = CreateInfoLabel("Ship: Unknown", fontManager.VerdanaFont);
             BalanceLabel = CreateInfoLabel("Balance: Unknown", fontManager.VerdanaFont);
+            LocationLabel = CreateInfoLabel("Location: Unknown", fontManager.VerdanaFont);
 
             // Configure properties for the flexible layout
             ShipLabel.AutoSize = false;
@@ -76,6 +77,7 @@ namespace EliteDataRelay.UI
             CommanderLabel.Dispose();
             ShipLabel.Dispose();
             BalanceLabel.Dispose();
+            LocationLabel.Dispose();
         }
 
         /// <summary>

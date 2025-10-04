@@ -100,6 +100,14 @@ namespace EliteDataRelay.UI
             _currentLocation = starSystem;
 
             UpdateFullTitleText();
+
+            if (_controlFactory?.LocationLabel != null)
+            {
+                var locationText = $"Location: {starSystem}";
+                _controlFactory.LocationLabel.Text = locationText;
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.LocationLabel, "Click to copy system name");
+            }
+            _overlayService?.UpdateLocation(starSystem);
         }
 
         public void UpdateCommanderName(string commanderName)

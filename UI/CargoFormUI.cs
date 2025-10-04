@@ -148,6 +148,7 @@ namespace EliteDataRelay.UI
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
             _controlFactory.MiningSessionPanel.StartMiningClicked += OnMiningStartClicked;
             _controlFactory.MiningSessionPanel.StopMiningClicked += OnMiningStopClicked;
+            _controlFactory.LocationLabel.Click += OnLocationLabelClicked;
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -156,6 +157,15 @@ namespace EliteDataRelay.UI
                 _trayIconManager.StartClicked += (s, e) => StartClicked?.Invoke(s, e);
                 _trayIconManager.StopClicked += (s, e) => StopClicked?.Invoke(s, e);
                 _trayIconManager.ExitClicked += (s, e) => ExitClicked?.Invoke(s, e);
+            }
+        }
+
+        private void OnLocationLabelClicked(object? sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_currentLocation) && _currentLocation != "Unknown")
+            {
+                Clipboard.SetText(_currentLocation);
+                _controlFactory?.ToolTip.Show($"Copied '{_currentLocation}' to clipboard.", _controlFactory.LocationLabel, 0, -20, 1500);
             }
         }
 

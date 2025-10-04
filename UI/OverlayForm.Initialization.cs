@@ -10,14 +10,14 @@ namespace EliteDataRelay.UI
         {
             if (_position == OverlayPosition.Info)
             {
-                this.Size = new Size(320, 85);
+                this.Size = new Size(320, 105);
                 var detailsTable = new TableLayoutPanel
                 {
                     Location = new Point(10, 10),
                     AutoSize = true,
                     Width = this.ClientSize.Width - 20,
                     ColumnCount = 2,
-                    RowCount = 3,
+                    RowCount = 4,
                     BackColor = Color.Transparent
                 };
                 detailsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -26,6 +26,7 @@ namespace EliteDataRelay.UI
                 _cmdrValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
                 _shipValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
                 _balanceValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                _locationValueLabel = CreateOverlayLabel(Point.Empty, _labelFont);
 
                 detailsTable.Controls.Add(CreateHeaderLabel("CMDR:"), 0, 0);
                 detailsTable.Controls.Add(_cmdrValueLabel, 1, 0);
@@ -33,6 +34,8 @@ namespace EliteDataRelay.UI
                 detailsTable.Controls.Add(_shipValueLabel, 1, 1);
                 detailsTable.Controls.Add(CreateHeaderLabel("Balance:"), 0, 2);
                 detailsTable.Controls.Add(_balanceValueLabel, 1, 2);
+                detailsTable.Controls.Add(CreateHeaderLabel("Location:"), 0, 3);
+                detailsTable.Controls.Add(_locationValueLabel, 1, 3);
 
                 Controls.Add(detailsTable);
             }

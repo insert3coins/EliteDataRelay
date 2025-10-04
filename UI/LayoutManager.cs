@@ -82,16 +82,18 @@ namespace EliteDataRelay.UI
             {
                 Dock = DockStyle.Bottom,
                 Height = 30,
-                ColumnCount = 3,
+                ColumnCount = 4,
                 RowCount = 1,
                 Padding = new Padding(5, 0, 5, 0),
             };
             _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            _infoPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             _infoPanel.Controls.Add(_controlFactory.CommanderLabel, 0, 0);
             _infoPanel.Controls.Add(_controlFactory.ShipLabel, 1, 0);
             _infoPanel.Controls.Add(_controlFactory.BalanceLabel, 2, 0);
+            _infoPanel.Controls.Add(_controlFactory.LocationLabel, 3, 0);
 
             // Create a separator line
             _separator = new Label

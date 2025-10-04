@@ -27,6 +27,7 @@ namespace EliteDataRelay.UI
         private Label _cmdrValueLabel = null!;
         private Label _shipValueLabel = null!;
         private Label _balanceValueLabel = null!;
+        private Label _locationValueLabel = null!;
         private Label _cargoHeaderLabel = null!;
         private Label _sessionCargoValueLabel = null!;
         private Label _sessionCreditsValueLabel = null!;
@@ -46,6 +47,10 @@ namespace EliteDataRelay.UI
         // Fonts are IDisposable, so we should keep references to them to dispose of them later.
         private readonly Font _labelFont;
         private readonly Font _listFont;
+        // Brushes are also IDisposable and should be cached for performance.
+        private readonly SolidBrush _textBrush;
+        private readonly SolidBrush _grayBrush;
+
         private readonly OverlayPosition _position;
 
         public OverlayForm(OverlayPosition position, bool allowDrag)
@@ -83,6 +88,10 @@ namespace EliteDataRelay.UI
 
             _labelFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize, FontStyle.Bold);
             _listFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);
+
+            // Create brushes once and reuse them in the Paint event to improve performance.
+            _textBrush = new SolidBrush(AppConfiguration.OverlayTextColor);
+            _grayBrush = new SolidBrush(SystemColors.GrayText);
 
             InitializeControls();
 
@@ -183,6 +192,8 @@ namespace EliteDataRelay.UI
             {
                 _labelFont?.Dispose();
                 _listFont?.Dispose();
+                _textBrush?.Dispose();
+                _grayBrush?.Dispose();
                 _animationTimer?.Dispose();
             }
             base.Dispose(disposing);
