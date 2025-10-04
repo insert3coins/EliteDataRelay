@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.Configuration
@@ -35,7 +36,11 @@ namespace EliteDataRelay.Configuration
                 if (File.Exists(SettingsFilePath))
                 {
                     var json = File.ReadAllText(SettingsFilePath);
-                    var config = JsonSerializer.Deserialize<ConfigData>(json);
+                    var options = new JsonSerializerOptions();
+                    options.Converters.Add(new ColorJsonConverter());
+
+                    var config = JsonSerializer.Deserialize<ConfigData>(json, options);
+
                     if (config != null)
                     {
                         // Map all properties from the loaded config data
@@ -62,6 +67,8 @@ namespace EliteDataRelay.Configuration
                         WindowState = config.WindowState;
                         DefaultFontSize = config.DefaultFontSize;
                         PollingIntervalMs = config.PollingIntervalMs;
+                        OverlayTextColor = config.OverlayTextColor;
+                        OverlayBackgroundColor = config.OverlayBackgroundColor;
                     }
                 }
             }
@@ -106,9 +113,15 @@ namespace EliteDataRelay.Configuration
                     WindowState = AppConfiguration.WindowState,
                     DefaultFontSize = AppConfiguration.DefaultFontSize,
                     PollingIntervalMs = AppConfiguration.PollingIntervalMs,
+                    OverlayTextColor = AppConfiguration.OverlayTextColor,
+                    OverlayBackgroundColor = AppConfiguration.OverlayBackgroundColor,
                 };
 
-                var options = new JsonSerializerOptions { WriteIndented = true };
+                var options = new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                };
+                options.Converters.Add(new ColorJsonConverter());
                 var json = JsonSerializer.Serialize(config, options);
                 File.WriteAllText(SettingsFilePath, json);
             }
@@ -144,6 +157,10 @@ namespace EliteDataRelay.Configuration
             public FormWindowState WindowState { get; set; } = FormWindowState.Normal;
             public float DefaultFontSize { get; set; } = 9f;
             public int PollingIntervalMs { get; set; } = 1000;
+            [JsonConverter(typeof(ColorJsonConverter))]
+            public Color OverlayTextColor { get; set; } = Color.FromArgb(255, 128, 0);
+            [JsonConverter(typeof(ColorJsonConverter))]
+            public Color OverlayBackgroundColor { get; set; } = Color.FromArgb(0, 0, 0);
         }
     }
 }

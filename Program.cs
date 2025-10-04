@@ -19,6 +19,9 @@ namespace EliteDataRelay
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => HandleUnhandledException(e.ExceptionObject as Exception);
 
+            // Load user settings from the configuration file.
+            AppConfiguration.Load();
+
             // To customize application configuration such as high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
