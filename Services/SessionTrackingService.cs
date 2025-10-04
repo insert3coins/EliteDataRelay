@@ -141,7 +141,6 @@ namespace EliteDataRelay.Services
 
             _journalWatcherService.MiningRefined += OnMiningRefined;
             _cargoProcessorService.CargoProcessed += OnCargoProcessed;
-            _journalWatcherService.MarketSell += OnMarketSell;
             _journalWatcherService.BuyDrones += OnBuyDrones;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -152,7 +151,6 @@ namespace EliteDataRelay.Services
             _miningStopTime = DateTime.UtcNow;
             _journalWatcherService.MiningRefined -= OnMiningRefined;
             _cargoProcessorService.CargoProcessed -= OnCargoProcessed;
-            _journalWatcherService.MarketSell -= OnMarketSell;
             _journalWatcherService.BuyDrones -= OnBuyDrones;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -242,34 +240,6 @@ namespace EliteDataRelay.Services
             }
 
             if (sessionWasUpdated) SessionUpdated?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void OnMarketSell(object? sender, MarketSellEventArgs e)
-        {
-            if (!IsMiningSessionActive) return;
-
-            var commodity = e.Commodity.ToLowerInvariant();
-            // Check if the commodity sold was one we refined in this session
-            if (_refinedCommodities.TryGetValue(commodity, out int refinedCount))
-            {
-                // Determine how many of the sold items were actually from this session.
-                int soldFromSession = Math.Min(e.Count, refinedCount);
-
-                // Calculate the profit for only the items sold from this session.
-                long pricePerUnit = e.TotalSale / e.Count;
-                _miningProfit += pricePerUnit * soldFromSession;
-                
-                // Decrement the count of refined commodities. If we've sold them all, remove the key.
-                if (refinedCount <= soldFromSession)
-                {
-                    _refinedCommodities.Remove(commodity);
-                }
-                else
-                {
-                    _refinedCommodities[commodity] = refinedCount - soldFromSession;
-                }
-                SessionUpdated?.Invoke(this, EventArgs.Empty);
-            }
         }
 
         private void OnBuyDrones(object? sender, BuyDronesEventArgs e)

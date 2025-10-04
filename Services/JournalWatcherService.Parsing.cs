@@ -188,14 +188,6 @@ namespace EliteDataRelay.Services
                                 LaunchDrone?.Invoke(this, new LaunchDroneEventArgs(type));
                             }
                         }
-                        else if (eventType == "MarketSell")
-                        {
-                            var sellEvent = JsonSerializer.Deserialize<MarketSellEvent>(journalLine, options);
-                            if (sellEvent != null)
-                            {
-                                MarketSell?.Invoke(this, new MarketSellEventArgs(sellEvent.Type, sellEvent.Count, sellEvent.TotalSale));
-                            }
-                        }
                         else if (eventType == "BuyDrones")
                         {
                             var buyEvent = JsonSerializer.Deserialize<BuyDronesEvent>(journalLine, options);

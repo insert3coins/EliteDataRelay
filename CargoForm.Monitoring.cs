@@ -16,8 +16,6 @@ namespace EliteDataRelay
             if (_lastLoadout != null) _cargoFormUI.UpdateShipLoadout(_lastLoadout);
             if (_lastCargoSnapshot != null)
             {
-                _cargoFormUI.UpdateCargoList(_lastCargoSnapshot);
-                _cargoFormUI.UpdateCargoHeader(_lastCargoSnapshot.Count, _cargoCapacity);
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
 

@@ -36,9 +36,6 @@ namespace EliteDataRelay.UI
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);
             CreateToolTips();
-
-            // Add the new Trade Tab
-            TabControl.TabPages.Add(CreateTradeTabPage(fontManager));
         }
 
         public void Dispose()
@@ -46,7 +43,6 @@ namespace EliteDataRelay.UI
             DisposeButtons();
             DisposeTabControls();
             DisposeMiningTabControls();
-            DisposeTradeTabControls();
             DisposeLabels();
             ToolTip.Dispose();
         }

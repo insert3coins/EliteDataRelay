@@ -32,7 +32,8 @@ namespace EliteDataRelay.UI
         private Label _sessionCreditsValueLabel = null!;
         private Panel _cargoListPanel = null!;
         private Label _cargoSizeLabel = null!;
-    private PictureBox _shipIconPictureBox = null!;
+        private Label _cargoBarLabel = null!;
+        private PictureBox _shipIconPictureBox = null!;
         private System.Windows.Forms.Timer? _animationTimer;
         private double _animationPhase;
         private const int ANIMATION_AMPLITUDE = 5; // How many pixels up/down it will move

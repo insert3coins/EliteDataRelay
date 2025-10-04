@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -26,8 +26,6 @@ namespace EliteDataRelay
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
         private readonly OverlayService _overlayService;
-        private readonly IMarketDataService _marketDataService;
-
         public CargoForm()
         {
             // Create all service instances. This form now owns its dependencies,
@@ -42,7 +40,6 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
-            _marketDataService = new MarketDataService();
             _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService);
 
             InitializeComponent();
@@ -97,9 +94,6 @@ namespace EliteDataRelay
 
             _cargoFormUI.MiningStartClicked += OnMiningStartClicked;
             _cargoFormUI.MiningStopClicked += OnMiningStopClicked;
-
-            _cargoFormUI.TradeFindBestSellClicked += OnTradeFindBestSellClicked;
-            _cargoFormUI.TradeFindBestBuyClicked += OnTradeFindBestBuyClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer

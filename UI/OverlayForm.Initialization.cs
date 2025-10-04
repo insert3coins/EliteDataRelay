@@ -61,6 +61,7 @@ namespace EliteDataRelay.UI
                 // Initialize labels that will be used for drawing the header text.
                 _cargoHeaderLabel = CreateOverlayLabel(Point.Empty, _labelFont); // This was named _cargoLabel before, but _cargoHeaderLabel is more descriptive
                 _cargoSizeLabel = CreateOverlayLabel(Point.Empty, _listFont);
+                _cargoBarLabel = CreateOverlayLabel(Point.Empty, _listFont); // This was using _labelFont
 
                 Panel? bottomPanel = null;
                 Panel? bottomSeparator = null;

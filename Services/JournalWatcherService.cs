@@ -99,11 +99,6 @@ namespace EliteDataRelay.Services
         public event EventHandler<LaunchDroneEventArgs>? LaunchDrone;
 
         /// <summary>
-        /// Event raised when commodities are sold on the market.
-        /// </summary>
-        public event EventHandler<MarketSellEventArgs>? MarketSell;
-
-        /// <summary>
         /// Event raised when limpet drones are purchased.
         /// </summary>
         public event EventHandler<BuyDronesEventArgs>? BuyDrones;

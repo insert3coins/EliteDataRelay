@@ -15,8 +15,12 @@ namespace EliteDataRelay.UI
         public void UpdateCommander(string text) => UpdateLabel(_cmdrValueLabel, text);
         public void UpdateShip(string text) => UpdateLabel(_shipValueLabel, text);
         public void UpdateBalance(long balance) => UpdateLabel(_balanceValueLabel, $"{balance:N0} CR");
-        public void UpdateCargo(int count, int? capacity) => UpdateLabel(_cargoHeaderLabel, capacity.HasValue ? $"Cargo: {count}/{capacity.Value}" : $"Cargo: {count}");
-        public void UpdateCargoSize(string text) => UpdateLabel(_cargoSizeLabel, text);
+        public void UpdateCargo(int count, int? capacity)
+        {
+            UpdateLabel(_cargoHeaderLabel, "Cargo:");
+            UpdateLabel(_cargoSizeLabel, capacity.HasValue ? $"{count}/{capacity.Value}" : $"{count}");
+        }
+        public void UpdateCargoSize(string text) => UpdateLabel(_cargoBarLabel, text);
         public void UpdateSessionCargoCollected(long cargo)
         {
             // Only update if the label was created

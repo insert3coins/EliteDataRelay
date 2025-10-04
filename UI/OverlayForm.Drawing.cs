@@ -19,10 +19,21 @@ namespace EliteDataRelay.UI
             using (var textBrush = new SolidBrush(AppConfiguration.OverlayTextColor))
             using (var grayBrush = new SolidBrush(SystemColors.GrayText))
             {
-                // 1. Draw the header text first at the top of the panel.
-                e.Graphics.DrawString(_cargoHeaderLabel.Text, _labelFont, textBrush, 10, 5);
-                var cargoTextSize = e.Graphics.MeasureString(_cargoHeaderLabel.Text, _labelFont);
-                e.Graphics.DrawString(_cargoSizeLabel.Text, _listFont, textBrush, 10 + cargoTextSize.Width + 10, 8);
+                // 1. Draw the header elements at the top of the panel.
+                // "Cargo:" (Header Color)
+                e.Graphics.DrawString(_cargoHeaderLabel.Text, _listFont, grayBrush, 10, 8);
+                var cargoHeaderTextSize = e.Graphics.MeasureString(_cargoHeaderLabel.Text, _listFont);
+
+                // "▰▰▱▱..." (Header Color, right-aligned)
+                var cargoBarTextSize = e.Graphics.MeasureString(_cargoBarLabel.Text, _listFont);
+                e.Graphics.DrawString(_cargoBarLabel.Text, _listFont, grayBrush, e.ClipRectangle.Width - cargoBarTextSize.Width - 10, 8);
+
+                // "128/256" (User-configurable Color, centered between the other two elements)
+                var cargoSizeTextSize = e.Graphics.MeasureString(_cargoSizeLabel.Text, _listFont);
+                float leftEdge = 10 + cargoHeaderTextSize.Width;
+                float rightEdge = e.ClipRectangle.Width - cargoBarTextSize.Width - 10;
+                float centeredX = leftEdge + ((rightEdge - leftEdge - cargoSizeTextSize.Width) / 2);
+                e.Graphics.DrawString(_cargoSizeLabel.Text, _listFont, textBrush, centeredX, 8);
 
                 // 2. Draw the cargo list, starting below the header area.
                 float y = 35.0f;

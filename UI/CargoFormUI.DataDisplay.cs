@@ -69,6 +69,9 @@ namespace EliteDataRelay.UI
 
         public void UpdateCargoDisplay(CargoSnapshot snapshot, int? cargoCapacity)
         {
+            // First, update the header and count on the main UI and the overlay
+            UpdateCargoHeader(snapshot.Count, cargoCapacity);
+
             if (_controlFactory == null) return;
 
             // Use the explicit Count property, as Inventory might be empty if we only have a total from a Loadout event.
@@ -87,6 +90,9 @@ namespace EliteDataRelay.UI
 
             _controlFactory.CargoSizeLabel.Text = UIConstants.CargoSize[index];
             _overlayService?.UpdateCargoSize(UIConstants.CargoSize[index]);
+
+            // Finally, update the list of items
+            UpdateCargoList(snapshot);
         }
 
         public void UpdateLocation(string starSystem)

@@ -205,5 +205,27 @@ namespace EliteDataRelay.Services
                 _debounceCancellationTokenSource?.Dispose();
             }
         }
+
+        #region EDSM Data Models
+        // These classes are defined here because they are only used by this service
+        // to deserialize the response from the EDSM API.
+
+        private class EdsmSystem
+        {
+            public string? Name { get; set; }
+            public EdsmSystemInformation? Information { get; set; }
+        }
+
+        private class EdsmSystemInformation
+        {
+            public string? Allegiance { get; set; }
+            public string? Government { get; set; }
+            public string? Economy { get; set; }
+            public string? Security { get; set; }
+            public long? Population { get; set; }
+            public string? Faction { get; set; }
+            public string? FactionState { get; set; }
+        }
+        #endregion
     }
 }

@@ -1,5 +1,4 @@
 using EliteDataRelay.Models;
-using EliteDataRelay.Models.Market;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -16,13 +15,10 @@ namespace EliteDataRelay.UI
         event EventHandler? SessionClicked;
         event EventHandler? MiningStartClicked;
         event EventHandler? MiningStopClicked;
-        event EventHandler? TradeFindBestSellClicked;
-        event EventHandler? TradeFindBestBuyClicked;
 
         void InitializeUI(Form form);
         void SetButtonStates(bool startEnabled, bool stopEnabled);
         void UpdateMonitoringVisuals(bool isMonitoring);
-        void UpdateCargoHeader(int count, int? capacity);
         void UpdateCargoList(CargoSnapshot cargoSnapshot);
         void UpdateCargoDisplay(CargoSnapshot cargoSnapshot, int? capacity);
         void UpdateBalance(long balance);
@@ -35,14 +31,7 @@ namespace EliteDataRelay.UI
         void UpdateLocation(string location);
         void UpdateSessionOverlay(int cargoCollected, long creditsEarned);
         void UpdateMiningStats();
-        void UpdateTitle(string title);
-        string? GetSelectedTradeCommodity();
-        void PopulateCommodities(IEnumerable<string> commodities);
-        void UpdateTradeResults(List<MarketInfo> results, bool isSellSearch);
-        void SetTradeStatus(string text);
-        void OnTradeCommodityChanged(object? sender, EventArgs e);
-        void StartTradeSearchAnimation();
-        void StopTradeSearchAnimation();
+        void UpdateTitle(string title);        
         void ShowOverlays();
         void HideOverlays();
         void RefreshOverlay();
