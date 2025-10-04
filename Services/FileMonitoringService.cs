@@ -14,33 +14,27 @@ namespace EliteDataRelay.Services
     {
         private FileSystemWatcher? _watcher;
         private readonly string? _filePath;
-        private readonly string? _fileDir;
         private readonly string _fileName;
         private bool _isMonitoring;
         private System.Threading.Timer? _debounceTimer;
         private System.Threading.Timer? _directoryCheckTimer;
         private readonly object _lock = new object();
 
-        public event Action? FileChanged;
+        public event Action<string>? FileChanged;
 
         public bool IsMonitoring => _isMonitoring;
 
         public FileMonitoringService(IJournalWatcherService journalWatcher)
         {
-            _fileDir = journalWatcher.JournalDirectoryPath;
-            _fileName = "Cargo.json"; // The file we are interested in.
-
-            // Only set the full path if the directory is known.
-            if (!string.IsNullOrEmpty(_fileDir))
-            {
-                _filePath = Path.Combine(_fileDir, _fileName);
-            }
+            _filePath = journalWatcher.JournalDirectoryPath;
+            // This service now only watches for Cargo.json
+            _fileName = "Cargo.json"; 
         }
 
         public void StartMonitoring()
         {
             if (_isMonitoring || string.IsNullOrEmpty(_filePath)) return;
-
+            
             _isMonitoring = true;
             Debug.WriteLine($"[FileMonitoringService] Starting monitoring for {_filePath}");
 
@@ -53,16 +47,16 @@ namespace EliteDataRelay.Services
             lock (_lock)
             {
                 // Don't try if the watcher is already running or the path is invalid.
-                if (_watcher != null || string.IsNullOrEmpty(_fileDir)) return;
+                if (_watcher != null || string.IsNullOrEmpty(_filePath)) return;
 
-                if (!Directory.Exists(_fileDir))
+                if (!Directory.Exists(_filePath))
                 {
                     // Directory doesn't exist yet. Start a timer to check for it periodically.
                     _directoryCheckTimer ??= new System.Threading.Timer(_ => TryInitializeWatcher(), null, 5000, 5000);
                     return;
                 }
 
-            _watcher = new FileSystemWatcher(_fileDir)
+            _watcher = new FileSystemWatcher(_filePath)
             {
                 Filter = _fileName,
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size, // Watch for content changes
@@ -75,7 +69,7 @@ namespace EliteDataRelay.Services
                 // The directory now exists, so we can stop the check timer.
                 _directoryCheckTimer?.Dispose();
                 _directoryCheckTimer = null;
-                Debug.WriteLine($"[FileMonitoringService] Successfully initialized watcher for directory: {_fileDir}");
+                Debug.WriteLine($"[FileMonitoringService] Successfully initialized watcher for directory: {_filePath}");
             }
         }
 
@@ -99,6 +93,10 @@ namespace EliteDataRelay.Services
 
         private void OnFileChangeEvent(object sender, FileSystemEventArgs e)
         {
+            // Capture the filename and guard against nulls to prevent CS8604 warning.
+            string? fileName = e.Name;
+            if (fileName == null) return;
+
             // Debounce the event to handle multiple rapid triggers for a single save.
             lock (_lock)
             {
@@ -106,7 +104,7 @@ namespace EliteDataRelay.Services
                 if (_isMonitoring)
                 {
                     _debounceTimer?.Change(250, Timeout.Infinite); // Reset the timer
-                    _debounceTimer ??= new System.Threading.Timer(_ => FileChanged?.Invoke(), null, 250, Timeout.Infinite);
+                    _debounceTimer ??= new System.Threading.Timer(_ => FileChanged?.Invoke(fileName), null, 250, Timeout.Infinite);
                 }
             }
         }

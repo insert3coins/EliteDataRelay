@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
+using EliteDataRelay.Services;
 using EliteDataRelay.UI;
 
 namespace EliteDataRelay
@@ -121,11 +122,9 @@ namespace EliteDataRelay
                 // Also force a session update to ensure the mining overlay is recreated if it was closed.
                 OnSessionUpdated(_sessionTrackingService, EventArgs.Empty);
             }
-            else
-            {
-                // If not monitoring, just update the visuals which will hide any overlays.
-                _cargoFormUI.UpdateMonitoringVisuals(false);
-            }
+
+            // If not monitoring, just update the visuals which will hide any overlays.
+            _cargoFormUI.UpdateMonitoringVisuals(false);
         }
 
         private void OnSessionClicked(object? sender, EventArgs e)

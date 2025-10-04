@@ -1,27 +1,37 @@
 using EliteDataRelay.Configuration;
+using EliteDataRelay.UI;
 
 namespace EliteDataRelay
 {
     public partial class CargoForm
     {
         #region Monitoring Control
-
+        
+        /// <summary>
+        /// Populates the entire UI from the cached data. This is called once after the initial
+        /// journal scan is complete to ensure the UI reflects the game's state at startup.
+        /// </summary>
         private void RefreshAllUIData()
         {
             // Populate the entire UI with the last known data.
             if (_lastCommanderName != null) _cargoFormUI.UpdateCommanderName(_lastCommanderName);
             if (_lastShipName != null && _lastShipIdent != null && _lastShipType != null && _lastInternalShipName != null) _cargoFormUI.UpdateShipInfo(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName);
+            if (_lastLoadout != null) _cargoFormUI.UpdateShipLoadout(_lastLoadout);
             if (_lastBalance.HasValue) _cargoFormUI.UpdateBalance(_lastBalance.Value);
             if (_lastLocation != null) _cargoFormUI.UpdateLocation(_lastLocation);
-            if (_lastLoadout != null) _cargoFormUI.UpdateShipLoadout(_lastLoadout);
+            if (_lastStatus != null) _cargoFormUI.UpdateShipStatus(_lastStatus);
+            if (_lastStationInfoData != null) _cargoFormUI.UpdateStationInfo(_lastStationInfoData);
+            if (_lastSystemInfoData != null) _cargoFormUI.UpdateSystemInfo(_lastSystemInfoData);
+
+            // Populate cargo and materials
             if (_lastCargoSnapshot != null)
             {
                 _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
             }
-
-            // Also populate system and station info
-            if (_lastStationInfoData != null) _cargoFormUI.UpdateStationInfo(_lastStationInfoData);
-            if (_lastSystemInfoData != null) _cargoFormUI.UpdateSystemInfo(_lastSystemInfoData);
+            if (_lastMaterials != null)
+            {
+                (_cargoFormUI as CargoFormUI)?.UpdateMaterials(_lastMaterials);
+            }
 
             // Also repopulate session data if tracking is active and shown on the overlay.
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)

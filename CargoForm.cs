@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -63,6 +63,7 @@ namespace EliteDataRelay
         private string? _lastLocation;
         private CargoSnapshot? _lastCargoSnapshot;
         private StationInfoData? _lastStationInfoData;
+        private MaterialsEvent? _lastMaterials;
         private SystemInfoData? _lastSystemInfoData;
         private StatusFile? _lastStatus;
 
@@ -106,8 +107,10 @@ namespace EliteDataRelay
             // Wire up service events
             // Use a lambda to subscribe ProcessCargoFile (which returns bool) to the FileChanged event (which expects void).
             // We discard the boolean result as it's not needed for file change notifications.
-            _fileMonitoringService.FileChanged += () => _cargoProcessorService.ProcessCargoFile();
+            _fileMonitoringService.FileChanged += (fileName) => OnGameFileChanged(fileName);
+
             _cargoProcessorService.CargoProcessed += OnCargoProcessed;
+            _journalWatcherService.MaterialsChanged += OnMaterialsChanged;
             _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
             _journalWatcherService.LocationChanged += OnLocationChanged;
             _journalWatcherService.BalanceChanged += OnBalanceChanged;
@@ -121,6 +124,12 @@ namespace EliteDataRelay
             _journalWatcherService.InitialScanComplete += OnInitialScanComplete;
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
+        }
+
+        private void OnGameFileChanged(string fileName)
+        {
+            // This service now only cares about Cargo.json
+            if (fileName.Equals("Cargo.json", StringComparison.OrdinalIgnoreCase)) _ = _cargoProcessorService.ProcessCargoFile();
         }
 
         protected override void Dispose(bool disposing)

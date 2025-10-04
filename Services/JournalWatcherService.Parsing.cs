@@ -155,6 +155,10 @@ namespace EliteDataRelay.Services
                         {
                             ProcessLoadoutEvent(journalLine, options);
                         }
+                        else if (eventType == "Materials")
+                        {
+                            HandleMaterialsEvent(jsonDoc.RootElement);
+                        }
                         else if (eventType == "ShipyardSwap")
                         {
                             ProcessShipyardSwapEvent(journalLine, options);

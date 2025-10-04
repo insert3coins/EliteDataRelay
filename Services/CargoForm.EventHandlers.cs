@@ -255,6 +255,18 @@ namespace EliteDataRelay
             });
         }
 
+        private void OnMaterialsChanged(object? sender, MaterialsEvent e)
+        {
+            SafeInvoke(() =>
+            {
+                _lastMaterials = e;
+
+                if (!_isInitializing)
+                {
+                    (_cargoFormUI as CargoFormUI)?.UpdateMaterials(e);
+                }
+            });
+        }
 
         #endregion
     }

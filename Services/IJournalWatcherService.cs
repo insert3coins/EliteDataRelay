@@ -13,6 +13,7 @@ namespace EliteDataRelay.Services
         event EventHandler<ShipInfoChangedEventArgs>? ShipInfoChanged;
         event EventHandler<LoadoutChangedEventArgs>? LoadoutChanged;
         event EventHandler<StatusChangedEventArgs>? StatusChanged;
+        event EventHandler<MaterialsEvent>? MaterialsChanged;
         event EventHandler InitialScanComplete;
         event EventHandler<CargoCollectedEventArgs>? CargoCollected;
         event EventHandler<DockedEventArgs>? Docked;

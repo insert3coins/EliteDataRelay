@@ -85,7 +85,18 @@ namespace EliteDataRelay.UI
                 _controlFactory.TabControl.SelectedIndex = 1; // Index of Ship tab
                 _controlFactory.TabControl.SelectedIndex = originalIndex;
             }
+            InitializeMaterialsTab();
             AdjustMessageColumnLayout();
+        }
+
+        private void InitializeMaterialsTab()
+        {
+            if (_controlFactory == null || _controlFactory.TabControl.TabPages.ContainsKey("Materials"))
+                return;
+
+            var materialsTab = new MaterialsTab();
+            _controlFactory.TabControl.TabPages.Add(materialsTab);
+            _controlFactory.MaterialsTab = materialsTab;
         }
 
         private void OnFormResize(object? sender, EventArgs e)
@@ -195,6 +206,13 @@ namespace EliteDataRelay.UI
         public void UpdateStationInfo(StationInfoData data)
         {
             _overlayService?.UpdateStationInfo(data);
+        }
+
+        public void UpdateMaterials(MaterialsEvent materials)
+        {
+            _controlFactory?.MaterialsTab?.UpdateRawMaterials(materials.Raw);
+            _controlFactory?.MaterialsTab?.UpdateManufacturedMaterials(materials.Manufactured);
+            _controlFactory?.MaterialsTab?.UpdateEncodedData(materials.Encoded);
         }
 
         public void UpdateMiningStats()

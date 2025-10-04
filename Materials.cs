@@ -54,4 +54,16 @@ namespace EliteDataRelay.Models
         [JsonPropertyName("Materials")]
         public List<MaterialItem> Materials { get; set; } = new();
     }
+
+    public class MaterialsProcessedEventArgs : EventArgs
+    {
+        public MaterialsEvent Materials { get; }
+        public string Hash { get; }
+
+        public MaterialsProcessedEventArgs(MaterialsEvent materials, string hash)
+        {
+            Materials = materials;
+            Hash = hash;
+        }
+    }
 }
