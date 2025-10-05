@@ -36,6 +36,7 @@ namespace EliteDataRelay
                 {
                     // --- UI Update ---
                     _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
+                    _cargoFormUI.UpdateCargoScrollBar();
 
                     // --- File Output ---
                     if (AppConfiguration.EnableFileOutput)
@@ -66,6 +67,7 @@ namespace EliteDataRelay
                     if (_lastCargoSnapshot != null)
                     {
                         _cargoFormUI.UpdateCargoDisplay(_lastCargoSnapshot, _cargoCapacity);
+                        _cargoFormUI.UpdateCargoScrollBar();
                     }
                     else
                     {
@@ -149,6 +151,7 @@ namespace EliteDataRelay
                         var emptySnapshot = new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0);
                         _lastCargoSnapshot = emptySnapshot;
                         _cargoFormUI.UpdateCargoDisplay(emptySnapshot, _cargoCapacity);
+                        _cargoFormUI.UpdateCargoScrollBar();
                     }
                 }
 
@@ -263,7 +266,7 @@ namespace EliteDataRelay
 
                 if (!_isInitializing)
                 {
-                    (_cargoFormUI as CargoFormUI)?.UpdateMaterials(e);
+                    _cargoFormUI.UpdateMaterials(e);
                 }
             });
         }

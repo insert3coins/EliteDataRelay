@@ -103,8 +103,9 @@ namespace EliteDataRelay.Services
                 // Only process if monitoring is still active
                 if (_isMonitoring)
                 {
-                    _debounceTimer?.Change(250, Timeout.Infinite); // Reset the timer
-                    _debounceTimer ??= new System.Threading.Timer(_ => FileChanged?.Invoke(fileName), null, 250, Timeout.Infinite);
+                    const int debounceTimeMs = 10; // This is our responce time for our cargo.json updates
+                    _debounceTimer?.Change(debounceTimeMs, Timeout.Infinite); // Reset the timer
+                    _debounceTimer ??= new System.Threading.Timer(_ => FileChanged?.Invoke(fileName), null, debounceTimeMs, Timeout.Infinite);
                 }
             }
         }

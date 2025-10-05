@@ -63,12 +63,12 @@ namespace EliteDataRelay.UI
             _layoutManager = new LayoutManager(_form, _controlFactory);
 
             _form.Resize += OnFormResize;
+            _form.ResizeEnd += OnFormResizeEnd;
             _form.Load += OnFormLoad;
             _trayIconManager = new TrayIconManager(_appIcon);
             SetupFormProperties();
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
-            DisplayWelcomeMessage();
             InitializeShipTab(); // This was the missing call
         }
 
@@ -86,7 +86,6 @@ namespace EliteDataRelay.UI
                 _controlFactory.TabControl.SelectedIndex = originalIndex;
             }
             InitializeMaterialsTab();
-            AdjustMessageColumnLayout();
         }
 
         private void InitializeMaterialsTab()
@@ -109,6 +108,11 @@ namespace EliteDataRelay.UI
             else if (_form?.WindowState == FormWindowState.Normal || _form?.WindowState == FormWindowState.Maximized)
             {
             }
+        }
+
+        private void OnFormResizeEnd(object? sender, EventArgs e)
+        {
+            UpdateCargoScrollBar();
         }
 
         private void InitializeIcon()
@@ -230,6 +234,18 @@ namespace EliteDataRelay.UI
             _trayIconManager?.SetMonitoringState(startEnabled: !isMonitoring, stopEnabled: isMonitoring);
             _watchingAnimationManager?.SetMonitoringState(isMonitoring);
             _overlayService?.SetVisibility(isMonitoring);
+
+            if (_controlFactory?.CargoWelcomePanel != null && _controlFactory.CargoGridView != null)
+            {
+                _controlFactory.CargoWelcomePanel.Visible = !isMonitoring;
+                _controlFactory.CargoGridView.Visible = isMonitoring;
+                UpdateCargoScrollBar();
+            }
+        }
+
+        public void UpdateCargoScrollBar()
+        {
+            _controlFactory?.UpdateCargoScrollBar();
         }
 
         public void Dispose()

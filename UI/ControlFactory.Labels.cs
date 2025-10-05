@@ -115,6 +115,14 @@ namespace EliteDataRelay.UI
             var customDrawer = new CustomToolTipDrawer(fontManager.ConsolasFont);
             ToolTip.Popup += customDrawer.ToolTip_Popup;
             ToolTip.Draw += customDrawer.ToolTip_Draw;
+
+            // Assign tooltips to the main action buttons
+            ToolTip.SetToolTip(StartBtn, "Start monitoring for cargo changes");
+            ToolTip.SetToolTip(StopBtn, "Stop monitoring for cargo changes");
+            ToolTip.SetToolTip(ExitBtn, "Exit the application");
+            ToolTip.SetToolTip(SettingsBtn, "Configure application settings");
+            ToolTip.SetToolTip(SessionBtn, "Show session summary statistics");
+            ToolTip.SetToolTip(AboutBtn, "Show information about the application");
         }
     }
 }

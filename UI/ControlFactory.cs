@@ -42,6 +42,7 @@ namespace EliteDataRelay.UI
             DisposeButtons();
             DisposeTabControls();
             DisposeMiningTabControls();
+            DisposeCargoTabControls();
             DisposeLabels();
         }
     }

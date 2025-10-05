@@ -27,30 +27,26 @@ namespace EliteDataRelay.UI
         {
             if (_controlFactory == null) return;
 
-            var listView = _controlFactory.ListView;
+            var gridView = _controlFactory.CargoGridView;
+            if (gridView is null) return;
 
-            listView.BeginUpdate();
-            listView.Items.Clear();
+            gridView.SuspendLayout();
+            gridView.Rows.Clear();
 
             if (snapshot.Items.Any())
             {
-                RestoreDataColumnLayout(); // Set columns for data view
                 var sortedInventory = snapshot.Items.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name);
                 foreach (var item in sortedInventory)
                 {
                     string displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
 
-                    // Capitalize the first letter for consistent display.
                     if (!string.IsNullOrEmpty(displayName))
                     {
                         displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
                     }
 
-                    var listViewItem = new ListViewItem(displayName);
-                    listViewItem.SubItems.Add(item.Count.ToString());
                     string category = CommodityDataService.GetCategory(item.Name);
-                    listViewItem.SubItems.Add(category);
-                    listView.Items.Add(listViewItem);
+                    gridView.Rows.Add(displayName, item.Count, category);
                 }
             }
             else
@@ -58,11 +54,17 @@ namespace EliteDataRelay.UI
                 // If inventory is empty, check if it's because the hold is empty or because we're waiting for an update.
                 string message = snapshot.Count > 0 ? "Cargo manifest updating..." : "Cargo hold is empty.";
 
-                var statusItem = new ListViewItem(message) { ForeColor = SystemColors.GrayText };
-                listView.Items.Add(statusItem);
-                AdjustMessageColumnLayout(); // Set columns for single message view
+                int rowIndex = gridView.Rows.Add(message, "", "");
+                var row = gridView.Rows[rowIndex];
+                
+                // Apply special styling for the status message row
+                row.DefaultCellStyle.ForeColor = Color.FromArgb(107, 114, 128); // A muted gray color
+                row.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                row.DefaultCellStyle.SelectionBackColor = row.DefaultCellStyle.BackColor; // Prevent selection highlight
+                row.DefaultCellStyle.SelectionForeColor = row.DefaultCellStyle.ForeColor;
+                row.ReadOnly = true;
             }
-            listView.EndUpdate();
+            gridView.ResumeLayout();
 
             _overlayService?.UpdateCargoList(snapshot);
         }
@@ -183,38 +185,5 @@ namespace EliteDataRelay.UI
             _form.Text = $"{_baseTitle} – Location: {_currentLocation}";
         }
 
-        public void DisplayWelcomeMessage()
-        {
-            if (_controlFactory == null) return;
-            var listView = _controlFactory.ListView;
-
-            listView.Items.Clear();
-            var welcomeItem = new ListViewItem(AppConfiguration.WelcomeMessage);
-            welcomeItem.ForeColor = SystemColors.GrayText;
-            listView.Items.Add(welcomeItem);
-
-            // The layout is intentionally not adjusted here, as the ListView's ClientSize
-            // may not be accurate until the form is loaded. The OnFormLoad event
-            // will handle the initial layout adjustment.
-            _controlFactory.CargoHeaderLabel.Text = "Cargo: 0";
-        }
-        public void AdjustMessageColumnLayout()
-        {
-            if (_controlFactory == null) return;
-            var listView = _controlFactory.ListView;
-
-            listView.Columns[0].Width = listView.ClientSize.Width;
-            listView.Columns[1].Width = 0;
-            listView.Columns[2].Width = 0;
-        }
-
-        public void RestoreDataColumnLayout()
-        {
-            if (_controlFactory == null) return;
-            var listView = _controlFactory.ListView;
-            listView.Columns[0].Width = 200;
-            listView.Columns[1].Width = 80;
-            listView.Columns[2].Width = -2; // Fill remaining space
-        }
     }
 }

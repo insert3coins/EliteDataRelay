@@ -27,6 +27,7 @@ namespace EliteDataRelay.UI
         void UpdateShipLoadout(ShipLoadout loadout);
         void UpdateShipStatus(StatusFile status);
         void UpdateStationInfo(StationInfoData data);
+        void UpdateMaterials(MaterialsEvent materials);
         void UpdateSystemInfo(SystemInfoData data);
         void UpdateLocation(string location);
         void UpdateSessionOverlay(int cargoCollected, long creditsEarned);
@@ -35,5 +36,6 @@ namespace EliteDataRelay.UI
         void ShowOverlays();
         void HideOverlays();
         void RefreshOverlay();
+        void UpdateCargoScrollBar();
     }
 }
