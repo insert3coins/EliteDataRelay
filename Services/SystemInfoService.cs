@@ -25,6 +25,7 @@ namespace EliteDataRelay.Services
         private CancellationTokenSource? _fetchCancellationTokenSource; // Manages cancellation for the actual API fetch
         private readonly object _lock = new object();
         private CancellationTokenSource? _debounceCancellationTokenSource; // Manages cancellation for the debounce delay
+        private bool _disposedValue;
 
         public event EventHandler<SystemInfoData>? SystemInfoUpdated;
 
@@ -191,21 +192,32 @@ namespace EliteDataRelay.Services
 
         public void Dispose()
         {
-            lock (_lock)
-            {
-                // First, stop listening to new events.
-                Stop();
-
-                // Signal any ongoing async operations to cancel.
-                _fetchCancellationTokenSource?.Cancel();
-                _debounceCancellationTokenSource?.Cancel();
-
-                // Now, dispose of the resources.
-                _fetchCancellationTokenSource?.Dispose();
-                _debounceCancellationTokenSource?.Dispose();
-            }
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            lock (_lock)
+            {
+                if (!_disposedValue)
+                {
+                    if (disposing)
+                    {
+                        // First, stop listening to new events.
+                        Stop();
+
+                        // Signal any ongoing async operations to cancel and dispose the sources.
+                        _fetchCancellationTokenSource?.Cancel();
+                        _debounceCancellationTokenSource?.Cancel();
+                        _fetchCancellationTokenSource?.Dispose();
+                        _debounceCancellationTokenSource?.Dispose();
+                    }
+                    _disposedValue = true;
+                }
+            }
+        }
         #region EDSM Data Models
         // These classes are defined here because they are only used by this service
         // to deserialize the response from the EDSM API.

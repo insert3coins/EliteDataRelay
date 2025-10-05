@@ -1,4 +1,4 @@
-﻿using EliteDataRelay.Models;
+﻿﻿using EliteDataRelay.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +22,7 @@ namespace EliteDataRelay.Services
         {
             var assembly = Assembly.GetExecutingAssembly();
             LoadCsv(assembly, "EliteDataRelay.Resources.material.csv");
+            LoadCsv(assembly, "EliteDataRelay.Resources.microresource.csv");
 
             // Group materials by category
             foreach (var group in AllMaterials.GroupBy(m => m.Category))
@@ -64,6 +65,9 @@ namespace EliteDataRelay.Services
 
         public static List<MaterialDefinition> GetAllEncodedMaterials() =>
             AllMaterials.Where(m => m.Category == "Encoded").OrderBy(m => m.FriendlyName).ToList();
+
+        public static List<MaterialDefinition> GetAllMaterials() =>
+            AllMaterials.OrderBy(m => m.FriendlyName).ToList();
 
         public static string GetLocalisedName(string name) =>
             AllMaterials.FirstOrDefault(m => m.Name.Equals(name, StringComparison.OrdinalIgnoreCase))?.FriendlyName ??

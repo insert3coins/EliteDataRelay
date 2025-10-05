@@ -27,7 +27,6 @@ namespace EliteDataRelay.Services
                     System.Diagnostics.Debug.WriteLine("[OverlayService] Elite Dangerous not running. Overlays will not be shown.");
                     return;
                 }
-                foreach (var p in gameProcesses) { p.Dispose(); }
             }
             catch { /* Ignore potential access denied errors */ }
 

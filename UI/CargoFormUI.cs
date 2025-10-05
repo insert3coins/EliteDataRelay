@@ -23,6 +23,8 @@ namespace EliteDataRelay.UI
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";        
+        private bool _isMonitoring;
+        private bool _disposedValue;
 
         private string _baseTitle = "";
 
@@ -233,6 +235,9 @@ namespace EliteDataRelay.UI
 
         public void UpdateMonitoringVisuals(bool isMonitoring)
         {
+            _isMonitoring = isMonitoring;
+            UpdateFullTitleText();
+
             _trayIconManager?.SetMonitoringState(startEnabled: !isMonitoring, stopEnabled: isMonitoring);
             _watchingAnimationManager?.SetMonitoringState(isMonitoring);
             _overlayService?.SetVisibility(isMonitoring);
@@ -252,14 +257,30 @@ namespace EliteDataRelay.UI
 
         public void Dispose()
         {
-            _controlFactory?.Dispose();
-            _layoutManager?.Dispose();
-            _trayIconManager?.Dispose();
-            _watchingAnimationManager?.Dispose();
-            // _shipWireframeDrawer is removed, no need to dispose.
-            _fontManager?.Dispose(); // Dispose fonts after the controls that use them.
-            _appIcon?.Dispose();
-            _iconStream?.Dispose();
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    // Dispose managed state (managed objects).
+                    _controlFactory?.Dispose();
+                    _layoutManager?.Dispose();
+                    _trayIconManager?.Dispose();
+                    _watchingAnimationManager?.Dispose();
+                    _fontManager?.Dispose(); // Dispose fonts after the controls that use them.
+                    _appIcon?.Dispose();
+                    _iconStream?.Dispose();
+                }
+
+                // No unmanaged resources to free, but good practice to have.
+
+                _disposedValue = true;
+            }
         }
     }
 }
