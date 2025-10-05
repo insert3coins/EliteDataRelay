@@ -70,7 +70,7 @@ namespace EliteDataRelay.UI
             foreach (var materialDef in allMaterials)
             {
                 currentMaterialsDict.TryGetValue(materialDef.Name.ToLowerInvariant(), out int count);
-                grid.Rows.Add(MaterialDataService.GetLocalisedName(materialDef.Name), count);
+                grid.Rows.Add(materialDef.FriendlyName, count);
             }
         }
 

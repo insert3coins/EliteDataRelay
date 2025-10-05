@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace EliteDataRelay.Services
 {
@@ -13,7 +13,7 @@ namespace EliteDataRelay.Services
     /// </summary>
     public static class ModuleDataService
     {
-        private static readonly ConcurrentDictionary<string, string> ModuleNames = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, ModuleInfo> ModulesBySymbol = new Dictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
 
         static ModuleDataService()
         {
@@ -24,31 +24,47 @@ namespace EliteDataRelay.Services
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            var resourceName = "EliteDataRelay.Resources.modules.txt";
+            var resourceName = "EliteDataRelay.Resources.outfitting.csv";
 
             using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
             {
                 if (stream == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[ModuleDataService] Error: Embedded resource '{resourceName}' not found. Module names will not be translated.");
+                    System.Diagnostics.Debug.WriteLine($"[ModuleDataService] Error: Embedded resource '{resourceName}' not found.");
                     return;
                 }
                 using (StreamReader reader = new StreamReader(stream))
                 {
+                    // Skip header
+                    reader.ReadLine();
+
                     string? line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        if (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("#"))
+                        var values = ParseCsvLine(line);
+                        if (values.Length >= 8)
                         {
-                            var parts = line.Split(new[] { '=' }, 2);
-                            if (parts.Length == 2)
+                            var moduleInfo = new ModuleInfo
                             {
-                                ModuleNames[parts[0].Trim()] = parts[1].Trim();
-                            }
+                                Symbol = values[1].ToLowerInvariant(),
+                                Category = values[2],
+                                Name = values[3],
+                                Mount = values[4],
+                                Class = int.TryParse(values[6], out int c) ? c : 0,
+                                Rating = values[7]
+                            };
+                            ModulesBySymbol[moduleInfo.Symbol] = moduleInfo;
                         }
                     }
                 }
             }
+        }
+
+        private static string[] ParseCsvLine(string line)
+        {
+            // Simple CSV parser that handles quoted fields.
+            var matches = Regex.Matches(line, "(\"[^\"]*\"|[^,]*),?");
+            return matches.Cast<Match>().Select(m => m.Value.Trim('"', ',')).ToArray();
         }
 
         // A dictionary to map internal power plant names to their power capacity in MW.
@@ -126,18 +142,22 @@ namespace EliteDataRelay.Services
                 return module.ItemLocalised;
             }
             
-            if (string.IsNullOrEmpty(module.Item))
+            if (string.IsNullOrEmpty(module.Item) || !ModulesBySymbol.TryGetValue(module.Item.ToLowerInvariant(), out var moduleInfo))
             {
-                return string.Empty;
+                // Fallback to the internal name if not found in our file.
+                return module.Item ?? string.Empty;
             }
 
-            if (ModuleNames.TryGetValue(module.Item, out var friendlyName))
+            // For categories like Armour, the name is sufficient.
+            if (moduleInfo.Category == "Armour")
             {
-                return friendlyName;
+                return moduleInfo.Name;
             }
 
-            // Fallback to the internal name if not found in our file.
-            return module.Item;
+            string mount = !string.IsNullOrEmpty(moduleInfo.Mount) ? $"{moduleInfo.Mount} " : "";
+            string name = moduleInfo.Name;
+
+            return moduleInfo.Class > 0 ? $"{moduleInfo.Class}{moduleInfo.Rating} {mount}{name}" : $"{mount}{name}";
         }
     }
 }
