@@ -14,6 +14,20 @@ namespace EliteDataRelay.Services
     {
         private static readonly Dictionary<string, Image> _iconCache = new Dictionary<string, Image>(StringComparer.OrdinalIgnoreCase);
         private static Image? _defaultIcon;
+
+        /// <summary>
+        /// Static constructor to log the ship icon mappings on startup.
+        /// </summary>
+        static ShipIconService()
+        {
+            Trace.WriteLine("[ShipIconService] Initializing ship icon mappings...");
+            foreach (var mapping in _shipToFileNameMap)
+            {
+                Trace.WriteLine($"[ShipIconService] Mapping: '{mapping.Key}' -> '{mapping.Value}.png'");
+            }
+            Trace.WriteLine($"[ShipIconService] Total mappings loaded: {_shipToFileNameMap.Count}");
+        }
+
         // Maps the journal's internal ship name (usually lowercase) to a specific icon file name.
         // This provides a single source of truth and handles any inconsistencies in journal data.
         private static readonly Dictionary<string, string> _shipToFileNameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -61,6 +75,7 @@ namespace EliteDataRelay.Services
             { "anaconda", "Anaconda" },
             { "federation_corvette", "Federation_Corvette" },
             { "cutter", "Cutter" },
+            { "panthermkii" , "Panther Clipper Mk II" }
         };
         private static readonly string _iconDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "Ships");
 
@@ -86,7 +101,7 @@ namespace EliteDataRelay.Services
             if (_shipToFileNameMap.TryGetValue(internalShipName, out var fileName))
             {
                 string fullPath = Path.Combine(_iconDirectory, $"{fileName}.png");
-                Debug.WriteLine($"[ShipIconService] Mapped '{internalShipName}' to file '{fileName}.png'. Attempting to load from: {fullPath}");
+                Trace.WriteLine($"[ShipIconService] Mapped '{internalShipName}' to file '{fileName}.png'. Attempting to load from: {fullPath}");
                 if (File.Exists(fullPath)) // This line was missing
                 {
                     try
@@ -103,12 +118,12 @@ namespace EliteDataRelay.Services
                 }
                 else
                 {
-                    Debug.WriteLine($"[ShipIconService] Icon file not found: '{fullPath}'.");
+                    Trace.WriteLine($"[ShipIconService] Icon file not found: '{fullPath}'.");
                 }
             }
             else
             { // This line was missing
-                Debug.WriteLine($"[ShipIconService] No mapping found for ship '{internalShipName}'.");
+                Trace.WriteLine($"[ShipIconService] No mapping found for ship '{internalShipName}'.");
             }
             return GetDefaultIcon();
         }
@@ -157,7 +172,7 @@ namespace EliteDataRelay.Services
             }
             else
             {
-                Debug.WriteLine($"[ShipIconService] Default icon file 'unknown.png' not found in '{_iconDirectory}'.");
+                Trace.WriteLine($"[ShipIconService] Default icon file 'unknown.png' not found in '{_iconDirectory}'.");
             }
             return null; // Ultimate fallback if even the default is missing.
         }

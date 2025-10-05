@@ -36,8 +36,12 @@ namespace EliteDataRelay
             catch (UnauthorizedAccessException) { /* Ignore if no permissions */ }
 
             var listener = new TextWriterTraceListener(logFilePath);
+            // Add the listener to both Trace and Debug to capture all diagnostic output.
+            // Both Debug and Trace write to the same shared Listeners collection.
             Trace.Listeners.Add(listener);
-            Trace.AutoFlush = true; // Ensure messages are written to the file immediately.
+
+            // Ensure messages are written to the file immediately.
+            Trace.AutoFlush = true;
 
             // Create and run the main form. The form itself is now responsible
             // for creating and managing its own services.

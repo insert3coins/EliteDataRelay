@@ -93,7 +93,11 @@ namespace EliteDataRelay.UI
             if (_controlFactory == null || _controlFactory.TabControl.TabPages.ContainsKey("Materials"))
                 return;
 
-            var materialsTab = new MaterialsTab();
+            var materialsTab = new MaterialsTab
+            {
+                Name = "Materials",
+                Text = "Materials"
+            };
             _controlFactory.TabControl.TabPages.Add(materialsTab);
             _controlFactory.MaterialsTab = materialsTab;
         }

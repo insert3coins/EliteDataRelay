@@ -35,7 +35,7 @@ namespace EliteDataRelay
                 if (!_isInitializing)
                 {
                     // --- UI Update ---
-                    _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity);
+                    _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity); // This was the missing call
                     _cargoFormUI.UpdateCargoScrollBar();
 
                     // --- File Output ---
