@@ -129,8 +129,8 @@ namespace EliteDataRelay
                 OnSessionUpdated(_sessionTrackingService, EventArgs.Empty);
             }
 
-            // If not monitoring, just update the visuals which will hide any overlays.
-            _cargoFormUI.UpdateMonitoringVisuals(false);
+            // Update the main form's visuals to reflect the current monitoring state.
+            _cargoFormUI.UpdateMonitoringVisuals(_fileMonitoringService.IsMonitoring);
         }
 
         private void OnSessionClicked(object? sender, EventArgs e)
