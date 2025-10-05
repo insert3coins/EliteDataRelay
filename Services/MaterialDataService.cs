@@ -21,17 +21,16 @@ namespace EliteDataRelay.Services
         private static void LoadMaterialData()
         {
             var assembly = Assembly.GetExecutingAssembly();
-            LoadCsv(assembly, "EliteDataRelay.Resources.material.csv", isMicroResource: false);
-            LoadCsv(assembly, "EliteDataRelay.Resources.microresources.csv", isMicroResource: true);
+            LoadCsv(assembly, "EliteDataRelay.Resources.material.csv");
 
             // Group materials by category
             foreach (var group in AllMaterials.GroupBy(m => m.Category))
             {
-                MaterialsByCategory[group.Key] = group.OrderBy(m => m.Grade).ThenBy(m => m.FriendlyName).ToList();
+                MaterialsByCategory[group.Key] = group.OrderBy(m => m.FriendlyName).ToList();
             }
         }
 
-        private static void LoadCsv(Assembly assembly, string resourceName, bool isMicroResource)
+        private static void LoadCsv(Assembly assembly, string resourceName)
         {
             using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
             {
@@ -47,12 +46,7 @@ namespace EliteDataRelay.Services
                     while ((line = reader.ReadLine()) != null)
                     {
                         var parts = line.Split(',');
-                        if (isMicroResource && parts.Length >= 4)
-                        {
-                            // id,symbol,category,name
-                            AllMaterials.Add(new MaterialDefinition(parts[1], parts[3], parts[2], 0)); // symbol, name, category, grade
-                        }
-                        else if (!isMicroResource && parts.Length >= 6)
+                        if (parts.Length >= 6)
                         {
                             // id,symbol,rarity,type,category,name
                             AllMaterials.Add(new MaterialDefinition(parts[1], parts[5], parts[3], int.TryParse(parts[2], out int g) ? g : 0)); // symbol, name, type (as category), rarity (as grade)
@@ -63,17 +57,13 @@ namespace EliteDataRelay.Services
         }
 
         public static List<MaterialDefinition> GetAllRawMaterials() =>
-            AllMaterials.Where(m => m.Category == "Raw").OrderBy(m => m.Grade).ThenBy(m => m.FriendlyName).ToList();
+            AllMaterials.Where(m => m.Category == "Raw").OrderBy(m => m.FriendlyName).ToList();
 
         public static List<MaterialDefinition> GetAllManufacturedMaterials() =>
-            AllMaterials.Where(m => m.Category == "Manufactured").OrderBy(m => m.Grade).ThenBy(m => m.FriendlyName).ToList();
+            AllMaterials.Where(m => m.Category == "Manufactured").OrderBy(m => m.FriendlyName).ToList();
 
         public static List<MaterialDefinition> GetAllEncodedMaterials() =>
-            AllMaterials.Where(m => m.Category == "Encoded").OrderBy(m => m.Grade).ThenBy(m => m.FriendlyName).ToList();
-
-        public static List<MaterialDefinition> GetAllOdysseyMaterials() =>
-            AllMaterials.Where(m => m.Category != "Raw" && m.Category != "Manufactured" && m.Category != "Encoded")
-                        .OrderBy(m => m.Category).ThenBy(m => m.FriendlyName).ToList();
+            AllMaterials.Where(m => m.Category == "Encoded").OrderBy(m => m.FriendlyName).ToList();
 
         public static string GetLocalisedName(string name) =>
             AllMaterials.FirstOrDefault(m => m.Name.Equals(name, StringComparison.OrdinalIgnoreCase))?.FriendlyName ??
