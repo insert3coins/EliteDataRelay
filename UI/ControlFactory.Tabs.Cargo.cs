@@ -17,6 +17,7 @@ namespace EliteDataRelay.UI
         private readonly Color _cargoTextPrimary = Color.FromArgb(243, 244, 246);
         private readonly Color _cargoTextSecondary = Color.FromArgb(156, 163, 175);
         private readonly Color _cargoBorderColor = Color.FromArgb(55, 65, 81);
+        private readonly SolidBrush _cargoAccentBrush = new SolidBrush(Color.FromArgb(99, 102, 241));
 
         private TabPage CreateCargoTabPage(FontManager fontManager)
         {
@@ -171,8 +172,7 @@ namespace EliteDataRelay.UI
             // Draw selection indicator on the left
             if (e.State.HasFlag(DataGridViewElementStates.Selected))
             {
-                using SolidBrush brush = new SolidBrush(_cargoAccentColor);
-                e.Graphics.FillRectangle(brush, e.CellBounds.Left, e.CellBounds.Top, 4, e.CellBounds.Height);
+                e.Graphics.FillRectangle(_cargoAccentBrush, e.CellBounds.Left, e.CellBounds.Top, 4, e.CellBounds.Height);
             }
         }
 
@@ -207,6 +207,7 @@ namespace EliteDataRelay.UI
         {
             CargoGridView?.Dispose();
             _cargoScrollBar?.Dispose();
+            _cargoAccentBrush?.Dispose();
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -11,6 +12,8 @@ namespace EliteDataRelay
 {
     public partial class CargoForm
     {
+        private Process? _gameProcess;
+
         #region UI Event Handlers
 
         private void OnStartClicked(object? sender, EventArgs e)
@@ -45,6 +48,9 @@ namespace EliteDataRelay
 
         private void OnStopClicked(object? sender, EventArgs e)
         {
+            _gameProcess?.Dispose();
+            _gameProcess = null;
+
             _soundService.PlayStopSound();
 
             // Reset services that maintain state to ensure a clean start next time.
@@ -147,47 +153,40 @@ namespace EliteDataRelay
         {
             if (!_fileMonitoringService.IsMonitoring) return;
 
-            var gameProcesses = Process.GetProcessesByName("EliteDangerous64");
-            var gameProcess = gameProcesses.FirstOrDefault();
+            // If we don't have a reference to the game process, try to find it.
+            if (_gameProcess == null)
+            {
+                _gameProcess = Process.GetProcessesByName("EliteDangerous64").FirstOrDefault();
+                if (_gameProcess == null)
+                {
+                    // If still not found, stop monitoring.
+                    Debug.WriteLine("[CargoForm] Elite Dangerous process no longer found. Stopping monitoring automatically.");
+                    OnStopClicked(null, EventArgs.Empty);
+                    return;
+                }
+            }
 
+            // Now that we have a process reference, just check if it has exited.
+            // This is much more efficient than scanning all system processes every time.
             try
             {
-                bool shouldStop = false;
-                if (gameProcess == null)
+                if (_gameProcess.HasExited)
                 {
-                    shouldStop = true;
-                }
-                else
-                {
-                    // This block safely checks properties of a process that might exit at any moment.
-                    try
-                    {
-                        // The HasExited property is more reliable, and checking MainWindowHandle ensures we stop if the window closes.
-                        if (gameProcess.HasExited || gameProcess.MainWindowHandle == IntPtr.Zero)
-                        {
-                            shouldStop = true;
-                        }
-                    }
-                    catch
-                    {
-                        // If accessing properties throws, the process has likely exited.
-                        shouldStop = true;
-                    }
-                }
-
-                if (shouldStop)
-                {
-                    Debug.WriteLine("[CargoForm] Elite Dangerous process no longer found. Stopping monitoring automatically.");
+                    Debug.WriteLine("[CargoForm] Elite Dangerous process has exited. Stopping monitoring automatically.");
                     OnStopClicked(null, EventArgs.Empty);
                 }
             }
-            finally
+            catch (Win32Exception)
             {
-                // Dispose all process objects retrieved to release system resources.
-                foreach (var p in gameProcesses)
-                {
-                    p.Dispose();
-                }
+                // This can happen if the process is forcefully terminated or access is denied.
+                // In either case, we should stop monitoring.
+                Debug.WriteLine("[CargoForm] Could not access game process state. Stopping monitoring automatically.");
+                OnStopClicked(null, EventArgs.Empty);
+            }
+            catch (InvalidOperationException)
+            {
+                // This can happen if the process object is in an invalid state.
+                OnStopClicked(null, EventArgs.Empty);
             }
         }
 

@@ -38,40 +38,51 @@ namespace EliteDataRelay.Services
                 fs.Seek(_lastPosition, SeekOrigin.Begin);
 
                 using var reader = new StreamReader(fs);
-                // Read all new lines into a list to process them.
-                // This allows us to make multiple passes if needed.
-                var newLines = new List<string>();
+                // Read all new lines and parse them into a list of JsonDocument objects.
+                // This avoids parsing the same string twice in our two-pass system.
+                var newEntries = new List<(JsonDocument doc, string line)>();
                 string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (!string.IsNullOrWhiteSpace(line))
                     {
-                        newLines.Add(line);
+                        try
+                        {
+                            newEntries.Add((JsonDocument.Parse(line), line));
+                        }
+                        catch (JsonException ex)
+                        {
+                            Trace.WriteLine($"[JournalWatcherService] Failed to parse journal line, skipping: {line}. Error: {ex.Message}");
+                        }
                     }
                 }
 
-                if (!newLines.Any())
+                if (!newEntries.Any())
                 {
                     _lastPosition = fs.Position;
                     return;
                 }
 
+                // Use a finally block to ensure we dispose of all the JsonDocument objects
+                // we created, preventing memory leaks.
+                try
+                { 
+                // Create serializer options once and reuse to avoid allocations in the loop.
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
                 // --- First Pass: Location Events ---
                 // It's critical to process location changes first. This establishes the context (i.e., the current SystemAddress)
                 // for all other events in this batch, preventing race conditions where a signal is discovered
                 // before the application knows it has jumped to a new system.
-                foreach (var journalLine in newLines)
+                foreach (var (jsonDoc, journalLine) in newEntries)
                 {
                     try
                     {
-                        // A more robust way of checking events rather than string.Contains
-                        using var jsonDoc = JsonDocument.Parse(journalLine);
                         if (!jsonDoc.RootElement.TryGetProperty("event", out var eventElement))
                         {
                             continue;
                         }
 
-                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         string? eventType = eventElement.GetString();
 
                         if (eventType == "LoadGame")
@@ -132,18 +143,15 @@ namespace EliteDataRelay.Services
 
                 // --- Second Pass: All Other Events ---
                 // Now that the location context is guaranteed to be up-to-date, process all other events.
-                foreach (var journalLine in newLines)
+                foreach (var (jsonDoc, journalLine) in newEntries)
                 {
                     try
                     {
-                        // A more robust way of checking events rather than string.Contains
-                        using var jsonDoc = JsonDocument.Parse(journalLine);
                         if (!jsonDoc.RootElement.TryGetProperty("event", out var eventElement))
                         {
                             continue;
                         }
 
-                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         string? eventType = eventElement.GetString();
 
                         // Skip location events as they were handled in the first pass
@@ -235,6 +243,14 @@ namespace EliteDataRelay.Services
                     {
                         Trace.WriteLine($"[JournalWatcherService] Failed to parse journal line: {journalLine}. Error: {ex.Message}");
                         // Continue to the next line instead of breaking the loop.
+                    }
+                }
+                }
+                finally
+                {
+                    foreach (var (doc, _) in newEntries)
+                    {
+                        doc.Dispose();
                     }
                 }
                 _lastPosition = fs.Position;

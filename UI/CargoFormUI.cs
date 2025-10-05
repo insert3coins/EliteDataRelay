@@ -204,9 +204,7 @@ namespace EliteDataRelay.UI
 
         public void UpdateMaterials(MaterialsEvent materials)
         {
-            _controlFactory?.MaterialsTab?.UpdateRawMaterials(materials.Raw);
-            _controlFactory?.MaterialsTab?.UpdateManufacturedMaterials(materials.Manufactured);
-            _controlFactory?.MaterialsTab?.UpdateEncodedData(materials.Encoded);
+            _controlFactory?.MaterialsTab?.UpdateAllMaterials(materials.Raw, materials.Manufactured, materials.Encoded);
         }
 
         public void UpdateMiningStats()
