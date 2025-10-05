@@ -33,16 +33,16 @@ namespace EliteDataRelay.UI
             CreateTabControls(fontManager, sessionTracker);
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);
-            CreateToolTips();
+            CreateToolTips(fontManager);
         }
 
         public void Dispose()
         {
+            ToolTip.Dispose();
             DisposeButtons();
             DisposeTabControls();
             DisposeMiningTabControls();
             DisposeLabels();
-            ToolTip.Dispose();
         }
     }
 }

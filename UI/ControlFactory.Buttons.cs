@@ -6,9 +6,6 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
-        private Font _toolTipFont = null!;
-        private CustomToolTipDrawer _toolTipDrawer = null!;
-
         private void CreateActionButtons(FontManager fontManager)
         {
             // Create control buttons
@@ -34,27 +31,6 @@ namespace EliteDataRelay.UI
             StartBtn.BackColor = UIConstants.StartButtonActiveColor;
         }
 
-        private void CreateToolTips()
-        {
-            _toolTipFont = new Font(SystemFonts.DefaultFont.FontFamily, 10f);
-            // Create ToolTip and assign to buttons
-            ToolTip = new ToolTip();
-
-            // The ShipModulesTreeView is created in CreateTabControls. We assume that method
-            // has been called before this one.
-            _toolTipDrawer = new CustomToolTipDrawer(_toolTipFont, ShipModulesTreeView);
-
-            ToolTip.OwnerDraw = true;
-            ToolTip.Popup += _toolTipDrawer.ToolTip_Popup;
-            ToolTip.Draw += _toolTipDrawer.ToolTip_Draw;
-            ToolTip.SetToolTip(StartBtn, "Start monitoring for cargo changes");
-            ToolTip.SetToolTip(StopBtn, "Stop monitoring for cargo changes");
-            ToolTip.SetToolTip(ExitBtn, "Exit the application");
-            ToolTip.SetToolTip(SettingsBtn, "Configure application settings");
-            ToolTip.SetToolTip(SessionBtn, "Show session summary statistics");            
-            ToolTip.SetToolTip(AboutBtn, "Show information about the application");
-        }
-
         private void Button_Paint(object? sender, PaintEventArgs e)
         {
             if (sender is not Button btn) return;
@@ -76,10 +52,6 @@ namespace EliteDataRelay.UI
                 btn.Paint -= Button_Paint;
                 btn.Dispose();
             }
-            ToolTip.Popup -= _toolTipDrawer.ToolTip_Popup;
-            ToolTip.Draw -= _toolTipDrawer.ToolTip_Draw;
-            ToolTip.Dispose();
-            _toolTipFont.Dispose();
         }
     }
 }

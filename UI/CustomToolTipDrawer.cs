@@ -13,12 +13,10 @@ namespace EliteDataRelay.UI
     public class CustomToolTipDrawer
     {
         private readonly Font _font;
-        private readonly TreeView _shipModulesTreeView;
 
-        public CustomToolTipDrawer(Font font, TreeView shipModulesTreeView)
+        public CustomToolTipDrawer(Font font)
         {
             _font = font;
-            _shipModulesTreeView = shipModulesTreeView;
         }
 
         /// <summary>
@@ -60,31 +58,31 @@ namespace EliteDataRelay.UI
         /// </summary>
         public void ToolTip_Draw(object? sender, DrawToolTipEventArgs e)
         {
-            e.DrawBackground();
-            e.DrawBorder();
+            if (sender is not ToolTip toolTip) return;
 
-            // Check if this is a tooltip for a ship module node
-            if (e.AssociatedControl is TreeView tv && tv == _shipModulesTreeView)
+            // Manually draw the background using the BackColor we set on the ToolTip control.
+            e.Graphics.FillRectangle(new SolidBrush(toolTip.BackColor), e.Bounds);
+            e.DrawBorder(); // Keep the standard border
+
+            // Check if this is a tooltip for our custom ModulePanel
+            if (e.AssociatedControl is CargoFormUI.ModulePanel modulePanel && modulePanel.Tag is ShipModule module && module.Engineering != null)
             {
-                var p = tv.PointToClient(Cursor.Position);
-                var node = tv.GetNodeAt(p);
-
-                // If we are over a valid module node with engineering, use our custom drawing logic
-                if (node?.Tag is ShipModule module && module.Engineering != null)
-                {
-                    DrawModuleToolTip(e);
-                    return;
-                }
+                DrawModuleToolTip(e, toolTip.ForeColor);
+                return;
             }
 
             // For all other tooltips, use the default text drawing which handles multiline correctly.
-            e.DrawText(TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            // We pass the ForeColor from the event args to ensure light text on our dark background.
+            TextRenderer.DrawText(e.Graphics, e.ToolTipText, _font, e.Bounds, toolTip.ForeColor, 
+                                  TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
         }
 
         /// <summary>
         /// Draws a color-coded tooltip for an engineered ship module.
         /// </summary>
-        private void DrawModuleToolTip(DrawToolTipEventArgs e)
+        /// <param name="e">The event arguments for drawing.</param>
+        /// <param name="defaultColor">The default text color to use for non-highlighted lines.</param>
+        private void DrawModuleToolTip(DrawToolTipEventArgs e, Color defaultColor)
         {
             if (string.IsNullOrEmpty(e.ToolTipText))
             {
@@ -99,8 +97,6 @@ namespace EliteDataRelay.UI
 
             // Use the same font as in ToolTip_Popup for consistency to ensure sizing is correct.
             var font = _font;
-            // The default text color for a tooltip. e.ForeColor is not available on DrawToolTipEventArgs.
-            var defaultColor = SystemColors.InfoText;
             var lines = e.ToolTipText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             float currentY = e.Bounds.Y + 2;
 
@@ -116,22 +112,10 @@ namespace EliteDataRelay.UI
                 if (trimmedLine.EndsWith("▲") || trimmedLine.EndsWith("▼"))
                 {
                     // This is a modification line, draw it in parts
-                    string indicator = trimmedLine.EndsWith("▲") ? " ▲" : " ▼";
                     Color indicatorColor = trimmedLine.EndsWith("▲") ? goodColor : badColor;
-
-                    // The main text is everything before the indicator
-                    string mainText = line.Substring(0, line.LastIndexOf(indicator));
-
-                    // Draw the main text part
-                    TextRenderer.DrawText(e.Graphics, mainText, font, new Point((int)currentX, (int)currentY), defaultColor, flags);
-
-                    // Measure the main text to find where to draw the indicator
-                    // Use MeasureText without NoPadding for positioning, as it's more consistent with DrawText.
-                    var mainPartSize = TextRenderer.MeasureText(e.Graphics, mainText, font, Size.Empty, TextFormatFlags.Left | TextFormatFlags.SingleLine);
-                    currentX += mainPartSize.Width;
-
-                    // Draw the colored indicator
-                    TextRenderer.DrawText(e.Graphics, indicator, font, new Point((int)currentX, (int)currentY), indicatorColor, flags);
+                    
+                    // Draw the entire line with the appropriate color
+                    TextRenderer.DrawText(e.Graphics, line, font, new Point((int)currentX, (int)currentY), indicatorColor, flags);
                 }
                 else if (trimmedLine.StartsWith("Blueprint:"))
                 {

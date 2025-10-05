@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
@@ -100,6 +100,21 @@ namespace EliteDataRelay.UI
                 },
                 Margin = new Padding(5, 3, 5, 3),
             };
+        }
+
+        private void CreateToolTips(FontManager fontManager)
+        {
+            ToolTip = new ToolTip 
+            { 
+                OwnerDraw = true, 
+                AutoPopDelay = 30000,
+                // Set the colors for our custom-drawn tooltips
+                BackColor = Color.FromArgb(45, 45, 50),
+                ForeColor = Color.FromArgb(220, 220, 230)
+            };
+            var customDrawer = new CustomToolTipDrawer(fontManager.ConsolasFont);
+            ToolTip.Popup += customDrawer.ToolTip_Popup;
+            ToolTip.Draw += customDrawer.ToolTip_Draw;
         }
     }
 }

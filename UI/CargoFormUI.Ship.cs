@@ -1,6 +1,7 @@
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -168,6 +169,42 @@ namespace EliteDataRelay.UI
                     foreach (var module in modules)
                     {
                         var moduleControl = new ModulePanel(module, _currentLoadout?.Ship ?? string.Empty, _fontManager);
+                        moduleControl.Tag = module; // Tag the control with the module data for the tooltip drawer
+                        
+                        // Add tooltip for engineering details
+                        if (module.Engineering != null && _controlFactory != null)
+                        {
+                            var sb = new StringBuilder();
+                            sb.AppendLine($"Blueprint: {BlueprintDataService.GetBlueprintName(module.Engineering.BlueprintName)} (G{module.Engineering.Level})");
+                            sb.AppendLine($"Engineer: {module.Engineering.Engineer}");
+                            sb.AppendLine("--------------------");
+
+                            foreach (var modifier in module.Engineering.Modifiers.OrderBy(m => m.Label))
+                            {
+                                bool isGood = modifier.Value > modifier.OriginalValue;
+                                if (modifier.LessIsGood == 1)
+                                {
+                                    isGood = !isGood;
+                                }
+                                string indicator = isGood ? "▲" : "▼";
+
+                                sb.AppendLine($"{modifier.Label}: {modifier.Value:N2} (was {modifier.OriginalValue:N2}) {indicator}");
+                            }
+
+                            if (!string.IsNullOrEmpty(module.Engineering.ExperimentalEffect_Localised))
+                            {
+                                sb.AppendLine("--------------------");
+                                sb.AppendLine($"Experimental: {BlueprintDataService.GetBlueprintName(module.Engineering.ExperimentalEffect_Localised)}");
+                            }
+
+                            _controlFactory.ToolTip.SetToolTip(moduleControl, sb.ToString());
+                        }
+                        else if (_controlFactory != null)
+                        {
+                            // Ensure no old tooltip persists if the module is not engineered
+                            _controlFactory.ToolTip.SetToolTip(moduleControl, string.Empty);
+                        }
+
                         moduleControl.Location = new Point(0, yPos);
                         modulePanel.Controls.Add(moduleControl);
                         yPos += moduleControl.Height;
@@ -200,7 +237,7 @@ namespace EliteDataRelay.UI
         /// <summary>
         /// A custom control to display a single ship module, replacing the owner-drawn ListBox item.
         /// </summary>
-        private class ModulePanel : Panel
+        public class ModulePanel : Panel
         {
             private readonly ShipModule _module;
             private readonly string _shipInternalName;

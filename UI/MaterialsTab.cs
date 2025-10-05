@@ -70,8 +70,25 @@ namespace EliteDataRelay.UI
             foreach (var materialDef in allMaterials)
             {
                 currentMaterialsDict.TryGetValue(materialDef.Name.ToLowerInvariant(), out int count);
-                grid.Rows.Add(materialDef.FriendlyName, count);
+                int rowIndex = grid.Rows.Add(materialDef.FriendlyName, count);
+                var row = grid.Rows[rowIndex];
+                row.DefaultCellStyle.BackColor = GetColorForGrade(materialDef.Grade);
+                row.DefaultCellStyle.SelectionBackColor = Color.FromArgb(180, 205, 255); // A slightly darker blue for selection
             }
+        }
+
+        private Color GetColorForGrade(int grade)
+        {
+            // These colors are chosen to be light enough to not interfere with text readability.
+            return grade switch
+            {
+                1 => Color.FromArgb(245, 245, 245), // Very Common - Very Light Grey
+                2 => Color.FromArgb(230, 245, 230), // Common - Very Light Green
+                3 => Color.FromArgb(230, 240, 255), // Standard - Very Light Blue
+                4 => Color.FromArgb(245, 235, 255), // Rare - Very Light Purple
+                5 => Color.FromArgb(255, 248, 225), // Very Rare - Very Light Yellow/Orange
+                _ => Color.White,                  // Default/Unknown
+            };
         }
 
         private void InitializeColumns()
@@ -120,10 +137,6 @@ namespace EliteDataRelay.UI
                 },
                 ColumnHeadersHeight = 40,
                 ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single,
-                AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
-                {
-                    BackColor = Color.FromArgb(249, 250, 251)
-                },
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
                     SelectionBackColor = Color.FromArgb(219, 234, 254),
