@@ -43,7 +43,8 @@ namespace EliteDataRelay.UI
             int totalHeight = 0;
             foreach (var line in lines)
             {
-                var size = TextRenderer.MeasureText(g, line, font);
+                // Use the same flags as the DrawText method to ensure measurement is accurate.
+                var size = TextRenderer.MeasureText(g, line, font, Size.Empty, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
                 if (size.Width > maxWidth)
                 {
                     maxWidth = size.Width;

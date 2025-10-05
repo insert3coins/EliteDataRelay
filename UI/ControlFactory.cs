@@ -26,13 +26,10 @@ namespace EliteDataRelay.UI
         public Button CommanderLabel { get; private set; } = null!;
         public Button ShipLabel { get; private set; } = null!;
         public Button BalanceLabel { get; private set; } = null!;
-        public Button LocationLabel { get; private set; } = null!;
         public ToolTip ToolTip { get; private set; } = null!;
 
-        public ControlFactory(FontManager fontManager, Services.SessionTrackingService sessionTracker, CargoFormUI cargoFormUI)
+        public ControlFactory(FontManager fontManager, Services.SessionTrackingService sessionTracker)
         {
-            _cargoFormUI = cargoFormUI;
-
             CreateTabControls(fontManager, sessionTracker);
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);

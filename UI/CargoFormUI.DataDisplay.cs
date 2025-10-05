@@ -100,13 +100,6 @@ namespace EliteDataRelay.UI
             _currentLocation = starSystem;
 
             UpdateFullTitleText();
-
-            if (_controlFactory?.LocationLabel != null)
-            {
-                var locationText = $"Location: {starSystem}";
-                _controlFactory.LocationLabel.Text = locationText;
-                _controlFactory.ToolTip.SetToolTip(_controlFactory.LocationLabel, "Click to copy system name");
-            }
         }
 
         public void UpdateCommanderName(string commanderName)
@@ -147,7 +140,19 @@ namespace EliteDataRelay.UI
             _overlayService?.UpdateShipIcon(shipImage);
 
             // Update the picture box on the Ship tab with the new image.
-            _controlFactory.ShipWireframePictureBox.Image = shipImage;
+            _controlFactory.ShipPictureBox.Image = shipImage;
+
+            // Update the new name and ID labels on the ship tab
+            if (_controlFactory.ShipTabNameLabel != null)
+            {
+                _controlFactory.ShipTabNameLabel.Text = nameLabel;
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipTabNameLabel, $"Ship Type: {shipType}\nName: {shipName}");
+            }
+            if (_controlFactory.ShipTabIdentLabel != null)
+            {
+                _controlFactory.ShipTabIdentLabel.Text = $"ID: {shipIdent}";
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipTabIdentLabel, $"Ship ID: {shipIdent}");
+            }
 
             // The overlay does not show the image, so no change to this call is needed.
             _overlayService?.UpdateShip(shipName, shipIdent, shipType);

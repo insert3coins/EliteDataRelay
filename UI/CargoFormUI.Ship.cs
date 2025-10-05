@@ -11,19 +11,13 @@ namespace EliteDataRelay.UI
     public partial class CargoFormUI
     {
         private ShipLoadout? _currentLoadout;
-        private string _activeModuleTab = "hardpoints";
         private StatusFile? _currentStatus;
-
-        // Elite Orange color scheme
-        private readonly Color _orangeColor = Color.FromArgb(255, 102, 0);
-        private readonly Color _darkOrangeColor = Color.FromArgb(153, 61, 0);
-        private readonly Color _lightOrangeColor = Color.FromArgb(255, 153, 68);
 
         public void InitializeShipTab()
         {
             // The ShipWireframeDrawer is no longer used.
             // The PictureBox is now updated directly with an image.
-            CreateModuleTabButtons();
+            CreateModuleTabs();
         }
 
         public ShipLoadout? GetCurrentLoadout() => _currentLoadout;
@@ -55,10 +49,10 @@ namespace EliteDataRelay.UI
 
             System.Diagnostics.Debug.WriteLine("[CargoFormUI] Updating ship stats panel...");
             statsPanel.SuspendLayout();
-            statsPanel.Controls.Clear();
+
 
             // Find the power plant to get its capacity.
-            var powerPlant = loadout.Modules.FirstOrDefault(m => m.Slot.Equals("PowerPlant", StringComparison.OrdinalIgnoreCase));
+            var powerPlant = loadout.Modules.FirstOrDefault(m => m.Slot.Contains("PowerPlant"));
             double powerCapacity = 0;
             if (powerPlant?.Engineering?.Modifiers != null)
             {
@@ -85,202 +79,211 @@ namespace EliteDataRelay.UI
             {
                 ("MASS", $"{loadout.UnladenMass:N1} T"),
                 ("ARMOR", $"{(loadout.HullHealth * 100):N0}%"),
-                ("CARGO", $"{loadout.CargoCapacity}T"),
+                ("CARGO", $"{loadout.CargoCapacity} T"),
                 ("JUMP", jumpText),
                 ("REBUY", $"{loadout.Rebuy:N0} CR"),
                 ("POWER", $"{powerCapacity:F2} MW")
             };
 
-            for (int i = 0; i < stats.Length; i++)
+            var toolTipTexts = new[]
             {
-                var statPanel = new StatPanel(stats[i].Item1, stats[i].Item2, _lightOrangeColor);
-                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Creating stat item: {stats[i].Item1} = {stats[i].Item2}");
-                statsPanel.Controls.Add(statPanel, i % 3, i / 3);
+                $"Unladen Mass: {loadout.UnladenMass:N1} T",
+                $"Hull Health: {(loadout.HullHealth * 100):N0}%",
+                $"Cargo Capacity: {loadout.CargoCapacity} T",
+                $"Jump Range (Current / Laden): {jumpText}",
+                $"Insurance Rebuy Cost: {loadout.Rebuy:N0} CR",
+                $"Power Plant Capacity: {powerCapacity:F2} MW"
+            };
+
+            // If first time, create panels. Otherwise, update them.
+            if (statsPanel.Controls.Count == 0 && _fontManager != null)
+            {
+                for (int i = 0; i < stats.Length; i++)
+                {
+                    var statPanel = new ControlFactory.StatPanel(stats[i].Item1, stats[i].Item2, _fontManager.ConsolasFont);
+                    _controlFactory?.ToolTip.SetToolTip(statPanel, toolTipTexts[i]);
+                    statsPanel.Controls.Add(statPanel, 0, i);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < Math.Min(stats.Length, statsPanel.Controls.Count); i++)
+                {
+                    var statPanel = statsPanel.Controls[i] as ControlFactory.StatPanel;
+                    if (statPanel != null)
+                    {
+                        statPanel.SetValue(stats[i].Item2);
+                        _controlFactory?.ToolTip.SetToolTip(statPanel, toolTipTexts[i]);
+                    }
+                }
+            }
+            statsPanel.ResumeLayout();
+
+            // Update the fuel label separately
+            if (_controlFactory?.ShipFuelLabel != null && loadout.FuelCapacity != null)
+            {
+                string fuelText = $"Fuel: {loadout.FuelCapacity.Main:F1} / {loadout.FuelCapacity.Reserve:F1} T";
+                _controlFactory.ShipFuelLabel.Text = fuelText;
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipFuelLabel, $"Main Tank: {loadout.FuelCapacity.Main:F1} T\nReserve Tank: {loadout.FuelCapacity.Reserve:F1} T");
             }
 
-            statsPanel.ResumeLayout();
+            // Update the value label
+            if (_controlFactory?.ShipValueLabel != null)
+            {
+                long totalValue = loadout.HullValue + loadout.ModulesValue;
+                string valueText = $"Value: {totalValue:N0} CR";
+                _controlFactory.ShipValueLabel.Text = valueText;
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipValueLabel, $"Hull: {loadout.HullValue:N0} CR\nModules: {loadout.ModulesValue:N0} CR");
+            }
+        }
+
+        private void CreateModuleTabs()
+        {
+            var tabControl = _controlFactory?.ModuleTabControl;
+            if (tabControl is null) return;
+
+            tabControl.TabPages.Clear();
+
+            var tabs = new[] { "Core", "Hardpoints", "Utility", "Optional" };
+
+            foreach (var tab in tabs)
+            {
+                tabControl.TabPages.Add(CreateModuleListPage(tab));
+            }
+        }
+
+        private void UpdateModuleList()
+        {
+            if (_currentLoadout is null) return;
+            if (_controlFactory?.ModuleTabControl is null) return;
+
+            foreach (TabPage tabPage in _controlFactory.ModuleTabControl.TabPages)
+            {
+                if (tabPage.Controls.Count > 0 && tabPage.Controls[0] is Panel modulePanel)
+                {
+                    modulePanel.SuspendLayout();
+                    modulePanel.Controls.Clear();
+                    var modules = GetModulesForTab(tabPage.Text);
+                    int yPos = 0;
+                    foreach (var module in modules)
+                    {
+                        var moduleControl = new ModulePanel(module, _currentLoadout?.Ship ?? string.Empty, _fontManager);
+                        moduleControl.Location = new Point(0, yPos);
+                        modulePanel.Controls.Add(moduleControl);
+                        yPos += moduleControl.Height;
+                    }
+                    modulePanel.ResumeLayout();
+                }
+            }
+        }
+
+        private TabPage CreateModuleListPage(string title)
+        {
+            var tabPage = new TabPage(title)
+            {
+                BackColor = Color.FromArgb(42, 50, 60), // Dark background for the tab page content area
+                Padding = Padding.Empty
+            };
+
+            var moduleListPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(42, 50, 60),
+                AutoScroll = true
+            };
+            
+            tabPage.Controls.Add(moduleListPanel);
+
+            return tabPage;
         }
 
         /// <summary>
-        /// A custom-drawn panel to display a single ship statistic, avoiding complex control nesting.
+        /// A custom control to display a single ship module, replacing the owner-drawn ListBox item.
         /// </summary>
-        private class StatPanel : Panel
+        private class ModulePanel : Panel
         {
-            private readonly string _label;
-            private readonly string _value;
-            private readonly Color _labelColor;
-            
-            // Re-usable drawing resources
-            private readonly Font _labelFont;
-            private readonly Font _valueFont;
-            private readonly SolidBrush _labelBrush;
-            private readonly SolidBrush _valueBrush;
+            private readonly ShipModule _module;
+            private readonly string _shipInternalName;
 
-            public StatPanel(string label, string value, Color labelColor)
+            public ModulePanel(ShipModule module, string shipInternalName, FontManager? fontManager)
             {
-                _label = label;
-                _value = value;
-                _labelColor = labelColor;
-                
-                _labelFont = new Font("Consolas", 9);
-                _valueFont = new Font("Consolas", 9, FontStyle.Bold);
-                _labelBrush = new SolidBrush(_labelColor);
-                _valueBrush = new SolidBrush(Color.White);
+                _module = module;
+                _shipInternalName = shipInternalName;
 
-                Dock = DockStyle.Fill;
-                Margin = new Padding(2);
-                BackColor = Color.FromArgb(20, 20, 20);
-                DoubleBuffered = true; // Prevents flicker
+                this.Dock = DockStyle.Top;
+                this.Height = 50;
+                this.BackColor = Color.FromArgb(51, 65, 85); // Slate-700
+                this.Font = fontManager?.ConsolasFont ?? new Font("Consolas", 9F);
+                this.DoubleBuffered = true;
             }
 
             protected override void OnPaint(PaintEventArgs e)
             {
                 base.OnPaint(e);
 
-                // Use high-quality rendering for text
-                e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                // Define colors from the React example
+                var slotColor = Color.FromArgb(103, 232, 249); // Cyan-ish
+                var moduleInfoColor = Color.FromArgb(156, 163, 175); // Gray
+                var integrityColor = Color.FromArgb(52, 211, 153); // Emerald
+                var integrityLabelColor = Color.FromArgb(156, 163, 175); // Gray
 
-                string labelText = _label + ": ";
-                string valueText = _value;
+                // --- Prepare text for drawing ---
+                string slotText = _module.Slot;
+                string moduleText = ModuleDataService.GetModuleDisplayName(_module, _shipInternalName);
 
-                // Measure the size of both parts of the text
-                SizeF labelSize = e.Graphics.MeasureString(labelText, _labelFont);
-                SizeF valueSize = e.Graphics.MeasureString(valueText, _valueFont);
+                if (string.IsNullOrEmpty(moduleText)) return;
 
-                // Calculate the total width and the starting X position to center the combined text
-                float totalWidth = labelSize.Width + valueSize.Width;
-                float startX = (ClientRectangle.Width - totalWidth) / 2;
+                string integrityLabel = "Integrity";
+                string integrityValue = $"{_module.Health * 100:F0}%";
 
-                // Calculate the Y position to center the text vertically
-                float startY = (ClientRectangle.Height - _labelFont.Height) / 2;
-
-                // Draw the label part
-                e.Graphics.DrawString(labelText, _labelFont, _labelBrush, new PointF(startX, startY));
-
-                // Draw the value part immediately after the label
-                e.Graphics.DrawString(valueText, _valueFont, _valueBrush, new PointF(startX + labelSize.Width, startY));
-            }
-
-            protected override void Dispose(bool disposing)
-            {
-                if (disposing)
+                if (_module.Engineering != null)
                 {
-                    // Dispose of the GDI resources we created
-                    _labelFont.Dispose();
-                    _valueFont.Dispose();
-                    _labelBrush.Dispose();
-                    _valueBrush.Dispose();
+                    string blueprintName = BlueprintDataService.GetBlueprintName(_module.Engineering.BlueprintName);
+                    string experimentalEffect = !string.IsNullOrEmpty(_module.Engineering.ExperimentalEffect_Localised) ? 
+                                                BlueprintDataService.GetBlueprintName(_module.Engineering.ExperimentalEffect_Localised) : "Engineered";
+                    integrityLabel = $"G{_module.Engineering.Level} {blueprintName}";
+                    integrityValue = experimentalEffect;
                 }
-                base.Dispose(disposing);
-            }
-        }
-        
-        private void CreateModuleTabButtons()
-        {
-            var tabPanel = _controlFactory!.ModuleTabPanel;
-            if (tabPanel == null) return;
 
-            tabPanel.Controls.Clear();
-            var tabs = new[] { "core", "hardpoints", "utility", "optional" };
+                // --- Define drawing rectangles ---
+                var textFormatLeft = TextFormatFlags.Left | TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis;
+                var textFormatRight = TextFormatFlags.Right | TextFormatFlags.NoPadding;
 
-            foreach (var tab in tabs)
-            {
-                var button = new Button
+                var contentBounds = new Rectangle(10, 5, this.Width - 20, this.Height - 10);
+
+                var slotRect = new Rectangle(contentBounds.Left, contentBounds.Top, contentBounds.Width / 2, contentBounds.Height / 2);
+                var moduleRect = new Rectangle(contentBounds.Left, contentBounds.Top + 20, contentBounds.Width - 160, contentBounds.Height / 2);
+
+                var integrityLabelRect = new Rectangle(contentBounds.Right - 150, contentBounds.Top, 150, contentBounds.Height / 2);
+                var integrityValueRect = new Rectangle(contentBounds.Right - 150, contentBounds.Top + 20, 150, contentBounds.Height / 2);
+
+                // --- Draw text ---
+                using (var smallFont = new Font("Segoe UI", 8f))
                 {
-                    Text = tab.ToUpper(),
-                    Tag = tab,
-                    Font = new Font("Consolas", 9),
-                    AutoSize = true,
-                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                    Padding = new Padding(8),
-                    Margin = new Padding(0, 0, 1, 0),
-                    FlatStyle = FlatStyle.Flat,
-                };
-                button.FlatAppearance.BorderSize = 0;
-                button.Click += OnModuleTabClicked;
-                tabPanel.Controls.Add(button);
-            }
-            UpdateTabStyles();
-        }
+                    TextRenderer.DrawText(e.Graphics, slotText, this.Font, slotRect, slotColor, textFormatLeft);
+                    TextRenderer.DrawText(e.Graphics, moduleText, smallFont, moduleRect, moduleInfoColor, textFormatLeft);
 
-        private void OnModuleTabClicked(object? sender, EventArgs e)
-        {
-            if (sender is Button button && button.Tag is string tabName)
-            {
-                _activeModuleTab = tabName;
-                UpdateTabStyles();
-                UpdateModuleList();
-            }
-        }
-
-        private void UpdateTabStyles()
-        {
-            var tabPanel = _controlFactory!.ModuleTabPanel;
-            if (tabPanel == null) return;
-
-            foreach (Control ctrl in tabPanel.Controls)
-            {
-                if (ctrl is Button button && button.Tag is string tabName)
-                {
-                    bool isActive = (tabName == _activeModuleTab);
-                    button.BackColor = isActive ? _orangeColor : Color.Transparent;
-                    button.ForeColor = isActive ? Color.Black : _darkOrangeColor;
+                    if (!string.IsNullOrEmpty(_module.Item))
+                    {
+                        TextRenderer.DrawText(e.Graphics, integrityLabel, smallFont, integrityLabelRect, integrityLabelColor, textFormatRight);
+                        TextRenderer.DrawText(e.Graphics, integrityValue, this.Font, integrityValueRect, integrityColor, textFormatRight);
+                    }
                 }
             }
         }
 
-        private void UpdateModuleList()
-        {
-            var listView = _controlFactory?.ModulesListView;
-            if (listView is null || _currentLoadout is null) return;
-
-            listView.BeginUpdate();
-            listView.Items.Clear();
-
-            var modules = GetModulesForCurrentTab();
-
-            foreach (var module in modules)
-            {
-                var item = new ListViewItem
-                {
-                    Tag = module.Slot, // Store the slot name, not the stale object
-                    // Text is set via custom drawing, but we can set it for accessibility
-                    Text = ItemNameService.TranslateModuleName(module.Item) ?? "Empty"
-                };
-                listView.Items.Add(item);
-            }
-
-            listView.EndUpdate();
-        }
-
-        private IEnumerable<ShipModule> GetModulesForCurrentTab()
+        private IEnumerable<ShipModule> GetModulesForTab(string tabName)
         {
             if (_currentLoadout == null) return Enumerable.Empty<ShipModule>();
 
-            return _activeModuleTab switch
+            return tabName.ToLowerInvariant() switch
             {
-                "core" => _currentLoadout.Modules.Where(m => IsCoreModule(m.Slot)).OrderBy(m => GetSlotSortOrder(m.Slot)),
-                "hardpoints" => _currentLoadout.Modules.Where(m => m.Slot.Contains("Hardpoint")).OrderBy(m => m.Slot),
-                "utility" => _currentLoadout.Modules.Where(m => m.Slot.Contains("Utility")).OrderBy(m => m.Slot),
-                "optional" => _currentLoadout.Modules.Where(m => m.Slot.Contains("Slot") || m.Slot.Contains("Military")).OrderBy(m => GetSlotSortOrder(m.Slot)).ThenBy(m => m.Slot),
+                "core" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && IsCoreModule(m.Slot)).OrderBy(m => GetSlotSortOrder(m.Slot)), 
+                "hardpoints" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && m.Slot.Contains("Hardpoint")).OrderBy(m => m.Slot), 
+                "utility" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && m.Slot.Contains("Utility")).OrderBy(m => m.Slot), 
+                "optional" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && (m.Slot.Contains("Slot") || m.Slot.Contains("Military"))).OrderBy(m => GetSlotSortOrder(m.Slot)).ThenBy(m => m.Slot),
                 _ => Enumerable.Empty<ShipModule>()
             };
-        }
-
-        private string GetFriendlySlotName(string slot)
-        {
-            if (slot.Contains("Hardpoint")) return "Hardpoints";
-            if (slot.Contains("Slot")) return "Optional Internals";
-            if (slot.Contains("Military")) return "Military Slots";
-            if (slot.Contains("Armour")) return "Armour";
-            if (slot.Contains("PowerPlant")) return "Power Plant";
-            if (slot.Contains("MainEngines")) return "Thrusters";
-            if (slot.Contains("FrameShiftDrive")) return "Frame Shift Drive";
-            if (slot.Contains("LifeSupport")) return "Life Support";
-            if (slot.Contains("PowerDistributor")) return "Power Distributor";
-            if (slot.Contains("Radar")) return "Sensors";
-            if (slot.Contains("FuelTank")) return "Fuel Tank";
-            return "Other";
         }
 
         private bool IsCoreModule(string slot)

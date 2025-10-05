@@ -31,12 +31,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Modules.txt" />
-    <EmbeddedResource Include="Blueprints.txt" />
+    <EmbeddedResource Include="Resources\modules.txt" />
+    <EmbeddedResource Include="Resources\blueprints.txt" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Images\Ships\**">
+    <Content Include="Images\Ships\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

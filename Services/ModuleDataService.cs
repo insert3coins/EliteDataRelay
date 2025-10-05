@@ -1,16 +1,58 @@
 using EliteDataRelay.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text.Json;
 
 namespace EliteDataRelay.Services
 {
     /// <summary>
-    /// Provides static data and helper methods for ship modules.
+    /// Provides static data and helper methods related to ship modules.
     /// </summary>
     public static class ModuleDataService
     {
-        // Data sourced from https://github.com/EDCD/coriolis-data/blob/master/modules/standard/power_plant.json
-        private static readonly Dictionary<string, double> _powerPlantCapacity = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
+        private static readonly ConcurrentDictionary<string, string> ModuleNames = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        static ModuleDataService()
+        {
+            LoadModulesData();
+        }
+
+        private static void LoadModulesData()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            var resourceName = "EliteDataRelay.Resources.modules.txt";
+
+            using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ModuleDataService] Error: Embedded resource '{resourceName}' not found. Module names will not be translated.");
+                    return;
+                }
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("#"))
+                        {
+                            var parts = line.Split(new[] { '=' }, 2);
+                            if (parts.Length == 2)
+                            {
+                                ModuleNames[parts[0].Trim()] = parts[1].Trim();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // A dictionary to map internal power plant names to their power capacity in MW.
+        private static readonly Dictionary<string, double> PowerPlantCapacities = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
         {
             { "int_powerplant_size2_a", 12.00 },
             { "int_powerplant_size2_b", 10.40 },
@@ -56,35 +98,46 @@ namespace EliteDataRelay.Services
         };
 
         /// <summary>
-        /// Gets the base power capacity of a power plant module.
+        /// Gets the base power capacity of a stock power plant module.
         /// </summary>
-        /// <param name="item">The internal name of the power plant (e.g., "int_powerplant_size7_a").</param>
+        /// <param name="internalName">The internal name of the power plant (e.g., "int_powerplant_size7_a").</param>
         /// <returns>The power capacity in MW, or 0 if not found.</returns>
-        public static double GetPowerPlantCapacity(string item)
+        public static double GetPowerPlantCapacity(string internalName)
         {
-            if (string.IsNullOrEmpty(item))
+            if (string.IsNullOrEmpty(internalName))
             {
                 return 0;
             }
 
-            return _powerPlantCapacity.TryGetValue(item, out double capacity) ? capacity : 0;
+            return PowerPlantCapacities.TryGetValue(internalName, out double capacity) ? capacity : 0;
         }
 
         /// <summary>
-        /// Gets a user-friendly display name for a module, including engineering info.
+        /// Gets a user-friendly display name for a module.
         /// </summary>
         /// <param name="module">The ship module.</param>
+        /// <param name="shipInternalName">The internal name of the ship the module is on.</param>
         /// <returns>A formatted display name.</returns>
-        public static string GetModuleDisplayName(ShipModule module)
+        public static string GetModuleDisplayName(ShipModule module, string shipInternalName)
         {
-            string name = ItemNameService.TranslateModuleName(module.Item) ?? "Unknown Module";
-
-            if (module.Engineering != null)
+            // Prioritize the in-game localised name if it exists.
+            if (!string.IsNullOrEmpty(module.ItemLocalised))
             {
-                name += $" [G{module.Engineering.Level}]";
+                return module.ItemLocalised;
+            }
+            
+            if (string.IsNullOrEmpty(module.Item))
+            {
+                return string.Empty;
             }
 
-            return name;
+            if (ModuleNames.TryGetValue(module.Item, out var friendlyName))
+            {
+                return friendlyName;
+            }
+
+            // Fallback to the internal name if not found in our file.
+            return module.Item;
         }
     }
 }

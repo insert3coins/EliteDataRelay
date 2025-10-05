@@ -12,6 +12,8 @@ namespace EliteDataRelay.Models
         public string ShipIdent { get; set; } = string.Empty;
         public int CargoCapacity { get; set; }
         public double HullHealth { get; set; }
+        public long HullValue { get; set; }
+        public long ModulesValue { get; set; }
         public long Rebuy { get; set; }
         public double UnladenMass { get; set; }
         public double MaxJumpRange { get; set; }
@@ -23,6 +25,8 @@ namespace EliteDataRelay.Models
     {
         public string Slot { get; set; } = string.Empty;
         public string Item { get; set; } = string.Empty;
+        [JsonPropertyName("Item_Localised")]
+        public string? ItemLocalised { get; set; }
         public bool On { get; set; }
         public int Priority { get; set; }
         public double Health { get; set; }

@@ -17,6 +17,9 @@ namespace EliteDataRelay.UI
         public Font VerdanaFont { get; private set; } = null!;
         public Font ConsolasFont { get; private set; } = null!;
         public Font AnimationFont { get; private set; } = null!;
+        public Font SegoeUIFont { get; private set; } = null!;
+        public Font SegoeUIFontBold { get; private set; } = null!;
+        public Font SegoeUIFontLarge { get; private set; } = null!;
 
         public FontManager()
         {
@@ -66,6 +69,12 @@ namespace EliteDataRelay.UI
                 ConsolasFont = new Font(FontFamily.GenericMonospace, AppConfiguration.DefaultFontSize);
                 AnimationFont = new Font(FontFamily.GenericMonospace, 12f); // Fallback for animation font
             }
+            finally
+            {
+                SegoeUIFont = new Font("Segoe UI", 9f);
+                SegoeUIFontBold = new Font("Segoe UI", 9f, FontStyle.Bold);
+                SegoeUIFontLarge = new Font("Segoe UI", 10f);
+            }
         }
 
         public void Dispose()
@@ -73,6 +82,9 @@ namespace EliteDataRelay.UI
             VerdanaFont?.Dispose();
             ConsolasFont?.Dispose();
             AnimationFont?.Dispose();
+            SegoeUIFont?.Dispose();
+            SegoeUIFontBold?.Dispose();
+            SegoeUIFontLarge?.Dispose();
             _privateFonts?.Dispose();
             if (_fontMemoryPtr != IntPtr.Zero)
             {
