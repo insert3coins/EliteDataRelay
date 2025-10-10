@@ -10,14 +10,13 @@ namespace EliteDataRelay.UI
         public DataGridView? CargoGridView { get; private set; }
         public Panel? CargoWelcomePanel { get; private set; }
 
-        // Color scheme from cargoui.cs
-        private readonly Color _cargoBgPrimary = Color.FromArgb(18, 18, 22);
-        private readonly Color _cargoBgSecondary = Color.FromArgb(28, 28, 35);
-        private readonly Color _cargoAccentColor = Color.FromArgb(99, 102, 241); // Indigo
-        private readonly Color _cargoTextPrimary = Color.FromArgb(243, 244, 246);
-        private readonly Color _cargoTextSecondary = Color.FromArgb(156, 163, 175);
-        private readonly Color _cargoBorderColor = Color.FromArgb(55, 65, 81);
-        private readonly SolidBrush _cargoAccentBrush = new SolidBrush(Color.FromArgb(99, 102, 241));
+        // Light theme color scheme to match Materials tab
+        private readonly Color _cargoBgPrimary = Color.FromArgb(249, 250, 251); // Light gray page background
+        private readonly Color _cargoBgSecondary = Color.White; // White content background
+        private readonly Color _cargoAccentColor = Color.FromArgb(0, 120, 215); // Standard blue accent
+        private readonly Color _cargoTextPrimary = Color.FromArgb(31, 41, 55); // Dark gray text
+        private readonly Color _cargoTextSecondary = Color.FromArgb(107, 114, 128); // Medium gray text
+        private readonly Color _cargoBorderColor = Color.FromArgb(229, 231, 235); // Light gray border
 
         private TabPage CreateCargoTabPage(FontManager fontManager)
         {
@@ -26,7 +25,7 @@ namespace EliteDataRelay.UI
                 BackColor = _cargoBgPrimary,
                 Padding = new Padding(20) // Uniform padding
             };
-            
+
             // Content Panel with border effect
             var contentPanel = new Panel
             {
@@ -38,7 +37,7 @@ namespace EliteDataRelay.UI
             {
                 if (s is Panel panel)
                 {
-                    using Pen pen = new Pen(_cargoAccentColor, 2);
+                    using Pen pen = new Pen(_cargoBorderColor, 1); // Use a subtle border
                     e.Graphics.DrawRectangle(pen, 0, 0, panel.Width - 1, panel.Height - 1);
                 }
             };
@@ -72,7 +71,7 @@ namespace EliteDataRelay.UI
             {
                 BackColor = _cargoBgSecondary,
                 ForeColor = _cargoTextSecondary,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 SelectionBackColor = _cargoBgSecondary,
                 Alignment = DataGridViewContentAlignment.MiddleLeft,
                 Padding = new Padding(15, 10, 15, 10)
@@ -84,7 +83,7 @@ namespace EliteDataRelay.UI
             {
                 BackColor = _cargoBgSecondary,
                 ForeColor = _cargoTextPrimary,
-                SelectionBackColor = Color.FromArgb(45, 45, 55),
+                SelectionBackColor = Color.FromArgb(219, 234, 254), // Light blue selection
                 SelectionForeColor = _cargoTextPrimary,
                 Padding = new Padding(15, 5, 15, 5),
                 Alignment = DataGridViewContentAlignment.MiddleLeft
@@ -92,9 +91,9 @@ namespace EliteDataRelay.UI
 
             CargoGridView.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
             {
-                BackColor = Color.FromArgb(32, 32, 40),
+                BackColor = _cargoBgPrimary, // Use the slightly off-white for alternating rows
                 ForeColor = _cargoTextPrimary,
-                SelectionBackColor = Color.FromArgb(45, 45, 55),
+                SelectionBackColor = Color.FromArgb(219, 234, 254),
                 SelectionForeColor = _cargoTextPrimary,
                 Padding = new Padding(15, 5, 15, 5)
             };
@@ -172,7 +171,8 @@ namespace EliteDataRelay.UI
             // Draw selection indicator on the left
             if (e.State.HasFlag(DataGridViewElementStates.Selected))
             {
-                e.Graphics.FillRectangle(_cargoAccentBrush, e.CellBounds.Left, e.CellBounds.Top, 4, e.CellBounds.Height);
+                using var accentBrush = new SolidBrush(_cargoAccentColor);
+                e.Graphics.FillRectangle(accentBrush, e.CellBounds.Left, e.CellBounds.Top, 4, e.CellBounds.Height);
             }
         }
 
@@ -207,7 +207,6 @@ namespace EliteDataRelay.UI
         {
             CargoGridView?.Dispose();
             _cargoScrollBar?.Dispose();
-            _cargoAccentBrush?.Dispose();
         }
     }
 }
