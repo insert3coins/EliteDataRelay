@@ -48,25 +48,29 @@ namespace EliteDataRelay.Services
                         return false;
                     }
 
-                    // Open file with shared read-write to handle file locking
-                    using var stream = new FileStream(AppConfiguration.CargoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    // Read the entire file content as a string. This allows us to hash the raw content
+                    // and also check for an empty file before attempting to deserialize.
+                    string fileContent;
+                    using (var stream = new FileStream(AppConfiguration.CargoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var reader = new StreamReader(stream))
+                    {
+                        fileContent = reader.ReadToEnd();
+                    }
 
-                    // An empty file is a common state when the game is about to write to it.
-                    // Treat it like a file lock and retry after a short delay. This is more
-                    // efficient than letting the JSON parser throw an exception.
-                    if (stream.Length == 0)
+                    // An empty file is a common state. Treat it like a file lock and retry.
+                    if (string.IsNullOrWhiteSpace(fileContent))
                     {
                         Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                         continue;
                     }
 
+                    // Fingerprint guard – skip duplicate file content
+                    string hash = ComputeHash(fileContent);
+                    if (!force && hash == _lastInventoryHash) return true;
+
                     // Deserialize JSON directly from the stream for better performance.
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(stream, options) ?? new CargoSnapshot();
-
-                    // Fingerprint guard – skip duplicate snapshots
-                    string hash = ComputeHash(snapshot);
-                    if (!force && hash == _lastInventoryHash) return true;
+                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(fileContent, options) ?? new CargoSnapshot();
                     
                     _lastInventoryHash = hash;
 
@@ -98,22 +102,14 @@ namespace EliteDataRelay.Services
         }
 
         /// <summary>
-        /// Compute SHA256 hash of cargo snapshot for duplicate detection
+        /// Compute SHA256 hash of the raw file content for duplicate detection.
         /// </summary>
-        /// <param name="snapshot">The cargo snapshot to hash</param>
+        /// <param name="content">The raw string content of the file to hash.</param>
         /// <returns>Base64-encoded SHA256 hash</returns>
-        private string ComputeHash(CargoSnapshot snapshot)
+        private string ComputeHash(string content)
         {
-            string json = JsonSerializer.Serialize(
-                new
-                {
-                    snapshot.Count,
-                    snapshot.Items
-                },
-                new JsonSerializerOptions { WriteIndented = false, PropertyNameCaseInsensitive = true });
-
             using var sha = SHA256.Create();
-            byte[] bytes = Encoding.UTF8.GetBytes(json); // This line was missing
+            byte[] bytes = Encoding.UTF8.GetBytes(content);
             byte[] hashBytes = sha.ComputeHash(bytes);
             return Convert.ToBase64String(hashBytes);
         }
