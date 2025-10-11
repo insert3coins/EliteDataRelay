@@ -1,289 +1,169 @@
 using EliteDataRelay.Models;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EliteDataRelay.Services
 {
-    /// <summary>
-    /// Tracks statistics for a single play session, such as credits earned and cargo collected.
-    /// </summary>
     public class SessionTrackingService : IDisposable
     {
         private readonly ICargoProcessorService _cargoProcessorService;
         private readonly IJournalWatcherService _journalWatcherService;
 
-        private long _startingBalance;
-        private long _currentBalance;
-        private int _startingCargoCount;
-        private Dictionary<string, int> _sessionStartCargoState = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private long _initialBalance;
+        private CargoSnapshot? _initialCargoSnapshot;
+        private CargoSnapshot? _previousCargoSnapshot;
         private DateTime? _sessionStartTime;
-
-        // Mining-specific tracking
-        private readonly Dictionary<string, int> _refinedCommodities = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, int> _pendingRefined = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        private long _miningProfit;
-        private int _limpetsUsed;
-        private int _lastLimpetCount = -1; // Use -1 to indicate it's not yet initialized for the session.
         private DateTime? _miningStartTime;
-        private DateTime? _miningStopTime;
+        private readonly ConcurrentDictionary<string, int> _refinedCommodities = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, int> _collectedCommodities = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        public bool IsSessionActive { get; private set; }
+        public long TotalCargoCollected { get; private set; }
+        public long CreditsEarned { get; private set; }
         public bool IsMiningSessionActive { get; private set; }
-
-        /// <summary>
-        /// The net credits earned or lost during the current session.
-        /// </summary>
-        public long CreditsEarned => IsSessionActive ? _currentBalance - _startingBalance : 0;
-
-        /// <summary>
-        /// The total amount of cargo units collected during the session.
-        /// </summary>
-        public int TotalCargoCollected { get; private set; }
-
-        /// <summary>
-        /// The duration of the current active session.
-        /// </summary>
-        public TimeSpan SessionDuration => IsSessionActive && _sessionStartTime.HasValue ? DateTime.UtcNow - _sessionStartTime.Value : TimeSpan.Zero;
-
-        #region Mining Properties
-        /// <summary>
-        /// The total profit earned from selling commodities refined during this session.
-        /// </summary>
-        public long MiningProfit => _miningProfit;
-
-        /// <summary>
-        /// The number of collector and prospector limpets used during the session.
-        /// </summary>
-        public int LimpetsUsed => _limpetsUsed;
-
-        /// <summary>
-        /// The duration of active mining (from first refinement to last).
-        /// </summary>
-        public TimeSpan MiningDuration
-        {
-            get
-            {
-                if (!_miningStartTime.HasValue) return TimeSpan.Zero;
-                var endTime = IsMiningSessionActive ? DateTime.UtcNow : (_miningStopTime ?? _miningStartTime.Value);
-                return endTime - _miningStartTime.Value;
-            }
-        }
-
-        /// <summary>
-        /// A dictionary of commodities refined during this session and their quantities.
-        /// </summary>
+        public long MiningProfit { get; private set; } // Placeholder for now
+        public int LimpetsUsed { get; private set; }
+        public IReadOnlyDictionary<string, int> CollectedCommodities => _collectedCommodities;
+        public TimeSpan MiningDuration => _miningStartTime.HasValue ? DateTime.UtcNow - _miningStartTime.Value : TimeSpan.Zero;
         public IReadOnlyDictionary<string, int> RefinedCommodities => _refinedCommodities;
-
-        /// <summary>
-        /// The total number of tons of all commodities refined during this session.
-        /// </summary>
         public int TotalRefinedCount => _refinedCommodities.Values.Sum();
-        #endregion
+        public TimeSpan SessionDuration => _sessionStartTime.HasValue ? DateTime.UtcNow - _sessionStartTime.Value : TimeSpan.Zero;
 
-        /// <summary>
-        /// Fires whenever session data (like credits or cargo) is updated.
-        /// </summary>
+        // Compatibility property for older controls if needed.
+        public bool IsMining
+        {
+            get => IsMiningSessionActive;
+        }
         public event EventHandler? SessionUpdated;
 
         public SessionTrackingService(ICargoProcessorService cargoProcessorService, IJournalWatcherService journalWatcherService)
         {
             _cargoProcessorService = cargoProcessorService;
             _journalWatcherService = journalWatcherService;
+
+            // Subscribe to the cargo processor to get updates based on Cargo.json
+            _cargoProcessorService.CargoProcessed += OnCargoProcessed;
+            _journalWatcherService.LaunchDrone += OnLaunchDrone;
+            _journalWatcherService.MiningRefined += OnMiningRefined;
         }
 
-        public void StartSession(long initialBalance, CargoSnapshot? initialCargo)
+        public void StartSession(long initialBalance, CargoSnapshot? initialCargoSnapshot)
         {
-            if (IsSessionActive) return;
+            _initialBalance = initialBalance;
+            _initialCargoSnapshot = initialCargoSnapshot;
+            _previousCargoSnapshot = initialCargoSnapshot; // Set the initial "previous" state
 
-            _startingBalance = initialBalance;
-            _currentBalance = initialBalance;
-            _startingCargoCount = initialCargo?.Count ?? 0;
-            TotalCargoCollected = 0;
             _sessionStartTime = DateTime.UtcNow;
-            _sessionStartCargoState.Clear(); // Clear any previous state
-            if (initialCargo != null && initialCargo.Items.Any())
-            {
-                _sessionStartCargoState = initialCargo.Items.ToDictionary(i => i.Name, i => i.Count, StringComparer.OrdinalIgnoreCase);
-            }
 
-            IsSessionActive = true;
-
-            // Subscribe to events now that the session is active
-            _journalWatcherService.CargoCollected += OnCargoCollected;
-            _journalWatcherService.MarketBuy += OnMarketBuy;
-            _cargoProcessorService.CargoProcessed += OnCargoProcessed;
-
+            // Reset counters
+            TotalCargoCollected = 0;
+            CreditsEarned = 0;
+            LimpetsUsed = 0;
+            MiningProfit = 0;
+            _refinedCommodities.Clear();
+            _collectedCommodities.Clear();
+            
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void StopSession()
         {
-            if (!IsSessionActive) return;
-
-            IsSessionActive = false;
+            _initialCargoSnapshot = null;
+            _previousCargoSnapshot = null;
             _sessionStartTime = null;
-            _sessionStartCargoState.Clear();
+            StopMiningSession(); // Ensure mining session also stops
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
+        }
 
-            // Unsubscribe from events
-            _journalWatcherService.CargoCollected -= OnCargoCollected;
-            _journalWatcherService.MarketBuy -= OnMarketBuy;
-            _cargoProcessorService.CargoProcessed -= OnCargoProcessed;
-
-            // Also ensure the mining session is stopped.
-            if (IsMiningSessionActive)
+        public void UpdateBalance(long newBalance)
+        {
+            if (_initialBalance > 0)
             {
-                StopMiningSession();
+                CreditsEarned = newBalance - _initialBalance;
+                SessionUpdated?.Invoke(this, EventArgs.Empty);
             }
+        }
+
+        /// <summary>
+        /// Handles the CargoProcessed event, which fires when Cargo.json changes.
+        /// This is the most reliable way to track collected cargo.
+        /// </summary>
+        private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
+        {
+            // We only care about this if a session is active.
+            if (_previousCargoSnapshot == null) return;
+
+            var currentSnapshot = e.Snapshot;
+            var previousSnapshot = _previousCargoSnapshot;
+
+            // Create a dictionary of the previous cargo state for quick lookups.
+            var previousCargoDict = previousSnapshot.Items.ToDictionary(c => c.Name, c => c.Count);
+
+            // Iterate through the current cargo and find any items that have increased in quantity.
+            foreach (var currentItem in currentSnapshot.Items)
+            {
+                previousCargoDict.TryGetValue(currentItem.Name, out var previousCount);
+
+                // Calculate the difference since the last snapshot.
+                var diff = currentItem.Count - previousCount;
+
+                // If the difference is positive, it means we collected new items.
+                if (diff > 0)
+                {
+                    // Add the newly collected amount to our running totals.
+                    TotalCargoCollected += diff;
+                    _collectedCommodities.AddOrUpdate(currentItem.Name, diff, (key, existingCount) => existingCount + diff);
+                }
+            }
+
+            // Update the previous snapshot to the current one for the next comparison.
+            _previousCargoSnapshot = currentSnapshot;
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void StartMiningSession()
         {
-            if (!IsSessionActive || IsMiningSessionActive) return;
-
-            // Reset mining stats
-            _miningProfit = 0;
-            _limpetsUsed = 0;
-            _miningStartTime = DateTime.UtcNow;
-            _refinedCommodities.Clear();
-            _miningStopTime = null;
-            _lastLimpetCount = -1;
-            _pendingRefined.Clear();
-
+            if (IsMiningSessionActive) return;
             IsMiningSessionActive = true;
-
-            _journalWatcherService.MiningRefined += OnMiningRefined;
-            _cargoProcessorService.CargoProcessed += OnCargoProcessed;
-            _journalWatcherService.BuyDrones += OnBuyDrones;
+            _miningStartTime = DateTime.UtcNow;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void StopMiningSession()
         {
+            if (!IsMiningSessionActive) return;
             IsMiningSessionActive = false;
-            _miningStopTime = DateTime.UtcNow;
-            _journalWatcherService.MiningRefined -= OnMiningRefined;
-            _cargoProcessorService.CargoProcessed -= OnCargoProcessed;
-            _journalWatcherService.BuyDrones -= OnBuyDrones;
+            _miningStartTime = null;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        /// <summary>
-        /// Updates the session's current credit balance.
-        /// </summary>
-        /// <param name="newBalance">The new total credit balance.</param>
-        public void UpdateBalance(long newBalance)
+        private void OnLaunchDrone(object? sender, LaunchDroneEventArgs e)
         {
-            if (!IsSessionActive) return;
-
-            _currentBalance = newBalance;
-            SessionUpdated?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void OnCargoCollected(object? sender, CargoCollectedEventArgs e)
-        {
-            TotalCargoCollected += e.Quantity;
-            SessionUpdated?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void OnMarketBuy(object? sender, MarketBuyEventArgs e)
-        {
-            TotalCargoCollected += e.Count;
-            SessionUpdated?.Invoke(this, EventArgs.Empty);
+            // Only track limpets used during an active mining session
+            if (IsMiningSessionActive)
+            {
+                LimpetsUsed++;
+                SessionUpdated?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         private void OnMiningRefined(object? sender, MiningRefinedEventArgs e)
         {
-            if (!IsMiningSessionActive) return;
-
-            var commodity = e.CommodityType.ToLowerInvariant();
-            // Add to a pending list. It will be confirmed once it appears in Cargo.json
-            if (_pendingRefined.ContainsKey(commodity))
-            {
-                _pendingRefined[commodity]++;
-            }
-            else
-            {
-                _pendingRefined[commodity] = 1;
-            }
-            // We don't fire SessionUpdated here, we wait for confirmation from the cargo hold.
+            _refinedCommodities.AddOrUpdate(e.CommodityType, 1, (key, count) => count + 1);
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
+
+        public void Dispose()
         {
-            if (!IsSessionActive) return;
-
-            bool sessionWasUpdated = false;
-            
-            // --- New Limpet Tracking Logic ---
-            // Find the current number of limpets (drones) in the cargo hold.
-            var currentLimpetCount = e.Snapshot.Items.FirstOrDefault(i => i.Name.Equals("drones", StringComparison.OrdinalIgnoreCase))?.Count ?? 0;
-
-            if (_lastLimpetCount == -1)
-            {
-                // This is the first cargo update for this session, establish the baseline.
-                _lastLimpetCount = currentLimpetCount;
-            }
-            else if (currentLimpetCount < _lastLimpetCount)
-            {
-                // The number of limpets has decreased, so we must have used some.
-                _limpetsUsed += _lastLimpetCount - currentLimpetCount;
-                sessionWasUpdated = true;
-            }
-
-            _lastLimpetCount = currentLimpetCount;
-
-            // --- End of New Limpet Tracking Logic ---
-
-            // --- Differential Cargo Tracking ---
-            int currentTotal = 0;
-            foreach (var item in e.Snapshot.Items)
-            {
-                // Exclude limpets (drones) from the session cargo count.
-                if (item.Name.Equals("drones", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                _sessionStartCargoState.TryGetValue(item.Name, out int startCount);
-                if (item.Count > startCount)
-                {
-                    currentTotal += (item.Count - startCount);
-                }
-            }
-
-            if (currentTotal > TotalCargoCollected)
-            {
-                TotalCargoCollected = currentTotal;
-                sessionWasUpdated = true;
-            }
-
-            // --- Mining-Specific Logic (Refined items) ---
-            if (IsMiningSessionActive && _pendingRefined.Any())
-            {
-                // This logic is now simpler: we just confirm that a refined item exists in cargo.
-                // The differential logic above handles the actual session count.
-                foreach (var item in e.Snapshot.Items)
-                {
-                    var commodityName = item.Name.ToLowerInvariant();
-                    if (_pendingRefined.ContainsKey(commodityName))
-                    {
-                        // Item is confirmed in cargo. Add it to the mining session's refined list.
-                        // We use the full current count for the mining list display.
-                        _refinedCommodities[commodityName] = item.Count;
-                        // No need to increment TotalCargoCollected here, the diff logic does it.
-                        _pendingRefined.Remove(commodityName); // Remove from pending
-                        sessionWasUpdated = true; // Ensure UI updates
-                    }
-                }
-            }
-
-            if (sessionWasUpdated) SessionUpdated?.Invoke(this, EventArgs.Empty);
+            // Unsubscribe from events to prevent memory leaks
+            _cargoProcessorService.CargoProcessed -= OnCargoProcessed;
+            _journalWatcherService.LaunchDrone -= OnLaunchDrone;
+            _journalWatcherService.MiningRefined -= OnMiningRefined;
+            GC.SuppressFinalize(this);
         }
 
-        private void OnBuyDrones(object? sender, BuyDronesEventArgs e)
-        {
-            if (!IsMiningSessionActive) return;
-        }
 
-        public void Dispose() => StopSession();
     }
 }

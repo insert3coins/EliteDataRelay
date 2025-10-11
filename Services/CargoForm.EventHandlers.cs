@@ -208,7 +208,7 @@ namespace EliteDataRelay
                     // Update the general session stats on the cargo overlay if enabled
                     if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
                     {
-                        _cargoFormUI.UpdateSessionOverlay(tracker.TotalCargoCollected, tracker.CreditsEarned);
+                        _cargoFormUI.UpdateSessionOverlay((int)tracker.TotalCargoCollected, tracker.CreditsEarned);
                     }
 
                     // Always update the mining tab on the main UI and the dedicated mining overlay

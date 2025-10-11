@@ -179,7 +179,13 @@ namespace EliteDataRelay.Services
                         }
                         else if (eventType == "CollectCargo")
                         {
-                            CargoCollected?.Invoke(this, new CargoCollectedEventArgs(1));
+                            // The 'Type' property contains the internal name of the commodity.
+                            var commodity = jsonDoc.RootElement.TryGetProperty("Type", out var nameElement)
+                                ? nameElement.GetString() : null;
+                            if (commodity != null)
+                            {
+                                CargoCollected?.Invoke(this, new CargoCollectedEventArgs(commodity));
+                            }
                         }
                         else if (eventType == "MiningRefined")
                         {

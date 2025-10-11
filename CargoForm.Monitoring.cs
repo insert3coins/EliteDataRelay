@@ -36,7 +36,7 @@ namespace EliteDataRelay
             // Also repopulate session data if tracking is active and shown on the overlay.
             if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
             {
-                _cargoFormUI.UpdateSessionOverlay(_sessionTrackingService.TotalCargoCollected, _sessionTrackingService.CreditsEarned);
+                _cargoFormUI.UpdateSessionOverlay((int)_sessionTrackingService.TotalCargoCollected, _sessionTrackingService.CreditsEarned);
             }
         }
 
