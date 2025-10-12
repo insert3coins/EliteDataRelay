@@ -39,18 +39,18 @@ namespace EliteDataRelay.Services
                 _lastStatusHash = hash;
 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var statusEvent = JsonSerializer.Deserialize<StatusFile>(content, options);
+                var status = JsonSerializer.Deserialize<Status>(content, options);
 
-                if (statusEvent != null)
+                if (status != null)
                 {
-                    Debug.WriteLine($"[JournalWatcherService] Found Status.json update. Fuel: {statusEvent.Fuel?.FuelMain}, Cargo: {statusEvent.Cargo}, Hull: {statusEvent.HullHealth:P1}");
-                    StatusChanged?.Invoke(this, new StatusChangedEventArgs(statusEvent));
+                    Debug.WriteLine($"[JournalWatcherService] Found Status.json update. Fuel: {status.Fuel?.FuelMain}, Cargo: {status.Cargo}");
+                    StatusChanged?.Invoke(this, new StatusChangedEventArgs(status));
 
                     // Also handle balance changes to replace StatusWatcherService
-                    if (statusEvent.Balance.HasValue && statusEvent.Balance.Value != _lastKnownBalance)
+                    if (status.Balance.HasValue && status.Balance.Value != _lastKnownBalance)
                     {
-                        Debug.WriteLine($"[JournalWatcherService] Balance changed. Old: {_lastKnownBalance}, New: {statusEvent.Balance.Value}. Firing event.");
-                        _lastKnownBalance = statusEvent.Balance.Value;
+                        Debug.WriteLine($"[JournalWatcherService] Balance changed. Old: {_lastKnownBalance}, New: {status.Balance.Value}. Firing event.");
+                        _lastKnownBalance = status.Balance.Value;
                         BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(_lastKnownBalance));
                     }
                 }

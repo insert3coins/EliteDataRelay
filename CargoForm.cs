@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -65,7 +65,7 @@ namespace EliteDataRelay
         private StationInfoData? _lastStationInfoData;
         private MaterialsEvent? _lastMaterials;
         private SystemInfoData? _lastSystemInfoData;
-        private StatusFile? _lastStatus;
+        private Status? _lastStatus;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 

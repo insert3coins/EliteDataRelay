@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text;
-using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 

@@ -12,7 +12,7 @@ namespace EliteDataRelay.UI
     public partial class CargoFormUI
     {
         private ShipLoadout? _currentLoadout;
-        private StatusFile? _currentStatus;
+        private Status? _currentStatus;
 
         public void InitializeShipTab()
         {
@@ -23,7 +23,7 @@ namespace EliteDataRelay.UI
 
         public ShipLoadout? GetCurrentLoadout() => _currentLoadout;
 
-        public void UpdateShipStatus(StatusFile status)
+        public void UpdateShipStatus(Status status)
         {
             if (_controlFactory == null) return;
             _currentStatus = status;

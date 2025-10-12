@@ -25,7 +25,7 @@ namespace EliteDataRelay.UI
         void UpdateCommanderName(string commanderName);
         void UpdateShipInfo(string shipName, string shipIdent, string shipType, string internalShipName);
         void UpdateShipLoadout(ShipLoadout loadout);
-        void UpdateShipStatus(StatusFile status);
+        void UpdateShipStatus(Status status);
         void UpdateStationInfo(StationInfoData data);
         void UpdateMaterials(MaterialsEvent materials);
         void UpdateSystemInfo(SystemInfoData data);

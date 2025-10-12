@@ -171,6 +171,10 @@ namespace EliteDataRelay.Services
                         {
                             ProcessShipyardSwapEvent(journalLine, options);
                         }
+                        else if (eventType == "ShipyardNew")
+                        {
+                            ProcessShipyardNewEvent(journalLine, options);
+                        }
                         else if (eventType == "ModuleSell" || eventType == "ModuleBuy" || eventType == "ModuleStore" || eventType == "ModuleRetrieve" || eventType == "ModuleSwap")
                         {
                             // These events indicate a loadout change. The subsequent 'Loadout' event is the source of truth.
@@ -211,7 +215,7 @@ namespace EliteDataRelay.Services
                             var buyEvent = JsonSerializer.Deserialize<BuyDronesEvent>(journalLine, options);
                             if (buyEvent != null)
                             {
-                                BuyDrones?.Invoke(this, new BuyDronesEventArgs(buyEvent.Count, buyEvent.TotalCost));
+                                BuyDrones?.Invoke(this, new BuyDronesEventArgs(buyEvent.Count, (long)buyEvent.TotalCost));
                             }
                         }
                         else if (eventType == "MarketBuy")

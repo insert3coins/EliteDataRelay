@@ -46,10 +46,10 @@ namespace EliteDataRelay.Services
 
                 LoadoutChanged?.Invoke(this, new LoadoutChangedEventArgs(loadoutEvent));
 
-                // The Loadout event is the most reliable source for the current ship.
-                // We can derive the ship type from its internal name if _lastShipType is not set (e.g., on startup).
-                var shipType = _lastShipType ?? ShipIconService.GetShipDisplayName(loadoutEvent.Ship);
-                UpdateShipInformation(loadoutEvent.ShipName, loadoutEvent.ShipIdent, shipType, loadoutEvent.Ship);
+                // The Loadout event provides the ship's name and ID. We combine this with the
+                // ship type we learned from either LoadGame or ShipyardSwap to do a full update.
+                UpdateShipInformation(loadoutEvent.ShipName, loadoutEvent.ShipIdent, _lastShipType, loadoutEvent.Ship);
+                // We no longer call UpdateShipInformation here, as Loadout's primary job is stats, not identity.
             }
         }
 
@@ -58,9 +58,30 @@ namespace EliteDataRelay.Services
             var swapEvent = JsonSerializer.Deserialize<ShipyardSwapEvent>(journalLine, options);
             if (swapEvent != null)
             {
-                var newShipType = !string.IsNullOrEmpty(swapEvent.ShipTypeLocalised) ? swapEvent.ShipTypeLocalised : Capitalize(swapEvent.ShipType);
-                _lastShipType = newShipType;
-                Trace.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. New ship type: {newShipType}");
+                // A ShipyardSwap tells us the new ship's type, but not its name or ID.
+                // We update what we know now, which is enough to get the correct ship icon.
+                // The subsequent 'Loadout' event will provide the name and ID to complete the update.
+                var shipType = !string.IsNullOrEmpty(swapEvent.ShipTypeLocalised) ? swapEvent.ShipTypeLocalised : Capitalize(swapEvent.ShipType);
+                _lastShipType = shipType;
+                _lastInternalShipName = swapEvent.ShipType; // Cache the internal name for the icon
+                Trace.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. New ship type: {shipType}");
+                UpdateShipInformation(null, null, shipType, swapEvent.ShipType);
+            }
+        }
+
+        private void ProcessShipyardNewEvent(string journalLine, JsonSerializerOptions options)
+        {
+            var newEvent = JsonSerializer.Deserialize<ShipyardNewEvent>(journalLine, options);
+            if (newEvent != null)
+            {
+                // A ShipyardNew event tells us the new ship's type, but not its name or ID.
+                // We update what we know now, which is enough to get the correct ship icon.
+                // The subsequent 'Loadout' event will provide the name and ID to complete the update.
+                var shipType = !string.IsNullOrEmpty(newEvent.ShipTypeLocalised) ? newEvent.ShipTypeLocalised : Capitalize(newEvent.ShipType);
+                _lastShipType = shipType;
+                _lastInternalShipName = newEvent.ShipType; // Cache the internal name for the icon
+                Trace.WriteLine($"[JournalWatcherService] Detected ShipyardNew. New ship type: {shipType}");
+                UpdateShipInformation(null, null, shipType, newEvent.ShipType);
             }
         }
     }

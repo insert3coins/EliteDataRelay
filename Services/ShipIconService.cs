@@ -37,7 +37,7 @@ namespace EliteDataRelay.Services
             { "eagle", "Eagle Mk II" },
             { "hauler", "Hauler" },
             { "adder", "Adder" },
-            { "empire_eagle", "Empire Eagle" },
+            { "empire_eagle", "Imperial Eagle" },
             { "viper", "Viper Mk III" },
             { "viper_mkiv", "Viper Mk IV" },
             { "cobramkiii", "Cobra Mk III" },
@@ -46,6 +46,7 @@ namespace EliteDataRelay.Services
             { "dolphin", "Dolphin" },
             { "empire_courier", "Empire_Courier" },
             { "vulture", "Vulture" },
+            { "corsair", "Corsair" },
 
             // --- Medium Ships ---
             { "diamondbackxl", "Diamondback Explorer" }, // Journal: "diamondbackxl" -> Explorer
@@ -57,7 +58,7 @@ namespace EliteDataRelay.Services
             { "federation_dropship", "Federation Dropship" },
             { "federation_dropship_mkii", "Federation Dropship Mk II" },
             { "federation_gunship", "Federation_Gunship" },
-            { "empire_trader", "Empire Trader" },
+            { "empire_trader", "Imperial Clipper" },
             { "krait_mkii", "Krait Mk II" },
             { "krait_phantom", "Krait Phantom" },
             { "mamba", "Mamba" },
@@ -65,6 +66,7 @@ namespace EliteDataRelay.Services
             { "python", "Python" },
             { "orca", "Orca" },
             { "typex", "TypeX" }, // Alliance Chieftain
+            {"type8", "Type-8 Transporter"}, // Type 8
             { "mandalay", "Mandalay" }, 
 
             // --- Large Ships ---

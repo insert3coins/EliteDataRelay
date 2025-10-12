@@ -117,13 +117,6 @@ namespace EliteDataRelay
 
                 if (!_isInitializing)
                 {
-                    // If we have a loadout, this is the most reliable time to update the ship UI,
-                    // as it avoids being overwritten by other events like CargoProcessed.
-                    if (_lastLoadout != null)
-                    {
-                        _cargoFormUI.UpdateShipLoadout(_lastLoadout); // This call is now correct
-                        Trace.WriteLine($"[CargoForm] OnShipInfoChanged: Called UpdateShipLoadout with cached loadout for ship ID {_lastLoadout.ShipId}.");
-                    }
                     _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName); // Pass internal name
                 }
             });

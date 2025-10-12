@@ -7,7 +7,7 @@ namespace EliteDataRelay.Services
 {
     public static class JumpRangeCalculator
     {
-        public static JumpRangeResult? Calculate(ShipLoadout? loadout, StatusFile? status)
+        public static JumpRangeResult? Calculate(ShipLoadout? loadout, Status? status)
         {
             if (loadout == null) return null;
 
