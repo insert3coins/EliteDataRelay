@@ -69,6 +69,9 @@ namespace EliteDataRelay.Configuration
                         PollingIntervalMs = config.PollingIntervalMs;
                         OverlayTextColor = config.OverlayTextColor;
                         OverlayBackgroundColor = config.OverlayBackgroundColor;
+                        InfoOverlayLocation = config.InfoOverlayLocation;
+                        CargoOverlayLocation = config.CargoOverlayLocation;
+                        ShipIconOverlayLocation = config.ShipIconOverlayLocation;
                     }
                 }
             }
@@ -115,6 +118,9 @@ namespace EliteDataRelay.Configuration
                     PollingIntervalMs = AppConfiguration.PollingIntervalMs,
                     OverlayTextColor = AppConfiguration.OverlayTextColor,
                     OverlayBackgroundColor = AppConfiguration.OverlayBackgroundColor,
+                    InfoOverlayLocation = AppConfiguration.InfoOverlayLocation,
+                    CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
+                    ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
                 };
 
                 var options = new JsonSerializerOptions 
@@ -161,6 +167,9 @@ namespace EliteDataRelay.Configuration
             public Color OverlayTextColor { get; set; } = Color.FromArgb(255, 128, 0);
             [JsonConverter(typeof(ColorJsonConverter))]
             public Color OverlayBackgroundColor { get; set; } = Color.FromArgb(0, 0, 0);
+            public Point InfoOverlayLocation { get; set; } = Point.Empty;
+            public Point CargoOverlayLocation { get; set; } = Point.Empty;
+            public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
         }
     }
 }

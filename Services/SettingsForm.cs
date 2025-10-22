@@ -223,10 +223,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayBackgroundColor = _originalOverlayBackColor;
             AppConfiguration.OverlayOpacity = _originalOverlayOpacity;
 
-            AppConfiguration.InfoOverlayLocation = _originalInfoOverlayLocation;
-            AppConfiguration.CargoOverlayLocation = _originalCargoOverlayLocation;
-            AppConfiguration.ShipIconOverlayLocation = _originalShipIconOverlayLocation;
-
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
     }

@@ -111,6 +111,10 @@ namespace EliteDataRelay.Services
                 // If the difference is positive, it means we collected new items.
                 if (diff > 0)
                 {
+                    // Drones (limpets) are consumables, not collected cargo for profit. Exclude them.
+                    // The internal name for limpets in Cargo.json is "drones".
+                    if (string.Equals(currentItem.Name, "drones", StringComparison.OrdinalIgnoreCase)) continue;
+
                     // Add the newly collected amount to our running totals.
                     TotalCargoCollected += diff;
                     _collectedCommodities.AddOrUpdate(currentItem.Name, diff, (key, existingCount) => existingCount + diff);
