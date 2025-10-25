@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
@@ -11,7 +12,7 @@ namespace EliteDataRelay.UI
     {
         private Icon? _formIcon;
 
-        private const string ABOUT_INFO = "Elite Data Relay provides real-time cargo and material tracking.";
+        private const string ABOUT_INFO = "Elite Data Relay";
         private const string ABOUT_URL = "https://github.com/insert3coins/EliteDataRelay";
         private const string LICENSE_URL = "https://github.com/insert3coins/EliteDataRelay/blob/main/LICENSE.txt";
 
@@ -62,16 +63,28 @@ namespace EliteDataRelay.UI
                 Location = new Point(90, 20)
             };
 
+            // Get version from assembly
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            string versionString = version != null ? $"Version {version.Major}.{version.Minor}.{version.Build}" : "Version not found";
+
+            // Version Label
+            var lblVersion = new Label
+            {
+                Text = versionString,
+                AutoSize = true,
+                Location = new Point(90, 48)
+            };
+
             // Copyright Label
             var lblCopyright = new Label
             {
                 Text = $"Copyright © {DateTime.Now.Year} insert3coins",
                 AutoSize = true,
-                Location = new Point(90, 48)
+                Location = new Point(90, 68)
             };
 
             // Project Link
-            var linkProject = new LinkLabel { Text = "Project GitHub Page", AutoSize = true, Location = new Point(12, 90) };
+            var linkProject = new LinkLabel { Text = "Project GitHub Page", AutoSize = true, Location = new Point(12, 100) };
             linkProject.LinkClicked += (s, e) => OpenUrl(ABOUT_URL);
 
             // License Link
@@ -84,8 +97,8 @@ namespace EliteDataRelay.UI
                 Text = "A lightweight Windows utility for players of Elite Dangerous. It monitors your in-game cargo in real-time, displaying the contents and total count in a simple interface and exporting the data to a text file for use with streaming overlays or other tools.",
                 Multiline = true,
                 ReadOnly = true,
-                BorderStyle = BorderStyle.Fixed3D,
-                Location = new Point(12, 120),
+                BorderStyle = BorderStyle.FixedSingle,
+                Location = new Point(12, 130),
                 Size = new Size(426, 130),
                 ScrollBars = ScrollBars.Vertical
             };
@@ -96,6 +109,7 @@ namespace EliteDataRelay.UI
             // Add controls to form
             Controls.Add(picIcon);
             Controls.Add(lblAppName);
+            Controls.Add(lblVersion);
             Controls.Add(lblCopyright);
             Controls.Add(linkProject);
             Controls.Add(linkLicense);
