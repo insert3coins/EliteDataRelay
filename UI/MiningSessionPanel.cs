@@ -13,10 +13,11 @@ namespace EliteDataRelay.UI
         private readonly SessionTrackingService _sessionTracker;
         private readonly FontManager _fontManager;
 
-        private readonly Color eliteOrange = Color.FromArgb(255, 136, 0);
-        private readonly Color eliteOrangeLight = Color.FromArgb(255, 153, 68);
-        private readonly Color eliteGreen = Color.FromArgb(0, 255, 0);
-
+        // Theme-aligned colors
+        private readonly Color accentColor = Color.FromArgb(34, 211, 238); // Cyan
+        private readonly Color textColor = Color.FromArgb(220, 220, 230); // Light Gray/White
+        private readonly Color secondaryTextColor = Color.FromArgb(156, 163, 175); // Gray
+        
         private Label? _limpetsValueLabel;
         private Label? _refinedValueLabel;
         private Label? _durationValueLabel;
@@ -25,21 +26,13 @@ namespace EliteDataRelay.UI
         private ProgressBar? _cargoFillProgressBar;
         private Label? _cargoFillPercentLabel;
         private ListBox? _announcementListBox;
-        private ListView? _historyListView;
-        private CheckBox? _autoStartCheckbox;
         private CheckBox? _cargoPromptCheckbox;
         private CheckBox? _announcementCheckbox;
-        private CheckBox? _autoReportCheckbox;
-        private NumericUpDown? _idleMinutesUpDown;
-        private ComboBox? _firegroupCombo;
         private NumericUpDown? _reminderMinutesUpDown;
         private Label? _reminderStatusLabel;
         private Button? _reminderButton;
         private Button? _startSessionButton;
         private Button? _stopSessionButton;
-        private Button? _createBackupButton;
-        private Button? _restoreBackupButton;
-        private Button? _generateReportButton;
         private System.Windows.Forms.Timer? _updateTimer;
         private System.Windows.Forms.Timer? _reminderTimer;
         private TimeSpan _reminderRemaining = TimeSpan.Zero;
@@ -49,9 +42,6 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? StartMiningClicked;
         public event EventHandler? StopMiningClicked;
-        public event EventHandler? BackupRequested;
-        public event EventHandler? RestoreRequested;
-        public event EventHandler? GenerateReportRequested;
 
         public MiningSessionPanel(SessionTrackingService sessionTracker, FontManager fontManager)
         {
@@ -67,33 +57,24 @@ namespace EliteDataRelay.UI
             BackColor = Color.FromArgb(10, 10, 10);
             Font = new Font("Segoe UI", 10F, FontStyle.Regular);
 
-            var mainLayout = new TableLayoutPanel
+            var mainTabControl = new TabControl
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 3,
-                Padding = new Padding(12),
-                BackColor = Color.Transparent
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Appearance = TabAppearance.Normal, // Use Normal for better compatibility with custom drawing
+                Alignment = TabAlignment.Top, // Revert to top alignment
+                SizeMode = TabSizeMode.Fixed
             };
-            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 35f));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 30f));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 35f));
 
-            var statsPanel = BuildStatsPanel();
-            var controlsPanel = BuildControlsPanel();
-            var announcementsPanel = BuildAnnouncementsPanel();
-            var historyPanel = BuildHistoryPanel();
+            var dashboardTab = BuildDashboardTab();
+            var announcementsTab = BuildAnnouncementsTab();
+            var settingsTab = BuildSettingsTab();
 
-            mainLayout.Controls.Add(statsPanel, 0, 0);
-            mainLayout.SetColumnSpan(statsPanel, 2);
-            mainLayout.Controls.Add(controlsPanel, 0, 1);
-            mainLayout.Controls.Add(announcementsPanel, 1, 1);
-            mainLayout.Controls.Add(historyPanel, 0, 2);
-            mainLayout.SetColumnSpan(historyPanel, 2);
+            mainTabControl.TabPages.Add(dashboardTab);
+            mainTabControl.TabPages.Add(announcementsTab);
+            mainTabControl.TabPages.Add(settingsTab);
 
-            Controls.Add(mainLayout);
+            Controls.Add(mainTabControl);
 
             _updateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _updateTimer.Tick += (s, e) => UpdateStats();
@@ -102,28 +83,46 @@ namespace EliteDataRelay.UI
             _reminderTimer.Tick += ReminderTimerOnTick;
 
             UpdateControlsVisibility();
+
+            // Apply custom styling to the TabControl
+            mainTabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
+            mainTabControl.ItemSize = new Size(120, 30);
+            mainTabControl.DrawItem += (s, e) =>
+            {
+                var tab = mainTabControl.TabPages[e.Index];
+                var isSelected = mainTabControl.SelectedIndex == e.Index;
+
+                // In Normal appearance, we need to draw over the default tab background.
+                e.DrawBackground();
+
+                using var bgBrush = new SolidBrush(isSelected ? Color.FromArgb(45, 45, 45) : Color.FromArgb(25, 25, 25));
+                e.Graphics.FillRectangle(bgBrush, e.Bounds);
+
+                using var textBrush = new SolidBrush(isSelected ? accentColor : textColor);
+                TextRenderer.DrawText(e.Graphics, tab.Text, e.Font, e.Bounds, textBrush.Color, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+                if (isSelected)
+                {
+                    using var borderPen = new Pen(accentColor, 2);
+                    e.Graphics.DrawLine(borderPen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
+                }
+            };
         }
 
-        private Control BuildStatsPanel()
+        private TabPage BuildDashboardTab()
         {
-            var container = new GroupBox
-            {
-                Text = "Real-time Mining Statistics",
-                ForeColor = eliteOrangeLight,
-                Dock = DockStyle.Fill,
-                Font = new Font(Font, FontStyle.Bold)
-            };
+            var tabPage = new TabPage("Dashboard") { BackColor = Color.FromArgb(15, 15, 15), Padding = new Padding(10) };
+            var mainLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2 };
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65f));
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35f));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // This row will fill the remaining space.
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // This row will have a fixed height.
 
-            var table = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 5,
-                BackColor = Color.Transparent,
-                Padding = new Padding(12)
-            };
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            // --- Stats Panel (Left) ---
+            var statsGroup = new GroupBox { Text = "Real-time Statistics", ForeColor = secondaryTextColor, Dock = DockStyle.Fill, Font = new Font(Font, FontStyle.Bold) };
+            var statsTable = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(12) };
+            statsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            statsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
             var headerFont = new Font("Consolas", 12F, FontStyle.Bold);
             var valueFont = new Font("Consolas", 12F, FontStyle.Regular);
@@ -133,216 +132,90 @@ namespace EliteDataRelay.UI
             _durationValueLabel = CreateValueLabel(valueFont);
             _creditsValueLabel = CreateValueLabel(valueFont);
             _cargoValueLabel = CreateValueLabel(valueFont);
-            _cargoFillPercentLabel = CreateValueLabel(valueFont);
 
-            table.Controls.Add(CreateHeaderLabel("Limpets Used", headerFont), 0, 0);
-            table.Controls.Add(_limpetsValueLabel, 1, 0);
-            table.Controls.Add(CreateHeaderLabel("Refined", headerFont), 0, 1);
-            table.Controls.Add(_refinedValueLabel, 1, 1);
-            table.Controls.Add(CreateHeaderLabel("Active Duration", headerFont), 0, 2);
-            table.Controls.Add(_durationValueLabel, 1, 2);
-            table.Controls.Add(CreateHeaderLabel("Credits Earned", headerFont), 0, 3);
-            table.Controls.Add(_creditsValueLabel, 1, 3);
-            table.Controls.Add(CreateHeaderLabel("Cargo Collected", headerFont), 0, 4);
-            table.Controls.Add(_cargoValueLabel, 1, 4);
+            statsTable.Controls.Add(CreateHeaderLabel("Limpets Used", headerFont), 0, 0);
+            statsTable.Controls.Add(_limpetsValueLabel, 1, 0);
+            statsTable.Controls.Add(CreateHeaderLabel("Refined", headerFont), 0, 1);
+            statsTable.Controls.Add(_refinedValueLabel, 1, 1);
+            statsTable.Controls.Add(CreateHeaderLabel("Active Duration", headerFont), 0, 2);
+            statsTable.Controls.Add(_durationValueLabel, 1, 2);
+            statsTable.Controls.Add(CreateHeaderLabel("Credits Earned", headerFont), 0, 3);
+            statsTable.Controls.Add(_creditsValueLabel, 1, 3);
+            statsTable.Controls.Add(CreateHeaderLabel("Cargo Collected", headerFont), 0, 4);
+            statsTable.Controls.Add(_cargoValueLabel, 1, 4);
+            statsGroup.Controls.Add(statsTable);
 
-            _cargoFillProgressBar = new ProgressBar
-            {
-                Dock = DockStyle.Bottom,
-                Height = 18,
-                ForeColor = eliteGreen,
-                Style = ProgressBarStyle.Continuous,
-            };
-
-            var cargoFillPanel = new Panel { Dock = DockStyle.Bottom, Height = 36 };
-            var cargoFillLabel = new Label
-            {
-                Text = "Cargo Fill",
-                ForeColor = eliteOrangeLight,
-                Dock = DockStyle.Left,
-                AutoSize = true,
-                Font = headerFont
-            };
-            _cargoFillPercentLabel.TextAlign = ContentAlignment.MiddleRight;
-            _cargoFillPercentLabel.Dock = DockStyle.Right;
-
-            cargoFillPanel.Controls.Add(_cargoFillPercentLabel);
-            cargoFillPanel.Controls.Add(cargoFillLabel);
-
-            container.Controls.Add(_cargoFillProgressBar);
-            container.Controls.Add(cargoFillPanel);
-            container.Controls.Add(table);
-
-            return container;
-        }
-
-        private Control BuildControlsPanel()
-        {
-            var group = new GroupBox
-            {
-                Text = "Session Controls",
-                ForeColor = eliteOrangeLight,
-                Dock = DockStyle.Fill,
-                Font = new Font(Font, FontStyle.Bold)
-            };
-
-            var layout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 6,
-                Padding = new Padding(10)
-            };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60f));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40f));
-
-            var buttonFlow = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                AutoSize = true
-            };
-
+            // --- Controls Panel (Right) ---
+            var controlsGroup = new GroupBox { Text = "Session Controls", ForeColor = secondaryTextColor, Dock = DockStyle.Fill, Font = new Font(Font, FontStyle.Bold) };
+            var controlsLayout = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, Padding = new Padding(10), WrapContents = false };
             _startSessionButton = CreatePrimaryButton("Start Session", (s, e) => StartMiningClicked?.Invoke(this, EventArgs.Empty));
             _stopSessionButton = CreateSecondaryButton("Stop Session", (s, e) => StopMiningClicked?.Invoke(this, EventArgs.Empty));
+            controlsLayout.Controls.Add(_startSessionButton);
+            controlsLayout.Controls.Add(_stopSessionButton);
+            controlsLayout.Controls.Add(new Panel { Height = 20 }); // Spacer
+            _reminderMinutesUpDown = new NumericUpDown { Minimum = 1, Maximum = 120, Value = 15, Width = 60, BackColor = Color.Black, ForeColor = Color.White };
+            _reminderButton = CreateSecondaryButton("Start Reminder", OnReminderButtonClicked);
+            var reminderFlow = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
+            reminderFlow.Controls.Add(new Label { Text = "Reminder (min):", ForeColor = Color.White, AutoSize = true, Padding = new Padding(0, 5, 0, 0) });
+            reminderFlow.Controls.Add(_reminderMinutesUpDown);
+            reminderFlow.Controls.Add(_reminderButton);
+            controlsLayout.Controls.Add(reminderFlow);
+            _reminderStatusLabel = new Label { Text = "No reminder active", ForeColor = secondaryTextColor, AutoSize = true, Padding = new Padding(5) };
+            controlsLayout.Controls.Add(_reminderStatusLabel);
+            controlsGroup.Controls.Add(controlsLayout);
 
-            buttonFlow.Controls.Add(_startSessionButton);
-            buttonFlow.Controls.Add(_stopSessionButton);
-
-            _autoStartCheckbox = CreateCheckBox("Auto-start on prospector limpets", (s, e) =>
+            // --- Cargo Bar (Bottom) ---
+            var cargoPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
+            _cargoFillProgressBar = new ProgressBar
             {
-                if (_isApplyingPreferences) return;
-                _sessionTracker.Preferences.AutoStartOnProspector = _autoStartCheckbox!.Checked;
-                _sessionTracker.NotifyPreferencesChanged();
-            });
+                Dock = DockStyle.Fill,
+                ForeColor = accentColor,
+                Style = ProgressBarStyle.Continuous,
+            };
+            _cargoFillPercentLabel = new Label { Dock = DockStyle.Right, ForeColor = Color.White, Font = new Font("Consolas", 10f, FontStyle.Bold), AutoSize = true, Padding = new Padding(0, 0, 10, 0) };
+            cargoPanel.Controls.Add(_cargoFillProgressBar);
+            cargoPanel.Controls.Add(_cargoFillPercentLabel);
+
+            mainLayout.Controls.Add(statsGroup, 0, 0);
+            mainLayout.Controls.Add(controlsGroup, 1, 0);
+            mainLayout.Controls.Add(cargoPanel, 0, 1);
+            mainLayout.SetColumnSpan(cargoPanel, 2);
+            tabPage.Controls.Add(mainLayout);
+
+            return tabPage;
+        }
+
+        private TabPage BuildSettingsTab()
+        {
+            var tabPage = new TabPage("Settings") { BackColor = Color.FromArgb(15, 15, 15), Padding = new Padding(10) };
+            var layout = new TableLayoutPanel {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+            };
 
             _cargoPromptCheckbox = CreateCheckBox("Cargo full notifications", (s, e) =>
             {
                 if (_isApplyingPreferences) return;
                 _sessionTracker.Preferences.CargoFullPromptEnabled = _cargoPromptCheckbox!.Checked;
-                _sessionTracker.NotifyPreferencesChanged();
             });
 
             _announcementCheckbox = CreateCheckBox("Enable announcements", (s, e) =>
             {
                 if (_isApplyingPreferences) return;
                 _sessionTracker.Preferences.AnnouncementsEnabled = _announcementCheckbox!.Checked;
-                _sessionTracker.NotifyPreferencesChanged();
             });
 
-            _autoReportCheckbox = CreateCheckBox("Auto-generate HTML reports", (s, e) =>
-            {
-                if (_isApplyingPreferences) return;
-                _sessionTracker.Preferences.AutoGenerateHtmlReports = _autoReportCheckbox!.Checked;
-                _sessionTracker.NotifyPreferencesChanged();
-            });
+            layout.Controls.Add(_cargoPromptCheckbox, 0, 0);
+            layout.Controls.Add(_announcementCheckbox, 1, 0);
 
-            _idleMinutesUpDown = new NumericUpDown
-            {
-                Minimum = 0.5M,
-                Maximum = 10M,
-                DecimalPlaces = 1,
-                Increment = 0.5M,
-                Dock = DockStyle.Fill,
-                BackColor = Color.Black,
-                ForeColor = Color.White
-            };
-            _idleMinutesUpDown.ValueChanged += (s, e) =>
-            {
-                if (_isApplyingPreferences) return;
-                _sessionTracker.Preferences.CargoIdleMinutesThreshold = (double)_idleMinutesUpDown!.Value;
-                _sessionTracker.NotifyPreferencesChanged();
-            };
-
-            _firegroupCombo = new ComboBox
-            {
-                Dock = DockStyle.Fill,
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                BackColor = Color.FromArgb(18, 18, 18),
-                ForeColor = Color.White
-            };
-            for (int i = 1; i <= 8; i++)
-            {
-                _firegroupCombo.Items.Add($"Firegroup {i}");
-            }
-            _firegroupCombo.SelectedIndexChanged += (s, e) =>
-            {
-                if (_isApplyingPreferences) return;
-                _sessionTracker.Preferences.PreferredFireGroup = _firegroupCombo!.SelectedIndex + 1;
-                _sessionTracker.NotifyPreferencesChanged();
-            };
-
-            _reminderMinutesUpDown = new NumericUpDown
-            {
-                Minimum = 1,
-                Maximum = 120,
-                Value = 15,
-                Dock = DockStyle.Fill,
-                BackColor = Color.Black,
-                ForeColor = Color.White
-            };
-
-            _reminderStatusLabel = new Label
-            {
-                Text = "No reminder active",
-                ForeColor = eliteOrangeLight,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            _reminderButton = CreateSecondaryButton("Start Reminder", OnReminderButtonClicked);
-
-            _createBackupButton = CreateSecondaryButton("Create Backup", (s, e) => BackupRequested?.Invoke(this, EventArgs.Empty));
-            _restoreBackupButton = CreateSecondaryButton("Restore Backup", (s, e) => RestoreRequested?.Invoke(this, EventArgs.Empty));
-            _generateReportButton = CreateSecondaryButton("Generate Report", (s, e) => GenerateReportRequested?.Invoke(this, EventArgs.Empty));
-
-            layout.Controls.Add(buttonFlow, 0, 0);
-            layout.SetColumnSpan(buttonFlow, 2);
-
-            layout.Controls.Add(_autoStartCheckbox, 0, 1);
-            layout.Controls.Add(_cargoPromptCheckbox, 1, 1);
-            layout.Controls.Add(_announcementCheckbox, 0, 2);
-            layout.Controls.Add(_autoReportCheckbox, 1, 2);
-
-            layout.Controls.Add(new Label { Text = "Idle minutes before cargo prompt", ForeColor = eliteOrangeLight, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
-            layout.Controls.Add(_idleMinutesUpDown, 1, 3);
-
-            layout.Controls.Add(new Label { Text = "Preferred Firegroup", ForeColor = eliteOrangeLight, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
-            layout.Controls.Add(_firegroupCombo, 1, 4);
-
-            var reminderRow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-            reminderRow.Controls.Add(new Label { Text = "Reminder (minutes)", ForeColor = eliteOrangeLight, AutoSize = true, TextAlign = ContentAlignment.MiddleLeft });
-            reminderRow.Controls.Add(_reminderMinutesUpDown);
-            reminderRow.Controls.Add(_reminderButton);
-
-            layout.Controls.Add(reminderRow, 0, 5);
-            layout.Controls.Add(_reminderStatusLabel, 1, 5);
-
-            var footerFlow = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Bottom,
-                FlowDirection = FlowDirection.LeftToRight,
-                AutoSize = true
-            };
-            footerFlow.Controls.Add(_createBackupButton);
-            footerFlow.Controls.Add(_restoreBackupButton);
-            footerFlow.Controls.Add(_generateReportButton);
-
-            group.Controls.Add(footerFlow);
-            group.Controls.Add(layout);
-
-            return group;
+            tabPage.Controls.Add(layout);
+            return tabPage;
         }
 
-        private Control BuildAnnouncementsPanel()
+        private TabPage BuildAnnouncementsTab()
         {
-            var group = new GroupBox
-            {
-                Text = "Announcements & Notifications",
-                ForeColor = eliteOrangeLight,
-                Dock = DockStyle.Fill,
-                Font = new Font(Font, FontStyle.Bold)
-            };
+            var tabPage = new TabPage("Announcements") { BackColor = Color.FromArgb(15, 15, 15), Padding = new Padding(10) };
 
             _announcementListBox = new ListBox
             {
@@ -357,42 +230,10 @@ namespace EliteDataRelay.UI
                 ?? new Button();
             clearButton.Dock = DockStyle.Bottom;
 
-            group.Controls.Add(_announcementListBox);
-            group.Controls.Add(clearButton);
+            tabPage.Controls.Add(_announcementListBox);
+            tabPage.Controls.Add(clearButton);
 
-            return group;
-        }
-
-        private Control BuildHistoryPanel()
-        {
-            var group = new GroupBox
-            {
-                Text = "Session History",
-                ForeColor = eliteOrangeLight,
-                Dock = DockStyle.Fill,
-                Font = new Font(Font, FontStyle.Bold)
-            };
-
-            _historyListView = new ListView
-            {
-                Dock = DockStyle.Fill,
-                View = View.Details,
-                FullRowSelect = true,
-                GridLines = true,
-                BackColor = Color.FromArgb(12, 12, 12),
-                ForeColor = Color.White
-            };
-
-            _historyListView.Columns.Add("Start", 150);
-            _historyListView.Columns.Add("Duration", 120);
-            _historyListView.Columns.Add("Mining", 100);
-            _historyListView.Columns.Add("Credits", 120);
-            _historyListView.Columns.Add("Cargo", 100);
-            _historyListView.Columns.Add("Limpets", 80);
-            _historyListView.Columns.Add("Cargo Fill", 100);
-
-            group.Controls.Add(_historyListView);
-            return group;
+            return tabPage;
         }
 
         private Button CreatePrimaryButton(string text, EventHandler onClick)
@@ -401,13 +242,13 @@ namespace EliteDataRelay.UI
             {
                 Text = text,
                 AutoSize = true,
-                BackColor = Color.FromArgb(0, 20, 40),
-                ForeColor = eliteOrange,
+                BackColor = Color.FromArgb(28, 28, 35),
+                ForeColor = accentColor,
                 FlatStyle = FlatStyle.Flat,
                 Padding = new Padding(10, 6, 10, 6),
                 Font = new Font("Consolas", 11F, FontStyle.Bold)
             };
-            button.FlatAppearance.BorderColor = eliteOrange;
+            button.FlatAppearance.BorderColor = accentColor;
             button.FlatAppearance.BorderSize = 1;
             button.Click += onClick;
             return button;
@@ -419,13 +260,13 @@ namespace EliteDataRelay.UI
             {
                 Text = text,
                 AutoSize = true,
-                BackColor = Color.FromArgb(25, 25, 25),
-                ForeColor = Color.White,
+                BackColor = Color.FromArgb(45, 45, 50),
+                ForeColor = textColor,
                 FlatStyle = FlatStyle.Flat,
                 Padding = new Padding(8, 4, 8, 4),
                 Font = new Font("Segoe UI", 9F, FontStyle.Regular)
             };
-            button.FlatAppearance.BorderColor = eliteOrangeLight;
+            button.FlatAppearance.BorderColor = secondaryTextColor;
             button.FlatAppearance.BorderSize = 1;
             button.Click += onClick;
             return button;
@@ -448,7 +289,7 @@ namespace EliteDataRelay.UI
         {
             Text = text,
             Font = font,
-            ForeColor = eliteOrangeLight,
+            ForeColor = secondaryTextColor,
             Anchor = AnchorStyles.Left,
             AutoSize = true
         };
@@ -457,7 +298,7 @@ namespace EliteDataRelay.UI
         {
             Text = "0",
             Font = font,
-            ForeColor = Color.White,
+            ForeColor = textColor,
             Anchor = AnchorStyles.Right,
             AutoSize = true
         };
@@ -474,7 +315,7 @@ namespace EliteDataRelay.UI
             }
 
             _reminderRemaining -= TimeSpan.FromSeconds(1);
-            _reminderStatusLabel!.Text = $"Reminder active: {_reminderRemaining:hh\:mm\:ss}";
+            _reminderStatusLabel!.Text = $"Reminder active: {_reminderRemaining:hh\\:mm\\:ss}";
         }
 
         private void OnReminderButtonClicked(object? sender, EventArgs e)
@@ -490,7 +331,7 @@ namespace EliteDataRelay.UI
             }
 
             _reminderRemaining = TimeSpan.FromMinutes((double)_reminderMinutesUpDown.Value);
-            _reminderStatusLabel!.Text = $"Reminder active: {_reminderRemaining:hh\:mm\:ss}";
+            _reminderStatusLabel!.Text = $"Reminder active: {_reminderRemaining:hh\\:mm\\:ss}";
             _reminderButton!.Text = "Cancel Reminder";
             _reminderTimer.Start();
         }
@@ -506,7 +347,7 @@ namespace EliteDataRelay.UI
             _refinedValueLabel!.Text = $"{_sessionTracker.TotalRefinedCount:N0} units";
             _durationValueLabel!.Text = $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
             _creditsValueLabel!.Text = $"{_sessionTracker.CreditsEarned:N0} cr";
-            _cargoValueLabel!.Text = $"{_sessionTracker.TotalCargoCollected:N0} tons";
+            _cargoValueLabel!.Text = $"{_sessionTracker.TotalCargoCollected:N0} units";
             _cargoFillPercentLabel!.Text = $"{_sessionTracker.CargoFillPercent:F1}%";
 
             if (_cargoFillProgressBar != null)
@@ -537,13 +378,8 @@ namespace EliteDataRelay.UI
             _isApplyingPreferences = true;
             try
             {
-                _autoStartCheckbox!.Checked = preferences.AutoStartOnProspector;
                 _cargoPromptCheckbox!.Checked = preferences.CargoFullPromptEnabled;
                 _announcementCheckbox!.Checked = preferences.AnnouncementsEnabled;
-                _autoReportCheckbox!.Checked = preferences.AutoGenerateHtmlReports;
-                _idleMinutesUpDown!.Value = Math.Min(_idleMinutesUpDown.MaxValue, Math.Max(_idleMinutesUpDown.Minimum, (decimal)preferences.CargoIdleMinutesThreshold));
-                var firegroupIndex = Math.Clamp(preferences.PreferredFireGroup - 1, 0, _firegroupCombo!.Items.Count - 1);
-                _firegroupCombo.SelectedIndex = firegroupIndex;
             }
             finally
             {
@@ -564,28 +400,6 @@ namespace EliteDataRelay.UI
             _announcementListBox.EndUpdate();
         }
 
-        public void UpdateSessionHistory(IReadOnlyList<MiningSessionRecord> history)
-        {
-            if (_historyListView == null) return;
-
-            _historyListView.BeginUpdate();
-            _historyListView.Items.Clear();
-
-            foreach (var record in history.OrderByDescending(r => r.SessionStart))
-            {
-                var item = new ListViewItem(record.SessionStart.ToString("yyyy-MM-dd HH:mm"));
-                item.SubItems.Add(record.SessionDuration.ToString());
-                item.SubItems.Add(record.MiningDuration.ToString());
-                item.SubItems.Add(record.CreditsEarned.ToString("N0"));
-                item.SubItems.Add(record.TotalCargoCollected.ToString("N0"));
-                item.SubItems.Add(record.LimpetsUsed.ToString("N0"));
-                item.SubItems.Add($"{record.FinalCargoFillPercent:F1}%");
-                _historyListView.Items.Add(item);
-            }
-
-            _historyListView.EndUpdate();
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -595,7 +409,6 @@ namespace EliteDataRelay.UI
                 _startSessionButton?.Dispose();
                 _stopSessionButton?.Dispose();
                 _announcementListBox?.Dispose();
-                _historyListView?.Dispose();
             }
 
             base.Dispose(disposing);

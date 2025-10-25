@@ -45,12 +45,6 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? MiningStopClicked;
 
-        public event EventHandler? BackupRequested;
-
-        public event EventHandler? RestoreRequested;
-
-        public event EventHandler? GenerateReportRequested;
-
         public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService)
         {
             _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
@@ -158,7 +152,7 @@ namespace EliteDataRelay.UI
 
             // Make the window a fixed size and not resizable.
             _form.FormBorderStyle = FormBorderStyle.FixedSingle;
-            _form.Size = new Size(800, 450);
+            _form.Size = new Size(800, 540);
 
             // Set application icon from pre-loaded resource
             if (_appIcon != null) _form.Icon = _appIcon;
@@ -176,9 +170,6 @@ namespace EliteDataRelay.UI
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
             _controlFactory.MiningSessionPanel.StartMiningClicked += OnMiningStartClicked;
             _controlFactory.MiningSessionPanel.StopMiningClicked += OnMiningStopClicked;
-            _controlFactory.MiningSessionPanel.BackupRequested += (s, e) => BackupRequested?.Invoke(s, e);
-            _controlFactory.MiningSessionPanel.RestoreRequested += (s, e) => RestoreRequested?.Invoke(s, e);
-            _controlFactory.MiningSessionPanel.GenerateReportRequested += (s, e) => GenerateReportRequested?.Invoke(s, e);
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -226,11 +217,6 @@ namespace EliteDataRelay.UI
         public void UpdateMiningStats()
         {
             _controlFactory?.MiningSessionPanel?.UpdateStats();
-        }
-
-        public void UpdateSessionHistory(IReadOnlyList<MiningSessionRecord> history)
-        {
-            _controlFactory?.MiningSessionPanel?.UpdateSessionHistory(history);
         }
 
         public void UpdateMiningPreferences(MiningSessionPreferences preferences)

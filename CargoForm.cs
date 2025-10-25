@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -129,8 +129,6 @@ namespace EliteDataRelay
 
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             _sessionTrackingService.MiningNotificationRaised += OnMiningNotificationRaised;
-            _sessionTrackingService.SessionCompleted += OnSessionCompleted;
-            _sessionTrackingService.SessionHistoryUpdated += OnSessionHistoryUpdated;
             _sessionTrackingService.PreferencesChanged += OnPreferencesChanged;
             // Assumes JournalWatcherService is updated to provide these events
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
@@ -141,12 +139,6 @@ namespace EliteDataRelay
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
 
-            _cargoFormUI.BackupRequested += OnBackupRequested;
-            _cargoFormUI.RestoreRequested += OnRestoreRequested;
-            _cargoFormUI.GenerateReportRequested += OnGenerateReportRequested;
-
-            _cargoFormUI.UpdateMiningPreferences(_sessionTrackingService.Preferences);
-            _cargoFormUI.UpdateSessionHistory(_sessionTrackingService.SessionHistory);
         }
 
         private void OnGameFileChanged(string fileName)

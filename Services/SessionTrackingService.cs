@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Timers;
 
 namespace EliteDataRelay.Services
 {
@@ -12,14 +11,12 @@ namespace EliteDataRelay.Services
     {
         private readonly ICargoProcessorService _cargoProcessorService;
         private readonly IJournalWatcherService _journalWatcherService;
-        private readonly Timer _cargoIdleTimer;
 
         private long _initialBalance;
         private CargoSnapshot? _initialCargoSnapshot;
         private CargoSnapshot? _previousCargoSnapshot;
         private DateTime? _sessionStartTime;
         private DateTime? _miningStartTime;
-        private DateTime _lastCargoActivityUtc = DateTime.UtcNow;
         private readonly ConcurrentDictionary<string, int> _refinedCommodities = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, int> _collectedCommodities = new(StringComparer.OrdinalIgnoreCase);
         private readonly List<MiningSessionRecord> _sessionHistory = new();
@@ -69,13 +66,6 @@ namespace EliteDataRelay.Services
             _journalWatcherService.LaunchDrone += OnLaunchDrone;
             _journalWatcherService.MiningRefined += OnMiningRefined;
             _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
-
-            _cargoIdleTimer = new Timer(TimeSpan.FromSeconds(30).TotalMilliseconds)
-            {
-                AutoReset = true,
-                Enabled = false
-            };
-            _cargoIdleTimer.Elapsed += OnCargoIdleTimerElapsed;
         }
 
         public void StartSession(long initialBalance, CargoSnapshot? initialCargoSnapshot)
@@ -94,8 +84,6 @@ namespace EliteDataRelay.Services
             _refinedCommodities.Clear();
             _collectedCommodities.Clear();
             CurrentCargoCount = initialCargoSnapshot?.Count ?? 0;
-            _lastCargoActivityUtc = DateTime.UtcNow;
-            ResetCargoFullNotification();
 
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -112,17 +100,17 @@ namespace EliteDataRelay.Services
                         _sessionHistory.Add(record);
                     }
 
-                    SessionCompleted?.Invoke(this, record.Clone());
+                    // Raise the history updated event first to ensure the UI grid is populated
+                    // before the live stats are reset by the StopMiningSession call.
                     SessionHistoryUpdated?.Invoke(this, EventArgs.Empty);
+                    SessionCompleted?.Invoke(this, record.Clone());
                 }
             }
 
             _initialCargoSnapshot = null;
             _previousCargoSnapshot = null;
             _sessionStartTime = null;
-            StopMiningSession(); // Ensure mining session also stops
-            ResetCargoFullNotification();
-            SessionUpdated?.Invoke(this, EventArgs.Empty);
+            StopMiningSession(); // This will reset live counters and raise SessionUpdated
         }
 
         public void UpdateBalance(long newBalance)
@@ -162,13 +150,7 @@ namespace EliteDataRelay.Services
                 }
             }
 
-            if (currentSnapshot.Count != CurrentCargoCount)
-            {
-                _lastCargoActivityUtc = DateTime.UtcNow;
-            }
-
             CurrentCargoCount = currentSnapshot.Count;
-            EvaluateCargoFullState();
 
             _previousCargoSnapshot = currentSnapshot;
             SessionUpdated?.Invoke(this, EventArgs.Empty);
@@ -188,7 +170,6 @@ namespace EliteDataRelay.Services
             if (!IsMiningSessionActive) return;
             IsMiningSessionActive = false;
             _miningStartTime = null;
-            ResetCargoFullNotification();
             PublishNotification("Mining session stopped.", MiningNotificationType.Info, false);
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
@@ -199,11 +180,6 @@ namespace EliteDataRelay.Services
             {
                 LimpetsUsed++;
                 SessionUpdated?.Invoke(this, EventArgs.Empty);
-            }
-            else if (Preferences.AutoStartOnProspector && string.Equals(e.Type, "Prospector", StringComparison.OrdinalIgnoreCase))
-            {
-                StartMiningSession();
-                PublishNotification("Detected prospector limpet launch – mining session auto-started.", MiningNotificationType.AutoStart, true);
             }
         }
 
@@ -216,51 +192,7 @@ namespace EliteDataRelay.Services
         private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
         {
             CargoCapacity = e.CargoCapacity;
-            EvaluateCargoFullState();
             SessionUpdated?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void OnCargoIdleTimerElapsed(object? sender, ElapsedEventArgs e)
-        {
-            if (!IsMiningSessionActive || !Preferences.CargoFullPromptEnabled) return;
-            if (!IsCargoHoldFull) return;
-
-            var idleMinutes = (DateTime.UtcNow - _lastCargoActivityUtc).TotalMinutes;
-            if (idleMinutes >= Preferences.CargoIdleMinutesThreshold)
-            {
-                PublishNotification("Cargo hold is full. Consider ending the mining session.", MiningNotificationType.CargoFull, true);
-                _cargoIdleTimer.Stop();
-            }
-        }
-
-        private void EvaluateCargoFullState()
-        {
-            if (!IsMiningSessionActive || !Preferences.CargoFullPromptEnabled || CargoCapacity <= 0)
-            {
-                ResetCargoFullNotification();
-                return;
-            }
-
-            if (IsCargoHoldFull)
-            {
-                if (!_cargoIdleTimer.Enabled)
-                {
-                    _cargoIdleTimer.Interval = Math.Max(1000, TimeSpan.FromSeconds(15).TotalMilliseconds);
-                    _cargoIdleTimer.Start();
-                }
-            }
-            else
-            {
-                ResetCargoFullNotification();
-            }
-        }
-
-        private void ResetCargoFullNotification()
-        {
-            if (_cargoIdleTimer.Enabled)
-            {
-                _cargoIdleTimer.Stop();
-            }
         }
 
         private MiningSessionRecord? CreateCurrentSessionRecord(DateTime sessionEnd)
@@ -285,7 +217,12 @@ namespace EliteDataRelay.Services
 
         public string GenerateHtmlReport(IEnumerable<MiningSessionRecord>? sessions = null, string? title = null)
         {
-            var data = (sessions ?? SessionHistory).Select(r => r.Clone()).ToList();
+            // If a specific list of sessions is provided, use it directly.
+            // Otherwise, use the full session history from the service.
+            var data = (sessions != null)
+                ? sessions.Select(r => r.Clone()).ToList()
+                : this.SessionHistory.Select(r => r.Clone()).ToList();
+
             if (data.Count == 0)
             {
                 return "<html><body><h1>No mining sessions recorded.</h1></body></html>";
@@ -417,7 +354,6 @@ namespace EliteDataRelay.Services
             _journalWatcherService.LaunchDrone -= OnLaunchDrone;
             _journalWatcherService.MiningRefined -= OnMiningRefined;
             _journalWatcherService.CargoCapacityChanged -= OnCargoCapacityChanged;
-            _cargoIdleTimer.Dispose();
             GC.SuppressFinalize(this);
         }
     }
