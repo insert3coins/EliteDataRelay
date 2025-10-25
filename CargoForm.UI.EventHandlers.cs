@@ -44,6 +44,9 @@ namespace EliteDataRelay
             }
 
             StartMonitoring();
+
+            // Asynchronously check for updates after starting.
+            _ = UpdateCheckService.CheckForUpdatesAsync(this);
         }
 
         private void OnStopClicked(object? sender, EventArgs e)

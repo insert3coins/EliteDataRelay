@@ -1,84 +1,85 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.Services
-    {
+
+{
     public static class UpdateCheckService
     {
         private const string GITHUB_API_URL = "https://api.github.com/repos/insert3coins/EliteDataRelay/releases/latest";
+        private static bool _updateCheckPerformed = false;
 
-        public static async Task CheckForUpdatesAsync()
+        /// <summary>
+        /// Checks for a new version of the application on GitHub.
+        /// </summary>
+        /// <param name="owner">The window that will own the update notification dialog.</param>
+        public static async Task CheckForUpdatesAsync(IWin32Window owner)
         {
-            Debug.WriteLine("[UpdateCheckService] Checking for updates...");
+            // Only check for updates once per application run.
+            if (_updateCheckPerformed)
+            {
+                return;
+            }
+            _updateCheckPerformed = true;
+
             try
             {
-                using var client = new HttpClient();
-                // GitHub API requires a User-Agent header.
-                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("EliteDataRelay", GetAppVersion()));
-
-                var response = await client.GetStringAsync(GITHUB_API_URL);
-                var release = JsonSerializer.Deserialize<GitHubRelease>(response);
-
-                if (release == null || string.IsNullOrEmpty(release.TagName))
+                using (var client = new HttpClient())
                 {
-                    return;
-                }
+                    // GitHub API requires a User-Agent header.
+                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("EliteDataRelay", "1.0"));
 
-                // Remove 'v' prefix from tag name if it exists for correct parsing.
-                var latestVersionString = release.TagName.StartsWith("v", StringComparison.OrdinalIgnoreCase)
-                    ? release.TagName.Substring(1)
-                    : release.TagName;
+                    var response = await client.GetStringAsync(GITHUB_API_URL);
+                    var release = JsonSerializer.Deserialize<GitHubRelease>(response);
 
-                if (Version.TryParse(latestVersionString, out var latestVersion))
-                {
-                    var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-                    if (currentVersion != null && latestVersion > currentVersion)
+                    if (release == null || string.IsNullOrEmpty(release.TagName))
                     {
-                        NotifyUserOfUpdate(latestVersion.ToString(), release.HtmlUrl);
+                        Debug.WriteLine("[UpdateCheck] Could not parse release information from GitHub.");
+                        return;
                     }
-                    Debug.WriteLine("[UpdateCheckService] Update check completed successfully.");
+
+                    // The tag name is expected to be in a format like "v0.31.1"
+                    var latestVersionStr = release.TagName.TrimStart('v');
+                    if (Version.TryParse(latestVersionStr, out var latestVersion))
+                    {
+                        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+
+                        if (latestVersion > currentVersion)
+                        {
+                            var result = MessageBox.Show(owner,
+                                $"A new version ({latestVersion}) is available!\n\nWould you like to go to the download page?",
+                                "Update Available",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Information);
+
+                            if (result == DialogResult.Yes)
+                            {
+                                Process.Start(new ProcessStartInfo(release.HtmlUrl) { UseShellExecute = true });
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 // Fail silently. We don't want to bother the user if the update check fails.
-                Debug.WriteLine($"[UpdateCheckService] Failed to check for updates: {ex.Message}");
+                Debug.WriteLine($"[UpdateCheck] Failed to check for updates: {ex.Message}");
             }
         }
 
-        private static void NotifyUserOfUpdate(string newVersion, string releaseUrl)
-        {
-            var message = $"A new version ({newVersion}) of Elite Data Relay is available.\n\nWould you like to open the download page?";
-            var result = MessageBox.Show(message, "Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-
-            if (result == DialogResult.Yes)
-            {
-                try
-                {
-                    Process.Start(new ProcessStartInfo(releaseUrl) { UseShellExecute = true });
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[UpdateCheckService] Failed to open URL: {ex.Message}");
-                }
-            }
-        }
-
-        private static string GetAppVersion() => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
-
+        // A simple class to deserialize the GitHub API response.
         private class GitHubRelease
         {
-            [JsonPropertyName("tag_name")]
+            [System.Text.Json.Serialization.JsonPropertyName("tag_name")]
             public string TagName { get; set; } = string.Empty;
 
-            [JsonPropertyName("html_url")]
+            [System.Text.Json.Serialization.JsonPropertyName("html_url")]
             public string HtmlUrl { get; set; } = string.Empty;
         }
     }
