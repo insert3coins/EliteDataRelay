@@ -1,123 +1,71 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
 {
-    /// A form to display application information, links, and disclaimers.
     public class AboutForm : Form
     {
-        private Icon? _formIcon;
-
-        private const string ABOUT_INFO = "Elite Data Relay";
         private const string ABOUT_URL = "https://github.com/insert3coins/EliteDataRelay";
-        private const string LICENSE_URL = "https://github.com/insert3coins/EliteDataRelay/blob/main/LICENSE.txt";
 
         public AboutForm()
         {
+            // Use the designer-generated InitializeComponent
+            // and then add our custom logic.
             InitializeComponent();
+            LoadVersionInfo();
+            SetupControls();
         }
 
-        private void InitializeComponent()
+        private void LoadVersionInfo()
         {
-            // Form properties
-            Text = "About Elite Data Relay";
-            ClientSize = new Size(450, 300);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            StartPosition = FormStartPosition.CenterParent;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ShowInTaskbar = false;
-
-            // Icon PictureBox
-            var picIcon = new PictureBox
-            {
-                Location = new Point(15, 15),
-                Size = new Size(64, 64),
-                SizeMode = PictureBoxSizeMode.StretchImage
-            };
-
-            try
-            {
-                // Load the icon resource and create a bitmap for the PictureBox
-                using (var iconStream = new MemoryStream(Properties.Resources.AppIcon))
-                {
-                    _formIcon = new Icon(iconStream, 256, 256);
-                    picIcon.Image = _formIcon.ToBitmap();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AboutForm] Failed to load icon: {ex.Message}");
-            }
-
-            // App Name Label
-            var lblAppName = new Label
-            {
-                Text = ABOUT_INFO,
-                Font = new Font(Font.FontFamily, 12, FontStyle.Bold),
-                AutoSize = true,
-                Location = new Point(90, 20)
-            };
-
-            // Get version from assembly
-            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            var assembly = Assembly.GetExecutingAssembly();
+            var version = assembly.GetName().Version;
             string versionString = version != null ? $"Version {version.Major}.{version.Minor}.{version.Build}" : "Version not found";
 
-            // Version Label
-            var lblVersion = new Label
+            // Check for informational version (e.g., from GitVersion)
+            var productVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            if (!string.IsNullOrEmpty(productVersion) && version != null && productVersion != version.ToString())
             {
-                Text = versionString,
-                AutoSize = true,
-                Location = new Point(90, 48)
-            };
+                versionString += $" ({productVersion})";
+            }
+            versionLabel.Text = versionString;
+        }
 
-            // Copyright Label
-            var lblCopyright = new Label
+        private void SetupControls()
+        {
+            // Link click event
+            linkLabelGitHub.LinkClicked += (s, e) => OpenUrl(ABOUT_URL);
+
+            // Close button event
+            closeButton.Click += (s, e) => this.Close();
+
+            // Make the version label clickable to copy to clipboard
+            versionLabel.Cursor = Cursors.Hand;
+            versionLabel.Click += (s, e) =>
             {
-                Text = $"Copyright © {DateTime.Now.Year} insert3coins",
-                AutoSize = true,
-                Location = new Point(90, 68)
+                try
+                {
+                    Clipboard.SetText(versionLabel.Text);
+                    // Provide feedback to the user
+                    var originalText = versionLabel.Text;
+                    versionLabel.Text = "Copied to clipboard!";
+                    var t = new System.Windows.Forms.Timer { Interval = 1500 };
+                    t.Tick += (sender, args) =>
+                    {
+                        versionLabel.Text = originalText;
+                        t.Stop();
+                        t.Dispose();
+                    };
+                    t.Start();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[AboutForm] Failed to copy to clipboard: {ex.Message}");
+                }
             };
-
-            // Project Link
-            var linkProject = new LinkLabel { Text = "Project GitHub Page", AutoSize = true, Location = new Point(12, 100) };
-            linkProject.LinkClicked += (s, e) => OpenUrl(ABOUT_URL);
-
-            // License Link
-            var linkLicense = new LinkLabel { Text = "View License (GPL-3.0)", AutoSize = true, Location = new Point(150, 90) };
-            linkLicense.LinkClicked += (s, e) => OpenUrl(LICENSE_URL);
-
-            // Disclaimer TextBox
-            var txtDisclaimer = new TextBox
-            {
-                Text = "A lightweight Windows utility for players of Elite Dangerous. It monitors your in-game cargo in real-time, displaying the contents and total count in a simple interface and exporting the data to a text file for use with streaming overlays or other tools.",
-                Multiline = true,
-                ReadOnly = true,
-                BorderStyle = BorderStyle.FixedSingle,
-                Location = new Point(12, 130),
-                Size = new Size(426, 130),
-                ScrollBars = ScrollBars.Vertical
-            };
-
-            // OK Button
-            var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(363, 265), Size = new Size(75, 23) };
-
-            // Add controls to form
-            Controls.Add(picIcon);
-            Controls.Add(lblAppName);
-            Controls.Add(lblVersion);
-            Controls.Add(lblCopyright);
-            Controls.Add(linkProject);
-            Controls.Add(linkLicense);
-            Controls.Add(txtDisclaimer);
-            Controls.Add(btnOk);
-
-            AcceptButton = btnOk;
-            CancelButton = btnOk;
         }
 
         private void OpenUrl(string url)
@@ -134,8 +82,114 @@ namespace EliteDataRelay.UI
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) { _formIcon?.Dispose(); }
+            if (disposing)
+            {
+                // The designer will create a 'components' field to dispose
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+            }
             base.Dispose(disposing);
         }
+
+        #region Windows Form Designer generated code
+
+        // NOTE: This is typically in a .Designer.cs file.
+        // I've included it here to provide a single, complete file for the new design.
+
+        private System.ComponentModel.IContainer components = null!;
+        private Label labelTitle = null!;
+        private Label versionLabel = null!;
+        private Label labelCopyright = null!;
+        private LinkLabel linkLabelGitHub = null!;
+        private Button closeButton = null!;
+        private Label labelDescription = null!;
+
+        private void InitializeComponent()
+        {
+            this.labelTitle = new System.Windows.Forms.Label();
+            this.versionLabel = new System.Windows.Forms.Label();
+            this.labelCopyright = new System.Windows.Forms.Label();
+            this.linkLabelGitHub = new System.Windows.Forms.LinkLabel();
+            this.closeButton = new System.Windows.Forms.Button();
+            this.labelDescription = new System.Windows.Forms.Label();
+            this.SuspendLayout();
+            // 
+            // labelTitle
+            // 
+            this.labelTitle.AutoSize = true;
+            this.labelTitle.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
+            this.labelTitle.Location = new System.Drawing.Point(12, 9);
+            this.labelTitle.Name = "labelTitle";
+            this.labelTitle.Size = new System.Drawing.Size(158, 25);
+            this.labelTitle.Text = "Elite Data Relay";
+            // 
+            // versionLabel
+            // 
+            this.versionLabel.AutoSize = true;
+            this.versionLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.versionLabel.Location = new System.Drawing.Point(17, 43);
+            this.versionLabel.Name = "versionLabel";
+            this.versionLabel.Size = new System.Drawing.Size(81, 15);
+            this.versionLabel.Text = "Version 0.0.0";
+            // 
+            // labelDescription
+            // 
+            this.labelDescription.Location = new System.Drawing.Point(17, 70);
+            this.labelDescription.Name = "labelDescription";
+            this.labelDescription.Size = new System.Drawing.Size(380, 45);
+            this.labelDescription.Text = "A lightweight Windows companion app for Elite Dangerous that provides real-time data overlays, session tracking, and stream-friendly text output.";
+            // 
+            // linkLabelGitHub
+            // 
+            this.linkLabelGitHub.AutoSize = true;
+            this.linkLabelGitHub.Location = new System.Drawing.Point(17, 125);
+            this.linkLabelGitHub.Name = "linkLabelGitHub";
+            this.linkLabelGitHub.Size = new System.Drawing.Size(133, 15);
+            this.linkLabelGitHub.TabStop = true;
+            this.linkLabelGitHub.Text = "View Project on GitHub";
+            // 
+            // labelCopyright
+            // 
+            this.labelCopyright.AutoSize = true;
+            this.labelCopyright.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.labelCopyright.Location = new System.Drawing.Point(17, 150);
+            this.labelCopyright.Name = "labelCopyright";
+            this.labelCopyright.Size = new System.Drawing.Size(166, 15);
+            this.labelCopyright.Text = "Copyright © 2024 insert3coins";
+            // 
+            // closeButton
+            // 
+            this.closeButton.Location = new System.Drawing.Point(322, 176);
+            this.closeButton.Name = "closeButton";
+            this.closeButton.Size = new System.Drawing.Size(75, 23);
+            this.closeButton.Text = "OK";
+            this.closeButton.UseVisualStyleBackColor = true;
+            // 
+            // AboutForm
+            // 
+            this.AcceptButton = this.closeButton;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(414, 211);
+            this.Controls.Add(this.closeButton);
+            this.Controls.Add(this.linkLabelGitHub);
+            this.Controls.Add(this.labelCopyright);
+            this.Controls.Add(this.versionLabel);
+            this.Controls.Add(this.labelTitle);
+            this.Controls.Add(this.labelDescription);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "AboutForm";
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "About Elite Data Relay";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+        }
+        #endregion
     }
 }
