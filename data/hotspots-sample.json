@@ -1,0 +1,29 @@
+[
+  {
+    "StarSystem": "Borann",
+    "Body": "Borann A 2",
+    "RingType": "Pristine Icy",
+    "Mineral": "Void Opals",
+    "DistanceFromStar": 986.5,
+    "OverlapQuality": 4.5,
+    "Notes": "Historic triple-overlap hotspot"
+  },
+  {
+    "StarSystem": "Musca Dark Region PJ-P b6-1",
+    "Body": "Planet 1",
+    "RingType": "Metal Rich",
+    "Mineral": "Painite",
+    "DistanceFromStar": 421.2,
+    "OverlapQuality": 3.8,
+    "Notes": "Reliable painite hotspot near station"
+  },
+  {
+    "StarSystem": "HIP 21991",
+    "Body": "HIP 21991 3",
+    "RingType": "Pristine Metallic",
+    "Mineral": "Platinum",
+    "DistanceFromStar": 633.0,
+    "OverlapQuality": 4.1,
+    "Notes": "Close to refuel station"
+  }
+]

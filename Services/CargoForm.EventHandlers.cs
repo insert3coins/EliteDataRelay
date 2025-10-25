@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System;
+using System.IO;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
@@ -261,6 +263,23 @@ namespace EliteDataRelay
                 {
                     _cargoFormUI.UpdateMaterials(e);
                 }
+            });
+        }
+
+        private void OnMiningNotificationRaised(object? sender, MiningNotificationEventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                _cargoFormUI.AppendMiningAnnouncement(e);
+                _cargoFormUI.ShowMiningNotification(e);
+            });
+        }
+
+        private void OnPreferencesChanged(object? sender, EventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                _cargoFormUI.UpdateMiningPreferences(_sessionTrackingService.Preferences);
             });
         }
 

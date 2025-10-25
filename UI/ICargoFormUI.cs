@@ -32,7 +32,10 @@ namespace EliteDataRelay.UI
         void UpdateLocation(string location);
         void UpdateSessionOverlay(int cargoCollected, long creditsEarned);
         void UpdateMiningStats();
-        void UpdateTitle(string title);        
+        void UpdateMiningPreferences(MiningSessionPreferences preferences);
+        void AppendMiningAnnouncement(MiningNotificationEventArgs notification);
+        void ShowMiningNotification(MiningNotificationEventArgs notification);
+        void UpdateTitle(string title);
         void ShowOverlays();
         void HideOverlays();
         void RefreshOverlay();

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -26,6 +26,11 @@ namespace EliteDataRelay
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
         private readonly OverlayService _overlayService;
+        private readonly HotspotFinderService _hotspotFinderService;
+        private readonly BackupService _backupService;
+        private readonly string _reportsDirectory;
+        private readonly string _backupsDirectory;
+
         public CargoForm()
         {
             // Create all service instances. This form now owns its dependencies,
@@ -40,7 +45,14 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
+            _hotspotFinderService = new HotspotFinderService();
             _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService);
+
+            _reportsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reports");
+            _backupsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backups");
+            Directory.CreateDirectory(_reportsDirectory);
+            Directory.CreateDirectory(_backupsDirectory);
+            _backupService = new BackupService(_sessionTrackingService, _hotspotFinderService);
 
             InitializeComponent();
 
@@ -116,6 +128,8 @@ namespace EliteDataRelay
             _journalWatcherService.BalanceChanged += OnBalanceChanged;
 
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
+            _sessionTrackingService.MiningNotificationRaised += OnMiningNotificationRaised;
+            _sessionTrackingService.PreferencesChanged += OnPreferencesChanged;
             // Assumes JournalWatcherService is updated to provide these events
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
@@ -124,6 +138,7 @@ namespace EliteDataRelay
             _journalWatcherService.InitialScanComplete += OnInitialScanComplete;
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
+
         }
 
         private void OnGameFileChanged(string fileName)

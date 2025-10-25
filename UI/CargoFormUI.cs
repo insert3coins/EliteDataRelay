@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Diagnostics;
@@ -151,7 +152,7 @@ namespace EliteDataRelay.UI
 
             // Make the window a fixed size and not resizable.
             _form.FormBorderStyle = FormBorderStyle.FixedSingle;
-            _form.Size = new Size(800, 450);
+            _form.Size = new Size(800, 540);
 
             // Set application icon from pre-loaded resource
             if (_appIcon != null) _form.Icon = _appIcon;
@@ -216,6 +217,34 @@ namespace EliteDataRelay.UI
         public void UpdateMiningStats()
         {
             _controlFactory?.MiningSessionPanel?.UpdateStats();
+        }
+
+        public void UpdateMiningPreferences(MiningSessionPreferences preferences)
+        {
+            _controlFactory?.MiningSessionPanel?.ApplyPreferences(preferences);
+        }
+
+        public void AppendMiningAnnouncement(MiningNotificationEventArgs notification)
+        {
+            _controlFactory?.MiningSessionPanel?.AddAnnouncement(notification);
+        }
+
+        public void ShowMiningNotification(MiningNotificationEventArgs notification)
+        {
+            if (_trayIconManager == null) return;
+
+            var icon = notification.Type switch
+            {
+                MiningNotificationType.CargoFull => ToolTipIcon.Warning,
+                MiningNotificationType.BackupCreated => ToolTipIcon.Info,
+                MiningNotificationType.BackupRestored => ToolTipIcon.Info,
+                MiningNotificationType.AutoStart => ToolTipIcon.Info,
+                MiningNotificationType.ReportGenerated => ToolTipIcon.Info,
+                MiningNotificationType.Reminder => ToolTipIcon.Warning,
+                _ => ToolTipIcon.Info
+            };
+
+            _trayIconManager.ShowBalloonTip(3000, "Elite Data Relay", notification.Message, icon);
         }
 
         public void UpdateSessionOverlay(int cargoCollected, long creditsEarned)
