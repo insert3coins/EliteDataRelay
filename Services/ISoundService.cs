@@ -14,5 +14,10 @@ namespace EliteDataRelay.Services
         /// Play the stop monitoring sound
         /// </summary>
         void PlayStopSound();
+
+        /// <summary>
+        /// Play the reminder sound
+        /// </summary>
+        void PlayReminderSound();
     }
 }

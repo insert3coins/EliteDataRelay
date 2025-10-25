@@ -132,6 +132,11 @@ namespace EliteDataRelay
             {
                 _cargoFormUI.AppendMiningAnnouncement(e); // Add announcement to the UI list
                 _cargoFormUI.ShowMiningNotification(e);   // Show the tray notification
+
+                if (e.Type == MiningNotificationType.Reminder)
+                {
+                    _soundService.PlayReminderSound();
+                }
             });
         }
 

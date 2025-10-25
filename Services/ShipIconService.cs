@@ -65,8 +65,9 @@ namespace EliteDataRelay.Services
             { "ferdelance", "FerDeLance" },
             { "python", "Python" },
             { "orca", "Orca" },
+            { "typex_3" , "Alliance Challenger" },
             { "typex", "TypeX" }, // Alliance Chieftain
-            {"type8", "Type-8 Transporter"}, // Type 8
+            { "type8", "Type-8 Transporter"}, // Type 8
             { "mandalay", "Mandalay" }, 
 
             // --- Large Ships ---
