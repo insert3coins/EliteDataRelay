@@ -99,10 +99,30 @@ namespace EliteDataRelay.UI
 
         private GroupBox BuildStatsGroup()
         {
-            var statsGroup = new GroupBox { Text = "Real-time Statistics", ForeColor = secondaryTextColor, Font = new Font(Font, FontStyle.Bold), Dock = DockStyle.Fill, Padding = new Padding(5) };
-            var statsTable = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(12), AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
+            var statsGroup = new GroupBox { 
+                Text = "Real-time Statistics", 
+                ForeColor = secondaryTextColor, 
+                Font = new Font(Font, FontStyle.Bold), 
+                Dock = DockStyle.Fill, 
+                Padding = new Padding(5) 
+            };
+            
+            var statsTable = new TableLayoutPanel { 
+                Dock = DockStyle.Fill, 
+                ColumnCount = 2, 
+                Padding = new Padding(12), 
+                AutoSize = true, 
+                AutoSizeMode = AutoSizeMode.GrowAndShrink 
+            };
             statsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             statsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+            
+            // Set row count and add consistent row styles with gaps
+            statsTable.RowCount = 4;
+            for (int i = 0; i < statsTable.RowCount; i++)
+            {
+                statsTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F)); // Increased height for consistent gaps
+            }
 
             var headerFont = new Font("Consolas", 12F, FontStyle.Bold);
             var valueFont = new Font("Consolas", 12F, FontStyle.Regular);
@@ -113,16 +133,21 @@ namespace EliteDataRelay.UI
             _creditsValueLabel = CreateValueLabel(valueFont);
             _cargoValueLabel = CreateValueLabel(valueFont);
             
+            // Add all controls with consistent spacing
             statsTable.Controls.Add(CreateHeaderLabel("Limpets Used", headerFont), 0, 0);
             statsTable.Controls.Add(_limpetsValueLabel, 1, 0);
+            
             statsTable.Controls.Add(CreateHeaderLabel("Refined", headerFont), 0, 1);
             statsTable.Controls.Add(_refinedValueLabel, 1, 1);
+            
             statsTable.Controls.Add(CreateHeaderLabel("Active Duration", headerFont), 0, 2);
             statsTable.Controls.Add(_durationValueLabel, 1, 2);
+            
             statsTable.Controls.Add(CreateHeaderLabel("Cargo Collected", headerFont), 0, 3);
             statsTable.Controls.Add(_cargoValueLabel, 1, 3);
-            //statsTable.Controls.Add(CreateHeaderLabel("Credits Earned", headerFont), 0, 4);
+            statsTable.Controls.Add(CreateHeaderLabel("Credits Earned", headerFont), 0, 4);
             statsTable.Controls.Add(_creditsValueLabel, 1, 4);
+            
             statsGroup.Controls.Add(statsTable);
             return statsGroup;
         }

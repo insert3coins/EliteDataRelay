@@ -198,16 +198,11 @@ namespace EliteDataRelay
 
             SafeInvoke(() =>
             {
-                if (!_isInitializing)
-                {
-                    // Update the general session stats on the cargo overlay if enabled
-                    if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
-                    {
-                        _cargoFormUI.UpdateSessionOverlay((int)tracker.TotalCargoCollected, tracker.CreditsEarned);
-                    }
-                }
-                // Always update the mining tab on the main UI and the dedicated mining overlay, even if session tracking is off.
+                // Update the mining tab on the main UI.
                 _cargoFormUI.RefreshMiningStats();
+
+                // Update the session stats on the cargo overlay if enabled.
+                _cargoFormUI.UpdateSessionOverlay((int)tracker.TotalCargoCollected, tracker.CreditsEarned);
             });
         }
 

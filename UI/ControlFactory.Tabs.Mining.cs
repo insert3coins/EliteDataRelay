@@ -9,7 +9,7 @@ namespace EliteDataRelay.UI
         private TabPage CreateMiningTabPage(FontManager fontManager, SessionTrackingService sessionTracker)
         {
             var miningPage = new TabPage("Mining");
-            miningPage.BackColor = Color.Black;
+            miningPage.BackColor = Color.FromArgb(249, 250, 251); // Match panel's light theme (Gray-50)
 
             MiningSessionPanel = new MiningSessionPanel(sessionTracker, fontManager)
             {
