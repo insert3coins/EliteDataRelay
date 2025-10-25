@@ -72,6 +72,8 @@ namespace EliteDataRelay.Configuration
                         InfoOverlayLocation = config.InfoOverlayLocation;
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
+                        EnableMiningAnnouncements = config.EnableMiningAnnouncements;
+                        NotifyOnCargoFull = config.NotifyOnCargoFull;
                     }
                 }
             }
@@ -121,6 +123,8 @@ namespace EliteDataRelay.Configuration
                     InfoOverlayLocation = AppConfiguration.InfoOverlayLocation,
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
+                    EnableMiningAnnouncements = AppConfiguration.EnableMiningAnnouncements,
+                    NotifyOnCargoFull = AppConfiguration.NotifyOnCargoFull,
                 };
 
                 var options = new JsonSerializerOptions 
@@ -170,6 +174,10 @@ namespace EliteDataRelay.Configuration
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
+            [JsonConverter(typeof(JsonBooleanConverter))]
+            public bool EnableMiningAnnouncements { get; set; } = false;
+            [JsonConverter(typeof(JsonBooleanConverter))]
+            public bool NotifyOnCargoFull { get; set; } = false;
         }
     }
 }

@@ -214,26 +214,34 @@ namespace EliteDataRelay.UI
             _controlFactory?.MaterialsTab?.UpdateAllMaterials(materials.Raw, materials.Manufactured, materials.Encoded);
         }
 
-        public void UpdateMiningStats()
-        {
-            _controlFactory?.MiningSessionPanel?.UpdateStats();
-        }
-
-        public void UpdateMiningPreferences(MiningSessionPreferences preferences)
-        {
-            _controlFactory?.MiningSessionPanel?.ApplyPreferences(preferences);
-        }
-
         public void AppendMiningAnnouncement(MiningNotificationEventArgs notification)
         {
-            _controlFactory?.MiningSessionPanel?.AddAnnouncement(notification);
+            // Only show announcements if the user has enabled them in settings.
+            if (AppConfiguration.EnableMiningAnnouncements)
+            {
+                _controlFactory?.MiningSessionPanel?.AddAnnouncement(notification);
+            }
         }
 
         public void ShowMiningNotification(MiningNotificationEventArgs notification)
         {
             if (_trayIconManager == null) return;
 
-            var icon = notification.Type switch
+            // Only show a "Cargo Full" notification if the user has enabled it.
+            if (notification.Type == MiningNotificationType.CargoFull && !AppConfiguration.NotifyOnCargoFull)
+            {
+                return;
+            }
+
+            // Only show tray notifications for specific, user-facing events.
+            // The 'Info' type is for UI announcements only.
+            if (notification.Type == MiningNotificationType.Info)
+            {
+                return;
+            }
+
+
+            var icon = notification.Type switch // This switch is now exhaustive
             {
                 MiningNotificationType.CargoFull => ToolTipIcon.Warning,
                 MiningNotificationType.BackupCreated => ToolTipIcon.Info,
@@ -241,7 +249,8 @@ namespace EliteDataRelay.UI
                 MiningNotificationType.AutoStart => ToolTipIcon.Info,
                 MiningNotificationType.ReportGenerated => ToolTipIcon.Info,
                 MiningNotificationType.Reminder => ToolTipIcon.Warning,
-                _ => ToolTipIcon.Info
+                MiningNotificationType.ValuableCommodityRefined => ToolTipIcon.Info,
+                _ => ToolTipIcon.None // Default case for Info and any future types
             };
 
             _trayIconManager.ShowBalloonTip(3000, "Elite Data Relay", notification.Message, icon);
@@ -275,19 +284,23 @@ namespace EliteDataRelay.UI
             {
                 _controlFactory.CargoWelcomePanel.Visible = !isMonitoring;
                 _controlFactory.CargoGridView.Visible = isMonitoring;
-                UpdateCargoScrollBar();
             }
+        }
+
+        public void RefreshMiningStats()
+        {
+            _controlFactory?.MiningSessionPanel?.UpdateStats();
+        }
+
+        public void UpdateMiningPreferences(MiningSessionPreferences preferences)
+        {
+            // This method is no longer used since settings were moved,
+            // but is required by the interface.
         }
 
         public void UpdateCargoScrollBar()
         {
             _controlFactory?.UpdateCargoScrollBar();
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -296,20 +309,25 @@ namespace EliteDataRelay.UI
             {
                 if (disposing)
                 {
-                    // Dispose managed state (managed objects).
+                    // Dispose managed state (managed objects)
+                    _fontManager?.Dispose();
                     _controlFactory?.Dispose();
-                    _layoutManager?.Dispose();
                     _trayIconManager?.Dispose();
-                    _watchingAnimationManager?.Dispose();
-                    _fontManager?.Dispose(); // Dispose fonts after the controls that use them.
-                    _appIcon?.Dispose();
                     _iconStream?.Dispose();
+                    _appIcon?.Dispose();
+                    _layoutManager?.Dispose();
+                    _watchingAnimationManager?.Dispose();
                 }
-
-                // No unmanaged resources to free, but good practice to have.
 
                 _disposedValue = true;
             }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

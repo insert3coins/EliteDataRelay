@@ -1,5 +1,6 @@
 using EliteDataRelay.Configuration;
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace EliteDataRelay
@@ -10,6 +11,30 @@ namespace EliteDataRelay
         {
             // Load settings when the form loads
             AppConfiguration.Load();
+
+            // Restore window state and location from settings
+            if (AppConfiguration.WindowLocation != Point.Empty)
+            {
+                // Ensure the window is restored to a visible screen.
+                // This prevents the window from being "lost" if the monitor configuration changes.
+                bool isOnScreen = false;
+                foreach (var screen in Screen.AllScreens)
+                {
+                    if (screen.WorkingArea.Contains(AppConfiguration.WindowLocation))
+                    {
+                        isOnScreen = true;
+                        break;
+                    }
+                }
+
+                if (isOnScreen)
+                {
+                    this.StartPosition = FormStartPosition.Manual;
+                    this.Location = AppConfiguration.WindowLocation;
+                }
+            }
+            this.WindowState = AppConfiguration.WindowState;
+
             RegisterHotkeys();
         }
 

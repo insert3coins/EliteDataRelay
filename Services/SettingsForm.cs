@@ -71,6 +71,8 @@ namespace EliteDataRelay.UI
         public SettingsForm()
         {
             InitializeComponent();
+            // This was the missing call to add the mining settings to the UI.
+            InitializeMiningSettings();
 
             // When the form is closing, check if the user cancelled. If so, revert any live changes.
             this.FormClosing += SettingsForm_FormClosing;

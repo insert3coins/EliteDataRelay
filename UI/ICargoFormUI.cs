@@ -31,7 +31,7 @@ namespace EliteDataRelay.UI
         void UpdateSystemInfo(SystemInfoData data);
         void UpdateLocation(string location);
         void UpdateSessionOverlay(int cargoCollected, long creditsEarned);
-        void UpdateMiningStats();
+        void RefreshMiningStats();
         void UpdateMiningPreferences(MiningSessionPreferences preferences);
         void AppendMiningAnnouncement(MiningNotificationEventArgs notification);
         void ShowMiningNotification(MiningNotificationEventArgs notification);

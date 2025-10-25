@@ -23,11 +23,7 @@ namespace EliteDataRelay.UI
         private Label? _durationValueLabel;
         private Label? _creditsValueLabel;
         private Label? _cargoValueLabel;
-        private ProgressBar? _cargoFillProgressBar;
-        private Label? _cargoFillPercentLabel;
-        private ListBox? _announcementListBox;
-        private CheckBox? _cargoPromptCheckbox;
-        private CheckBox? _announcementCheckbox;
+        private ListBox? _announcementListBox;        
         private NumericUpDown? _reminderMinutesUpDown;
         private Label? _reminderStatusLabel;
         private Button? _reminderButton;
@@ -36,7 +32,6 @@ namespace EliteDataRelay.UI
         private System.Windows.Forms.Timer? _updateTimer;
         private System.Windows.Forms.Timer? _reminderTimer;
         private TimeSpan _reminderRemaining = TimeSpan.Zero;
-        private bool _isApplyingPreferences;
 
         private const int MaxAnnouncements = 50;
 
@@ -56,167 +51,168 @@ namespace EliteDataRelay.UI
             DoubleBuffered = true;
             BackColor = Color.FromArgb(10, 10, 10);
             Font = new Font("Segoe UI", 10F, FontStyle.Regular);
+            Padding = new Padding(10);
 
-            var mainTabControl = new TabControl
+            // Use TableLayoutPanel instead of SplitContainer for precise control
+            var mainLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                Appearance = TabAppearance.Normal, // Use Normal for better compatibility with custom drawing
-                Alignment = TabAlignment.Top, // Revert to top alignment
-                SizeMode = TabSizeMode.Fixed
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = Color.Transparent
             };
+            
+            // Top section takes ~2/3 of space, bottom takes ~1/3 (lower third)
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 66F)); // Stats & Controls
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 34F)); // Announcements
 
-            var dashboardTab = BuildDashboardTab();
-            var announcementsTab = BuildAnnouncementsTab();
-            var settingsTab = BuildSettingsTab();
+            // --- Top Panel (Stats and Controls) ---
+            var topPanel = new TableLayoutPanel { 
+                Dock = DockStyle.Fill, 
+                ColumnCount = 2, 
+                BackColor = Color.FromArgb(15, 15, 15) 
+            };
+            topPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55f));
+            topPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45f));
+            var statsGroup = BuildStatsGroup();
+            var controlsGroup = BuildControlsGroup();
+            topPanel.Controls.Add(statsGroup, 0, 0);
+            topPanel.Controls.Add(controlsGroup, 1, 0);
 
-            mainTabControl.TabPages.Add(dashboardTab);
-            mainTabControl.TabPages.Add(announcementsTab);
-            mainTabControl.TabPages.Add(settingsTab);
+            // --- Bottom Panel (Announcements) ---
+            var announcementsGroup = BuildAnnouncementsGroup();
 
-            Controls.Add(mainTabControl);
+            // Add to main layout
+            mainLayout.Controls.Add(topPanel, 0, 0);
+            mainLayout.Controls.Add(announcementsGroup, 0, 1);
+
+            Controls.Add(mainLayout);
 
             _updateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _updateTimer.Tick += (s, e) => UpdateStats();
 
             _reminderTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _reminderTimer.Tick += ReminderTimerOnTick;
-
+            
             UpdateControlsVisibility();
-
-            // Apply custom styling to the TabControl
-            mainTabControl.DrawMode = TabDrawMode.OwnerDrawFixed;
-            mainTabControl.ItemSize = new Size(120, 30);
-            mainTabControl.DrawItem += (s, e) =>
-            {
-                var tab = mainTabControl.TabPages[e.Index];
-                var isSelected = mainTabControl.SelectedIndex == e.Index;
-
-                // In Normal appearance, we need to draw over the default tab background.
-                e.DrawBackground();
-
-                using var bgBrush = new SolidBrush(isSelected ? Color.FromArgb(45, 45, 45) : Color.FromArgb(25, 25, 25));
-                e.Graphics.FillRectangle(bgBrush, e.Bounds);
-
-                using var textBrush = new SolidBrush(isSelected ? accentColor : textColor);
-                TextRenderer.DrawText(e.Graphics, tab.Text, e.Font, e.Bounds, textBrush.Color, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-
-                if (isSelected)
-                {
-                    using var borderPen = new Pen(accentColor, 2);
-                    e.Graphics.DrawLine(borderPen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
-                }
-            };
         }
 
-        private TabPage BuildDashboardTab()
+        private GroupBox BuildStatsGroup()
         {
-            var tabPage = new TabPage("Dashboard") { BackColor = Color.FromArgb(15, 15, 15), Padding = new Padding(10) };
-            var mainLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2 };
-            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65f));
-            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35f));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // This row will fill the remaining space.
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // This row will have a fixed height.
-
-            // --- Stats Panel (Left) ---
-            var statsGroup = new GroupBox { Text = "Real-time Statistics", ForeColor = secondaryTextColor, Dock = DockStyle.Fill, Font = new Font(Font, FontStyle.Bold) };
-            var statsTable = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(12) };
+            var statsGroup = new GroupBox { Text = "Real-time Statistics", ForeColor = secondaryTextColor, Font = new Font(Font, FontStyle.Bold), Dock = DockStyle.Fill, Padding = new Padding(5) };
+            var statsTable = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(12), AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             statsTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             statsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
             var headerFont = new Font("Consolas", 12F, FontStyle.Bold);
             var valueFont = new Font("Consolas", 12F, FontStyle.Regular);
-
+            
             _limpetsValueLabel = CreateValueLabel(valueFont);
             _refinedValueLabel = CreateValueLabel(valueFont);
             _durationValueLabel = CreateValueLabel(valueFont);
             _creditsValueLabel = CreateValueLabel(valueFont);
             _cargoValueLabel = CreateValueLabel(valueFont);
-
+            
             statsTable.Controls.Add(CreateHeaderLabel("Limpets Used", headerFont), 0, 0);
             statsTable.Controls.Add(_limpetsValueLabel, 1, 0);
             statsTable.Controls.Add(CreateHeaderLabel("Refined", headerFont), 0, 1);
             statsTable.Controls.Add(_refinedValueLabel, 1, 1);
             statsTable.Controls.Add(CreateHeaderLabel("Active Duration", headerFont), 0, 2);
             statsTable.Controls.Add(_durationValueLabel, 1, 2);
-            statsTable.Controls.Add(CreateHeaderLabel("Credits Earned", headerFont), 0, 3);
-            statsTable.Controls.Add(_creditsValueLabel, 1, 3);
-            statsTable.Controls.Add(CreateHeaderLabel("Cargo Collected", headerFont), 0, 4);
-            statsTable.Controls.Add(_cargoValueLabel, 1, 4);
+            statsTable.Controls.Add(CreateHeaderLabel("Cargo Collected", headerFont), 0, 3);
+            statsTable.Controls.Add(_cargoValueLabel, 1, 3);
+            //statsTable.Controls.Add(CreateHeaderLabel("Credits Earned", headerFont), 0, 4);
+            statsTable.Controls.Add(_creditsValueLabel, 1, 4);
             statsGroup.Controls.Add(statsTable);
+            return statsGroup;
+        }
 
-            // --- Controls Panel (Right) ---
-            var controlsGroup = new GroupBox { Text = "Session Controls", ForeColor = secondaryTextColor, Dock = DockStyle.Fill, Font = new Font(Font, FontStyle.Bold) };
-            var controlsLayout = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, Padding = new Padding(10), WrapContents = false };
+        private GroupBox BuildControlsGroup()
+        {
+            var controlsGroup = new GroupBox 
+            { 
+                Text = "Controls", 
+                ForeColor = secondaryTextColor,
+                Font = new Font(Font, FontStyle.Bold), 
+                Dock = DockStyle.Fill,
+                Padding = new Padding(10)
+            };
+            
+            var mainFlowLayout = new FlowLayoutPanel 
+            { 
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoSize = true
+            };
+
+            // --- Session Controls ---
+            var sessionFlow = new FlowLayoutPanel 
+            { 
+                FlowDirection = FlowDirection.LeftToRight, 
+                AutoSize = true, 
+                Padding = new Padding(0, 5, 0, 15) 
+            };
             _startSessionButton = CreatePrimaryButton("Start Session", (s, e) => StartMiningClicked?.Invoke(this, EventArgs.Empty));
             _stopSessionButton = CreateSecondaryButton("Stop Session", (s, e) => StopMiningClicked?.Invoke(this, EventArgs.Empty));
-            controlsLayout.Controls.Add(_startSessionButton);
-            controlsLayout.Controls.Add(_stopSessionButton);
-            controlsLayout.Controls.Add(new Panel { Height = 20 }); // Spacer
-            _reminderMinutesUpDown = new NumericUpDown { Minimum = 1, Maximum = 120, Value = 15, Width = 60, BackColor = Color.Black, ForeColor = Color.White };
+            sessionFlow.Controls.Add(_startSessionButton);
+            sessionFlow.Controls.Add(_stopSessionButton);
+
+            // --- Reminder Controls ---
+            var reminderLayout = new TableLayoutPanel { ColumnCount = 2, AutoSize = true };
+            reminderLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            reminderLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+
+            _reminderMinutesUpDown = new NumericUpDown 
+            { 
+                Minimum = 1, 
+                Maximum = 120, 
+                Value = 15, 
+                Width = 70, 
+                BackColor = Color.Black, 
+                ForeColor = Color.White 
+            };
             _reminderButton = CreateSecondaryButton("Start Reminder", OnReminderButtonClicked);
-            var reminderFlow = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
-            reminderFlow.Controls.Add(new Label { Text = "Reminder (min):", ForeColor = Color.White, AutoSize = true, Padding = new Padding(0, 5, 0, 0) });
-            reminderFlow.Controls.Add(_reminderMinutesUpDown);
-            reminderFlow.Controls.Add(_reminderButton);
-            controlsLayout.Controls.Add(reminderFlow);
-            _reminderStatusLabel = new Label { Text = "No reminder active", ForeColor = secondaryTextColor, AutoSize = true, Padding = new Padding(5) };
-            controlsLayout.Controls.Add(_reminderStatusLabel);
-            controlsGroup.Controls.Add(controlsLayout);
+            reminderLayout.Controls.Add(new Label { Text = "Reminder (min):", ForeColor = Color.White, AutoSize = true, Anchor = AnchorStyles.Left, Padding = new Padding(0, 5, 0, 0) }, 0, 0);
+            reminderLayout.Controls.Add(_reminderMinutesUpDown, 1, 0);
+            reminderLayout.Controls.Add(_reminderButton, 0, 1);
+            reminderLayout.SetColumnSpan(_reminderButton, 2);
 
-            // --- Cargo Bar (Bottom) ---
-            var cargoPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
-            _cargoFillProgressBar = new ProgressBar
-            {
-                Dock = DockStyle.Fill,
-                ForeColor = accentColor,
-                Style = ProgressBarStyle.Continuous,
+            _reminderStatusLabel = new Label 
+            { 
+                Text = "No reminder active", 
+                ForeColor = secondaryTextColor, 
+                AutoSize = true, 
+                Padding = new Padding(5, 0, 5, 0) 
             };
-            _cargoFillPercentLabel = new Label { Dock = DockStyle.Right, ForeColor = Color.White, Font = new Font("Consolas", 10f, FontStyle.Bold), AutoSize = true, Padding = new Padding(0, 0, 10, 0) };
-            cargoPanel.Controls.Add(_cargoFillProgressBar);
-            cargoPanel.Controls.Add(_cargoFillPercentLabel);
+            reminderLayout.Controls.Add(_reminderStatusLabel, 0, 2);
+            reminderLayout.SetColumnSpan(_reminderStatusLabel, 2);
 
-            mainLayout.Controls.Add(statsGroup, 0, 0);
-            mainLayout.Controls.Add(controlsGroup, 1, 0);
-            mainLayout.Controls.Add(cargoPanel, 0, 1);
-            mainLayout.SetColumnSpan(cargoPanel, 2);
-            tabPage.Controls.Add(mainLayout);
+            // Add to main flow layout
+            mainFlowLayout.Controls.Add(sessionFlow);
+            mainFlowLayout.Controls.Add(reminderLayout);
 
-            return tabPage;
+            controlsGroup.Controls.Add(mainFlowLayout);
+            return controlsGroup;
         }
 
-        private TabPage BuildSettingsTab()
+        private GroupBox BuildAnnouncementsGroup()
         {
-            var tabPage = new TabPage("Settings") { BackColor = Color.FromArgb(15, 15, 15), Padding = new Padding(10) };
-            var layout = new TableLayoutPanel {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 1,
+            var announcementsGroup = new GroupBox { 
+                Text = "Announcements", 
+                ForeColor = secondaryTextColor, 
+                Dock = DockStyle.Fill, 
+                Font = new Font(Font, FontStyle.Bold), 
+                BackColor = Color.FromArgb(15, 15, 15) 
             };
-
-            _cargoPromptCheckbox = CreateCheckBox("Cargo full notifications", (s, e) =>
-            {
-                if (_isApplyingPreferences) return;
-                _sessionTracker.Preferences.CargoFullPromptEnabled = _cargoPromptCheckbox!.Checked;
-            });
-
-            _announcementCheckbox = CreateCheckBox("Enable announcements", (s, e) =>
-            {
-                if (_isApplyingPreferences) return;
-                _sessionTracker.Preferences.AnnouncementsEnabled = _announcementCheckbox!.Checked;
-            });
-
-            layout.Controls.Add(_cargoPromptCheckbox, 0, 0);
-            layout.Controls.Add(_announcementCheckbox, 1, 0);
-
-            tabPage.Controls.Add(layout);
-            return tabPage;
-        }
-
-        private TabPage BuildAnnouncementsTab()
-        {
-            var tabPage = new TabPage("Announcements") { BackColor = Color.FromArgb(15, 15, 15), Padding = new Padding(10) };
-
+            var layout = new TableLayoutPanel { 
+                Dock = DockStyle.Fill, 
+                ColumnCount = 1, 
+                RowCount = 2, 
+                Padding = new Padding(10) 
+            };
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             _announcementListBox = new ListBox
             {
                 Dock = DockStyle.Fill,
@@ -225,15 +221,13 @@ namespace EliteDataRelay.UI
                 BorderStyle = BorderStyle.None,
                 IntegralHeight = false
             };
+            var clearButton = CreateSecondaryButton("Clear", (s, e) => _announcementListBox?.Items.Clear());
+            clearButton.Anchor = AnchorStyles.Right;
 
-            var clearButton = CreateSecondaryButton("Clear", (s, e) => _announcementListBox?.Items.Clear())
-                ?? new Button();
-            clearButton.Dock = DockStyle.Bottom;
-
-            tabPage.Controls.Add(_announcementListBox);
-            tabPage.Controls.Add(clearButton);
-
-            return tabPage;
+            layout.Controls.Add(_announcementListBox, 0, 0);
+            layout.Controls.Add(clearButton, 0, 1);
+            announcementsGroup.Controls.Add(layout);
+            return announcementsGroup;
         }
 
         private Button CreatePrimaryButton(string text, EventHandler onClick)
@@ -263,26 +257,13 @@ namespace EliteDataRelay.UI
                 BackColor = Color.FromArgb(45, 45, 50),
                 ForeColor = textColor,
                 FlatStyle = FlatStyle.Flat,
-                Padding = new Padding(8, 4, 8, 4),
+                Padding = new Padding(6, 4, 6, 4),
                 Font = new Font("Segoe UI", 9F, FontStyle.Regular)
             };
             button.FlatAppearance.BorderColor = secondaryTextColor;
             button.FlatAppearance.BorderSize = 1;
             button.Click += onClick;
             return button;
-        }
-
-        private CheckBox CreateCheckBox(string text, EventHandler onChanged)
-        {
-            var checkbox = new CheckBox
-            {
-                Text = text,
-                ForeColor = Color.White,
-                AutoSize = true,
-                BackColor = Color.Transparent
-            };
-            checkbox.CheckedChanged += onChanged;
-            return checkbox;
         }
 
         private Label CreateHeaderLabel(string text, Font font) => new()
@@ -348,13 +329,6 @@ namespace EliteDataRelay.UI
             _durationValueLabel!.Text = $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
             _creditsValueLabel!.Text = $"{_sessionTracker.CreditsEarned:N0} cr";
             _cargoValueLabel!.Text = $"{_sessionTracker.TotalCargoCollected:N0} units";
-            _cargoFillPercentLabel!.Text = $"{_sessionTracker.CargoFillPercent:F1}%";
-
-            if (_cargoFillProgressBar != null)
-            {
-                var value = Math.Max(0, Math.Min(100, (int)Math.Round(_sessionTracker.CargoFillPercent)));
-                _cargoFillProgressBar.Value = value;
-            }
         }
 
         private void UpdateControlsVisibility()
@@ -370,20 +344,6 @@ namespace EliteDataRelay.UI
             else if (!sessionActive && _updateTimer?.Enabled == true)
             {
                 _updateTimer!.Stop();
-            }
-        }
-
-        public void ApplyPreferences(MiningSessionPreferences preferences)
-        {
-            _isApplyingPreferences = true;
-            try
-            {
-                _cargoPromptCheckbox!.Checked = preferences.CargoFullPromptEnabled;
-                _announcementCheckbox!.Checked = preferences.AnnouncementsEnabled;
-            }
-            finally
-            {
-                _isApplyingPreferences = false;
             }
         }
 

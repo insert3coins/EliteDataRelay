@@ -10,7 +10,8 @@ namespace EliteDataRelay.Models
         BackupCreated,
         BackupRestored,
         ReportGenerated,
-        Reminder
+        Reminder,
+        ValuableCommodityRefined
     }
 
     public class MiningNotificationEventArgs : EventArgs
@@ -28,6 +29,6 @@ namespace EliteDataRelay.Models
             IsPersistent = isPersistent;
         }
 
-        public override string ToString() => $"[{Timestamp:HH:mm}] {Message}";
+        public override string ToString() => $"[{Timestamp.ToLocalTime():HH:mm}] {Message}";
     }
 }

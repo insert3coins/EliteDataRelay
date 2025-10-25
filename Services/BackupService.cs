@@ -32,17 +32,6 @@ namespace EliteDataRelay.Services
             }
         }
 
-        public string CreateBackup(string directory)
-        {
-            if (string.IsNullOrWhiteSpace(directory)) throw new ArgumentException("Directory must be provided", nameof(directory));
-
-            Directory.CreateDirectory(directory);
-            var snapshot = BuildSnapshot();
-            var filePath = Path.Combine(directory, $"edr-backup-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json");
-            SaveSnapshot(filePath, snapshot);
-            return filePath;
-        }
-
         public void SaveSnapshot(string path, BackupSnapshot snapshot)
         {
             var options = new JsonSerializerOptions

@@ -195,6 +195,12 @@ namespace EliteDataRelay.Services
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
+        public MiningSessionRecord? GetCurrentSessionRecord()
+        {
+            // This creates a snapshot of the current, ongoing session.
+            return CreateCurrentSessionRecord(DateTime.UtcNow);
+        }
+
         private MiningSessionRecord? CreateCurrentSessionRecord(DateTime sessionEnd)
         {
             if (!_sessionStartTime.HasValue) return null;
@@ -244,7 +250,7 @@ namespace EliteDataRelay.Services
             sb.AppendLine("</style>");
             sb.AppendLine("</head><body>");
             sb.AppendLine($"<h1>{System.Net.WebUtility.HtmlEncode(title)}</h1>");
-            sb.AppendLine($"<p>Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC</p>");
+            sb.AppendLine($"<p>Generated: {DateTime.Now:yyyy-MM-dd HH:mm} (Local Time)</p>");
 
             sb.AppendLine("<div class=\"card\"><h2>Session Overview</h2><div class=\"metrics\">");
             sb.AppendLine($"<div class=\"metric\"><strong>Total Sessions</strong><br/>{data.Count}</div>");
@@ -258,7 +264,7 @@ namespace EliteDataRelay.Services
             sb.AppendLine("<table><thead><tr><th>Start</th><th>End</th><th>Duration</th><th>Mining Time</th><th>Credits</th><th>Cargo</th><th>Limpets</th><th>Final Fill %</th></tr></thead><tbody>");
             foreach (var record in data)
             {
-                sb.AppendLine($"<tr><td>{record.SessionStart:yyyy-MM-dd HH:mm}</td><td>{record.SessionEnd:yyyy-MM-dd HH:mm}</td><td>{record.SessionDuration}</td><td>{record.MiningDuration}</td><td>{record.CreditsEarned:N0}</td><td>{record.TotalCargoCollected:N0}</td><td>{record.LimpetsUsed}</td><td>{record.FinalCargoFillPercent:F1}%</td></tr>");
+                sb.AppendLine($"<tr><td>{record.SessionStart.ToLocalTime():yyyy-MM-dd HH:mm}</td><td>{record.SessionEnd.ToLocalTime():yyyy-MM-dd HH:mm}</td><td>{record.SessionDuration}</td><td>{record.MiningDuration}</td><td>{record.CreditsEarned:N0}</td><td>{record.TotalCargoCollected:N0}</td><td>{record.LimpetsUsed}</td><td>{record.FinalCargoFillPercent:F1}%</td></tr>");
             }
             sb.AppendLine("</tbody></table>");
 
@@ -282,7 +288,7 @@ namespace EliteDataRelay.Services
                 sb.AppendLine("</tbody></table></div>");
             }
 
-            var labels = string.Join(',', data.Select(r => $"'{r.SessionStart:MM-dd HH:mm}'"));
+            var labels = string.Join(',', data.Select(r => $"'{r.SessionStart.ToLocalTime():MM-dd HH:mm}'"));
             var credits = string.Join(',', data.Select(r => r.CreditsEarned));
             var cargo = string.Join(',', data.Select(r => r.TotalCargoCollected));
             sb.AppendLine("<script>");
