@@ -4,10 +4,6 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 
 ---
 
-![Screenshot](https://github.com/insert3coins/EliteDataRelay/raw/main/Images/Screenshot.png)
-
----
-
 ## ✨ Features
 
 -   **Real-Time Data**: Track your ship, cargo, materials, and session progress at a glance.
