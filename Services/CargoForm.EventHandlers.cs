@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System;
+using System.IO;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
@@ -262,6 +264,111 @@ namespace EliteDataRelay
                     _cargoFormUI.UpdateMaterials(e);
                 }
             });
+        }
+
+        private void OnMiningNotificationRaised(object? sender, MiningNotificationEventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                _cargoFormUI.AppendMiningAnnouncement(e);
+                _cargoFormUI.ShowMiningNotification(e);
+            });
+        }
+
+        private void OnSessionCompleted(object? sender, MiningSessionRecord record)
+        {
+            SafeInvoke(() =>
+            {
+                if (_sessionTrackingService.Preferences.AutoGenerateHtmlReports)
+                {
+                    var path = SaveSessionReport(record);
+                    _backupService.RegisterReport(path);
+                    var notification = new MiningNotificationEventArgs(MiningNotificationType.ReportGenerated,
+                        $"Saved mining session report to {Path.GetFileName(path)}",
+                        DateTime.UtcNow,
+                        true);
+                    _cargoFormUI.AppendMiningAnnouncement(notification);
+                    _cargoFormUI.ShowMiningNotification(notification);
+                }
+            });
+        }
+
+        private void OnSessionHistoryUpdated(object? sender, EventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                _cargoFormUI.UpdateSessionHistory(_sessionTrackingService.SessionHistory);
+            });
+        }
+
+        private void OnPreferencesChanged(object? sender, EventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                _cargoFormUI.UpdateMiningPreferences(_sessionTrackingService.Preferences);
+            });
+        }
+
+        private void OnBackupRequested(object? sender, EventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                var path = _backupService.CreateBackup(_backupsDirectory);
+                var notification = new MiningNotificationEventArgs(MiningNotificationType.BackupCreated,
+                    $"Backup created at {Path.GetFileName(path)}",
+                    DateTime.UtcNow,
+                    true);
+                _cargoFormUI.AppendMiningAnnouncement(notification);
+                _cargoFormUI.ShowMiningNotification(notification);
+            });
+        }
+
+        private void OnRestoreRequested(object? sender, EventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                using var dialog = new OpenFileDialog
+                {
+                    Filter = "Elite Data Relay Backup (*.json)|*.json",
+                    InitialDirectory = _backupsDirectory
+                };
+
+                if (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    _backupService.RestoreBackup(dialog.FileName);
+                    var notification = new MiningNotificationEventArgs(MiningNotificationType.BackupRestored,
+                        $"Restored backup from {Path.GetFileName(dialog.FileName)}",
+                        DateTime.UtcNow,
+                        true);
+                    _cargoFormUI.AppendMiningAnnouncement(notification);
+                    _cargoFormUI.ShowMiningNotification(notification);
+                }
+            });
+        }
+
+        private void OnGenerateReportRequested(object? sender, EventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                var html = _sessionTrackingService.GenerateHtmlReport();
+                var path = Path.Combine(_reportsDirectory, $"mining-history-{DateTime.UtcNow:yyyyMMdd-HHmmss}.html");
+                File.WriteAllText(path, html);
+                _backupService.RegisterReport(path);
+                var notification = new MiningNotificationEventArgs(MiningNotificationType.ReportGenerated,
+                    $"Generated report {Path.GetFileName(path)}",
+                    DateTime.UtcNow,
+                    true);
+                _cargoFormUI.AppendMiningAnnouncement(notification);
+                _cargoFormUI.ShowMiningNotification(notification);
+            });
+        }
+
+        private string SaveSessionReport(MiningSessionRecord record)
+        {
+            var html = _sessionTrackingService.GenerateHtmlReport(new[] { record }, $"Mining Session – {record.SessionStart:yyyy-MM-dd HH:mm}");
+            var path = Path.Combine(_reportsDirectory, $"mining-session-{record.SessionStart:yyyyMMdd-HHmmss}.html");
+            File.WriteAllText(path, html);
+            return path;
         }
 
         #endregion

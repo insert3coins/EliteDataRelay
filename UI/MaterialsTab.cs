@@ -10,6 +10,7 @@ namespace EliteDataRelay.UI
         private readonly DataGridView _rawMaterialsGrid;
         private readonly DataGridView _manufacturedMaterialsGrid;
         private readonly DataGridView _encodedDataGrid;
+        private readonly Dictionary<int, Label> _rawGradeLabels = new();
 
         public MaterialsTab()
         {
@@ -27,7 +28,18 @@ namespace EliteDataRelay.UI
             // Raw Materials Tab
             var rawMaterialsTab = new TabPage("Raw Materials");
             _rawMaterialsGrid = CreateDataGridView();
-            rawMaterialsTab.Controls.Add(_rawMaterialsGrid);
+            var rawLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2
+            };
+            rawLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 80));
+            rawLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+            rawLayout.Controls.Add(CreateRawGradeSummaryPanel(), 0, 0);
+            rawLayout.Controls.Add(_rawMaterialsGrid, 0, 1);
+            rawMaterialsTab.Controls.Add(rawLayout);
             tabControl.TabPages.Add(rawMaterialsTab);
 
             // Manufactured Materials Tab
@@ -105,6 +117,7 @@ namespace EliteDataRelay.UI
                 _rawMaterialsGrid.SuspendLayout();
                 UpdateGrid(_rawMaterialsGrid, raw);
                 _rawMaterialsGrid.ResumeLayout();
+                UpdateRawGradeSummary(raw);
 
                 _manufacturedMaterialsGrid.SuspendLayout();
                 UpdateGrid(_manufacturedMaterialsGrid, manufactured);
@@ -139,6 +152,63 @@ namespace EliteDataRelay.UI
             }
             grid.Rows.AddRange(rows.ToArray());
             grid.ClearSelection();
+        }
+
+        private Control CreateRawGradeSummaryPanel()
+        {
+            var panel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Padding = new Padding(10),
+                BackColor = Color.FromArgb(243, 244, 246)
+            };
+
+            for (int grade = 1; grade <= 5; grade++)
+            {
+                var label = new Label
+                {
+                    Text = $"Grade {grade}: 0",
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(55, 65, 81),
+                    Margin = new Padding(10, 10, 25, 10)
+                };
+                _rawGradeLabels[grade] = label;
+                panel.Controls.Add(label);
+            }
+
+            return panel;
+        }
+
+        private void UpdateRawGradeSummary(List<MaterialItem> raw)
+        {
+            var gradeCounts = new Dictionary<int, int>();
+            for (int grade = 1; grade <= 5; grade++) gradeCounts[grade] = 0;
+
+            foreach (var item in raw)
+            {
+                if (Services.MaterialDataService.TryGetMaterialDefinition(item.Name, out var definition))
+                {
+                    if (definition.Grade >= 1 && definition.Grade <= 5)
+                    {
+                        gradeCounts[definition.Grade] += item.Count;
+                    }
+                }
+            }
+
+            foreach (var kvp in _rawGradeLabels)
+            {
+                if (gradeCounts.TryGetValue(kvp.Key, out var count))
+                {
+                    kvp.Value.Text = $"Grade {kvp.Key}: {count}";
+                }
+                else
+                {
+                    kvp.Value.Text = $"Grade {kvp.Key}: 0";
+                }
+            }
         }
     }
 }
