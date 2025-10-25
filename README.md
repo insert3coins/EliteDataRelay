@@ -9,66 +9,30 @@ A lightweight Windows utility for Elite Dangerous that monitors your in-game sta
 
 ---
 
-## 📸 Screenshots
-
-
+## 📸 Screenshot
+ 
 ![Screenshot](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Screenshot.png)
 
 ---
 
-## ✨ Features
+## ✨ Features (TL;DR)
 
--   **Live Data Tracking**: Monitors your **CMDR name**, **ship**, **credit balance**, **cargo count**, and **materials** (Raw, Manufactured, Encoded) in real-time.
--   **Multiple Views**:
-    -   **Desktop UI**: A simple, clean window for at-a-glance information.
-    -   **In-Game Overlay**: Customizable overlays to see your status, cargo, and materials without leaving the game.
-    -   **Text File Output**: Exports live data to a text file for use in streaming software like OBS.
--   **Highly Configurable**: Set **global hotkeys**, toggle overlay panels, pin materials to a watchlist, and customize the text file format.
--   **Session Tracking**: Automatically tracks credits earned and cargo collected during your play session.
--   **Smart & Unobtrusive**: Automatically detects the game's data folder, stops monitoring when the game closes, and minimizes to the system tray.
+-   **Live Data**: See your CMDR info, ship, balance, cargo, and materials.
+-   **Multiple Views**: Use the desktop app, in-game overlay, or text file output for OBS.
+-   **Customizable**: Configure hotkeys, overlays, and text output.
+-   **Session Tracking**: Tracks credits earned and cargo collected.
+-   **Simple**: Auto-detects game data, auto-stops, and minimizes to tray.
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-
--   Windows OS
--   [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
--   Elite Dangerous
-
-### Installation & Usage
-
-1.  Download the **latest release** and run `EliteDataRelay.exe`.
+1.  Requires **Windows** and the **.NET 8 Desktop Runtime**.
+2.  Download the **latest release** and run `EliteDataRelay.exe`.
 2.  Launch Elite Dangerous.
 3.  Click **Start** in the app to begin monitoring.
-4.  Click **Settings** to configure the overlay, hotkeys, or file output.
-5.  The app minimizes to the system tray. To exit completely, right-click the tray icon and select **Exit**.
-
----
-
-## 🛠️ Building from Source
-
-If you want to build the project yourself:
-
-1.  Clone the repository:
-    ```sh
-    git clone [https://github.com/insert3coins/EliteDataRelay.git](https://github.com/insert3coins/EliteDataRelay.git)
-    ```
-2.  Navigate to the project directory and restore dependencies:
-    ```sh
-    cd EliteDataRelay && dotnet restore
-    ```
-3.  Run the application:
-    ```sh
-    dotnet run
-    ```
-
----
-
-## 🔰 Contributing
-
-Contributions are welcome! Whether it's reporting a bug, suggesting a feature, or submitting a pull request, your help is appreciated. Feel free to fork the repository, create a feature branch, and submit a pull request.
+5.  Click **Settings** to configure overlays, hotkeys, or file output.
+6.  The app minimizes to the system tray. Right-click the tray icon to exit.
 
 ---
 
