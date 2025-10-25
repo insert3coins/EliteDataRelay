@@ -1,43 +1,35 @@
 ﻿# Elite Dangerous Data Relay
 
-![Elite Dangerous Data Relay](https://img.shields.io/badge/Elite%20Dangerous-Data%20Relay-orange?style=flat-square)
-[![GitHub License](https://img.shields.io/github/license/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay/blob/main/LICENSE.txt)
-[![Last Commit](https://img.shields.io/github/last-commit/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay/commits/main)
-[![Top Language](https://img.shields.io/github/languages/top/insert3coins/EliteDataRelay?style=flat-square)](https://github.com/insert3coins/EliteDataRelay)
-
-A lightweight Windows utility for Elite Dangerous that monitors your in-game status, cargo, and materials in real-time. It displays the information via a clean UI, customizable in-game overlays, and a text file output perfect for streaming.
+A lightweight Windows companion app for Elite Dangerous that provides real-time data overlays, session tracking, and stream-friendly text output.
 
 ---
 
-## 📸 Screenshot
- 
-![Screenshot](https://github.com/insert3coins/EliteDataRelay/blob/master/Images/Screenshot.png)
+![Screenshot](https://github.com/insert3coins/EliteDataRelay/raw/main/Images/Screenshot.png)
 
 ---
 
-## ✨ Features (TL;DR)
+## ✨ Features
 
--   **Live Data**: See your CMDR info, ship, balance, cargo, and materials.
--   **Multiple Views**: Use the desktop app, in-game overlay, or text file output for OBS.
--   **Customizable**: Configure hotkeys, overlays, and text output.
--   **Session Tracking**: Tracks credits earned and cargo collected.
--   **Simple**: Auto-detects game data, auto-stops, and minimizes to tray.
+-   **Real-Time Data**: Track your ship, cargo, materials, and session progress at a glance.
+-   **Multiple Display Options**: Use the clean desktop UI, customizable in-game overlays, or a simple text file output for your stream.
+-   **Key Info on Demand**: Includes jump range calculation, session credit/cargo tracking, and more.
+-   **Streamer Friendly**: Designed with streamers in mind, providing an easy way to show game data via OBS/SLOBS.
+-   **Simple & Lightweight**: Auto-detects game files, checks for updates, and minimizes to the system tray.
 
 ---
 
 ## 🚀 Getting Started
 
-1.  Requires **Windows** and the **.NET 8 Desktop Runtime**.
-2.  Download the **latest release** and run `EliteDataRelay.exe`.
-2.  Launch Elite Dangerous.
-3.  Click **Start** in the app to begin monitoring.
-5.  Click **Settings** to configure overlays, hotkeys, or file output.
-6.  The app minimizes to the system tray. Right-click the tray icon to exit.
+1.  **Prerequisites**: Requires **Windows** and the **.NET 8 Desktop Runtime**.
+2.  **Download**: Grab the **latest release** and run `EliteDataRelay.exe`.
+3.  **Launch**: Start Elite Dangerous.
+4.  **Monitor**: Click **Start** in the app to begin monitoring your game data.
+5.  **Customize**: Click **Settings** to configure overlays, hotkeys, or file output.
 
 ---
 
-## 🎗 License & Disclaimer
+## 📜 License & Disclaimer
 
-This project is licensed under the **GNU General Public License v3.0**. See `LICENSE.txt` for details.
+This project is licensed under the **GPL-3.0 license**. See the `LICENSE.txt` file for details.
 
-This tool was created using assets and imagery from Elite: Dangerous, with the permission of Frontier Developments plc for non-commercial purposes. It is not endorsed by nor reflects the views or opinions of Frontier Developments.
+This is a third-party tool and is not affiliated with or endorsed by Frontier Developments plc.
