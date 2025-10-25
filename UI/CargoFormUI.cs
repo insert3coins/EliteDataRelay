@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Diagnostics;
@@ -43,6 +44,12 @@ namespace EliteDataRelay.UI
         public event EventHandler? MiningStartClicked;
 
         public event EventHandler? MiningStopClicked;
+
+        public event EventHandler? BackupRequested;
+
+        public event EventHandler? RestoreRequested;
+
+        public event EventHandler? GenerateReportRequested;
 
         public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService)
         {
@@ -169,6 +176,9 @@ namespace EliteDataRelay.UI
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
             _controlFactory.MiningSessionPanel.StartMiningClicked += OnMiningStartClicked;
             _controlFactory.MiningSessionPanel.StopMiningClicked += OnMiningStopClicked;
+            _controlFactory.MiningSessionPanel.BackupRequested += (s, e) => BackupRequested?.Invoke(s, e);
+            _controlFactory.MiningSessionPanel.RestoreRequested += (s, e) => RestoreRequested?.Invoke(s, e);
+            _controlFactory.MiningSessionPanel.GenerateReportRequested += (s, e) => GenerateReportRequested?.Invoke(s, e);
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -216,6 +226,39 @@ namespace EliteDataRelay.UI
         public void UpdateMiningStats()
         {
             _controlFactory?.MiningSessionPanel?.UpdateStats();
+        }
+
+        public void UpdateSessionHistory(IReadOnlyList<MiningSessionRecord> history)
+        {
+            _controlFactory?.MiningSessionPanel?.UpdateSessionHistory(history);
+        }
+
+        public void UpdateMiningPreferences(MiningSessionPreferences preferences)
+        {
+            _controlFactory?.MiningSessionPanel?.ApplyPreferences(preferences);
+        }
+
+        public void AppendMiningAnnouncement(MiningNotificationEventArgs notification)
+        {
+            _controlFactory?.MiningSessionPanel?.AddAnnouncement(notification);
+        }
+
+        public void ShowMiningNotification(MiningNotificationEventArgs notification)
+        {
+            if (_trayIconManager == null) return;
+
+            var icon = notification.Type switch
+            {
+                MiningNotificationType.CargoFull => ToolTipIcon.Warning,
+                MiningNotificationType.BackupCreated => ToolTipIcon.Info,
+                MiningNotificationType.BackupRestored => ToolTipIcon.Info,
+                MiningNotificationType.AutoStart => ToolTipIcon.Info,
+                MiningNotificationType.ReportGenerated => ToolTipIcon.Info,
+                MiningNotificationType.Reminder => ToolTipIcon.Warning,
+                _ => ToolTipIcon.Info
+            };
+
+            _trayIconManager.ShowBalloonTip(3000, "Elite Data Relay", notification.Message, icon);
         }
 
         public void UpdateSessionOverlay(int cargoCollected, long creditsEarned)

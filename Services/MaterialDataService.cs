@@ -12,6 +12,7 @@ namespace EliteDataRelay.Services
     {
         private static readonly List<MaterialDefinition> AllMaterials = new List<MaterialDefinition>();
         private static readonly Dictionary<string, List<MaterialDefinition>> MaterialsByCategory = new Dictionary<string, List<MaterialDefinition>>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, MaterialDefinition> MaterialsByName = new Dictionary<string, MaterialDefinition>(StringComparer.OrdinalIgnoreCase);
 
         static MaterialDataService()
         {
@@ -50,7 +51,9 @@ namespace EliteDataRelay.Services
                         if (parts.Length >= 6)
                         {
                             // id,symbol,rarity,type,category,name
-                            AllMaterials.Add(new MaterialDefinition(parts[1], parts[5], parts[3], int.TryParse(parts[2], out int g) ? g : 0)); // symbol, name, type (as category), rarity (as grade)
+                            var definition = new MaterialDefinition(parts[1], parts[5], parts[3], int.TryParse(parts[2], out int g) ? g : 0);
+                            AllMaterials.Add(definition);
+                            MaterialsByName[definition.Name] = definition;
                         }
                     }
                 }
@@ -72,5 +75,8 @@ namespace EliteDataRelay.Services
         public static string GetLocalisedName(string name) =>
             AllMaterials.FirstOrDefault(m => m.Name.Equals(name, StringComparison.OrdinalIgnoreCase))?.FriendlyName ??
             (name.Length > 1 ? char.ToUpperInvariant(name[0]) + name.Substring(1) : name);
+
+        public static bool TryGetMaterialDefinition(string name, out MaterialDefinition definition)
+            => MaterialsByName.TryGetValue(name, out definition!);
     }
 }
