@@ -110,7 +110,7 @@ namespace EliteDataRelay.UI
                 Font = new Font("Segoe UI", 16F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(15, 23, 42),
                 AutoSize = true,
-                Location = new Point(0, 0)
+                Location = new Point(0, 10)
             };
 
             // System stats - smaller, below name
@@ -120,7 +120,7 @@ namespace EliteDataRelay.UI
                 Font = new Font("Segoe UI", 10F),
                 ForeColor = Color.FromArgb(100, 116, 139),
                 AutoSize = true,
-                Location = new Point(0, 32)
+                Location = new Point(0, 42)
             };
 
             systemCard.Controls.Add(_systemNameLabel);

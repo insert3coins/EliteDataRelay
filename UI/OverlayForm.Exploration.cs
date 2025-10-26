@@ -171,7 +171,11 @@ namespace EliteDataRelay.UI
                         firstsText += $"🗺️ {firstMappings} Mapped";
                     }
 
-                    g.DrawString(firstsText, GameColors.FontNormal, GameColors.BrushGold, padding, y);
+                    // Use TextRenderer for better emoji support. Graphics.DrawString can fail to render color emojis.
+                    TextRenderer.DrawText(g, firstsText, GameColors.FontNormal,
+                                          new Point(padding, y),
+                                          GameColors.Gold,
+                                          TextFormatFlags.Left | TextFormatFlags.NoPadding);
                 }
                 else if (data.Bodies.Any())
                 {
