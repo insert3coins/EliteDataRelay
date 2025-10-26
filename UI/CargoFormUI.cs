@@ -122,7 +122,7 @@ namespace EliteDataRelay.UI
             {
                 explorationTab.UpdateSystemData(data);
                 // When data for the current system changes (e.g., new scan),
-                // refresh the historical log to reflect the latest saved state.
+                // refresh the historical log to reflect the latest saved state. This was missing.
                 explorationTab.RefreshLog();
             };
 

@@ -134,7 +134,7 @@ namespace EliteDataRelay.Services
 
             _currentSystem.TotalBodies = fssEvent.BodyCount;
             _currentSystem.FSSProgress = fssEvent.Progress * 100;
-            _currentSystem.LastUpdated = DateTime.Now;
+            _currentSystem.LastUpdated = DateTime.UtcNow;
 
             Debug.WriteLine($"[ExplorationDataService] FSS scan: {fssEvent.BodyCount} bodies, {fssEvent.Progress * 100:F1}% complete");
 
@@ -176,7 +176,7 @@ namespace EliteDataRelay.Services
                 }
             }
 
-            _currentSystem.LastUpdated = DateTime.Now;
+            _currentSystem.LastUpdated = DateTime.UtcNow;
 
             Debug.WriteLine($"[ExplorationDataService] Scanned body: {scanEvent.BodyName}");
 
@@ -217,7 +217,7 @@ namespace EliteDataRelay.Services
                     Debug.WriteLine($"[ExplorationDataService] Mapped body: {saaEvent.BodyName} " +
                                   $"(Probes: {saaEvent.ProbesUsed}/{saaEvent.EfficiencyTarget})");
 
-                    _currentSystem.LastUpdated = DateTime.Now;
+                    _currentSystem.LastUpdated = DateTime.UtcNow;
 
                     // Save to database
                     _database.SaveSystem(_currentSystem);
@@ -242,7 +242,7 @@ namespace EliteDataRelay.Services
             if (body != null)
             {
                 body.Signals = signalsEvent.Signals;
-                _currentSystem.LastUpdated = DateTime.Now;
+                _currentSystem.LastUpdated = DateTime.UtcNow;
 
                 // Save to database
                 _database.SaveSystem(_currentSystem);
@@ -277,7 +277,7 @@ namespace EliteDataRelay.Services
                                   $"{string.Join(", ", body.BiologicalSignals)}");
                 }
 
-                _currentSystem.LastUpdated = DateTime.Now;
+                _currentSystem.LastUpdated = DateTime.UtcNow;
 
                 // Save to database
                 _database.SaveSystem(_currentSystem);
@@ -341,7 +341,7 @@ namespace EliteDataRelay.Services
 
                     Debug.WriteLine($"[ExplorationDataService] First footfall on {touchdownEvent.Body}!");
 
-                    _currentSystem.LastUpdated = DateTime.Now;
+                    _currentSystem.LastUpdated = DateTime.UtcNow;
 
                     // Save to database
                     _database.SaveSystem(_currentSystem);

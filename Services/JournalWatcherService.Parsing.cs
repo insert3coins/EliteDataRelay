@@ -123,7 +123,7 @@ namespace EliteDataRelay.Services
                                 systemAddress = sa;
                             }
 
-                            DateTime timestamp = DateTime.Now;
+                            DateTime timestamp = DateTime.UtcNow;
                             if (jsonDoc.RootElement.TryGetProperty("timestamp", out var timestampElement) && timestampElement.TryGetDateTime(out var ts))
                             {
                                 timestamp = ts;

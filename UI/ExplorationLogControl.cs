@@ -474,9 +474,11 @@ namespace EliteDataRelay.UI
 
         private string GetTimeAgo(DateTime date)
         {
-            var span = DateTime.Now - date;
+            // Ensure the date from the database is treated as UTC and converted to local before comparison.
+            var localDate = date.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(date, DateTimeKind.Utc).ToLocalTime() : date.ToLocalTime();
+            var span = DateTime.Now - localDate;
 
-            System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] GetTimeAgo - Date: {date:o}, Now: {DateTime.Now:o}, Span: {span.TotalMinutes:F2} minutes");
+            System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] GetTimeAgo - Date (UTC): {date:o}, Date (Local): {localDate:o}, Now: {DateTime.Now:o}, Span: {span.TotalMinutes:F2} minutes");
 
             if (span.TotalMinutes < 1)
                 return "Just now";

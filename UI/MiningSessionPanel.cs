@@ -154,7 +154,7 @@ namespace EliteDataRelay.UI
 
         private GroupBox BuildControlsGroup()
         {
-            var controlsGroup = new GroupBox 
+            var controlsGroup = new GroupBox
             { 
                 Text = "Controls", 
                 ForeColor = secondaryTextColor,
@@ -178,7 +178,15 @@ namespace EliteDataRelay.UI
                 AutoSize = true, 
                 Padding = new Padding(0, 5, 0, 15) 
             };
-            _startSessionButton = CreatePrimaryButton("Start Session", (s, e) => StartMiningClicked?.Invoke(this, EventArgs.Empty));
+            _startSessionButton = CreatePrimaryButton("Start Session", (s, e) =>
+            {
+                if (!_sessionTracker.IsMainSessionActive)
+                {
+                    MessageBox.Show("Please start the main monitoring session first before starting a mining session.", "Monitoring Not Active", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                StartMiningClicked?.Invoke(this, EventArgs.Empty);
+            });
             _stopSessionButton = CreateSecondaryButton("Stop Session", (s, e) => StopMiningClicked?.Invoke(this, EventArgs.Empty));
             sessionFlow.Controls.Add(_startSessionButton);
             sessionFlow.Controls.Add(_stopSessionButton);

@@ -23,7 +23,7 @@ namespace EliteDataRelay.UI
 
         public ExplorationTab(ExplorationDatabaseService? database = null)
         {
-            this.Text = "eXploration";
+            this.Text = "Exploration";
             this.Name = "Exploration";
             this.BackColor = Color.White;
             this.Padding = new Padding(0);

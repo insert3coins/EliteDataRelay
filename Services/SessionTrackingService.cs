@@ -25,6 +25,7 @@ namespace EliteDataRelay.Services
         public long TotalCargoCollected { get; private set; }
         public long CreditsEarned { get; private set; }
         public bool IsMiningSessionActive { get; private set; }
+        public bool IsMainSessionActive => _sessionStartTime.HasValue;
         public long MiningProfit { get; private set; } // Placeholder for now
         public int LimpetsUsed { get; private set; }
         public IReadOnlyDictionary<string, int> CollectedCommodities => _collectedCommodities;
