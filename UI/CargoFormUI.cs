@@ -131,6 +131,8 @@ namespace EliteDataRelay.UI
             _explorationDataService.SessionDataChanged += (sender, data) =>
             {
                 explorationTab.UpdateSessionData(data);
+                // Update exploration overlay with session data
+                _overlayService.UpdateExplorationSessionData(data);
             };
         }
 

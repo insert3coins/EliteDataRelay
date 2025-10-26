@@ -12,32 +12,122 @@ namespace EliteDataRelay.UI
 {
     public partial class OverlayForm
     {
-        public void UpdateCommander(string text) => UpdateLabel(_cmdrValueLabel, text);
-        public void UpdateShip(string text) => UpdateLabel(_shipValueLabel, text);
-        public void UpdateBalance(long balance) => UpdateLabel(_balanceValueLabel, $"{balance:N0} CR");
+        /// <summary>
+        /// Updates commander name and marks frame as stale.
+        /// </summary>
+        public void UpdateCommander(string text)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateCommander(text)));
+                return;
+            }
+
+            _commanderName = text;
+            _stale = true;
+            _renderPanel?.Invalidate();
+        }
+
+        /// <summary>
+        /// Updates ship type and marks frame as stale.
+        /// </summary>
+        public void UpdateShip(string text)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateShip(text)));
+                return;
+            }
+
+            _shipType = text;
+            _stale = true;
+            _renderPanel?.Invalidate();
+        }
+
+        /// <summary>
+        /// Updates balance and marks frame as stale.
+        /// </summary>
+        public void UpdateBalance(long balance)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateBalance(balance)));
+                return;
+            }
+
+            _balance = balance;
+            _stale = true;
+            _renderPanel?.Invalidate();
+        }
+
+        /// <summary>
+        /// Updates cargo count/capacity and marks frame as stale.
+        /// </summary>
         public void UpdateCargo(int count, int? capacity)
         {
-            UpdateLabel(_cargoHeaderLabel, "Cargo:");
-            UpdateLabel(_cargoSizeLabel, capacity.HasValue ? $"{count}/{capacity.Value}" : $"{count}");
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateCargo(count, capacity)));
+                return;
+            }
+
+            _cargoCount = count;
+            _cargoCapacity = capacity;
+            _stale = true;
+            _renderPanel?.Invalidate();
         }
-        public void UpdateCargoSize(string text) => UpdateLabel(_cargoBarLabel, text);
+
+        /// <summary>
+        /// Updates cargo bar text (visual representation) and marks frame as stale.
+        /// </summary>
+        public void UpdateCargoSize(string text)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateCargoSize(text)));
+                return;
+            }
+
+            _cargoBarText = text;
+            _stale = true;
+            _renderPanel?.Invalidate();
+        }
+
+        /// <summary>
+        /// Updates session cargo collected and marks frame as stale.
+        /// </summary>
         public void UpdateSessionCargoCollected(long cargo)
         {
-            // Only update if the label was created
-            if (_sessionCargoValueLabel != null)
+            if (InvokeRequired)
             {
-                UpdateLabel(_sessionCargoValueLabel, $"{cargo}");
+                Invoke(new Action(() => UpdateSessionCargoCollected(cargo)));
+                return;
             }
+
+            _sessionCargo = cargo;
+            _stale = true;
+            _renderPanel?.Invalidate();
         }
 
+        /// <summary>
+        /// Updates session credits earned and marks frame as stale.
+        /// </summary>
         public void UpdateSessionCreditsEarned(long credits)
         {
-            if (_sessionCreditsValueLabel != null)
+            if (InvokeRequired)
             {
-                UpdateLabel(_sessionCreditsValueLabel, $"{credits:N0}");
+                Invoke(new Action(() => UpdateSessionCreditsEarned(credits)));
+                return;
             }
+
+            _sessionCredits = credits;
+            _stale = true;
+            _renderPanel?.Invalidate();
         }
 
+        /// <summary>
+        /// Updates cargo list and marks frame as stale.
+        /// </summary>
         public void UpdateCargoList(IEnumerable<CargoItem> inventory)
         {
             if (InvokeRequired)
@@ -47,25 +137,27 @@ namespace EliteDataRelay.UI
             }
 
             _cargoItems = inventory.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name).ToList();
-            _cargoListPanel?.Invalidate();
+            _stale = true;
+            _renderPanel?.Invalidate();
         }
 
+        /// <summary>
+        /// Updates ship icon image and marks frame as stale.
+        /// Note: ShipIcon overlay always re-renders for animation.
+        /// </summary>
         public void UpdateShipIcon(Image? shipIcon)
         {
-            if (InvokeRequired) { Invoke(new Action(() => _shipIconPictureBox.Image = shipIcon)); }
-            else { _shipIconPictureBox.Image = shipIcon; }
-        }
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateShipIcon(shipIcon)));
+                return;
+            }
 
-        private void UpdateLabel(Label label, string text)
-        {
-            if (InvokeRequired) { Invoke(new Action(() => label.Text = text)); }
-            else { label.Text = text; }
-        }
-
-        private void UpdateLabel(Label label, string text, Color color)
-        {
-            if (InvokeRequired) { Invoke(new Action(() => { label.Text = text; label.ForeColor = color; })); }
-            else { label.Text = text; label.ForeColor = color; }
+            // Don't dispose - the image might be shared/managed elsewhere
+            // The old reference will be garbage collected
+            _shipIcon = shipIcon;
+            _stale = true;
+            _renderPanel?.Invalidate();
         }
     }
 }

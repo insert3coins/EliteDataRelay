@@ -43,6 +43,7 @@ namespace EliteDataRelay.UI
         private Label _lblCurrentFont = null!;
         private Panel _pnlTextColor = null!;
         private Panel _pnlBackColor = null!;
+        private Panel _pnlBorderColor = null!;
         private TrackBar _trackBarOpacity = null!;
         private Label _lblOpacityValue = null!;
 
@@ -56,12 +57,14 @@ namespace EliteDataRelay.UI
         private Font _overlayFont = null!;
         private Color _overlayTextColor;
         private Color _overlayBackColor;
+        private Color _overlayBorderColor;
         private int _overlayOpacity;
 
         // Cache for original settings to allow for cancellation of live changes
         private Font _originalOverlayFont = null!;
         private Color _originalOverlayTextColor;
         private Color _originalOverlayBackColor;
+        private Color _originalOverlayBorderColor;
         private int _originalOverlayOpacity;
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
@@ -108,12 +111,14 @@ namespace EliteDataRelay.UI
             _overlayFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);
             _overlayTextColor = AppConfiguration.OverlayTextColor;
             _overlayBackColor = AppConfiguration.OverlayBackgroundColor;
+            _overlayBorderColor = AppConfiguration.OverlayBorderColor;
             _overlayOpacity = AppConfiguration.OverlayOpacity;
 
             // Store original values for cancellation
             _originalOverlayFont = (Font)_overlayFont.Clone();
             _originalOverlayTextColor = _overlayTextColor;
             _originalOverlayBackColor = _overlayBackColor;
+            _originalOverlayBorderColor = _overlayBorderColor;
             _originalOverlayOpacity = _overlayOpacity;
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
@@ -147,6 +152,7 @@ namespace EliteDataRelay.UI
             _lblCurrentFont.Text = $"{_overlayFont.Name}, {_overlayFont.SizeInPoints}pt";
             _pnlTextColor.BackColor = _overlayTextColor;
             _pnlBackColor.BackColor = _overlayBackColor;
+            _pnlBorderColor.BackColor = _overlayBorderColor;
             _trackBarOpacity.Value = _overlayOpacity;
             _lblOpacityValue.Text = $"{_overlayOpacity}%";
         }
@@ -175,6 +181,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayFontSize = _overlayFont.Size;
             AppConfiguration.OverlayTextColor = _overlayTextColor;
             AppConfiguration.OverlayBackgroundColor = _overlayBackColor;
+            AppConfiguration.OverlayBorderColor = _overlayBorderColor;
             AppConfiguration.OverlayOpacity = _overlayOpacity;
 
             AppConfiguration.Save();
@@ -226,6 +233,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayFontSize = _originalOverlayFont.Size;
             AppConfiguration.OverlayTextColor = _originalOverlayTextColor;
             AppConfiguration.OverlayBackgroundColor = _originalOverlayBackColor;
+            AppConfiguration.OverlayBorderColor = _originalOverlayBorderColor;
             AppConfiguration.OverlayOpacity = _originalOverlayOpacity;
 
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);

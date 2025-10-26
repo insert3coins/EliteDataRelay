@@ -84,7 +84,7 @@ namespace EliteDataRelay.UI
             grpFont.Controls.Add(btnChangeFont);
 
             // Colors GroupBox
-            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 340), Size = new Size(410, 140) };
+            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 340), Size = new Size(410, 175) };
             var lblTextColor = new Label { Text = "Text Color:", Location = new Point(15, 25), AutoSize = true };
             _pnlTextColor = new Panel { Location = new Point(130, 25), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
             var btnChangeTextColor = new Button { Text = "...", Location = new Point(160, 25), Size = new Size(23, 23) };
@@ -93,22 +93,29 @@ namespace EliteDataRelay.UI
             _pnlBackColor = new Panel { Location = new Point(130, 60), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
             var btnChangeBackColor = new Button { Text = "...", Location = new Point(160, 60), Size = new Size(23, 23) };
             btnChangeBackColor.Click += OnChangeBackColorClicked;
-            var lblOpacity = new Label { Text = "Background Opacity:", Location = new Point(15, 95), AutoSize = true };
-            _trackBarOpacity = new TrackBar { Location = new Point(125, 90), Size = new Size(200, 45), Minimum = 10, Maximum = 100, TickFrequency = 10, Value = 85 };
+            var lblBorderColor = new Label { Text = "Border Color:", Location = new Point(15, 95), AutoSize = true };
+            _pnlBorderColor = new Panel { Location = new Point(130, 95), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
+            var btnChangeBorderColor = new Button { Text = "...", Location = new Point(160, 95), Size = new Size(23, 23) };
+            btnChangeBorderColor.Click += OnChangeBorderColorClicked;
+            var lblOpacity = new Label { Text = "Background Opacity:", Location = new Point(15, 130), AutoSize = true };
+            _trackBarOpacity = new TrackBar { Location = new Point(125, 125), Size = new Size(200, 45), Minimum = 10, Maximum = 100, TickFrequency = 10, Value = 85 };
             _trackBarOpacity.Scroll += OnOpacityTrackBarScroll;
-            _lblOpacityValue = new Label { Text = "85%", Location = new Point(330, 95), AutoSize = true };
+            _lblOpacityValue = new Label { Text = "85%", Location = new Point(330, 130), AutoSize = true };
             grpColors.Controls.Add(lblTextColor);
             grpColors.Controls.Add(_pnlTextColor);
             grpColors.Controls.Add(btnChangeTextColor);
             grpColors.Controls.Add(lblBackColor);
             grpColors.Controls.Add(_pnlBackColor);
             grpColors.Controls.Add(btnChangeBackColor);
+            grpColors.Controls.Add(lblBorderColor);
+            grpColors.Controls.Add(_pnlBorderColor);
+            grpColors.Controls.Add(btnChangeBorderColor);
             grpColors.Controls.Add(lblOpacity);
             grpColors.Controls.Add(_trackBarOpacity);
             grpColors.Controls.Add(_lblOpacityValue);
 
             // Reset Button
-            _btnResetOverlaySettings = new Button { Text = "Reset All Overlay Settings", Location = new Point(12, 485), Size = new Size(180, 23) };
+            _btnResetOverlaySettings = new Button { Text = "Reset All Overlay Settings", Location = new Point(12, 520), Size = new Size(180, 23) };
             _btnResetOverlaySettings.Click += OnResetOverlaySettingsClicked;
 
             // Add controls to the Overlay tab

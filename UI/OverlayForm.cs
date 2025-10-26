@@ -25,16 +25,6 @@ namespace EliteDataRelay.UI
         private Point _dragCursorStartPoint;
         private Point _dragFormStartPoint;
 
-        private Label _cmdrValueLabel = null!;
-        private Label _shipValueLabel = null!;
-        private Label _balanceValueLabel = null!;
-        private Label _cargoHeaderLabel = null!;
-        private Label _sessionCargoValueLabel = null!;
-        private Label _sessionCreditsValueLabel = null!;
-        private Panel _cargoListPanel = null!;
-        private Label _cargoSizeLabel = null!;
-        private Label _cargoBarLabel = null!;
-        private PictureBox _shipIconPictureBox = null!;
         private System.Windows.Forms.Timer? _animationTimer;
         private double _animationPhase;
         private const int ANIMATION_AMPLITUDE = 5; // How many pixels up/down it will move
@@ -42,13 +32,30 @@ namespace EliteDataRelay.UI
 
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
 
-        // Exploration overlay controls
-        private Label _explorationSystemLabel = null!;
-        private Label _explorationBodiesLabel = null!;
-        private Label _explorationMappedLabel = null!;
-        private Label _explorationFirstsLabel = null!;
-        private Panel _explorationNotableBodiesPanel = null!;
+        // Bitmap caching for all overlays
+        private Panel? _renderPanel;
+        private Bitmap? _frameCache;
+        private Bitmap? _shipIconBackgroundCache; // Separate background cache for ship icon animation
+        private bool _stale = true;
+
+        // Info overlay data
+        private string _commanderName = "";
+        private string _shipType = "";
+        private long _balance = 0;
+
+        // Cargo overlay data
+        private int _cargoCount = 0;
+        private int? _cargoCapacity = null;
+        private string _cargoBarText = "";
+        private long _sessionCargo = 0;
+        private long _sessionCredits = 0;
+
+        // Ship icon overlay data
+        private Image? _shipIcon;
+
+        // Exploration overlay data
         private SystemExplorationData? _currentExplorationData;
+        private ExplorationSessionData? _currentSessionData;
 
         private readonly bool _allowDrag;
 
@@ -60,6 +67,21 @@ namespace EliteDataRelay.UI
         private readonly SolidBrush _grayBrush;
 
         private readonly OverlayPosition _position;
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                // WS_EX_LAYERED: Enable per-pixel alpha blending for smooth transparency
+                // WS_EX_NOACTIVATE: Prevent the form from stealing focus
+                // WS_EX_TRANSPARENT: Allow click-through (optional, currently disabled for dragging)
+                cp.ExStyle |= 0x00080000; // WS_EX_LAYERED
+                cp.ExStyle |= 0x08000000; // WS_EX_NOACTIVATE
+                // Uncomment for click-through: cp.ExStyle |= 0x00000020; // WS_EX_TRANSPARENT
+                return cp;
+            }
+        }
 
         public OverlayForm(OverlayPosition position, bool allowDrag)
         {
@@ -183,16 +205,21 @@ namespace EliteDataRelay.UI
 
         private void AnimationTimer_Tick(object? sender, EventArgs e)
         {
-            if (_shipIconPictureBox == null || _shipIconPictureBox.IsDisposed)
+            if (_renderPanel == null || _renderPanel.IsDisposed || _position != OverlayPosition.ShipIcon)
             {
                 _animationTimer?.Stop();
                 return;
             }
 
+            // Only animate if we have a ship icon to display
+            if (_shipIcon == null)
+                return;
+
             // Calculate the vertical offset using a sine wave for smooth oscillation
             _animationPhase += ANIMATION_SPEED;
-            int offsetY = (int)(Math.Sin(_animationPhase) * ANIMATION_AMPLITUDE);
-            _shipIconPictureBox.Top = (this.ClientSize.Height - _shipIconPictureBox.Height) / 2 + offsetY;
+
+            // Trigger repaint for animation (ShipIcon overlay)
+            _renderPanel?.Invalidate();
         }
 
          // Clean up any resources being used.
@@ -206,6 +233,9 @@ namespace EliteDataRelay.UI
                 _textBrush?.Dispose();
                 _grayBrush?.Dispose();
                 _animationTimer?.Dispose();
+                _frameCache?.Dispose();
+                _shipIconBackgroundCache?.Dispose();
+                // Don't dispose _shipIcon - it's managed by the service layer
             }
             base.Dispose(disposing);
         }

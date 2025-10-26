@@ -53,6 +53,19 @@ namespace EliteDataRelay.UI
             }
         }
 
+        private void OnChangeBorderColorClicked(object? sender, EventArgs e)
+        {
+            using (var colorDialog = new ColorDialog())
+            {
+                colorDialog.Color = _overlayBorderColor;
+                if (colorDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    _overlayBorderColor = colorDialog.Color;
+                    UpdateAppearanceControls();
+                }
+            }
+        }
+
         private void OnOpacityTrackBarScroll(object? sender, EventArgs e)
         {
             _overlayOpacity = _trackBarOpacity.Value;
@@ -65,6 +78,7 @@ namespace EliteDataRelay.UI
             _overlayFont = new Font("Consolas", 12F);
             _overlayTextColor = Color.Orange;
             _overlayBackColor = Color.FromArgb(200, 0, 0, 0);
+            _overlayBorderColor = Color.FromArgb(255, 111, 0); // Elite Dangerous Orange
             _overlayOpacity = 85;
             UpdateAppearanceControls();
 
@@ -73,6 +87,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayFontSize = _overlayFont.Size;
             AppConfiguration.OverlayTextColor = _overlayTextColor;
             AppConfiguration.OverlayBackgroundColor = _overlayBackColor;
+            AppConfiguration.OverlayBorderColor = _overlayBorderColor;
             AppConfiguration.OverlayOpacity = _overlayOpacity;
 
             // Also reset overlay positions

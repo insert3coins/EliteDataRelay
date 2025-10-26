@@ -70,6 +70,7 @@ namespace EliteDataRelay.Configuration
                         PollingIntervalMs = config.PollingIntervalMs;
                         OverlayTextColor = config.OverlayTextColor;
                         OverlayBackgroundColor = config.OverlayBackgroundColor;
+                        OverlayBorderColor = config.OverlayBorderColor;
                         InfoOverlayLocation = config.InfoOverlayLocation;
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
@@ -123,6 +124,7 @@ namespace EliteDataRelay.Configuration
                     PollingIntervalMs = AppConfiguration.PollingIntervalMs,
                     OverlayTextColor = AppConfiguration.OverlayTextColor,
                     OverlayBackgroundColor = AppConfiguration.OverlayBackgroundColor,
+                    OverlayBorderColor = AppConfiguration.OverlayBorderColor,
                     InfoOverlayLocation = AppConfiguration.InfoOverlayLocation,
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
@@ -176,6 +178,8 @@ namespace EliteDataRelay.Configuration
             public Color OverlayTextColor { get; set; } = Color.FromArgb(255, 128, 0);
             [JsonConverter(typeof(ColorJsonConverter))]
             public Color OverlayBackgroundColor { get; set; } = Color.FromArgb(0, 0, 0);
+            [JsonConverter(typeof(ColorJsonConverter))]
+            public Color OverlayBorderColor { get; set; } = Color.FromArgb(255, 111, 0);
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
@@ -10,177 +12,234 @@ namespace EliteDataRelay.UI
 {
     public partial class OverlayForm
     {
+        /// <summary>
+        /// Updates exploration data and marks the frame as stale for re-rendering.
+        /// Inspired by SrvSurvey's PlotBase2 stale tracking system.
+        /// </summary>
         public void UpdateExplorationData(SystemExplorationData? systemData)
         {
             if (_position != OverlayPosition.Exploration) return;
 
             _currentExplorationData = systemData;
+            _stale = true; // Mark frame as needing re-render
 
             if (this.InvokeRequired)
             {
-                this.Invoke(new System.Action(() => UpdateExplorationData(systemData)));
+                this.Invoke(new Action(() => UpdateExplorationData(systemData)));
                 return;
             }
 
-            if (systemData == null || string.IsNullOrEmpty(systemData.SystemName))
-            {
-                _explorationSystemLabel.Text = "No System";
-                _explorationBodiesLabel.Text = "Bodies: 0/0";
-                _explorationMappedLabel.Text = "Mapped: 0";
-                _explorationFirstsLabel.Text = "";
-                _explorationNotableBodiesPanel.Controls.Clear();
-                return;
-            }
-
-            // Update system info
-            _explorationSystemLabel.Text = systemData.SystemName;
-
-            var bodiesText = systemData.TotalBodies > 0
-                ? $"Bodies: {systemData.ScannedBodies}/{systemData.TotalBodies}"
-                : $"Bodies: {systemData.ScannedBodies}";
-
-            if (systemData.FSSProgress > 0 && systemData.FSSProgress < 100)
-            {
-                bodiesText += $" (FSS: {systemData.FSSProgress:F0}%)";
-            }
-
-            _explorationBodiesLabel.Text = bodiesText;
-            _explorationMappedLabel.Text = $"Mapped: {systemData.MappedBodies}";
-
-            // Count first discoveries (bodies that weren't previously discovered)
-            var firstDiscoveries = systemData.Bodies.Count(b => !b.WasDiscovered);
-            var firstMappings = systemData.Bodies.Count(b => b.IsMapped && !b.WasMapped);
-
-            if (firstDiscoveries > 0 || firstMappings > 0)
-            {
-                var firsts = new List<string>();
-                if (firstDiscoveries > 0) firsts.Add($"⭐ {firstDiscoveries} First");
-                if (firstMappings > 0) firsts.Add($"🗺️ {firstMappings} Mapped");
-                _explorationFirstsLabel.Text = string.Join(" | ", firsts);
-                _explorationFirstsLabel.ForeColor = Color.FromArgb(34, 139, 34); // Green for first discoveries
-            }
-            else if (systemData.Bodies.Any())
-            {
-                // All scanned bodies were already discovered/mapped
-                _explorationFirstsLabel.Text = "Known System";
-                _explorationFirstsLabel.ForeColor = SystemColors.GrayText;
-            }
-            else
-            {
-                _explorationFirstsLabel.Text = "";
-            }
-
-            Debug.WriteLine($"[OverlayForm.Exploration] UpdateExplorationData called - Mapped: {systemData.MappedBodies}, Scanned: {systemData.ScannedBodies}");
-
-            // Update notable bodies
-            UpdateNotableBodiesPanel(systemData);
+            // Trigger repaint with new data
+            _renderPanel?.Invalidate();
         }
 
-        private void UpdateNotableBodiesPanel(SystemExplorationData systemData)
+        /// <summary>
+        /// Updates session data for the exploration overlay.
+        /// </summary>
+        public void UpdateExplorationSessionData(ExplorationSessionData? sessionData)
         {
-            _explorationNotableBodiesPanel.SuspendLayout();
-            _explorationNotableBodiesPanel.Controls.Clear();
+            if (_position != OverlayPosition.Exploration) return;
 
-            int yPosition = 0;
-            const int lineHeight = 18;
+            _currentSessionData = sessionData;
+            _stale = true;
 
-            // Count notable body types
-            int earthLikes = 0;
-            int waterWorlds = 0;
-            int ammoniaWorlds = 0;
-            int terraformables = 0;
-            int biologicals = 0;
-
-            foreach (var body in systemData.Bodies)
+            if (this.InvokeRequired)
             {
-                var bodyType = body.BodyType.ToLowerInvariant();
-
-                if (bodyType.Contains("earth") || bodyType.Contains("earthlike"))
-                    earthLikes++;
-                else if (bodyType.Contains("water"))
-                    waterWorlds++;
-                else if (bodyType.Contains("ammonia"))
-                    ammoniaWorlds++;
-
-                if (!string.IsNullOrEmpty(body.TerraformState) && body.TerraformState != "Not Terraformable")
-                    terraformables++;
-
-                if (body.BiologicalSignals.Any())
-                    biologicals++;
+                this.Invoke(new Action(() => UpdateExplorationSessionData(sessionData)));
+                return;
             }
 
-            // Display notable bodies
-            if (earthLikes > 0)
-            {
-                AddNotableBodyLabel("🌍 Earth-like World", earthLikes, yPosition, Color.FromArgb(34, 139, 34));
-                yPosition += lineHeight;
-            }
+            _renderPanel?.Invalidate();
+        }
 
-            if (waterWorlds > 0)
-            {
-                AddNotableBodyLabel("💧 Water World", waterWorlds, yPosition, Color.FromArgb(0, 119, 190));
-                yPosition += lineHeight;
-            }
+        /// <summary>
+        /// Paint handler for exploration panel - uses bitmap caching for smooth rendering.
+        /// Based on SrvSurvey's PlotBase2 pattern.
+        /// </summary>
+        private void OnExplorationPanelPaint(object? sender, PaintEventArgs e)
+        {
+            if (_renderPanel == null) return;
 
-            if (ammoniaWorlds > 0)
+            try
             {
-                AddNotableBodyLabel("⚗️ Ammonia World", ammoniaWorlds, yPosition, Color.FromArgb(138, 43, 226));
-                yPosition += lineHeight;
-            }
-
-            if (terraformables > 0)
-            {
-                AddNotableBodyLabel("⚡ Terraformable", terraformables, yPosition, Color.FromArgb(255, 165, 0));
-                yPosition += lineHeight;
-            }
-
-            if (biologicals > 0)
-            {
-                AddNotableBodyLabel("🧬 Biologicals", biologicals, yPosition, Color.FromArgb(16, 185, 129));
-                yPosition += lineHeight;
-            }
-
-            if (yPosition == 0)
-            {
-                var noneLabel = new Label
+                // If frame is stale, re-render to cache
+                if (_stale || _frameCache == null)
                 {
-                    Text = "None found",
-                    ForeColor = SystemColors.GrayText,
-                    Font = _listFont,
-                    BackColor = Color.Transparent,
-                    AutoSize = true,
-                    Location = new Point(0, 0)
-                };
-                _explorationNotableBodiesPanel.Controls.Add(noneLabel);
-            }
+                    RenderExplorationFrame();
+                    _stale = false;
+                }
 
-            _explorationNotableBodiesPanel.ResumeLayout();
+                // Draw cached frame to panel
+                if (_frameCache != null)
+                {
+                    e.Graphics.DrawImageUnscaled(_frameCache, 0, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[OverlayForm.Exploration] Paint error: {ex.Message}");
+            }
         }
 
-        private void AddNotableBodyLabel(string text, int count, int yPosition, Color highlightColor)
+        /// <summary>
+        /// Renders the exploration overlay to the cached bitmap.
+        /// Uses Elite Dangerous color palette and custom drawing.
+        /// </summary>
+        private void RenderExplorationFrame()
         {
-            var displayText = count > 1 ? $"{text} ({count})" : text;
+            if (_renderPanel == null) return;
 
-            var label = new Label
+            int width = _renderPanel.Width;
+            int height = _renderPanel.Height;
+
+            if (width <= 0 || height <= 0) return;
+
+            // Dispose old frame and create new one
+            _frameCache?.Dispose();
+            _frameCache = new Bitmap(width, height);
+
+            using (Graphics g = Graphics.FromImage(_frameCache))
             {
-                Text = displayText,
-                ForeColor = AppConfiguration.OverlayTextColor,
-                Font = _listFont,
-                BackColor = Color.Transparent,
-                AutoSize = true,
-                Location = new Point(0, yPosition)
-            };
+                // Configure high-quality rendering
+                GameColors.ConfigureHighQuality(g);
 
-            // Add a small colored indicator
-            var indicator = new Panel
+                // Clear background
+                g.Clear(Color.Transparent);
+
+                // Draw semi-transparent background
+                using (var bgBrush = new SolidBrush(GameColors.BackgroundDark))
+                {
+                    g.FillRectangle(bgBrush, 0, 0, width, height);
+                }
+
+                // Draw border
+                g.DrawRectangle(GameColors.PenBorder2, 0, 0, width - 1, height - 1);
+
+                // Layout constants
+                const int padding = 12;
+                const int lineHeight = 20;
+                int y = padding;
+
+                if (_currentExplorationData == null || string.IsNullOrEmpty(_currentExplorationData.SystemName))
+                {
+                    // No system data
+                    DrawCenteredText(g, "NO SYSTEM DATA", GameColors.FontNormal, GameColors.BrushGrayText,
+                                     new Rectangle(0, height / 2 - 10, width, 20));
+                    return;
+                }
+
+                var data = _currentExplorationData;
+
+                // === HEADER: System Name ===
+                string systemName = TruncateText(g, data.SystemName, GameColors.FontHeader, width - padding * 2);
+                g.DrawString(systemName, GameColors.FontHeader, GameColors.BrushOrange, padding, y);
+                y += lineHeight + 4;
+
+                // Draw separator line
+                g.DrawLine(GameColors.PenOrange1, padding, y, width - padding, y);
+                y += 8;
+
+                // === BODIES INFO ===
+                string bodiesText = data.TotalBodies > 0
+                    ? $"Bodies:  {data.ScannedBodies} / {data.TotalBodies}"
+                    : $"Bodies:  {data.ScannedBodies}";
+
+                if (data.FSSProgress > 0 && data.FSSProgress < 100)
+                {
+                    bodiesText += $"  (FSS: {data.FSSProgress:F0}%)";
+                }
+
+                g.DrawString(bodiesText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                y += lineHeight;
+
+                // === MAPPED INFO ===
+                string mappedText = $"Mapped:  {data.MappedBodies}";
+                g.DrawString(mappedText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                y += lineHeight;
+
+                // === FIRST DISCOVERIES / MAPPINGS ===
+                var firstDiscoveries = data.Bodies.Count(b => !b.WasDiscovered);
+                var firstMappings = data.Bodies.Count(b => b.IsMapped && !b.WasMapped);
+
+                if (firstDiscoveries > 0 || firstMappings > 0)
+                {
+                    string firstsText = "";
+                    if (firstDiscoveries > 0) firstsText += $"⭐ {firstDiscoveries} First";
+                    if (firstMappings > 0)
+                    {
+                        if (!string.IsNullOrEmpty(firstsText)) firstsText += "  ";
+                        firstsText += $"🗺️ {firstMappings} Mapped";
+                    }
+
+                    g.DrawString(firstsText, GameColors.FontNormal, GameColors.BrushGold, padding, y);
+                }
+                else if (data.Bodies.Any())
+                {
+                    g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                }
+                y += lineHeight;
+
+                // === SESSION STATISTICS (if available) ===
+                if (_currentSessionData != null && _currentSessionData.SystemsVisited > 0)
+                {
+                    y += 4;
+                    g.DrawLine(GameColors.PenGrayDim1, padding, y, width - padding, y);
+                    y += 6;
+
+                    string sessionText = $"Session: {_currentSessionData.SystemsVisited} systems";
+                    if (_currentSessionData.TotalScans > 0)
+                        sessionText += $" • {_currentSessionData.TotalScans} scans";
+
+                    g.DrawString(sessionText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                }
+            }
+
+            Debug.WriteLine($"[OverlayForm.Exploration] Rendered frame: {_currentExplorationData?.SystemName ?? "No System"}");
+        }
+
+        /// <summary>
+        /// Truncates text to fit within specified width with ellipsis.
+        /// </summary>
+        private string TruncateText(Graphics g, string text, Font font, int maxWidth)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            var size = g.MeasureString(text, font);
+            if (size.Width <= maxWidth) return text;
+
+            // Binary search for best fit
+            int left = 0, right = text.Length;
+            string result = text;
+
+            while (left < right)
             {
-                Size = new Size(3, 14),
-                BackColor = highlightColor,
-                Location = new Point(_explorationNotableBodiesPanel.Width - 10, yPosition + 2)
-            };
+                int mid = (left + right + 1) / 2;
+                string truncated = text.Substring(0, mid) + "...";
+                size = g.MeasureString(truncated, font);
 
-            _explorationNotableBodiesPanel.Controls.Add(label);
-            _explorationNotableBodiesPanel.Controls.Add(indicator);
+                if (size.Width <= maxWidth)
+                {
+                    result = truncated;
+                    left = mid;
+                }
+                else
+                {
+                    right = mid - 1;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Draws centered text within a rectangle.
+        /// </summary>
+        private void DrawCenteredText(Graphics g, string text, Font font, Brush brush, Rectangle rect)
+        {
+            var size = g.MeasureString(text, font);
+            float x = rect.X + (rect.Width - size.Width) / 2;
+            float y = rect.Y + (rect.Height - size.Height) / 2;
+            g.DrawString(text, font, brush, x, y);
         }
     }
 }

@@ -19,6 +19,7 @@ namespace EliteDataRelay.Configuration
         public static float OverlayFontSize { get; set; } = 12f;
         public static Color OverlayTextColor { get; set; } = Color.Orange;
         public static Color OverlayBackgroundColor { get; set; } = Color.FromArgb(200, 0, 0, 0);
+        public static Color OverlayBorderColor { get; set; } = Color.FromArgb(255, 111, 0); // Elite Dangerous Orange
         public static int OverlayOpacity { get; set; } = 85;
     }
 }

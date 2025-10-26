@@ -15,6 +15,10 @@ namespace EliteDataRelay.Services
         private OverlayForm? _shipIconOverlayForm;
         private OverlayForm? _explorationOverlayForm;
 
+        // Cache last known data to restore on overlay refresh
+        private SystemExplorationData? _lastExplorationData;
+        private ExplorationSessionData? _lastExplorationSessionData;
+
         public void Start()
         {
             Stop(); // Ensure any existing overlays are closed
@@ -71,6 +75,17 @@ namespace EliteDataRelay.Services
             {
                 System.Diagnostics.Debug.WriteLine($"[OverlayService] Showing exploration overlay at {_explorationOverlayForm.Location}");
                 _explorationOverlayForm.Show();
+
+                // Restore last known exploration data after recreating overlay
+                if (_lastExplorationData != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[OverlayService] Restoring exploration data: {_lastExplorationData.SystemName}");
+                    _explorationOverlayForm.UpdateExplorationData(_lastExplorationData);
+                }
+                if (_lastExplorationSessionData != null)
+                {
+                    _explorationOverlayForm.UpdateExplorationSessionData(_lastExplorationSessionData);
+                }
             }
         }
 

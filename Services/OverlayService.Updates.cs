@@ -52,7 +52,16 @@ namespace EliteDataRelay.Services
 
         public void UpdateExplorationData(SystemExplorationData? data)
         {
+            // Cache the data so we can restore it after overlay refresh
+            _lastExplorationData = data;
             _explorationOverlayForm?.UpdateExplorationData(data);
+        }
+
+        public void UpdateExplorationSessionData(ExplorationSessionData? data)
+        {
+            // Cache the data so we can restore it after overlay refresh
+            _lastExplorationSessionData = data;
+            _explorationOverlayForm?.UpdateExplorationSessionData(data);
         }
 
         #endregion
