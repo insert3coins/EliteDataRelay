@@ -297,11 +297,48 @@ namespace EliteDataRelay.UI
             grid.AlternatingRowsDefaultCellStyle.BackColor = Color.White;
 
             grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "BodyName", HeaderText = "Body Name", FillWeight = 40 });
-            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "BodyType", HeaderText = "Type", FillWeight = 25 });
-            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Distance", HeaderText = "Distance (Ls)", FillWeight = 15 });
-            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Status", HeaderText = "Status", FillWeight = 20 });
 
-            grid.Columns["Distance"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            // Icon column for body type
+            var iconColumn = new DataGridViewImageColumn
+            {
+                Name = "BodyIcon",
+                HeaderText = "",
+                Width = 30,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                ImageLayout = DataGridViewImageCellLayout.Zoom,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Alignment = DataGridViewContentAlignment.MiddleCenter,
+                    NullValue = null,
+                    Padding = new Padding(2)
+                }
+            };
+            grid.Columns.Add(iconColumn);
+
+            grid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "BodyType",
+                HeaderText = "Type",
+                FillWeight = 12
+            });
+
+            grid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Distance",
+                HeaderText = "Distance",
+                FillWeight = 15,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Alignment = DataGridViewContentAlignment.MiddleRight
+                }
+            });
+
+            grid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Status",
+                HeaderText = "Status",
+                FillWeight = 23
+            });
 
             return grid;
         }
@@ -389,6 +426,9 @@ namespace EliteDataRelay.UI
                 {
                     var row = new DataGridViewRow();
 
+                    // Generate icon for body type
+                    var bodyIcon = BodyIconGenerator.GetIconForBodyType(body.BodyType);
+
                     string bodyType = body.BodyType;
                     if (!string.IsNullOrEmpty(body.TerraformState) && body.TerraformState != "Not Terraformable")
                     {
@@ -409,7 +449,7 @@ namespace EliteDataRelay.UI
                         status = "⭐ First Discovery";
                     }
 
-                    row.CreateCells(_bodiesGrid, body.BodyName, bodyType, distance, status);
+                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, status);
 
                     if (body.FirstFootfall)
                     {

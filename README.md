@@ -1,16 +1,24 @@
 ﻿# Elite Dangerous Data Relay
 
-A lightweight Windows companion app for Elite Dangerous that provides real-time data overlays, session tracking, and stream-friendly text output.
+A lightweight Windows companion app for Elite Dangerous that provides real-time data overlays, detailed session tracking, exploration logging, and stream-friendly text output.
 
 ---
 
 ## ✨ Features
 
--   **Real-Time Data**: Track your ship, cargo, materials, and session progress at a glance.
--   **Multiple Display Options**: Use the clean desktop UI, customizable in-game overlays, or a simple text file output for your stream.
--   **Key Info on Demand**: Includes jump range calculation, session credit/cargo tracking, and more.
--   **Streamer Friendly**: Designed with streamers in mind, providing an easy way to show game data via OBS/SLOBS.
--   **Simple & Lightweight**: Auto-detects game files, checks for updates, and minimizes to the system tray.
+-   **Comprehensive Session Tracking**
+    -   Track credits earned, cargo collected, and overall session duration.
+    -   Dedicated **Mining Session** mode with stats for limpets used, refined materials, and active mining time.
+ 
+-   **Detailed Exploration Log**
+    -   Automatically records every system you visit.
+    -   Logs all scanned and mapped bodies, highlighting first discoveries.
+    -   Browse your entire exploration history in a dedicated tab.
+
+-   **Real-Time Data Monitoring**
+    -   View your ship's status, cargo hold, and material inventory.
+    -   Customizable in-game overlays for critical information.
+    -   Ship loadout viewer with detailed tooltips for engineered modules.
 
 ---
 

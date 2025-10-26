@@ -265,32 +265,57 @@ namespace EliteDataRelay.UI
                 FillWeight = 35
             });
 
+            // Icon column for body type
+            var iconColumn = new DataGridViewImageColumn
+            {
+                Name = "BodyIcon",
+                HeaderText = "",
+                Width = 30,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                ImageLayout = DataGridViewImageCellLayout.Zoom,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Alignment = DataGridViewContentAlignment.MiddleCenter,
+                    NullValue = null,
+                    Padding = new Padding(2)
+                }
+            };
+            grid.Columns.Add(iconColumn);
+
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "BodyType",
                 HeaderText = "Type",
-                FillWeight = 22
+                FillWeight = 12
             });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Distance",
-                HeaderText = "Distance (Ls)",
-                FillWeight = 13
+                HeaderText = "Distance",
+                FillWeight = 13,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Alignment = DataGridViewContentAlignment.MiddleRight
+                }
             });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Landable",
                 HeaderText = "Land",
-                FillWeight = 8
+                FillWeight = 7,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Alignment = DataGridViewContentAlignment.MiddleCenter
+                }
             });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Signals",
                 HeaderText = "Signals",
-                FillWeight = 15
+                FillWeight = 13
             });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
@@ -299,10 +324,6 @@ namespace EliteDataRelay.UI
                 HeaderText = "Status",
                 FillWeight = 12
             });
-
-            // Right-align distance column
-            grid.Columns["Distance"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            grid.Columns["Landable"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             return grid;
         }
@@ -347,6 +368,9 @@ namespace EliteDataRelay.UI
                 foreach (var body in systemData.Bodies.OrderBy(b => b.DistanceFromArrival ?? double.MaxValue))
                 {
                     var row = new DataGridViewRow();
+
+                    // Generate icon for body type
+                    var bodyIcon = BodyIconGenerator.GetIconForBodyType(body.BodyType);
 
                     // Body type with terraform indicator
                     string bodyType = body.BodyType;
@@ -401,7 +425,7 @@ namespace EliteDataRelay.UI
                         status = "Known";
                     }
 
-                    row.CreateCells(_bodiesGrid, body.BodyName, bodyType, distance, landable, signals, status);
+                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, landable, signals, status);
 
                     // Subtle color coding
                     if (body.FirstFootfall)
