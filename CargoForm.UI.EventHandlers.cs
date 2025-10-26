@@ -73,6 +73,7 @@ namespace EliteDataRelay
             // Open the dedicated About form instead of a simple MessageBox.
             using (var aboutForm = new AboutForm())
             {
+                aboutForm.StartPosition = FormStartPosition.CenterParent;
                 aboutForm.ShowDialog(this);
             }
         }
