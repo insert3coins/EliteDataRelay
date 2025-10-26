@@ -18,6 +18,16 @@ namespace EliteDataRelay.Services
         // Cache last known data to restore on overlay refresh
         private SystemExplorationData? _lastExplorationData;
         private ExplorationSessionData? _lastExplorationSessionData;
+        private string? _lastCommanderName;
+        private string? _lastShipType;
+        private long? _lastBalance;
+        private int? _lastCargoCount;
+        private int? _lastCargoCapacity;
+        private string? _lastCargoBarText;
+        private long? _lastSessionCargo;
+        private long? _lastSessionCredits;
+        private Image? _lastShipIcon;
+        private CargoSnapshot? _lastCargoSnapshot;
 
         public void Start()
         {
@@ -68,9 +78,34 @@ namespace EliteDataRelay.Services
 
             PositionOverlays(screen);
 
-            _leftOverlayForm?.Show();
-            _rightOverlayForm?.Show();
-            _shipIconOverlayForm?.Show();
+            // Show and restore data for Info overlay
+            if (_leftOverlayForm != null)
+            {
+                _leftOverlayForm.Show();
+                if (_lastCommanderName != null) _leftOverlayForm.UpdateCommander(_lastCommanderName);
+                if (_lastShipType != null) _leftOverlayForm.UpdateShip(_lastShipType);
+                if (_lastBalance.HasValue) _leftOverlayForm.UpdateBalance(_lastBalance.Value);
+            }
+
+            // Show and restore data for Cargo overlay
+            if (_rightOverlayForm != null)
+            {
+                _rightOverlayForm.Show();
+                if (_lastCargoCount.HasValue) _rightOverlayForm.UpdateCargo(_lastCargoCount.Value, _lastCargoCapacity);
+                if (_lastCargoBarText != null) _rightOverlayForm.UpdateCargoSize(_lastCargoBarText);
+                if (_lastCargoSnapshot != null) _rightOverlayForm.UpdateCargoList(_lastCargoSnapshot.Items);
+                if (_lastSessionCredits.HasValue) _rightOverlayForm.UpdateSessionCreditsEarned(_lastSessionCredits.Value);
+                if (_lastSessionCargo.HasValue) _rightOverlayForm.UpdateSessionCargoCollected(_lastSessionCargo.Value);
+            }
+
+            // Show and restore data for Ship Icon overlay
+            if (_shipIconOverlayForm != null)
+            {
+                _shipIconOverlayForm.Show();
+                if (_lastShipIcon != null) _shipIconOverlayForm.UpdateShipIcon(_lastShipIcon);
+            }
+
+            // Show and restore data for Exploration overlay
             if (_explorationOverlayForm != null)
             {
                 System.Diagnostics.Debug.WriteLine($"[OverlayService] Showing exploration overlay at {_explorationOverlayForm.Location}");

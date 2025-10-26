@@ -39,9 +39,11 @@
     <EmbeddedResource Include="Resources\microresources.csv" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Images\Ships\*" />
-  </ItemGroup>
+<ItemGroup>
+  <Content Include="images\ships\**">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
+</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />

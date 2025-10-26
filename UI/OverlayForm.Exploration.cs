@@ -135,8 +135,8 @@ namespace EliteDataRelay.UI
                 g.DrawString(systemName, GameColors.FontHeader, GameColors.BrushOrange, padding, y);
                 y += lineHeight + 4;
 
-                // Draw separator line
-                g.DrawLine(GameColors.PenOrange1, padding, y, width - padding, y);
+                // Draw separator line (use gray like other separators)
+                g.DrawLine(GameColors.PenGrayDim1, padding, y, width - padding, y);
                 y += 8;
 
                 // === BODIES INFO ===

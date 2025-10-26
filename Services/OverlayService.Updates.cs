@@ -14,35 +14,51 @@ namespace EliteDataRelay.Services
 
         public void UpdateCommander(string name)
         {
+            _lastCommanderName = name;
             _leftOverlayForm?.UpdateCommander(name);
         }
 
         public void UpdateShip(string shipName, string shipIdent, string shipType)
         {
+            _lastShipType = shipType;
             _leftOverlayForm?.UpdateShip(shipType);
         }
 
         public void UpdateShipIcon(Image? shipIcon)
         {
+            _lastShipIcon = shipIcon;
             _shipIconOverlayForm?.UpdateShipIcon(shipIcon);
         }
 
         public void UpdateBalance(long balance)
         {
+            _lastBalance = balance;
             _leftOverlayForm?.UpdateBalance(balance);
         }
 
         public void UpdateCargo(int count, int? capacity)
         {
+            _lastCargoCount = count;
+            _lastCargoCapacity = capacity;
             _rightOverlayForm?.UpdateCargo(count, capacity);
         }
 
-        public void UpdateCargoList(CargoSnapshot snapshot) => _rightOverlayForm?.UpdateCargoList(snapshot.Items);
+        public void UpdateCargoList(CargoSnapshot snapshot)
+        {
+            _lastCargoSnapshot = snapshot;
+            _rightOverlayForm?.UpdateCargoList(snapshot.Items);
+        }
 
-        public void UpdateCargoSize(string size) => _rightOverlayForm?.UpdateCargoSize(size);
+        public void UpdateCargoSize(string size)
+        {
+            _lastCargoBarText = size;
+            _rightOverlayForm?.UpdateCargoSize(size);
+        }
 
         public void UpdateSessionOverlay(long cargo, long credits)
         {
+            _lastSessionCargo = cargo;
+            _lastSessionCredits = credits;
             _rightOverlayForm?.UpdateSessionCreditsEarned(credits);
             _rightOverlayForm?.UpdateSessionCargoCollected(cargo);
         }
