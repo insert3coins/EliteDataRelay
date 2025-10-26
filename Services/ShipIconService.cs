@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
+using System.Reflection;
 namespace EliteDataRelay.Services
 {
     /// <summary>
@@ -80,7 +81,6 @@ namespace EliteDataRelay.Services
             { "cutter", "Cutter" },
             { "panthermkii" , "Panther Clipper Mk II" }
         };
-        private static readonly string _iconDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "Ships");
 
         /// <summary>
         /// Gets the icon for a given ship type.
@@ -103,25 +103,28 @@ namespace EliteDataRelay.Services
             // Use the mapping to find the correct file name for the given internal ship name.
             if (_shipToFileNameMap.TryGetValue(internalShipName, out var fileName))
             {
-                string fullPath = Path.Combine(_iconDirectory, $"{fileName}.png");
-                Trace.WriteLine($"[ShipIconService] Mapped '{internalShipName}' to file '{fileName}.png'. Attempting to load from: {fullPath}");
-                if (File.Exists(fullPath)) // This line was missing
+                // Resource names use '.' as a separator, and include the project's root namespace.
+                string resourceName = $"EliteDataRelay.Images.Ships.{fileName}.png";
+                Trace.WriteLine($"[ShipIconService] Mapped '{internalShipName}' to resource '{resourceName}'.");
+
+                try
                 {
-                    try
+                    var assembly = Assembly.GetExecutingAssembly();
+                    using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
                     {
-                        var icon = Image.FromFile(fullPath);
-                        _iconCache[internalShipName] = icon; // Cache under the original name for performance
-                        Trace.WriteLine($"[ShipIconService] Successfully loaded and cached icon for '{internalShipName}'.");
-                        return icon;
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine($"[ShipIconService] Failed to load icon '{fullPath}': {ex.Message}");
+                        if (stream != null)
+                        {
+                            var icon = Image.FromStream(stream);
+                            _iconCache[internalShipName] = icon; // Cache under the original name for performance
+                            Trace.WriteLine($"[ShipIconService] Successfully loaded and cached icon for '{internalShipName}'.");
+                            return icon;
+                        }
+                        Trace.WriteLine($"[ShipIconService] Embedded resource not found: '{resourceName}'.");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Trace.WriteLine($"[ShipIconService] Icon file not found: '{fullPath}'.");
+                    Trace.WriteLine($"[ShipIconService] Failed to load icon from resource '{resourceName}': {ex.Message}");
                 }
             }
             else
@@ -159,23 +162,26 @@ namespace EliteDataRelay.Services
                 return _defaultIcon;
             }
 
-            string defaultIconPath = Path.Combine(_iconDirectory, "unknown.png");
-            if (File.Exists(defaultIconPath))
+            string resourceName = "EliteDataRelay.Images.Ships.unknown.png";
+            Trace.WriteLine($"[ShipIconService] Attempting to load default icon from resource '{resourceName}'.");
+
+            try
             {
-                try
+                var assembly = Assembly.GetExecutingAssembly();
+                using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
                 {
-                    _defaultIcon = Image.FromFile(defaultIconPath);
-                    Trace.WriteLine($"[ShipIconService] Successfully loaded and cached default icon from '{defaultIconPath}'.");
-                    return _defaultIcon;
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine($"[ShipIconService] Failed to load default icon '{defaultIconPath}': {ex.Message}");
+                    if (stream != null)
+                    {
+                        _defaultIcon = Image.FromStream(stream);
+                        Trace.WriteLine($"[ShipIconService] Successfully loaded and cached default icon.");
+                        return _defaultIcon;
+                    }
+                    Trace.WriteLine($"[ShipIconService] Default icon resource not found: '{resourceName}'.");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                Trace.WriteLine($"[ShipIconService] Default icon file 'unknown.png' not found in '{_iconDirectory}'.");
+                Trace.WriteLine($"[ShipIconService] Failed to load default icon from resource: {ex.Message}");
             }
             return null; // Ultimate fallback if even the default is missing.
         }

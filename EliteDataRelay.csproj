@@ -40,11 +40,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Images\Ships\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="Images\Ships\*" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
