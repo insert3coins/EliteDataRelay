@@ -52,6 +52,10 @@ namespace EliteDataRelay.Services
 
             if (_shipIconOverlayForm != null)
                 _shipIconOverlayForm.Location = AppConfiguration.ShipIconOverlayLocation != Point.Empty ? AppConfiguration.ShipIconOverlayLocation : defaultShipIconLocation;
+
+            // Exploration overlay defaults to top-left (already set in config default)
+            if (_explorationOverlayForm != null)
+                _explorationOverlayForm.Location = AppConfiguration.ExplorationOverlayLocation != Point.Empty ? AppConfiguration.ExplorationOverlayLocation : new Point(screenEdgePadding, screenEdgePadding);
         }
 
         private void OnOverlayPositionChanged(object? sender, Point newLocation)
@@ -62,6 +66,8 @@ namespace EliteDataRelay.Services
                 AppConfiguration.CargoOverlayLocation = newLocation;
             else if (sender == _shipIconOverlayForm)
                 AppConfiguration.ShipIconOverlayLocation = newLocation;
+            else if (sender == _explorationOverlayForm)
+                AppConfiguration.ExplorationOverlayLocation = newLocation;
 
             AppConfiguration.Save();
         }

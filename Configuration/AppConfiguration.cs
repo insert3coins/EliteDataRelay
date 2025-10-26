@@ -53,6 +53,7 @@ namespace EliteDataRelay.Configuration
                         EnableInfoOverlay = config.EnableInfoOverlay;
                         EnableCargoOverlay = config.EnableCargoOverlay;
                         EnableShipIconOverlay = config.EnableShipIconOverlay;
+                        EnableExplorationOverlay = config.EnableExplorationOverlay;
                         AllowOverlayDrag = config.AllowOverlayDrag;
                         EnableSessionTracking = config.EnableSessionTracking;
                         ShowSessionOnOverlay = config.ShowSessionOnOverlay;
@@ -72,6 +73,7 @@ namespace EliteDataRelay.Configuration
                         InfoOverlayLocation = config.InfoOverlayLocation;
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
+                        ExplorationOverlayLocation = config.ExplorationOverlayLocation;
                         EnableMiningAnnouncements = config.EnableMiningAnnouncements;
                         NotifyOnCargoFull = config.NotifyOnCargoFull;
                     }
@@ -104,6 +106,7 @@ namespace EliteDataRelay.Configuration
                     EnableInfoOverlay = AppConfiguration.EnableInfoOverlay,
                     EnableCargoOverlay = AppConfiguration.EnableCargoOverlay,
                     EnableShipIconOverlay = AppConfiguration.EnableShipIconOverlay,
+                    EnableExplorationOverlay = AppConfiguration.EnableExplorationOverlay,
                     AllowOverlayDrag = AppConfiguration.AllowOverlayDrag,
                     EnableSessionTracking = AppConfiguration.EnableSessionTracking,
                     ShowSessionOnOverlay = AppConfiguration.ShowSessionOnOverlay,
@@ -123,6 +126,7 @@ namespace EliteDataRelay.Configuration
                     InfoOverlayLocation = AppConfiguration.InfoOverlayLocation,
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
+                    ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
                     EnableMiningAnnouncements = AppConfiguration.EnableMiningAnnouncements,
                     NotifyOnCargoFull = AppConfiguration.NotifyOnCargoFull,
                 };
@@ -153,6 +157,7 @@ namespace EliteDataRelay.Configuration
             public bool EnableInfoOverlay { get; set; } = false;
             public bool EnableCargoOverlay { get; set; } = false;
             public bool EnableShipIconOverlay { get; set; } = false;
+            public bool EnableExplorationOverlay { get; set; } = false;
             public bool AllowOverlayDrag { get; set; } = true;
             public bool EnableSessionTracking { get; set; } = true;
             public bool ShowSessionOnOverlay { get; set; } = false;
@@ -174,6 +179,7 @@ namespace EliteDataRelay.Configuration
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
+            public Point ExplorationOverlayLocation { get; set; } = new Point(20, 20);
             [JsonConverter(typeof(JsonBooleanConverter))]
             public bool EnableMiningAnnouncements { get; set; } = false;
             [JsonConverter(typeof(JsonBooleanConverter))]

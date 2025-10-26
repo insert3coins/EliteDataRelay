@@ -131,6 +131,98 @@ namespace EliteDataRelay.UI
                 };
                 Controls.Add(_shipIconPictureBox);
             }
+            else if (_position == OverlayPosition.Exploration)
+            {
+                this.Size = new Size(320, 250);
+
+                var contentPanel = new Panel
+                {
+                    Location = new Point(1, 1),
+                    Size = new Size(this.ClientSize.Width - 2, this.ClientSize.Height - 2),
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
+
+                var mainLayout = new TableLayoutPanel
+                {
+                    Dock = DockStyle.Fill,
+                    BackColor = Color.Transparent,
+                    Padding = new Padding(10),
+                    ColumnCount = 1,
+                    RowCount = 2,
+                    AutoSize = false
+                };
+                mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 98));  // Current system
+                mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // Notable bodies
+
+                // === CURRENT SYSTEM INFO ===
+                var systemPanel = new Panel
+                {
+                    Dock = DockStyle.Fill,
+                    BackColor = Color.Transparent,
+                    Padding = new Padding(0, 0, 0, 5)
+                };
+
+                var systemHeaderLabel = CreateHeaderLabel("EXPLORATION");
+                systemHeaderLabel.Dock = DockStyle.Top;
+                systemHeaderLabel.Height = 20;
+
+                _explorationSystemLabel = CreateOverlayLabel(Point.Empty, _labelFont);
+                _explorationSystemLabel.Dock = DockStyle.Top;
+                _explorationSystemLabel.Height = 20;
+                _explorationSystemLabel.Text = "No System";
+
+                _explorationBodiesLabel = CreateOverlayLabel(Point.Empty, _listFont);
+                _explorationBodiesLabel.Dock = DockStyle.Top;
+                _explorationBodiesLabel.Height = 18;
+                _explorationBodiesLabel.Text = "Bodies: 0/0";
+
+                _explorationMappedLabel = CreateOverlayLabel(Point.Empty, _listFont);
+                _explorationMappedLabel.Dock = DockStyle.Top;
+                _explorationMappedLabel.Height = 18;
+                _explorationMappedLabel.Text = "Mapped: 0";
+
+                _explorationFirstsLabel = CreateOverlayLabel(Point.Empty, _listFont);
+                _explorationFirstsLabel.Dock = DockStyle.Top;
+                _explorationFirstsLabel.Height = 18;
+                _explorationFirstsLabel.Text = "";
+                _explorationFirstsLabel.ForeColor = Color.FromArgb(34, 139, 34); // Green for first discoveries
+
+                systemPanel.Controls.Add(_explorationFirstsLabel);
+                systemPanel.Controls.Add(_explorationMappedLabel);
+                systemPanel.Controls.Add(_explorationBodiesLabel);
+                systemPanel.Controls.Add(_explorationSystemLabel);
+                systemPanel.Controls.Add(systemHeaderLabel);
+
+                mainLayout.Controls.Add(systemPanel, 0, 0);
+
+                // === NOTABLE BODIES ===
+                var notableBodiesContainer = new Panel
+                {
+                    Dock = DockStyle.Fill,
+                    BackColor = Color.Transparent,
+                    Padding = new Padding(0, 5, 0, 5)
+                };
+
+                var notableBodiesHeaderLabel = CreateHeaderLabel("NOTABLE BODIES");
+                notableBodiesHeaderLabel.Dock = DockStyle.Top;
+                notableBodiesHeaderLabel.Height = 20;
+
+                _explorationNotableBodiesPanel = new Panel
+                {
+                    Dock = DockStyle.Fill,
+                    BackColor = Color.Transparent,
+                    AutoScroll = true
+                };
+
+                notableBodiesContainer.Controls.Add(_explorationNotableBodiesPanel);
+                notableBodiesContainer.Controls.Add(notableBodiesHeaderLabel);
+
+                mainLayout.Controls.Add(notableBodiesContainer, 0, 1);
+
+                contentPanel.Controls.Add(mainLayout);
+                Controls.Add(contentPanel);
+            }
         }
 
         private Label CreateOverlayLabel(Point location, Font? font = null)

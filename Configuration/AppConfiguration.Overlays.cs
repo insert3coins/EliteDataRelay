@@ -8,11 +8,13 @@ namespace EliteDataRelay.Configuration
         public static bool EnableInfoOverlay { get; set; } = false;
         public static bool EnableCargoOverlay { get; set; } = false;
         public static bool EnableShipIconOverlay { get; set; } = false;
+        public static bool EnableExplorationOverlay { get; set; } = false;
         public static bool ShowSessionOnOverlay { get; set; } = false;
         public static bool AllowOverlayDrag { get; set; } = true;
         public static Point InfoOverlayLocation { get; set; } = Point.Empty;
         public static Point CargoOverlayLocation { get; set; } = Point.Empty;
         public static Point ShipIconOverlayLocation { get; set; } = Point.Empty;
+        public static Point ExplorationOverlayLocation { get; set; } = new Point(20, 20); // Default top-left
         public static string OverlayFontName { get; set; } = "Consolas";
         public static float OverlayFontSize { get; set; } = 12f;
         public static Color OverlayTextColor { get; set; } = Color.Orange;

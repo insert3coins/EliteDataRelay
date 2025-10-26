@@ -16,7 +16,8 @@ namespace EliteDataRelay.UI
         {
             Info,
             Cargo,
-            ShipIcon
+            ShipIcon,
+            Exploration
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -40,6 +41,14 @@ namespace EliteDataRelay.UI
         private const double ANIMATION_SPEED = 0.05; // How fast it will move
 
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
+
+        // Exploration overlay controls
+        private Label _explorationSystemLabel = null!;
+        private Label _explorationBodiesLabel = null!;
+        private Label _explorationMappedLabel = null!;
+        private Label _explorationFirstsLabel = null!;
+        private Panel _explorationNotableBodiesPanel = null!;
+        private SystemExplorationData? _currentExplorationData;
 
         private readonly bool _allowDrag;
 
@@ -79,6 +88,9 @@ namespace EliteDataRelay.UI
                     break;
                 case OverlayPosition.ShipIcon:
                     this.Text = "Elite Data Relay: Ship Icon";
+                    break;
+                case OverlayPosition.Exploration:
+                    this.Text = "Elite Data Relay: Exploration";
                     break;
                 default:
                     this.Text = "Elite Data Relay Overlay";

@@ -50,6 +50,11 @@ namespace EliteDataRelay.Services
         public void UpdateSystemInfo(SystemInfoData data) { }
         public void UpdateStationInfo(StationInfoData data) { }
 
+        public void UpdateExplorationData(SystemExplorationData? data)
+        {
+            _explorationOverlayForm?.UpdateExplorationData(data);
+        }
+
         #endregion
     }
 }

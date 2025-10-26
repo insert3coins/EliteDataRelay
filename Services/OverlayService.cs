@@ -13,6 +13,7 @@ namespace EliteDataRelay.Services
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
         private OverlayForm? _shipIconOverlayForm;
+        private OverlayForm? _explorationOverlayForm;
 
         public void Start()
         {
@@ -54,12 +55,23 @@ namespace EliteDataRelay.Services
                 _shipIconOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.ShipIcon, AppConfiguration.AllowOverlayDrag);
                 _shipIconOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
+            if (AppConfiguration.EnableExplorationOverlay)
+            {
+                _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag);
+                _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
+                System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
+            }
 
             PositionOverlays(screen);
 
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
+            if (_explorationOverlayForm != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[OverlayService] Showing exploration overlay at {_explorationOverlayForm.Location}");
+                _explorationOverlayForm.Show();
+            }
         }
 
         public void Stop()
@@ -67,10 +79,12 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
             _shipIconOverlayForm?.Close();
+            _explorationOverlayForm?.Close();
 
             _leftOverlayForm = null;
             _rightOverlayForm = null;
             _shipIconOverlayForm = null;
+            _explorationOverlayForm = null;
         }
 
         public void Show()
@@ -78,6 +92,7 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
+            _explorationOverlayForm?.Show();
         }
 
         public void Hide()
@@ -85,6 +100,7 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
             _shipIconOverlayForm?.Hide();
+            _explorationOverlayForm?.Hide();
         }
 
         /// <summary>
@@ -99,12 +115,14 @@ namespace EliteDataRelay.Services
                 if (AppConfiguration.EnableInfoOverlay) _leftOverlayForm?.Show();
                 if (AppConfiguration.EnableCargoOverlay) _rightOverlayForm?.Show();
                 if (AppConfiguration.EnableShipIconOverlay) _shipIconOverlayForm?.Show();
+                if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
             }
             else
             {
                 _leftOverlayForm?.Hide();
                 _rightOverlayForm?.Hide();
                 _shipIconOverlayForm?.Hide();
+                _explorationOverlayForm?.Hide();
             }
         }
 
@@ -120,6 +138,7 @@ namespace EliteDataRelay.Services
                 OverlayForm.OverlayPosition.Info => _leftOverlayForm,
                 OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
                 OverlayForm.OverlayPosition.ShipIcon => _shipIconOverlayForm,
+                OverlayForm.OverlayPosition.Exploration => _explorationOverlayForm,
                 _ => null
             };
         }

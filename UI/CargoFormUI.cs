@@ -124,6 +124,8 @@ namespace EliteDataRelay.UI
                 // When data for the current system changes (e.g., new scan),
                 // refresh the historical log to reflect the latest saved state. This was missing.
                 explorationTab.RefreshLog();
+                // Update exploration overlay
+                _overlayService.UpdateExplorationData(data);
             };
 
             _explorationDataService.SessionDataChanged += (sender, data) =>

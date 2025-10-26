@@ -216,12 +216,14 @@ namespace EliteDataRelay.Services
 
                     Debug.WriteLine($"[ExplorationDataService] Mapped body: {saaEvent.BodyName} " +
                                   $"(Probes: {saaEvent.ProbesUsed}/{saaEvent.EfficiencyTarget})");
+                    Debug.WriteLine($"[ExplorationDataService] System mapped count now: {_currentSystem.MappedBodies}, Session total mapped: {_sessionData.TotalMapped}");
 
                     _currentSystem.LastUpdated = DateTime.UtcNow;
 
                     // Save to database
                     _database.SaveSystem(_currentSystem);
 
+                    Debug.WriteLine($"[ExplorationDataService] Firing SystemDataChanged event...");
                     SystemDataChanged?.Invoke(this, _currentSystem);
                     SessionDataChanged?.Invoke(this, _sessionData);
                 }
