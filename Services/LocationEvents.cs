@@ -16,13 +16,15 @@ namespace EliteDataRelay.Services
         public bool IsNewSystem { get; }
         public double[] StarPos { get; }
         public long? SystemAddress { get; }
+        public DateTime Timestamp { get; }
 
-        public LocationChangedEventArgs(string starSystem, double[] starPos, bool isNewSystem, long? systemAddress)
+        public LocationChangedEventArgs(string starSystem, double[] starPos, bool isNewSystem, long? systemAddress, DateTime timestamp)
         {
             StarSystem = starSystem;
             IsNewSystem = isNewSystem;
             StarPos = starPos;
             SystemAddress = systemAddress;
+            Timestamp = timestamp;
         }
     }
 }

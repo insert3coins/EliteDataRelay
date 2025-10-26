@@ -40,5 +40,6 @@ namespace EliteDataRelay.UI
         void HideOverlays();
         void RefreshOverlay();
         void UpdateCargoScrollBar();
+        void RefreshExplorationLog();
     }
 }

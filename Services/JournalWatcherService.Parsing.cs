@@ -96,6 +96,12 @@ namespace EliteDataRelay.Services
                             dockedElement.GetBoolean())
                         {
                             var dockedEvent = JsonSerializer.Deserialize<DockedEvent>(journalLine, options);
+                            // The timestamp is in the root of the JSON, not the deserialized object
+                            if (dockedEvent != null && jsonDoc.RootElement.TryGetProperty("timestamp", out var tsElement) && tsElement.TryGetDateTime(out var ts))
+                            {
+                                dockedEvent.Timestamp = ts;
+                            }
+
                             if (dockedEvent != null)
                             {
                                 _lastDockedEventArgs = new DockedEventArgs(dockedEvent);
@@ -117,6 +123,12 @@ namespace EliteDataRelay.Services
                                 systemAddress = sa;
                             }
 
+                            DateTime timestamp = DateTime.Now;
+                            if (jsonDoc.RootElement.TryGetProperty("timestamp", out var timestampElement) && timestampElement.TryGetDateTime(out var ts))
+                            {
+                                timestamp = ts;
+                            }
+
                             // A "new system" is detected if it's a jump event, the first location event,
                             // or if the system name has changed from the last known one.
                             bool isNewSystem = (eventType == "FSDJump" || eventType == "CarrierJump") || _lastStarSystem == null || starSystem != _lastStarSystem;
@@ -124,13 +136,13 @@ namespace EliteDataRelay.Services
                             if (isNewSystem)
                             {
                                 _lastStarSystem = starSystem;
-                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), true, systemAddress); // This line was missing
+                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), true, systemAddress, timestamp);
                                 Debug.WriteLine($"[JournalWatcherService] Found new system event ({eventType}). StarSystem: {starSystem}");
                                 LocationChanged?.Invoke(this, _lastLocationArgs);
                             }
                             else // This only applies to subsequent "Location" events in the same system.
                             {
-                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), false, systemAddress);
+                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), false, systemAddress, timestamp);
                                 LocationChanged?.Invoke(this, _lastLocationArgs);
                             }
                         }
@@ -247,6 +259,71 @@ namespace EliteDataRelay.Services
                             }
                             _lastDockedEventArgs = null;
                             Undocked?.Invoke(this, new UndockedEventArgs(stationName ?? "Unknown"));
+                        }
+                        // Exploration Events
+                        else if (eventType == "FSSDiscoveryScan")
+                        {
+                            var fssEvent = JsonSerializer.Deserialize<FSSDiscoveryScanEvent>(journalLine, options);
+                            if (fssEvent != null)
+                            {
+                                FSSDiscoveryScan?.Invoke(this, fssEvent);
+                            }
+                        }
+                        else if (eventType == "Scan")
+                        {
+                            var scanEvent = JsonSerializer.Deserialize<ScanEvent>(journalLine, options);
+                            if (scanEvent != null)
+                            {
+                                BodyScanned?.Invoke(this, scanEvent);
+                            }
+                        }
+                        else if (eventType == "SAAScanComplete")
+                        {
+                            var saaEvent = JsonSerializer.Deserialize<SAAScanCompleteEvent>(journalLine, options);
+                            if (saaEvent != null)
+                            {
+                                SAAScanComplete?.Invoke(this, saaEvent);
+                            }
+                        }
+                        else if (eventType == "FSSBodySignals")
+                        {
+                            var signalsEvent = JsonSerializer.Deserialize<FSSBodySignalsEvent>(journalLine, options);
+                            if (signalsEvent != null)
+                            {
+                                FSSBodySignals?.Invoke(this, signalsEvent);
+                            }
+                        }
+                        else if (eventType == "SAASignalsFound")
+                        {
+                            var signalsEvent = JsonSerializer.Deserialize<SAASignalsFoundEvent>(journalLine, options);
+                            if (signalsEvent != null)
+                            {
+                                SAASignalsFound?.Invoke(this, signalsEvent);
+                            }
+                        }
+                        else if (eventType == "SellExplorationData")
+                        {
+                            var sellEvent = JsonSerializer.Deserialize<SellExplorationDataEvent>(journalLine, options);
+                            if (sellEvent != null)
+                            {
+                                SellExplorationData?.Invoke(this, sellEvent);
+                            }
+                        }
+                        else if (eventType == "MultiSellExplorationData")
+                        {
+                            var multiSellEvent = JsonSerializer.Deserialize<MultiSellExplorationDataEvent>(journalLine, options);
+                            if (multiSellEvent != null)
+                            {
+                                MultiSellExplorationData?.Invoke(this, multiSellEvent);
+                            }
+                        }
+                        else if (eventType == "Touchdown")
+                        {
+                            var touchdownEvent = JsonSerializer.Deserialize<TouchdownEvent>(journalLine, options);
+                            if (touchdownEvent != null)
+                            {
+                                Touchdown?.Invoke(this, touchdownEvent);
+                            }
                         }
                     }
                     catch (JsonException ex)

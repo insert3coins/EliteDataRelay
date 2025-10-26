@@ -22,6 +22,14 @@ namespace EliteDataRelay.Services
         event EventHandler<LaunchDroneEventArgs>? LaunchDrone;
         event EventHandler<BuyDronesEventArgs>? BuyDrones;
         event EventHandler<MarketBuyEventArgs>? MarketBuy;
+        event EventHandler<FSSDiscoveryScanEvent>? FSSDiscoveryScan;
+        event EventHandler<ScanEvent>? BodyScanned;
+        event EventHandler<SAAScanCompleteEvent>? SAAScanComplete;
+        event EventHandler<FSSBodySignalsEvent>? FSSBodySignals;
+        event EventHandler<SAASignalsFoundEvent>? SAASignalsFound;
+        event EventHandler<SellExplorationDataEvent>? SellExplorationData;
+        event EventHandler<MultiSellExplorationDataEvent>? MultiSellExplorationData;
+        event EventHandler<TouchdownEvent>? Touchdown;
 
         void StartMonitoring();
         void StopMonitoring();

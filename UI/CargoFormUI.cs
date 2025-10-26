@@ -21,9 +21,10 @@ namespace EliteDataRelay.UI
         private LayoutManager? _layoutManager;
         private readonly OverlayService _overlayService;
         private readonly SessionTrackingService _sessionTrackingService;
+        private readonly ExplorationDataService _explorationDataService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
-        private string _currentLocation = "Unknown";        
+        private string _currentLocation = "Unknown";
         private bool _isMonitoring;
         private bool _disposedValue;
 
@@ -45,10 +46,11 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? MiningStopClicked;
 
-        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService)
+        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService, ExplorationDataService explorationDataService)
         {
             _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
+            _explorationDataService = explorationDataService ?? throw new ArgumentNullException(nameof(explorationDataService));
         }
 
         public void InitializeUI(Form form)
@@ -89,6 +91,7 @@ namespace EliteDataRelay.UI
                 _controlFactory.TabControl.SelectedIndex = originalIndex;
             }
             InitializeMaterialsTab();
+            InitializeExplorationTab();
         }
 
         private void InitializeMaterialsTab()
@@ -103,6 +106,30 @@ namespace EliteDataRelay.UI
             };
             _controlFactory.TabControl.TabPages.Add(materialsTab);
             _controlFactory.MaterialsTab = materialsTab;
+        }
+
+        private void InitializeExplorationTab()
+        {
+            if (_controlFactory == null || _controlFactory.TabControl.TabPages.ContainsKey("Exploration"))
+                return;
+
+            var explorationTab = new ExplorationTab(_explorationDataService.Database);
+            _controlFactory.TabControl.TabPages.Add(explorationTab);
+            _controlFactory.ExplorationTab = explorationTab;
+
+            // Wire up exploration service events to update the tab
+            _explorationDataService.SystemDataChanged += (sender, data) =>
+            {
+                explorationTab.UpdateSystemData(data);
+                // When data for the current system changes (e.g., new scan),
+                // refresh the historical log to reflect the latest saved state.
+                explorationTab.RefreshLog();
+            };
+
+            _explorationDataService.SessionDataChanged += (sender, data) =>
+            {
+                explorationTab.UpdateSessionData(data);
+            };
         }
 
         private void OnFormResize(object? sender, EventArgs e)
@@ -321,6 +348,11 @@ namespace EliteDataRelay.UI
 
                 _disposedValue = true;
             }
+        }
+
+        public void RefreshExplorationLog()
+        {
+            _controlFactory?.ExplorationTab?.RefreshLog();
         }
 
         public void Dispose()

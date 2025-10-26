@@ -108,6 +108,46 @@ namespace EliteDataRelay.Services
         public event EventHandler<MarketBuyEventArgs>? MarketBuy;
 
         /// <summary>
+        /// Event raised when an FSS discovery scan is performed.
+        /// </summary>
+        public event EventHandler<FSSDiscoveryScanEvent>? FSSDiscoveryScan;
+
+        /// <summary>
+        /// Event raised when a body is scanned.
+        /// </summary>
+        public event EventHandler<ScanEvent>? BodyScanned;
+
+        /// <summary>
+        /// Event raised when a detailed surface scan (SAA) is completed.
+        /// </summary>
+        public event EventHandler<SAAScanCompleteEvent>? SAAScanComplete;
+
+        /// <summary>
+        /// Event raised when FSS identifies signals on a body.
+        /// </summary>
+        public event EventHandler<FSSBodySignalsEvent>? FSSBodySignals;
+
+        /// <summary>
+        /// Event raised when SAA mapping finds signals on a body.
+        /// </summary>
+        public event EventHandler<SAASignalsFoundEvent>? SAASignalsFound;
+
+        /// <summary>
+        /// Event raised when exploration data is sold.
+        /// </summary>
+        public event EventHandler<SellExplorationDataEvent>? SellExplorationData;
+
+        /// <summary>
+        /// Event raised when on-foot exploration data is sold.
+        /// </summary>
+        public event EventHandler<MultiSellExplorationDataEvent>? MultiSellExplorationData;
+
+        /// <summary>
+        /// Event raised when landing on a planet surface.
+        /// </summary>
+        public event EventHandler<TouchdownEvent>? Touchdown;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;

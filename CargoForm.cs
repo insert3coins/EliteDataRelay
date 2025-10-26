@@ -26,6 +26,8 @@ namespace EliteDataRelay
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
         private readonly OverlayService _overlayService;
+        private readonly ExplorationDataService _explorationDataService;
+        private readonly ExplorationDatabaseService _explorationDatabaseService;
         public CargoForm()
         {
             // Create all service instances. This form now owns its dependencies,
@@ -40,7 +42,11 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
-            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService);
+            // Initialize the database service BEFORE creating any UI that might use it.
+            _explorationDatabaseService = new ExplorationDatabaseService();
+            _explorationDatabaseService.Initialize();
+            _explorationDataService = new ExplorationDataService(_explorationDatabaseService);
+            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService);
 
             InitializeComponent();
 
@@ -124,6 +130,19 @@ namespace EliteDataRelay
             _journalWatcherService.InitialScanComplete += OnInitialScanComplete;
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
+
+            // Wire up exploration events
+            _journalWatcherService.FSSDiscoveryScan += (sender, e) => _explorationDataService.HandleFSSDiscoveryScan(e);
+            _journalWatcherService.BodyScanned += (sender, e) => _explorationDataService.HandleScan(e);
+            _journalWatcherService.SAAScanComplete += (sender, e) => _explorationDataService.HandleSAAScanComplete(e);
+            _journalWatcherService.FSSBodySignals += (sender, e) => _explorationDataService.HandleFSSBodySignals(e);
+            _journalWatcherService.SAASignalsFound += (sender, e) => _explorationDataService.HandleSAASignalsFound(e);
+            _journalWatcherService.Touchdown += (sender, e) => _explorationDataService.HandleTouchdown(e);
+            _journalWatcherService.SellExplorationData += (sender, e) => {
+                _explorationDataService.HandleSellExplorationData(e);
+                // After selling data, refresh the log to show updated discovery/mapping statuses.
+                _cargoFormUI.RefreshExplorationLog();
+            };
         }
 
         private void OnMiningNotificationRaised(object? sender, MiningNotificationEventArgs e)
@@ -161,6 +180,8 @@ namespace EliteDataRelay
                 (_stationInfoService as IDisposable)?.Dispose();
                 (_systemInfoService as IDisposable)?.Dispose();
                 _overlayService.Dispose();
+                _explorationDataService.Dispose();
+                _explorationDatabaseService.Dispose();
             }
             base.Dispose(disposing);
         }

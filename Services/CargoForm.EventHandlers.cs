@@ -211,6 +211,9 @@ namespace EliteDataRelay
         {
             _lastLocation = e.StarSystem;
 
+            // Update exploration service with system change
+            _explorationDataService.HandleSystemChange(e.StarSystem, e.SystemAddress, e.Timestamp);
+
             SafeInvoke(() =>
             {
                 if (!_isInitializing)
@@ -245,6 +248,12 @@ namespace EliteDataRelay
                     _cargoFormUI.UpdateSystemInfo(e);
                 }
             });
+        }
+
+        private void OnMultiSellExplorationData(object? sender, MultiSellExplorationDataEvent e)
+        {
+            // Update exploration service with on-foot data sales
+            _explorationDataService.HandleMultiSellExplorationData(e);
         }
 
         private void OnMaterialsChanged(object? sender, MaterialsEvent e)

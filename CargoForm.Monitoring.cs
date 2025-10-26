@@ -1,5 +1,6 @@
 using EliteDataRelay.Configuration;
 using EliteDataRelay.UI;
+using System.Threading.Tasks;
 
 namespace EliteDataRelay
 {
@@ -48,33 +49,34 @@ namespace EliteDataRelay
             // Play start sound
             _soundService.PlayStartSound();
 
-            // Update UI state
+            // Immediately update UI state and show overlays for instant feedback.
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
             _cargoFormUI.UpdateMonitoringVisuals(isMonitoring: true);
-
-            // Start the overlay service
             _overlayService.Start();
 
-            // Start file-based services first so they are ready.
+            // Start all background monitoring services.
             _fileMonitoringService.StartMonitoring();
             _stationInfoService.Start();
             _systemInfoService.Start();
-
-            // Start the journal watcher last. Its initial poll will fire events that other services may need to handle.
-            // This initial poll is synchronous and will populate _lastBalance before we proceed.
-            _journalWatcherService.StartMonitoring();
-
-            // Force one more read of the cargo file to ensure we have the absolute latest count before starting the session.
-            _cargoProcessorService.ProcessCargoFile(force: true);
-
-            // Now that the initial poll is complete and _lastBalance is populated, start the session.
-            if (AppConfiguration.EnableSessionTracking)
-            {
-                _sessionTrackingService.StartSession(_lastBalance ?? 0, _lastCargoSnapshot);
-            }
-
-            // Start the game process checker
             _gameProcessCheckTimer?.Start();
+
+            // The initial journal scan can be slow. Run it in the background without awaiting it.
+            // This allows the UI to remain responsive and the overlays to be visible immediately.
+            // The `InitialScanComplete` event will fire when it's done, populating the UI.
+            _ = Task.Run(() =>
+            {
+                _journalWatcherService.StartMonitoring();
+
+                // Now that the initial poll is complete and _lastBalance is populated, start the session.
+                if (AppConfiguration.EnableSessionTracking)
+                {
+                    _sessionTrackingService.StartSession(_lastBalance ?? 0, _lastCargoSnapshot);
+                }
+
+            });
+
+            // Start exploration session tracking
+            _explorationDataService.StartSession();
         }
 
         private void StopMonitoringInternal()
@@ -102,6 +104,10 @@ namespace EliteDataRelay
             {
                 _sessionTrackingService.StopSession();
             }
+
+            // Stop exploration session tracking
+            _explorationDataService.StopSession();
+            _explorationDataService.Reset();
 
             _stationInfoService.Stop();
             _systemInfoService.Stop();
