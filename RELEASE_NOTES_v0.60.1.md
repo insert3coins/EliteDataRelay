@@ -18,10 +18,6 @@ Release Date: October 27, 2025
   - Simple search by mineral, ring type, system substring, and max distance
   - Uses existing bookmarks dataset
 
-- Mining Companion (new)
-  - Dock-side “Restock limpets” reminder when rearm/outfitting is available
-  - Hooks into existing mining announcements UI
-
 - Faster Start (optional)
   - New FastStart option to skip historic journal lines on initial scan (default: on)
 
@@ -29,9 +25,8 @@ Release Date: October 27, 2025
 
 - Added: Local web overlay server with matching styles/sizes and live updates
 - Added: BMP→PNG conversion in screenshot processing; smarter system name fallback
-- Added: Hotspot Finder tab and Mining Companion restock reminder
+- Added: Hotspot Finder tab and Mining Companion restock reminder *note its in early stages, so might be borked
 - Removed: OBS Compatibility Mode and overlay position exporter (use Browser Source overlays)
-- Removed: Discord/Webhook integration and settings
 - Improved: Startup responsiveness with FastStartSkipJournalHistory
 - Fixed: Screenshots defaulting to “Unknown System” in some cases
 

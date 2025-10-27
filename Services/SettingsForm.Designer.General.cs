@@ -148,6 +148,8 @@ namespace EliteDataRelay.UI
             grpScreenshots.Controls.Add(lblFormat);
             grpScreenshots.Controls.Add(txtFormat);
             generalTabPage.Controls.Add(grpScreenshots);
+
+            // Advanced moved to its own tab
         }
     }
 }

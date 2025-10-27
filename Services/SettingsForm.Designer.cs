@@ -28,17 +28,20 @@ namespace EliteDataRelay.UI
             var generalTabPage = new TabPage("General");
             var overlayTabPage = new TabPage("Overlay");
             var hotkeysTabPage = new TabPage("Hotkeys");
+            var advancedTabPage = new TabPage("Advanced");
             var webOverlayTabPage = new TabPage("Web Overlay");
             
             tabControl.TabPages.Add(generalTabPage);
             tabControl.TabPages.Add(overlayTabPage);
             tabControl.TabPages.Add(hotkeysTabPage);
+            tabControl.TabPages.Add(advancedTabPage);
             tabControl.TabPages.Add(webOverlayTabPage);
 
             // Initialize each tab's content from the new partial classes
             InitializeGeneralTab(generalTabPage);
             InitializeOverlayTab(overlayTabPage);
             InitializeHotkeysTab(hotkeysTabPage);
+            InitializeAdvancedTab(advancedTabPage);
             InitializeWebOverlayTab(webOverlayTabPage);
 
             // OK Button

@@ -30,7 +30,7 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableExplorationOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
-        
+        private CheckBox _chkFastStart = null!;
         private GroupBox _grpSessionTracking = null!;
         private CheckBox _chkEnableSessionTracking = null!;
         private CheckBox _chkEnableHotkeys = null!;
@@ -76,8 +76,7 @@ namespace EliteDataRelay.UI
         public SettingsForm()
         {
             InitializeComponent();
-            // This was the missing call to add the mining settings to the UI.
-            InitializeMiningSettings();
+            // Mining settings removed
 
             // When the form is closing, check if the user cancelled. If so, revert any live changes.
             this.FormClosing += SettingsForm_FormClosing;
@@ -98,7 +97,7 @@ namespace EliteDataRelay.UI
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
             _chkEnableShipIconOverlay.Checked = AppConfiguration.EnableShipIconOverlay;
             _chkEnableExplorationOverlay.Checked = AppConfiguration.EnableExplorationOverlay;
-            
+            _chkFastStart.Checked = AppConfiguration.FastStartSkipJournalHistory;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -171,7 +170,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableShipIconOverlay = _chkEnableShipIconOverlay.Checked;
             AppConfiguration.EnableExplorationOverlay = _chkEnableExplorationOverlay.Checked;
-            
+            AppConfiguration.FastStartSkipJournalHistory = _chkFastStart.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;

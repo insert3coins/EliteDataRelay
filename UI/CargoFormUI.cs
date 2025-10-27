@@ -247,22 +247,12 @@ namespace EliteDataRelay.UI
 
         public void AppendMiningAnnouncement(MiningNotificationEventArgs notification)
         {
-            // Only show announcements if the user has enabled them in settings.
-            if (AppConfiguration.EnableMiningAnnouncements)
-            {
-                _controlFactory?.MiningSessionPanel?.AddAnnouncement(notification);
-            }
+            _controlFactory?.MiningSessionPanel?.AddAnnouncement(notification);
         }
 
         public void ShowMiningNotification(MiningNotificationEventArgs notification)
         {
             if (_trayIconManager == null) return;
-
-            // Only show a "Cargo Full" notification if the user has enabled it.
-            if (notification.Type == MiningNotificationType.CargoFull && !AppConfiguration.NotifyOnCargoFull)
-            {
-                return;
-            }
 
             // Only show tray notifications for specific, user-facing events.
             // The 'Info' type is for UI announcements only.

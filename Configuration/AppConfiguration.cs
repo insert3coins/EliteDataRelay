@@ -75,8 +75,7 @@ namespace EliteDataRelay.Configuration
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
                         ExplorationOverlayLocation = config.ExplorationOverlayLocation;
-                        EnableMiningAnnouncements = config.EnableMiningAnnouncements;
-                        NotifyOnCargoFull = config.NotifyOnCargoFull;
+                        // Mining announcements removed
                         // OBS compatibility removed
 
                         // Performance and extras
@@ -143,8 +142,8 @@ namespace EliteDataRelay.Configuration
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
-                    EnableMiningAnnouncements = AppConfiguration.EnableMiningAnnouncements,
-     NotifyOnCargoFull = AppConfiguration.NotifyOnCargoFull,
+                    
+     
 
                     // Performance and extras
                     FastStartSkipJournalHistory = AppConfiguration.FastStartSkipJournalHistory,
@@ -211,10 +210,7 @@ namespace EliteDataRelay.Configuration
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
             public Point ExplorationOverlayLocation { get; set; } = new Point(20, 20);
-            [JsonConverter(typeof(JsonBooleanConverter))]
-            public bool EnableMiningAnnouncements { get; set; } = false;
-            [JsonConverter(typeof(JsonBooleanConverter))]
-            public bool NotifyOnCargoFull { get; set; } = false;
+            // Mining announcements removed
             // OBS compatibility removed
 
             // Performance and extras
@@ -232,3 +228,4 @@ namespace EliteDataRelay.Configuration
         }
     }
 }
+

@@ -56,7 +56,7 @@ namespace EliteDataRelay
             // Start optional services
             if (AppConfiguration.EnableScreenshotRenamer) _screenshotRenamerService.Start();
             if (AppConfiguration.EnableWebOverlayServer) _webOverlayService.Start();
-            _miningCompanionService.Start();
+            // mining companion removed
 
             // Start all background monitoring services.
             _fileMonitoringService.StartMonitoring();
@@ -125,7 +125,7 @@ namespace EliteDataRelay
             // Stop optional services
             _screenshotRenamerService.Stop();
             _webOverlayService.Stop();
-            _miningCompanionService.Stop();
+            // mining companion removed
             // no webhook
         }
 

@@ -149,6 +149,14 @@ namespace EliteDataRelay.Services
                     TotalCargoCollected += diff;
                     _collectedCommodities.AddOrUpdate(currentItem.Name, diff, (key, existingCount) => existingCount + diff);
                 }
+                else if (diff < 0)
+                {
+                    // Detect limpet usage by decrease in 'drones' count from Cargo.json
+                    if (string.Equals(currentItem.Name, "drones", StringComparison.OrdinalIgnoreCase))
+                    {
+                        LimpetsUsed += -diff; // diff is negative
+                    }
+                }
             }
 
             CurrentCargoCount = currentSnapshot.Count;

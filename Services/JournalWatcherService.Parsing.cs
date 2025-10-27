@@ -240,6 +240,7 @@ namespace EliteDataRelay.Services
                             var type = jsonDoc.RootElement.TryGetProperty("Type", out var typeElement) ? typeElement.GetString() : null;
                             if (type != null)
                             {
+                                System.Diagnostics.Trace.WriteLine($"[JournalWatcherService] LaunchDrone: {type}");
                                 LaunchDrone?.Invoke(this, new LaunchDroneEventArgs(type));
                             }
                         }

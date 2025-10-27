@@ -30,7 +30,6 @@ namespace EliteDataRelay
         private readonly ExplorationDatabaseService _explorationDatabaseService;
         private readonly ScreenshotRenamerService _screenshotRenamerService;
         private readonly WebOverlayServerService _webOverlayService;
-        private readonly MiningCompanionService _miningCompanionService;
         public CargoForm()
         {
             // Create all service instances. This form now owns its dependencies,
@@ -54,7 +53,6 @@ namespace EliteDataRelay
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
             _webOverlayService = new WebOverlayServerService();
-            _miningCompanionService = new MiningCompanionService(_journalWatcherService, _sessionTrackingService);
 
             InitializeComponent();
 
@@ -139,16 +137,7 @@ namespace EliteDataRelay
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
 
-            // Mining companion reminder -> surface via existing mining notifications UI
-            _miningCompanionService.RestockReminder += (s, msg) =>
-            {
-                SafeInvoke(() =>
-                {
-                    var evt = new MiningNotificationEventArgs(MiningNotificationType.Reminder, msg, DateTime.UtcNow, false);
-                    _cargoFormUI.AppendMiningAnnouncement(evt);
-                    _cargoFormUI.ShowMiningNotification(evt);
-                });
-            };
+            // Mining companion removed
 
             // Wire up exploration events
             _journalWatcherService.FSSDiscoveryScan += (sender, e) => _explorationDataService.HandleFSSDiscoveryScan(e);
@@ -207,7 +196,7 @@ namespace EliteDataRelay
                 _explorationDatabaseService.Dispose();
                 _screenshotRenamerService?.Dispose();
                 _webOverlayService?.Dispose();
-                _miningCompanionService?.Dispose();
+                
             }
             base.Dispose(disposing);
         }

@@ -85,7 +85,8 @@ namespace EliteDataRelay.Services
                 ControllingFaction = dockedEvent.StationFaction?.Name ?? "N/A",
                 HasRefuel = services.Contains("refuel"),
                 HasRepair = services.Contains("repair"),
-                HasRearm = services.Contains("rearm"),
+                // Journal uses 'Restock' for ammo/limpets; accept both for safety
+                HasRearm = services.Contains("rearm") || services.Contains("restock"),
                 HasOutfitting = services.Contains("outfitting"),
                 HasShipyard = services.Contains("shipyard"),
                 HasMarket = services.Contains("market")
