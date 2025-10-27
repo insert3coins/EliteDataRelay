@@ -174,12 +174,14 @@ namespace EliteDataRelay.UI
                 g.DrawString(mappedText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
                 y += lineHeight;
 
-                // === FIRST DISCOVERIES / MAPPINGS ===
+                // === FIRST DISCOVERIES / MAPPINGS / FOOTFALLS ===
                 var firstDiscoveries = data.Bodies.Count(b => !b.WasDiscovered);
                 var firstMappings = data.Bodies.Count(b => b.IsMapped && !b.WasMapped);
+                var firstFootfalls = data.Bodies.Count(b => b.FirstFootfall);
 
-                if (firstDiscoveries > 0 || firstMappings > 0)
+                if (firstDiscoveries > 0 || firstMappings > 0 || firstFootfalls > 0)
                 {
+                    // Line 1: First discoveries and mappings
                     string firstsText = "";
                     if (firstDiscoveries > 0) firstsText += $"⭐ {firstDiscoveries} First";
                     if (firstMappings > 0)
@@ -188,17 +190,33 @@ namespace EliteDataRelay.UI
                         firstsText += $"🗺️ {firstMappings} Mapped";
                     }
 
-                    // Use TextRenderer for better emoji support. Graphics.DrawString can fail to render color emojis.
-                    TextRenderer.DrawText(g, firstsText, GameColors.FontNormal,
-                                          new Point(padding, y),
-                                          GameColors.Gold,
-                                          TextFormatFlags.Left | TextFormatFlags.NoPadding);
+                    if (!string.IsNullOrEmpty(firstsText))
+                    {
+                        // Use TextRenderer for better emoji support. Graphics.DrawString can fail to render color emojis.
+                        TextRenderer.DrawText(g, firstsText, GameColors.FontNormal,
+                                              new Point(padding, y),
+                                              GameColors.Gold,
+                                              TextFormatFlags.Left | TextFormatFlags.NoPadding);
+                        y += lineHeight;
+                    }
+
+                    // Line 2: First footfalls (if any)
+                    if (firstFootfalls > 0)
+                    {
+                        string footfallText = $"👣 {firstFootfalls} First Footfall";
+                        TextRenderer.DrawText(g, footfallText, GameColors.FontNormal,
+                                              new Point(padding, y),
+                                              GameColors.Gold,
+                                              TextFormatFlags.Left | TextFormatFlags.NoPadding);
+                        y += lineHeight;
+                    }
                 }
-                else if (data.Bodies.Any())
+                else if (data.Bodies.Any(b => b.WasDiscovered))
                 {
+                    // Only show "Known System" if we have scanned bodies that were already discovered
                     g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                    y += lineHeight;
                 }
-                y += lineHeight;
 
                 // === SESSION STATISTICS (if available) ===
                 if (_currentSessionData != null && _currentSessionData.SystemsVisited > 0)
@@ -210,6 +228,8 @@ namespace EliteDataRelay.UI
                     string sessionText = $"Session: {_currentSessionData.SystemsVisited} systems";
                     if (_currentSessionData.TotalScans > 0)
                         sessionText += $" • {_currentSessionData.TotalScans} scans";
+                    if (_currentSessionData.TotalMapped > 0)
+                        sessionText += $" • {_currentSessionData.TotalMapped} mapped";
 
                     g.DrawString(sessionText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                 }

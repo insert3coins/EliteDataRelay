@@ -58,8 +58,8 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.Exploration)
             {
-                // Exploration overlay with FSS tracking: 340px wide x 175px tall
-                this.Size = new Size(340, 175);
+                // Exploration overlay with FSS tracking: 340px wide x 195px tall
+                this.Size = new Size(340, 195);
 
                 // Custom render panel for bitmap-cached drawing (SrvSurvey PlotBase2 style)
                 _renderPanel = new DoubleBufferedPanel
