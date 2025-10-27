@@ -11,6 +11,8 @@ namespace EliteDataRelay.Configuration
     public static partial class AppConfiguration
     {
         private static readonly string SettingsFilePath;
+        // Opacity for browser-source overlays (0-100)
+        public static int WebOverlayOpacity { get; set; } = 85;
 
         #region Properties
 
@@ -87,6 +89,7 @@ namespace EliteDataRelay.Configuration
                         // Web overlay
                         EnableWebOverlayServer = config.EnableWebOverlayServer;
                         WebOverlayPort = config.WebOverlayPort;
+                        WebOverlayOpacity = config.WebOverlayOpacity;
                     }
                 }
             }
@@ -152,6 +155,7 @@ namespace EliteDataRelay.Configuration
                     // Web overlay
                     EnableWebOverlayServer = AppConfiguration.EnableWebOverlayServer,
                     WebOverlayPort = AppConfiguration.WebOverlayPort,
+                    WebOverlayOpacity = AppConfiguration.WebOverlayOpacity,
                 };
 
                 var options = new JsonSerializerOptions 
@@ -218,6 +222,7 @@ namespace EliteDataRelay.Configuration
             // Web overlay
             public bool EnableWebOverlayServer { get; set; } = false;
             public int WebOverlayPort { get; set; } = 9005;
+            public int WebOverlayOpacity { get; set; } = 85;
         }
     }
 }

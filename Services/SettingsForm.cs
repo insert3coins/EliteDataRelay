@@ -39,6 +39,7 @@ namespace EliteDataRelay.UI
         private Panel _pnlBorderColor = null!;
         private TrackBar _trackBarOpacity = null!;
         private Label _lblOpacityValue = null!;
+        // Web overlay UI (local to Advanced tab; created inline), add fields if later reused
 
 
         private Keys _startHotkey;

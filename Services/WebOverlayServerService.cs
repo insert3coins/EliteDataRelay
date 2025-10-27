@@ -361,7 +361,8 @@ namespace EliteDataRelay.Services
         private static string CssBackground()
         {
             var c = AppConfiguration.OverlayBackgroundColor;
-            var a = Math.Clamp(AppConfiguration.OverlayOpacity/100.0, 0.0, 1.0);
+            // Use dedicated web overlay opacity to decouple from desktop overlay
+            var a = Math.Clamp(AppConfiguration.WebOverlayOpacity/100.0, 0.0, 1.0);
             return $"rgba({c.R},{c.G},{c.B},{a.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
         }
         private static string BorderWidth() => "2px";
