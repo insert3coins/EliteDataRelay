@@ -36,7 +36,6 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Real-time cargo and session data for stream displays
 
 **Advanced Features**
-- Mining hotspot bookmarks and finder
 - Cargo full notifications and mining announcements
 - Global hotkeys for monitoring control (Ctrl+Alt+F9/F10)
 - Comprehensive event tracking from Elite Dangerous journals
