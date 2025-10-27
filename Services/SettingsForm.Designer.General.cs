@@ -13,7 +13,9 @@ namespace EliteDataRelay.UI
             {
                 Text = "Text File Output",
                 Location = new Point(12, 12),
-                Size = new Size(440, 298),
+                Size = new Size(520, 298),
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(31, 41, 55)
             };
 
             // Enable/Disable CheckBox
@@ -37,7 +39,7 @@ namespace EliteDataRelay.UI
             _txtOutputFormat = new TextBox
             {
                 Location = new Point(18, 70),
-                Size = new Size(407, 20)
+                Size = new Size(487, 20)
             };
 
             // Output File Name Label
@@ -52,7 +54,7 @@ namespace EliteDataRelay.UI
             _txtOutputFileName = new TextBox
             {
                 Location = new Point(18, 116),
-                Size = new Size(407, 20)
+                Size = new Size(487, 20)
             };
 
             // Output Directory Label
@@ -67,14 +69,14 @@ namespace EliteDataRelay.UI
             _txtOutputDirectory = new TextBox
             {
                 Location = new Point(18, 158),
-                Size = new Size(326, 20)
+                Size = new Size(400, 20)
             };
 
             // Browse Button
             _btnBrowse = new Button
             {
                 Text = "Browse...",
-                Location = new Point(350, 157),
+                Location = new Point(425, 157),
                 Size = new Size(75, 22)
             };
             _btnBrowse.Click += OnBrowseClicked;
@@ -98,7 +100,9 @@ namespace EliteDataRelay.UI
             {
                 Text = "Session Tracking",
                 Location = new Point(12, 316),
-                Size = new Size(440, 55),
+                Size = new Size(520, 55),
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(31, 41, 55)
             };
             _chkEnableSessionTracking = new CheckBox
             {
@@ -107,6 +111,7 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
             _grpSessionTracking.Controls.Add(_chkEnableSessionTracking);
+            _chkEnableSessionTracking.ForeColor = Color.FromArgb(31, 41, 55);
 
 
             // Add controls to the file output groupbox
@@ -119,6 +124,10 @@ namespace EliteDataRelay.UI
             _grpOutputFormat.Controls.Add(_lblOutputFileName);
             _grpOutputFormat.Controls.Add(_txtOutputFileName);
             _grpOutputFormat.Controls.Add(_lblPlaceholders);
+            foreach (Control c in _grpOutputFormat.Controls)
+            {
+                c.ForeColor = Color.FromArgb(31, 41, 55);
+            }
 
             // Add controls to the General tab
             generalTabPage.Controls.Add(_grpOutputFormat);
@@ -129,7 +138,9 @@ namespace EliteDataRelay.UI
             {
                 Text = "Screenshots",
                 Location = new Point(12, 380),
-                Size = new Size(440, 75)
+                Size = new Size(520, 80),
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(31, 41, 55)
             };
             var chkEnableScreenshotRenamer = new CheckBox
             {
@@ -139,7 +150,7 @@ namespace EliteDataRelay.UI
             };
             chkEnableScreenshotRenamer.CheckedChanged += (s, e) => AppConfiguration.EnableScreenshotRenamer = chkEnableScreenshotRenamer.Checked;
             var lblFormat = new Label { Text = "Format:", Location = new Point(15, 50), AutoSize = true };
-            var txtFormat = new TextBox { Location = new Point(70, 47), Size = new Size(355, 20) };
+            var txtFormat = new TextBox { Location = new Point(70, 47), Size = new Size(430, 20) };
             txtFormat.TextChanged += (s, e) => AppConfiguration.ScreenshotRenameFormat = txtFormat.Text;
             // initialize values
             chkEnableScreenshotRenamer.Checked = AppConfiguration.EnableScreenshotRenamer;
@@ -147,6 +158,10 @@ namespace EliteDataRelay.UI
             grpScreenshots.Controls.Add(chkEnableScreenshotRenamer);
             grpScreenshots.Controls.Add(lblFormat);
             grpScreenshots.Controls.Add(txtFormat);
+            foreach (Control c in grpScreenshots.Controls)
+            {
+                c.ForeColor = Color.FromArgb(31, 41, 55);
+            }
             generalTabPage.Controls.Add(grpScreenshots);
 
             // Advanced moved to its own tab

@@ -5,16 +5,18 @@ namespace EliteDataRelay.UI
 {
     public class CustomTabControl : TabControl
     {
-        private readonly Color _backColor = Color.FromArgb(18, 18, 22);
-        private readonly Color _selectedTabColor = Color.FromArgb(28, 28, 35);
-        private readonly Color _textColor = Color.FromArgb(243, 244, 246);
-        private readonly Color _borderColor = Color.FromArgb(99, 102, 241);
+        private readonly Color _backColor = Color.White;                      // Control background
+        private readonly Color _selectedTabColor = Color.FromArgb(243, 244, 246); // Selected tab bg
+        private readonly Color _textColor = Color.FromArgb(17, 24, 39);          // #111827
+        private readonly Color _borderColor = Color.FromArgb(209, 213, 219);     // #D1D5DB
 
         public CustomTabControl()
         {
             this.SetStyle(ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             this.SizeMode = TabSizeMode.Fixed;
-            this.ItemSize = new Size(150, 40);
+            this.ItemSize = new Size(140, 36);
+            this.Multiline = true; // Wrap into multiple rows instead of showing scroll arrows
+            this.Padding = new Point(12, 6);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -27,13 +29,9 @@ namespace EliteDataRelay.UI
                 e.Graphics.FillRectangle(backBrush, this.ClientRectangle);
             }
 
-            // Draw the border for the tab page area
-            if (this.SelectedTab != null)
-            {
-                var pageRect = this.SelectedTab.Bounds;
-                var borderRect = new Rectangle(pageRect.Left - 2, pageRect.Top - 2, pageRect.Width + 4, pageRect.Height + 4);
-                ControlPaint.DrawBorder(e.Graphics, borderRect, _borderColor, ButtonBorderStyle.Solid);
-            }
+            // Subtle bottom border under the tab strip
+            var tabsArea = new Rectangle(0, 0, this.Width, this.GetTabRect(0).Bottom + 1);
+            ControlPaint.DrawBorder(e.Graphics, tabsArea, _borderColor, ButtonBorderStyle.Solid);
 
             // Draw the tabs
             for (int i = 0; i < this.TabCount; i++)
@@ -49,7 +47,7 @@ namespace EliteDataRelay.UI
 
                 // Tab text
                 TextRenderer.DrawText(e.Graphics, this.TabPages[i].Text, this.Font, tabRect, _textColor,
-                                      TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                                      TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                 // Border for selected tab
                 if (isSelected)
@@ -57,6 +55,18 @@ namespace EliteDataRelay.UI
                     ControlPaint.DrawBorder(e.Graphics, tabRect, _borderColor, ButtonBorderStyle.Solid);
                 }
             }
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            if (this.TabCount <= 1) return;
+
+            int direction = e.Delta > 0 ? -1 : 1; // Up = previous, Down = next
+            int newIndex = this.SelectedIndex + direction;
+            if (newIndex < 0) newIndex = this.TabCount - 1;
+            if (newIndex >= this.TabCount) newIndex = 0;
+            this.SelectedIndex = newIndex;
         }
     }
 }

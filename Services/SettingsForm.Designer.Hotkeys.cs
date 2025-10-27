@@ -21,7 +21,9 @@ namespace EliteDataRelay.UI
             {
                 Text = "Hotkeys",
                 Location = new Point(12, 12),
-                Size = new Size(410, 155),
+                Size = new Size(520, 155),
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(31, 41, 55)
             };
 
             // Hotkey Labels and TextBoxes
@@ -50,6 +52,10 @@ namespace EliteDataRelay.UI
             _grpHotkeys.Controls.Add(_txtShowOverlayHotkey);
             _grpHotkeys.Controls.Add(lblHide);
             _grpHotkeys.Controls.Add(_txtHideOverlayHotkey);
+            foreach (Control c in _grpHotkeys.Controls)
+            {
+                c.ForeColor = Color.FromArgb(31, 41, 55);
+            }
 
             // Add controls to the Hotkeys tab
             hotkeysTabPage.Controls.Add(_grpHotkeys);

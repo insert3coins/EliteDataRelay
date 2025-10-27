@@ -28,7 +28,7 @@ Release Date: October 27, 2025
 - Added: Hotspot Finder tab and Mining Companion restock reminder *note its in early stages, so might be borked
 - Removed: OBS Compatibility Mode and overlay position exporter (use Browser Source overlays)
 - Improved: Startup responsiveness with FastStartSkipJournalHistory
-- Fixed: Screenshots defaulting to “Unknown System” in some cases
+- Settings window got a make over! (went mining, came back different, saw some things out there in the void) 
 
 ## Quick OBS (Browser Source)
 
@@ -42,7 +42,7 @@ Release Date: October 27, 2025
 ## Installation
 
 New Users
-1. Download `EliteDataRelay-v0.60.1.zip`
+1. Download `EliteDataRelay.zip`
 2. Extract
 3. Run `EliteDataRelay.exe`
 4. Click Start and play

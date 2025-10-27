@@ -14,7 +14,9 @@ namespace EliteDataRelay.UI
             {
                 Text = "Advanced",
                 Location = new Point(12, 12),
-                Size = new Size(440, 80)
+                Size = new Size(520, 80),
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(31, 41, 55)
             };
 
             _chkFastStart = new CheckBox
@@ -27,8 +29,11 @@ namespace EliteDataRelay.UI
             _chkFastStart.CheckedChanged += (s, e) => AppConfiguration.FastStartSkipJournalHistory = _chkFastStart.Checked;
 
             grp.Controls.Add(_chkFastStart);
+            foreach (Control c in grp.Controls)
+            {
+                c.ForeColor = Color.FromArgb(31, 41, 55);
+            }
             tab.Controls.Add(grp);
         }
     }
 }
-

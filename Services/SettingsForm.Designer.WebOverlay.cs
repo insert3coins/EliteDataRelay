@@ -14,7 +14,9 @@ namespace EliteDataRelay.UI
             {
                 Text = "Browser-Source Overlay Server",
                 Location = new Point(12, 12),
-                Size = new Size(440, 110)
+                Size = new Size(520, 110),
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(31, 41, 55)
             };
 
             var chkEnable = new CheckBox { Text = "Enable web overlay server", Location = new Point(15, 25), AutoSize = true };
@@ -28,8 +30,11 @@ namespace EliteDataRelay.UI
             grp.Controls.Add(chkEnable);
             grp.Controls.Add(lblPort);
             grp.Controls.Add(nudPort);
+            foreach (Control c in grp.Controls)
+            {
+                c.ForeColor = Color.FromArgb(31, 41, 55);
+            }
             tab.Controls.Add(grp);
         }
     }
 }
-
