@@ -29,17 +29,27 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - OBS-compatible window capture mode
 - Global hotkeys for show/hide control (Ctrl+Alt+F11/F12)
 
+**Browser-Source Overlays**
+- Built‑in local web server (default port 9005)
+- Matching styles and sizes for Info, Cargo, Ship Icon, and Exploration
+- Auto‑updates live via WebSocket (no scene refresh required)
+- Endpoints: `/info`, `/cargo`, `/ship-icon`, `/exploration`
+
 **Streaming & Content Creation**
 - Text file output with customizable format templates
 - Multiple overlay support for stream scenes
 - Position export for OBS integration
 - Real-time cargo and session data for stream displays
+- Screenshot helper: auto‑rename with {System}/{Body}/{Timestamp} and BMP→PNG conversion
 
 **Advanced Features**
 - Cargo full notifications and mining announcements
 - Global hotkeys for monitoring control (Ctrl+Alt+F9/F10)
 - Comprehensive event tracking from Elite Dangerous journals
 - Performance-optimized file monitoring with 25ms debounce
+- Hotspot Finder UI with search and bookmarks (mining)
+- Mining companion: dock‑side “Restock limpets” reminder when services available
+- Fast start option to skip historic journal lines on initial scan
 
 ---
 
@@ -50,6 +60,14 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 3. **Launch**: Start Elite Dangerous
 4. **Monitor**: Click Start in the app to begin monitoring
 5. **Customize**: Configure overlays, hotkeys, and file output in Settings
+
+### OBS Browser Source (optional)
+- Enable Web Overlay server in Settings → Web Overlay
+- Add Browser Source to OBS using one of:
+  - `http://localhost:9005/info`
+  - `http://localhost:9005/cargo`
+  - `http://localhost:9005/ship-icon`
+  - `http://localhost:9005/exploration`
 
 ---
 

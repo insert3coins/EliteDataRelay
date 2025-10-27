@@ -77,7 +77,3 @@ This release focuses on making cargo monitoring more responsive and snappier whe
 
 - **Issues:** https://github.com/insert3coins/EliteDataRelay/issues
 - **Discussions:** https://github.com/insert3coins/EliteDataRelay/discussions
-
----
-
-**Full Changelog:** https://github.com/insert3coins/EliteDataRelay/compare/v0.55.3...v0.55.4

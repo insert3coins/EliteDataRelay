@@ -56,30 +56,11 @@ namespace EliteDataRelay.UI
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
 
-            // OBS Compatibility Mode CheckBox
-            _chkObsCompatibilityMode = new CheckBox
-            {
-                Text = "Enable OBS compatibility mode (allows Window Capture)",
-                Location = new Point(15, 145),
-                AutoSize = true
-            };
-            _chkObsCompatibilityMode.CheckedChanged += OnObsCompatibilityModeCheckedChanged;
-
-            // Info label for OBS compatibility
-            _lblObsCompatibilityInfo = new Label
-            {
-                Text = "Note: Requires app restart. Slightly reduces transparency quality.",
-                Location = new Point(35, 168),
-                AutoSize = true,
-                ForeColor = Color.Gray,
-                Font = new Font(this.Font.FontFamily, 8f, FontStyle.Italic)
-            };
-
             // Reposition Overlays Button
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(15, 235),
+                Location = new Point(15, 165),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -90,8 +71,6 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableShipIconOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
-            _grpOverlaySettings.Controls.Add(_chkObsCompatibilityMode);
-            _grpOverlaySettings.Controls.Add(_lblObsCompatibilityInfo);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 
             // Font GroupBox

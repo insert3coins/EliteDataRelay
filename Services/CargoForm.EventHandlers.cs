@@ -46,6 +46,21 @@ namespace EliteDataRelay
                         _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
                     }
 
+                    // Web overlay
+                    _webOverlayService.UpdateCargo(e.Snapshot.Count, _cargoCapacity);
+                    _webOverlayService.UpdateCargoList(e.Snapshot.Items);
+                    // compute cargo size text, mirror desktop logic
+                    int count = e.Snapshot.Count;
+                    int index = 0;
+                    if (_cargoCapacity is > 0)
+                    {
+                        double percentage = (double)count / _cargoCapacity.Value;
+                        percentage = Math.Clamp(percentage, 0.0, 1.0);
+                        index = (int)Math.Round(percentage * (UI.UIConstants.CargoSize.Length - 1));
+                        index = Math.Clamp(index, 0, UI.UIConstants.CargoSize.Length - 1);
+                    }
+                    _webOverlayService.UpdateCargoSize(UI.UIConstants.CargoSize[index]);
+
                     // Auto-populate the trade commodity dropdown with items currently in cargo
                     // We must translate the internal names (e.g., "lowtemperaturediamonds") to friendly names ("Low Temperature Diamonds")
                     // that the EDSM API expects. We are no longer doing this.
@@ -75,6 +90,19 @@ namespace EliteDataRelay
                     {
                         _cargoFormUI.UpdateCargoDisplay(new CargoSnapshot(new System.Collections.Generic.List<CargoItem>(), 0), _cargoCapacity);
                     }
+
+                    // Web overlay
+                    var webCount = _lastCargoSnapshot?.Count ?? 0;
+                    _webOverlayService.UpdateCargo(webCount, _cargoCapacity);
+                    int index = 0;
+                    if (_cargoCapacity is > 0)
+                    {
+                        double percentage = (double)webCount / _cargoCapacity.Value;
+                        percentage = Math.Clamp(percentage, 0.0, 1.0);
+                        index = (int)Math.Round(percentage * (UI.UIConstants.CargoSize.Length - 1));
+                        index = Math.Clamp(index, 0, UI.UIConstants.CargoSize.Length - 1);
+                    }
+                    _webOverlayService.UpdateCargoSize(UI.UIConstants.CargoSize[index]);
                 });
             }
         }
@@ -90,6 +118,9 @@ namespace EliteDataRelay
 
                     // Notify the session tracker of the new balance to update session stats.
                     _sessionTrackingService.UpdateBalance(e.Balance);
+
+                    // Web overlay
+                    _webOverlayService.UpdateBalance(e.Balance);
                 }
             });
         }
@@ -103,6 +134,7 @@ namespace EliteDataRelay
                 if (!_isInitializing)
                 {
                     _cargoFormUI.UpdateCommanderName(e.CommanderName);
+                    _webOverlayService.UpdateCommander(e.CommanderName);
                 }
             });
         }
@@ -120,6 +152,8 @@ namespace EliteDataRelay
                 if (!_isInitializing)
                 {
                     _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName); // Pass internal name
+                    _webOverlayService.UpdateShip(e.ShipType);
+                    _webOverlayService.UpdateShipIconFromInternalName(e.InternalShipName);
                 }
             });
         }
@@ -203,6 +237,9 @@ namespace EliteDataRelay
 
                 // Update the session stats on the cargo overlay if enabled.
                 _cargoFormUI.UpdateSessionOverlay((int)tracker.TotalCargoCollected, tracker.CreditsEarned);
+
+                // Web overlay session info
+                _webOverlayService.UpdateSession(tracker.TotalCargoCollected, tracker.CreditsEarned);
             });
         }
 

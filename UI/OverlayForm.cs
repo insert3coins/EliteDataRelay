@@ -74,14 +74,8 @@ namespace EliteDataRelay.UI
             {
                 CreateParams cp = base.CreateParams;
 
-                // OBS Compatibility Mode: When enabled, removes WS_EX_LAYERED to allow OBS window capture.
-                // Trade-off: Slightly reduced transparency quality, but overlays become visible to OBS.
-                if (!AppConfiguration.OverlayObsCompatibilityMode)
-                {
-                    // WS_EX_LAYERED: Enable per-pixel alpha blending for smooth transparency
-                    // Note: This style prevents OBS from capturing the window with "Window Capture"
-                    cp.ExStyle |= 0x00080000; // WS_EX_LAYERED
-                }
+                // Always use WS_EX_LAYERED for smooth transparency; browser overlays replace OBS window-capture needs.
+                cp.ExStyle |= 0x00080000; // WS_EX_LAYERED
 
                 // WS_EX_NOACTIVATE: Prevent the form from stealing focus
                 // WS_EX_TRANSPARENT: Allow click-through (optional, currently disabled for dragging)

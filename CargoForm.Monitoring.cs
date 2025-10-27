@@ -53,6 +53,10 @@ namespace EliteDataRelay
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
             _cargoFormUI.UpdateMonitoringVisuals(isMonitoring: true);
             _overlayService.Start();
+            // Start optional services
+            if (AppConfiguration.EnableScreenshotRenamer) _screenshotRenamerService.Start();
+            if (AppConfiguration.EnableWebOverlayServer) _webOverlayService.Start();
+            _miningCompanionService.Start();
 
             // Start all background monitoring services.
             _fileMonitoringService.StartMonitoring();
@@ -77,6 +81,8 @@ namespace EliteDataRelay
 
             // Start exploration session tracking
             _explorationDataService.StartSession();
+
+            // no webhook
         }
 
         private void StopMonitoringInternal()
@@ -115,6 +121,12 @@ namespace EliteDataRelay
             // Clear cached data after stopping services
             _lastStationInfoData = null;
             _lastSystemInfoData = null;
+
+            // Stop optional services
+            _screenshotRenamerService.Stop();
+            _webOverlayService.Stop();
+            _miningCompanionService.Stop();
+            // no webhook
         }
 
         #endregion

@@ -28,6 +28,9 @@ namespace EliteDataRelay
         private readonly OverlayService _overlayService;
         private readonly ExplorationDataService _explorationDataService;
         private readonly ExplorationDatabaseService _explorationDatabaseService;
+        private readonly ScreenshotRenamerService _screenshotRenamerService;
+        private readonly WebOverlayServerService _webOverlayService;
+        private readonly MiningCompanionService _miningCompanionService;
         public CargoForm()
         {
             // Create all service instances. This form now owns its dependencies,
@@ -47,6 +50,11 @@ namespace EliteDataRelay
             _explorationDatabaseService.Initialize();
             _explorationDataService = new ExplorationDataService(_explorationDatabaseService);
             _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService);
+
+            // Optional services
+            _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
+            _webOverlayService = new WebOverlayServerService();
+            _miningCompanionService = new MiningCompanionService(_journalWatcherService, _sessionTrackingService);
 
             InitializeComponent();
 
@@ -131,6 +139,17 @@ namespace EliteDataRelay
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
 
+            // Mining companion reminder -> surface via existing mining notifications UI
+            _miningCompanionService.RestockReminder += (s, msg) =>
+            {
+                SafeInvoke(() =>
+                {
+                    var evt = new MiningNotificationEventArgs(MiningNotificationType.Reminder, msg, DateTime.UtcNow, false);
+                    _cargoFormUI.AppendMiningAnnouncement(evt);
+                    _cargoFormUI.ShowMiningNotification(evt);
+                });
+            };
+
             // Wire up exploration events
             _journalWatcherService.FSSDiscoveryScan += (sender, e) => _explorationDataService.HandleFSSDiscoveryScan(e);
             _journalWatcherService.BodyScanned += (sender, e) => _explorationDataService.HandleScan(e);
@@ -143,6 +162,10 @@ namespace EliteDataRelay
                 // After selling data, refresh the log to show updated discovery/mapping statuses.
                 _cargoFormUI.RefreshExplorationLog();
             };
+
+            // Push exploration updates to web overlay
+            _explorationDataService.SystemDataChanged += (s, data) => _webOverlayService.UpdateExploration(data);
+            _explorationDataService.SessionDataChanged += (s, data) => _webOverlayService.UpdateExplorationSession(data);
         }
 
         private void OnMiningNotificationRaised(object? sender, MiningNotificationEventArgs e)
@@ -182,6 +205,9 @@ namespace EliteDataRelay
                 _overlayService.Dispose();
                 _explorationDataService.Dispose();
                 _explorationDatabaseService.Dispose();
+                _screenshotRenamerService?.Dispose();
+                _webOverlayService?.Dispose();
+                _miningCompanionService?.Dispose();
             }
             base.Dispose(disposing);
         }

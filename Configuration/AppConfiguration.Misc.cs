@@ -25,5 +25,18 @@ namespace EliteDataRelay.Configuration
         public static bool PlaySounds { get; set; } = true;
         public static string StartSoundPath { get; set; }
         public static string StopSoundPath { get; set; }
+
+        // Performance
+        public static bool FastStartSkipJournalHistory { get; set; } = true;
+
+        // Screenshot Renamer
+        public static bool EnableScreenshotRenamer { get; set; } = false;
+        public static string ScreenshotRenameFormat { get; set; } = "{System} - {Body} - {Timestamp}";
+
+        // Webhook removed
+
+        // Web Overlay Server
+        public static bool EnableWebOverlayServer { get; set; } = false;
+        public static int WebOverlayPort { get; set; } = 9005;
     }
 }

@@ -77,12 +77,7 @@ namespace EliteDataRelay.Services
 
         private void ExportObsPositions()
         {
-            // Only export overlay positions if OBS compatibility mode is enabled
-            if (AppConfiguration.OverlayObsCompatibilityMode)
-            {
-                // Export overlay positions to a JSON file for OBS positioning reference
-                ObsPositionExporter.ExportPositions(_leftOverlayForm, _rightOverlayForm, _shipIconOverlayForm, _explorationOverlayForm);
-            }
+            // OBS compatibility removed; browser overlays recommended for streaming.
         }
     }
 }

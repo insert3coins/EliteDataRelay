@@ -77,7 +77,20 @@ namespace EliteDataRelay.Configuration
                         ExplorationOverlayLocation = config.ExplorationOverlayLocation;
                         EnableMiningAnnouncements = config.EnableMiningAnnouncements;
                         NotifyOnCargoFull = config.NotifyOnCargoFull;
-                        OverlayObsCompatibilityMode = config.OverlayObsCompatibilityMode;
+                        // OBS compatibility removed
+
+                        // Performance and extras
+                        FastStartSkipJournalHistory = config.FastStartSkipJournalHistory;
+
+                        // Screenshot renamer
+                        EnableScreenshotRenamer = config.EnableScreenshotRenamer;
+                        ScreenshotRenameFormat = config.ScreenshotRenameFormat;
+
+                        // Webhook removed
+
+                        // Web overlay
+                        EnableWebOverlayServer = config.EnableWebOverlayServer;
+                        WebOverlayPort = config.WebOverlayPort;
                     }
                 }
             }
@@ -131,8 +144,20 @@ namespace EliteDataRelay.Configuration
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
                     EnableMiningAnnouncements = AppConfiguration.EnableMiningAnnouncements,
-                    NotifyOnCargoFull = AppConfiguration.NotifyOnCargoFull,
-                    OverlayObsCompatibilityMode = AppConfiguration.OverlayObsCompatibilityMode,
+     NotifyOnCargoFull = AppConfiguration.NotifyOnCargoFull,
+
+                    // Performance and extras
+                    FastStartSkipJournalHistory = AppConfiguration.FastStartSkipJournalHistory,
+
+                    // Screenshot renamer
+                    EnableScreenshotRenamer = AppConfiguration.EnableScreenshotRenamer,
+                    ScreenshotRenameFormat = AppConfiguration.ScreenshotRenameFormat,
+
+                    // Webhook removed
+
+                    // Web overlay
+                    EnableWebOverlayServer = AppConfiguration.EnableWebOverlayServer,
+                    WebOverlayPort = AppConfiguration.WebOverlayPort,
                 };
 
                 var options = new JsonSerializerOptions 
@@ -190,7 +215,20 @@ namespace EliteDataRelay.Configuration
             public bool EnableMiningAnnouncements { get; set; } = false;
             [JsonConverter(typeof(JsonBooleanConverter))]
             public bool NotifyOnCargoFull { get; set; } = false;
-            public bool OverlayObsCompatibilityMode { get; set; } = false;
+            // OBS compatibility removed
+
+            // Performance and extras
+            public bool FastStartSkipJournalHistory { get; set; } = true;
+
+            // Screenshot renamer
+            public bool EnableScreenshotRenamer { get; set; } = false;
+            public string ScreenshotRenameFormat { get; set; } = "{System} - {Body} - {Timestamp}";
+
+            // Webhook removed
+
+            // Web overlay
+            public bool EnableWebOverlayServer { get; set; } = false;
+            public int WebOverlayPort { get; set; } = 9005;
         }
     }
 }

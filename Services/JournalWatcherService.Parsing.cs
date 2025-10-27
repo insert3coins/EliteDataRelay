@@ -1,4 +1,5 @@
 using EliteDataRelay.Models;
+using EliteDataRelay.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,6 +37,12 @@ namespace EliteDataRelay.Services
                 if (fs.Length <= _lastPosition) return;
 
                 fs.Seek(_lastPosition, SeekOrigin.Begin);
+
+                // On first pass after a start/reset, optionally skip historical lines for fast start
+                if (_lastPosition == 0 && AppConfiguration.FastStartSkipJournalHistory)
+                {
+                    _lastPosition = fs.Length; // jump to end, only new events from now
+                }
 
                 using var reader = new StreamReader(fs);
                 // Read all new lines and parse them into a list of JsonDocument objects.
@@ -174,6 +181,20 @@ namespace EliteDataRelay.Services
                         else if (eventType == "Loadout")
                         {
                             ProcessLoadoutEvent(journalLine, options);
+                        }
+                        else if (eventType == "Screenshot")
+                        {
+                            // Parse minimal fields directly from JSON as this event is simple
+                            var root = jsonDoc.RootElement;
+                            string? file = root.TryGetProperty("Filename", out var f) ? f.GetString() : null;
+                            string? systemName = root.TryGetProperty("System", out var s) ? s.GetString() : null;
+                            string? bodyName = root.TryGetProperty("Body", out var b) ? b.GetString() : null;
+                            DateTime ts = DateTime.UtcNow;
+                            if (root.TryGetProperty("timestamp", out var tsElem) && tsElem.TryGetDateTime(out var parsed)) ts = parsed;
+                            if (!string.IsNullOrEmpty(file))
+                            {
+                                ScreenshotTaken?.Invoke(this, new ScreenshotEventArgs(file, systemName, bodyName, ts));
+                            }
                         }
                         else if (eventType == "Materials")
                         {

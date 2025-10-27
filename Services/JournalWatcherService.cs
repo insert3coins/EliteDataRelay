@@ -147,6 +147,7 @@ namespace EliteDataRelay.Services
         /// Event raised when landing on a planet surface.
         /// </summary>
         public event EventHandler<TouchdownEvent>? Touchdown;
+        public event EventHandler<ScreenshotEventArgs>? ScreenshotTaken;
 
         /// <summary>
         /// Gets whether the monitoring service is currently active.

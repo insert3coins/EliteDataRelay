@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.UI
 {
@@ -122,6 +123,31 @@ namespace EliteDataRelay.UI
             // Add controls to the General tab
             generalTabPage.Controls.Add(_grpOutputFormat);
             generalTabPage.Controls.Add(_grpSessionTracking);
+
+            // Screenshots group (added after output/session)
+            var grpScreenshots = new GroupBox
+            {
+                Text = "Screenshots",
+                Location = new Point(12, 380),
+                Size = new Size(440, 75)
+            };
+            var chkEnableScreenshotRenamer = new CheckBox
+            {
+                Text = "Auto-rename screenshots (system/body/timestamp)",
+                Location = new Point(15, 25),
+                AutoSize = true
+            };
+            chkEnableScreenshotRenamer.CheckedChanged += (s, e) => AppConfiguration.EnableScreenshotRenamer = chkEnableScreenshotRenamer.Checked;
+            var lblFormat = new Label { Text = "Format:", Location = new Point(15, 50), AutoSize = true };
+            var txtFormat = new TextBox { Location = new Point(70, 47), Size = new Size(355, 20) };
+            txtFormat.TextChanged += (s, e) => AppConfiguration.ScreenshotRenameFormat = txtFormat.Text;
+            // initialize values
+            chkEnableScreenshotRenamer.Checked = AppConfiguration.EnableScreenshotRenamer;
+            txtFormat.Text = AppConfiguration.ScreenshotRenameFormat;
+            grpScreenshots.Controls.Add(chkEnableScreenshotRenamer);
+            grpScreenshots.Controls.Add(lblFormat);
+            grpScreenshots.Controls.Add(txtFormat);
+            generalTabPage.Controls.Add(grpScreenshots);
         }
     }
 }

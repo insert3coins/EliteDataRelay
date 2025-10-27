@@ -37,4 +37,20 @@ namespace EliteDataRelay.Models
             TotalCost = totalCost;
         }
     }
+
+    public class ScreenshotEventArgs : EventArgs
+    {
+        public string FileName { get; }
+        public string? SystemName { get; }
+        public string? BodyName { get; }
+        public DateTime Timestamp { get; }
+
+        public ScreenshotEventArgs(string fileName, string? systemName, string? bodyName, DateTime timestamp)
+        {
+            FileName = fileName;
+            SystemName = systemName;
+            BodyName = bodyName;
+            Timestamp = timestamp;
+        }
+    }
 }
