@@ -30,6 +30,8 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableExplorationOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
+        private CheckBox _chkObsCompatibilityMode = null!;
+        private Label _lblObsCompatibilityInfo = null!;
         private GroupBox _grpSessionTracking = null!;
         private CheckBox _chkEnableSessionTracking = null!;
         private CheckBox _chkEnableHotkeys = null!;
@@ -97,6 +99,7 @@ namespace EliteDataRelay.UI
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
             _chkEnableShipIconOverlay.Checked = AppConfiguration.EnableShipIconOverlay;
             _chkEnableExplorationOverlay.Checked = AppConfiguration.EnableExplorationOverlay;
+            _chkObsCompatibilityMode.Checked = AppConfiguration.OverlayObsCompatibilityMode;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
@@ -169,6 +172,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableShipIconOverlay = _chkEnableShipIconOverlay.Checked;
             AppConfiguration.EnableExplorationOverlay = _chkEnableExplorationOverlay.Checked;
+            AppConfiguration.OverlayObsCompatibilityMode = _chkObsCompatibilityMode.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;

@@ -133,6 +133,13 @@ namespace EliteDataRelay.UI
             }
         }
 
+        private void OnObsCompatibilityModeCheckedChanged(object? sender, EventArgs e)
+        {
+            // This setting requires an application restart to take effect.
+            // The CreateParams property is only read when the form is created, not dynamically.
+            // We just save the setting; no live preview is possible for this particular change.
+        }
+
         private void OnEnableHotkeysCheckedChanged(object? sender, EventArgs e)
         {
             bool enabled = _chkEnableHotkeys.Checked;

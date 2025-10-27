@@ -11,7 +11,7 @@ namespace EliteDataRelay.UI
         {
             // Form Properties
             Text = "Settings";
-            ClientSize = new Size(464, 585);
+            ClientSize = new Size(464, 680);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -22,7 +22,7 @@ namespace EliteDataRelay.UI
             var tabControl = new TabControl
             {
                 Dock = DockStyle.Top,
-                Height = 510,
+                Height = 605,
             };
 
             var generalTabPage = new TabPage("General");
@@ -39,11 +39,11 @@ namespace EliteDataRelay.UI
             InitializeHotkeysTab(hotkeysTabPage);
 
             // OK Button
-            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 550) };
+            _btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(296, 645) };
             _btnOk.Click += (sender, e) => SaveSettings();
 
             // Cancel Button
-            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 550) };
+            _btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(377, 645) };
 
             // Add Controls
             Controls.Add(tabControl);

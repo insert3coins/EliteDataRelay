@@ -17,7 +17,7 @@ namespace EliteDataRelay.UI
         private Label _sessionLabel = null!;
         private Label _sessionStatsLabel = null!;
         private readonly ExplorationLogControl? _logControl;
-        private readonly TabControl _subTabControl;
+    private readonly TabControl _subTabControl;
         private SystemExplorationData? _currentSystemData;
         private ExplorationSessionData _sessionData = new ExplorationSessionData();
 
@@ -28,48 +28,48 @@ namespace EliteDataRelay.UI
             this.BackColor = Color.White;
             this.Padding = new Padding(0);
 
-            // Create sub-tab control
-            _subTabControl = new TabControl
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F)
-            };
+        // Create sub-tab control
+        _subTabControl = new TabControl
+        {
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI", 10F)
+        };
 
-            // Create "Current System" tab
-            var currentSystemTab = new TabPage("Current System")
+        // Create "Current System" tab
+        var currentSystemTab = new TabPage("Current System")
+        {
+            BackColor = Color.White,
+            Padding = new Padding(0)
+        };
+
+        // Move all existing UI into the current system tab
+            var currentSystemPanel = CreateCurrentSystemPanel();
+        currentSystemTab.Controls.Add(currentSystemPanel);
+
+        _subTabControl.TabPages.Add(currentSystemTab);
+
+        // Create "Exploration Log" tab if database is available
+        if (database != null)
+        {
+            var logTab = new TabPage("Exploration Log")
             {
                 BackColor = Color.White,
                 Padding = new Padding(0)
             };
 
-            // Move all existing UI into the current system tab
-            var currentSystemPanel = CreateCurrentSystemPanel();
-            currentSystemTab.Controls.Add(currentSystemPanel);
-
-            _subTabControl.TabPages.Add(currentSystemTab);
-
-            // Create "Exploration Log" tab if database is available
-            if (database != null)
+            _logControl = new ExplorationLogControl(database)
             {
-                var logTab = new TabPage("Exploration Log")
-                {
-                    BackColor = Color.White,
-                    Padding = new Padding(0)
-                };
+                Dock = DockStyle.Fill // Ensure the control fills the tab page
+            };
+            logTab.Controls.Add(_logControl);
 
-                _logControl = new ExplorationLogControl(database)
-                {
-                    Dock = DockStyle.Fill // Ensure the control fills the tab page
-                };
-                logTab.Controls.Add(_logControl);
+            // Refresh the log data when the tab becomes visible
+            logTab.Enter += (s, e) => _logControl.Refresh();
 
-                // Refresh the log data when the tab becomes visible
-                logTab.Enter += (s, e) => _logControl.Refresh();
+            _subTabControl.TabPages.Add(logTab);
+        }
 
-                _subTabControl.TabPages.Add(logTab);
-            }
-
-            this.Controls.Add(_subTabControl);
+        this.Controls.Add(_subTabControl);
         }
 
         private Panel CreateCurrentSystemPanel()
@@ -355,7 +355,11 @@ namespace EliteDataRelay.UI
 
                 if (systemData.FSSProgress > 0 && systemData.FSSProgress < 100)
                 {
-                    statsParts.Add($"FSS: {systemData.FSSProgress:F0}%");
+                    statsParts.Add($"FSS: {systemData.FSSProgress:F1}%");
+                }
+                else if (systemData.FSSProgress >= 100)
+                {
+                    statsParts.Add("FSS: Complete");
                 }
 
                 _systemStatsLabel.Text = string.Join(" • ", statsParts);

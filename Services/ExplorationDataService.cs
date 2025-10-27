@@ -8,6 +8,7 @@ namespace EliteDataRelay.Services
 {
     /// <summary>
     /// Service for managing exploration data and session tracking.
+    /// Uses async database operations for improved performance during rapid scan events.
     /// </summary>
     public class ExplorationDataService : IDisposable
     {
@@ -98,7 +99,7 @@ namespace EliteDataRelay.Services
                     Debug.WriteLine($"[ExplorationDataService] Entered new system: {systemName}");
 
                     // Save immediately so all visited systems are tracked
-                    _database.SaveSystem(_currentSystem);
+                    _database.SaveSystemAsync(_currentSystem);
                 }
                 else
                 {
@@ -109,7 +110,7 @@ namespace EliteDataRelay.Services
                         _currentSystem.LastUpdated = eventTimestamp;
                         Debug.WriteLine($"[ExplorationDataService] Updating last visit time for {systemName} to {eventTimestamp:o}");
                         // Save the updated visit time to the database.
-                        _database.SaveSystem(_currentSystem);
+                        _database.SaveSystemAsync(_currentSystem);
                     }
                 }
 
@@ -139,7 +140,7 @@ namespace EliteDataRelay.Services
             Debug.WriteLine($"[ExplorationDataService] FSS scan: {fssEvent.BodyCount} bodies, {fssEvent.Progress * 100:F1}% complete");
 
             // Save to database
-            _database.SaveSystem(_currentSystem);
+            _database.SaveSystemAsync(_currentSystem);
 
             SystemDataChanged?.Invoke(this, _currentSystem);
         }
@@ -181,7 +182,7 @@ namespace EliteDataRelay.Services
             Debug.WriteLine($"[ExplorationDataService] Scanned body: {scanEvent.BodyName}");
 
             // Save to database
-            _database.SaveSystem(_currentSystem);
+            _database.SaveSystemAsync(_currentSystem);
 
             SystemDataChanged?.Invoke(this, _currentSystem);
             SessionDataChanged?.Invoke(this, _sessionData);
@@ -221,7 +222,7 @@ namespace EliteDataRelay.Services
                     _currentSystem.LastUpdated = DateTime.UtcNow;
 
                     // Save to database
-                    _database.SaveSystem(_currentSystem);
+                    _database.SaveSystemAsync(_currentSystem);
 
                     Debug.WriteLine($"[ExplorationDataService] Firing SystemDataChanged event...");
                     SystemDataChanged?.Invoke(this, _currentSystem);
@@ -247,7 +248,7 @@ namespace EliteDataRelay.Services
                 _currentSystem.LastUpdated = DateTime.UtcNow;
 
                 // Save to database
-                _database.SaveSystem(_currentSystem);
+                _database.SaveSystemAsync(_currentSystem);
 
                 SystemDataChanged?.Invoke(this, _currentSystem);
             }
@@ -282,7 +283,7 @@ namespace EliteDataRelay.Services
                 _currentSystem.LastUpdated = DateTime.UtcNow;
 
                 // Save to database
-                _database.SaveSystem(_currentSystem);
+                _database.SaveSystemAsync(_currentSystem);
 
                 SystemDataChanged?.Invoke(this, _currentSystem);
             }
@@ -346,7 +347,7 @@ namespace EliteDataRelay.Services
                     _currentSystem.LastUpdated = DateTime.UtcNow;
 
                     // Save to database
-                    _database.SaveSystem(_currentSystem);
+                    _database.SaveSystemAsync(_currentSystem);
 
                     SystemDataChanged?.Invoke(this, _currentSystem);
                     SessionDataChanged?.Invoke(this, _sessionData);

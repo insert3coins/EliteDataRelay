@@ -40,7 +40,7 @@ namespace EliteDataRelay.UI
 
             _notifyIcon = new NotifyIcon
             {
-                Text = "Elite Cargo Monitor",
+                Text = "Elite Data Relay",
                 Visible = true,
                 ContextMenuStrip = _trayMenu,
                 Icon = appIcon

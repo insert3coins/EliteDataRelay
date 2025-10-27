@@ -11,7 +11,7 @@
 	<ApplicationIcon>Resources\Appicon.ico</ApplicationIcon>
 
     <!-- Assembly Information for File Details -->
-    <Version>0.51.2</Version> <!-- This sets the product version and is used for file version. -->
+    <Version>0.55.3</Version> <!-- This sets the product version and is used for file version. -->
     <Company>insert3coins</Company>
     <Product>Elite Data Relay</Product>
     <Copyright>Copyright © 2024 insert3coins</Copyright>
@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Appicon.ico" />
+    <EmbeddedResource Include="Resources\Appicon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,11 +39,13 @@
     <EmbeddedResource Include="Resources\microresources.csv" />
   </ItemGroup>
 
-<ItemGroup>
-  <Content Include="images\ships\**">
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </Content>
-</ItemGroup>
+  <!--
+    This ensures the ship images are always copied to the output directory for both build and publish.
+    Using <None> with CopyToOutputDirectory is more reliable than <Content> for this purpose.
+  -->
+  <ItemGroup>
+    <None Update="images\ships\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />

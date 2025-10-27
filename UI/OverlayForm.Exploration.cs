@@ -139,15 +139,32 @@ namespace EliteDataRelay.UI
                 g.DrawLine(GameColors.PenGrayDim1, padding, y, width - padding, y);
                 y += 8;
 
-                // === BODIES INFO ===
-                string bodiesText = data.TotalBodies > 0
-                    ? $"Bodies:  {data.ScannedBodies} / {data.TotalBodies}"
-                    : $"Bodies:  {data.ScannedBodies}";
-
+                // === FSS DETECTION STATUS ===
+                // Show FSS progress if not complete
                 if (data.FSSProgress > 0 && data.FSSProgress < 100)
                 {
-                    bodiesText += $"  (FSS: {data.FSSProgress:F0}%)";
+                    string fssText = $"FSS:     {data.FSSProgress:F1}%";
+                    if (data.TotalBodies > 0)
+                    {
+                        // Calculate detected bodies from percentage
+                        int detectedBodies = (int)Math.Round(data.TotalBodies * (data.FSSProgress / 100.0));
+                        fssText += $"  ({detectedBodies}/{data.TotalBodies} detected)";
+                    }
+                    g.DrawString(fssText, GameColors.FontNormal, GameColors.BrushOrange, padding, y);
+                    y += lineHeight;
                 }
+                else if (data.FSSProgress >= 100 && data.TotalBodies > 0)
+                {
+                    // FSS Complete
+                    string fssText = $"FSS:     Complete ({data.TotalBodies} bodies)";
+                    g.DrawString(fssText, GameColors.FontNormal, GameColors.BrushGreen, padding, y);
+                    y += lineHeight;
+                }
+
+                // === DETAILED SCAN STATUS ===
+                string bodiesText = data.TotalBodies > 0
+                    ? $"Scanned: {data.ScannedBodies} / {data.TotalBodies}"
+                    : $"Scanned: {data.ScannedBodies}";
 
                 g.DrawString(bodiesText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
                 y += lineHeight;

@@ -122,6 +122,9 @@ namespace EliteDataRelay.Services
                     _explorationOverlayForm.UpdateExplorationSessionData(_lastExplorationSessionData);
                 }
             }
+
+            // Export overlay positions for OBS
+            ExportObsPositions();
         }
 
         public void Stop()

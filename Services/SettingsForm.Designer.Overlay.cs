@@ -20,7 +20,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Overlay Functionality",
                 Location = new Point(12, 12),
-                Size = new Size(440, 240),
+                Size = new Size(440, 270),
             };
 
             // Enable Right Overlay CheckBox
@@ -56,11 +56,30 @@ namespace EliteDataRelay.UI
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
 
+            // OBS Compatibility Mode CheckBox
+            _chkObsCompatibilityMode = new CheckBox
+            {
+                Text = "Enable OBS compatibility mode (allows Window Capture)",
+                Location = new Point(15, 145),
+                AutoSize = true
+            };
+            _chkObsCompatibilityMode.CheckedChanged += OnObsCompatibilityModeCheckedChanged;
+
+            // Info label for OBS compatibility
+            _lblObsCompatibilityInfo = new Label
+            {
+                Text = "Note: Requires app restart. Slightly reduces transparency quality.",
+                Location = new Point(35, 168),
+                AutoSize = true,
+                ForeColor = Color.Gray,
+                Font = new Font(this.Font.FontFamily, 8f, FontStyle.Italic)
+            };
+
             // Reposition Overlays Button
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(15, 205),
+                Location = new Point(15, 235),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -71,10 +90,12 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableShipIconOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
+            _grpOverlaySettings.Controls.Add(_chkObsCompatibilityMode);
+            _grpOverlaySettings.Controls.Add(_lblObsCompatibilityInfo);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
 
             // Font GroupBox
-            var grpFont = new GroupBox { Text = "Appearance: Font", Location = new Point(12, 255), Size = new Size(410, 80) };
+            var grpFont = new GroupBox { Text = "Appearance: Font", Location = new Point(12, 290), Size = new Size(410, 80) };
             var lblCurrentFontHeader = new Label { Text = "Current Font:", Location = new Point(15, 25), AutoSize = true };
             _lblCurrentFont = new Label { Text = "Consolas, 11pt", Font = new Font(this.Font, FontStyle.Bold), Location = new Point(100, 25), AutoSize = true };
             var btnChangeFont = new Button { Text = "Change Font...", Location = new Point(15, 45), Size = new Size(100, 23) };
@@ -84,7 +105,7 @@ namespace EliteDataRelay.UI
             grpFont.Controls.Add(btnChangeFont);
 
             // Colors GroupBox
-            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 340), Size = new Size(410, 175) };
+            var grpColors = new GroupBox { Text = "Appearance: Colors & Opacity", Location = new Point(12, 375), Size = new Size(410, 175) };
             var lblTextColor = new Label { Text = "Text Color:", Location = new Point(15, 25), AutoSize = true };
             _pnlTextColor = new Panel { Location = new Point(130, 25), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
             var btnChangeTextColor = new Button { Text = "...", Location = new Point(160, 25), Size = new Size(23, 23) };
@@ -115,7 +136,7 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(_lblOpacityValue);
 
             // Reset Button
-            _btnResetOverlaySettings = new Button { Text = "Reset All Overlay Settings", Location = new Point(12, 520), Size = new Size(180, 23) };
+            _btnResetOverlaySettings = new Button { Text = "Reset All Overlay Settings", Location = new Point(12, 555), Size = new Size(180, 23) };
             _btnResetOverlaySettings.Click += OnResetOverlaySettingsClicked;
 
             // Add controls to the Overlay tab

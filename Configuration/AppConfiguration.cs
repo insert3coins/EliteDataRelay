@@ -77,6 +77,7 @@ namespace EliteDataRelay.Configuration
                         ExplorationOverlayLocation = config.ExplorationOverlayLocation;
                         EnableMiningAnnouncements = config.EnableMiningAnnouncements;
                         NotifyOnCargoFull = config.NotifyOnCargoFull;
+                        OverlayObsCompatibilityMode = config.OverlayObsCompatibilityMode;
                     }
                 }
             }
@@ -131,6 +132,7 @@ namespace EliteDataRelay.Configuration
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
                     EnableMiningAnnouncements = AppConfiguration.EnableMiningAnnouncements,
                     NotifyOnCargoFull = AppConfiguration.NotifyOnCargoFull,
+                    OverlayObsCompatibilityMode = AppConfiguration.OverlayObsCompatibilityMode,
                 };
 
                 var options = new JsonSerializerOptions 
@@ -188,6 +190,7 @@ namespace EliteDataRelay.Configuration
             public bool EnableMiningAnnouncements { get; set; } = false;
             [JsonConverter(typeof(JsonBooleanConverter))]
             public bool NotifyOnCargoFull { get; set; } = false;
+            public bool OverlayObsCompatibilityMode { get; set; } = false;
         }
     }
 }

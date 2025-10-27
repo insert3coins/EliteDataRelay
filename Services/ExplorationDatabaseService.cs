@@ -13,7 +13,7 @@ namespace EliteDataRelay.Services
     /// <summary>
     /// Service for persisting exploration data to SQLite database.
     /// </summary>
-    public class ExplorationDatabaseService : IDisposable
+    public partial class ExplorationDatabaseService : IDisposable
     {
         private readonly string _databasePath;
         private SqliteConnection? _connection;
@@ -38,15 +38,18 @@ namespace EliteDataRelay.Services
             _connection = new SqliteConnection($"Data Source={_databasePath}");
             _connection.Open();
 
-            // Set PRAGMA for better performance and immediate writes
+            // Set PRAGMA for better performance
+            // WAL mode is faster for concurrent reads/writes, and NORMAL synchronous is safe with background writes
             using (var pragmaCmd = _connection.CreateCommand())
             {
                 pragmaCmd.CommandText = @"
-                    PRAGMA journal_mode = DELETE;
-                    PRAGMA synchronous = FULL;
+                    PRAGMA journal_mode = WAL;
+                    PRAGMA synchronous = NORMAL;
+                    PRAGMA cache_size = -32000;
+                    PRAGMA temp_store = MEMORY;
                 ";
                 pragmaCmd.ExecuteNonQuery();
-                Debug.WriteLine("[ExplorationDatabaseService] Set SQLite PRAGMA settings");
+                Debug.WriteLine("[ExplorationDatabaseService] Set SQLite PRAGMA settings for optimized performance");
             }
 
             using var cmd = _connection.CreateCommand();
@@ -87,6 +90,9 @@ namespace EliteDataRelay.Services
 
             cmd.ExecuteNonQuery();
             Debug.WriteLine($"[ExplorationDatabaseService] Database initialized at: {_databasePath}");
+
+            // Start background writer for async/non-blocking database operations
+            StartBackgroundWriter();
         }
 
         /// <summary>
@@ -442,6 +448,9 @@ namespace EliteDataRelay.Services
 
         public void Dispose()
         {
+            // Stop background writer and flush pending writes
+            StopBackgroundWriter();
+
             if (_connection != null)
             {
                 try

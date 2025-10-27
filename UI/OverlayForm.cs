@@ -73,10 +73,18 @@ namespace EliteDataRelay.UI
             get
             {
                 CreateParams cp = base.CreateParams;
-                // WS_EX_LAYERED: Enable per-pixel alpha blending for smooth transparency
+
+                // OBS Compatibility Mode: When enabled, removes WS_EX_LAYERED to allow OBS window capture.
+                // Trade-off: Slightly reduced transparency quality, but overlays become visible to OBS.
+                if (!AppConfiguration.OverlayObsCompatibilityMode)
+                {
+                    // WS_EX_LAYERED: Enable per-pixel alpha blending for smooth transparency
+                    // Note: This style prevents OBS from capturing the window with "Window Capture"
+                    cp.ExStyle |= 0x00080000; // WS_EX_LAYERED
+                }
+
                 // WS_EX_NOACTIVATE: Prevent the form from stealing focus
                 // WS_EX_TRANSPARENT: Allow click-through (optional, currently disabled for dragging)
-                cp.ExStyle |= 0x00080000; // WS_EX_LAYERED
                 cp.ExStyle |= 0x08000000; // WS_EX_NOACTIVATE
                 // Uncomment for click-through: cp.ExStyle |= 0x00000020; // WS_EX_TRANSPARENT
                 return cp;
@@ -95,6 +103,25 @@ namespace EliteDataRelay.UI
             ShowInTaskbar = false;
             TopMost = true;
             StartPosition = FormStartPosition.Manual;
+ 
+            // Set the form icon from embedded resources. This is more reliable than loading from a file.
+            // The icon might be used by the OS in task switchers or other UI elements.
+            try
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                // The resource name is formatted as <DefaultNamespace>.<FolderPath>.<FileName>
+                using (var stream = assembly.GetManifestResourceStream("EliteDataRelay.Resources.Appicon.ico"))
+                {
+                    if (stream != null)
+                    {
+                        this.Icon = new Icon(stream);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Failed to load icon, continue without it.
+            }
 
             // Apply appearance settings from configuration for semi-transparent background.
             // The BackColor property does not support an alpha channel. We set an opaque color and use the form's Opacity property for transparency.
