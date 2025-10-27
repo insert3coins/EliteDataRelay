@@ -19,10 +19,18 @@ namespace EliteDataRelay.Services
         private System.Threading.Timer? _debounceTimer;
         private System.Threading.Timer? _directoryCheckTimer;
         private readonly object _lock = new object();
+        private DateTime _lastActivityTime = DateTime.MinValue;
+        private const int ActiveWindowSeconds = 10; // Consider "active" for 10 seconds after a change
 
         public event Action<string>? FileChanged;
 
         public bool IsMonitoring => _isMonitoring;
+
+        /// <summary>
+        /// Returns true if there has been recent activity (within the last 10 seconds).
+        /// This can be used to adaptively increase monitoring frequency.
+        /// </summary>
+        public bool IsRecentlyActive => (DateTime.UtcNow - _lastActivityTime).TotalSeconds < ActiveWindowSeconds;
 
         public FileMonitoringService(IJournalWatcherService journalWatcher)
         {
@@ -97,6 +105,9 @@ namespace EliteDataRelay.Services
             string? fileName = e.Name;
             if (fileName == null) return;
 
+            // Track activity time for adaptive monitoring
+            _lastActivityTime = DateTime.UtcNow;
+
             // Debounce the event to handle multiple rapid triggers for a single save.
             lock (_lock)
             {
@@ -106,7 +117,7 @@ namespace EliteDataRelay.Services
                     // Dispose the old timer to ensure we can create a new one.
                     // This fixes the bug where subsequent updates would not fire.
                     _debounceTimer?.Dispose();
-                    const int debounceTimeMs = 50; // Increased slightly to be safer
+                    const int debounceTimeMs = 25; // Reduced for faster in-game response
                     _debounceTimer = new System.Threading.Timer(_ => FileChanged?.Invoke(fileName), null, debounceTimeMs, Timeout.Infinite);
                 }
             }

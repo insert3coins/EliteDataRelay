@@ -8,6 +8,8 @@ namespace EliteDataRelay.Models
         public string Ship { get; set; } = string.Empty;
         [JsonPropertyName("ShipID")]
         public int ShipId { get; set; }
+        [JsonPropertyName("Ship_Localised")]
+        public string? ShipLocalised { get; set; }
         public string ShipName { get; set; } = string.Empty;
         public string ShipIdent { get; set; } = string.Empty;
         public int CargoCapacity { get; set; }

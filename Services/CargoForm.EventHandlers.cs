@@ -116,7 +116,7 @@ namespace EliteDataRelay
                 _lastShipIdent = e.ShipIdent;
                 _lastShipType = e.ShipType;
                 _lastInternalShipName = e.InternalShipName;
-
+                
                 if (!_isInitializing)
                 {
                     _cargoFormUI.UpdateShipInfo(e.ShipName, e.ShipIdent, e.ShipType, e.InternalShipName); // Pass internal name

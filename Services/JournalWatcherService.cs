@@ -28,6 +28,7 @@ namespace EliteDataRelay.Services
         private string? _lastShipIdent;
         private string? _lastShipType;
         private string? _lastInternalShipName;
+        private string? _lastShipLocalised;
         private LocationChangedEventArgs? _lastLocationArgs;
         private DockedEventArgs? _lastDockedEventArgs;
         private bool _isMonitoring;
@@ -203,6 +204,7 @@ namespace EliteDataRelay.Services
             _lastShipIdent = null;
             _lastShipType = null;
             _lastInternalShipName = null;
+            _lastShipLocalised = null;
             _lastKnownBalance = -1;
             _lastCommanderName = null;
             _lastLocationArgs = null;

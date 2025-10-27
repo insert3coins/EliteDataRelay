@@ -50,14 +50,15 @@ namespace EliteDataRelay.Services
 
                     // Read the entire file content as a string. This allows us to hash the raw content
                     // and also check for an empty file before attempting to deserialize.
+                    // Using buffered reading for better performance with larger cargo files.
                     string fileContent;
-                    using (var stream = new FileStream(AppConfiguration.CargoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var stream = new FileStream(AppConfiguration.CargoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 4096, useAsync: false))
                     using (var reader = new StreamReader(stream))
                     {
                         fileContent = reader.ReadToEnd();
                     }
 
-                    // An empty file is a common state. Treat it like a file lock and retry.
+                    // An empty file is a common state. Treat it like a file lock and retry with minimal delay.
                     if (string.IsNullOrWhiteSpace(fileContent))
                     {
                         Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);

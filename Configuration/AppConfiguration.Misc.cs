@@ -18,7 +18,7 @@ namespace EliteDataRelay.Configuration
 
         // Advanced
         public static int FileReadMaxAttempts { get; set; } = 5;
-        public static int FileReadRetryDelayMs { get; set; } = 50;
+        public static int FileReadRetryDelayMs { get; set; } = 30; // Reduced from 50ms for faster in-game response
         public static int PollingIntervalMs { get; set; } = 1000;
 
         // Sound

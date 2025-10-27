@@ -128,11 +128,10 @@ namespace EliteDataRelay.UI
 
             // Update the dedicated controls on the "Ship" tab
             // Display the ship type (e.g., "Krait Mk II") and the user-defined name if it's set.
-            string displayName = ShipIconService.GetShipDisplayName(internalShipName);
-            string nameLabel = displayName;
-            if (!string.IsNullOrEmpty(shipName) && shipName != "N/A" && !shipName.Equals(displayName, StringComparison.OrdinalIgnoreCase))
+            string nameLabel = shipType;
+            if (!string.IsNullOrEmpty(shipName) && shipName != "N/A" && !shipName.Equals(shipType, StringComparison.OrdinalIgnoreCase))
             {
-                nameLabel = $"{displayName} \"{shipName}\"";
+                nameLabel = $"{shipType} \"{shipName}\"";
             }
 
             // Update the ship image using the new service

@@ -87,7 +87,7 @@ namespace EliteDataRelay.Services
 
                         if (eventType == "LoadGame")
                         {
-                            ProcessLoadGameEvent(jsonDoc, journalLine, options);
+                            ProcessLoadGameEvent(jsonDoc, journalLine, options); // This calls UpdateShipInformation internally
                         }
                         // Handle the case where we load into the game already docked.
                         // The 'Location' event will contain all the necessary station info.
@@ -345,19 +345,20 @@ namespace EliteDataRelay.Services
             }
         }
 
-        private void UpdateShipInformation(string? shipName, string? shipIdent, string? shipType, string? internalShipName)
+        private void UpdateShipInformation(string? shipName, string? shipIdent, string? shipType, string? internalShipName, string? shipLocalised)
         {
             // Only raise an update event if something has actually changed.
             // The internalShipName is the most reliable indicator of a ship change.
             if (!string.IsNullOrEmpty(internalShipName) &&
-                (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType || internalShipName != _lastInternalShipName))
+                (shipName != _lastShipName || shipIdent != _lastShipIdent || shipType != _lastShipType || internalShipName != _lastInternalShipName || shipLocalised != _lastShipLocalised))
             {
                 _lastShipName = shipName;
                 _lastShipIdent = shipIdent;
                 _lastShipType = shipType;
                 _lastInternalShipName = internalShipName;
+                _lastShipLocalised = shipLocalised;
                 Debug.WriteLine($"[JournalWatcherService] Ship Info Updated. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
-                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipType ?? "Unknown", internalShipName ?? "unknown"));
+                ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipLocalised ?? shipType ?? "Unknown", internalShipName ?? "unknown"));
             }
         }
 

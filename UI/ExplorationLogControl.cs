@@ -91,22 +91,25 @@ namespace EliteDataRelay.UI
                 RowCount = 2,
                 ColumnCount = 1
             };
-            detailLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
+            detailLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 90)); // Increased from 70 to accommodate longer FSS text
             detailLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             var detailHeader = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(248, 250, 252),
-                Padding = new Padding(20, 16, 20, 16)
+                Padding = new Padding(20, 12, 20, 12)
             };
 
             _selectedSystemLabel = new Label
             {
                 Text = "Select a system to view details",
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold), // Reduced from 12F to 10F
                 ForeColor = Color.FromArgb(100, 116, 139),
-                AutoSize = true
+                AutoSize = false, // Changed to false to allow wrapping
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                MaximumSize = new Size(0, 66) // Allow up to 3 lines of text
             };
             detailHeader.Controls.Add(_selectedSystemLabel);
 
@@ -416,7 +419,30 @@ namespace EliteDataRelay.UI
                 var system = _database.LoadSystem(systemAddress);
                 if (system == null) return;
 
-                _selectedSystemLabel.Text = $"{system.SystemName} — {system.ScannedBodies} bodies scanned, {system.MappedBodies} mapped";
+                // Build system details string with FSS status
+                var detailsParts = new List<string>();
+
+                // FSS status
+                if (system.FSSProgress >= 100 && system.TotalBodies > 0)
+                {
+                    detailsParts.Add($"FSS: Complete ({system.TotalBodies} bodies detected)");
+                }
+                else if (system.FSSProgress > 0 && system.FSSProgress < 100)
+                {
+                    int detectedBodies = system.TotalBodies > 0
+                        ? (int)Math.Round(system.TotalBodies * (system.FSSProgress / 100.0))
+                        : 0;
+                    detailsParts.Add($"FSS: {system.FSSProgress:F1}% ({detectedBodies} detected)");
+                }
+
+                // Scanned and mapped counts
+                detailsParts.Add($"{system.ScannedBodies} scanned");
+                if (system.MappedBodies > 0)
+                {
+                    detailsParts.Add($"{system.MappedBodies} mapped");
+                }
+
+                _selectedSystemLabel.Text = $"{system.SystemName} — {string.Join(" • ", detailsParts)}";
 
                 _bodiesGrid.SuspendLayout();
                 _bodiesGrid.Rows.Clear();
