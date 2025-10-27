@@ -100,19 +100,7 @@ namespace EliteDataRelay.UI
             MessageBox.Show(this, "All overlay settings (appearance and position) have been reset to defaults.\n\nClick OK to save this change, or Cancel to revert.", "Overlay Settings Reset", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void OnEnableOutputCheckedChanged(object? sender, EventArgs e)
-        {
-            bool enabled = _chkEnableFileOutput.Checked;
-
-            _lblDescription.Enabled = enabled;
-            _txtOutputFormat.Enabled = enabled;
-            _lblOutputFileName.Enabled = enabled;
-            _txtOutputFileName.Enabled = enabled;
-            _lblOutputDirectory.Enabled = enabled;
-            _txtOutputDirectory.Enabled = enabled;
-            _btnBrowse.Enabled = enabled;
-            _lblPlaceholders.Enabled = enabled;
-        }
+        // Legacy: OnEnableOutputCheckedChanged removed with text file output feature
 
         private void OnEnableRightOverlayCheckedChanged(object? sender, EventArgs e)
         {
@@ -147,30 +135,7 @@ namespace EliteDataRelay.UI
             }
         }
 
-        private void OnBrowseClicked(object? sender, EventArgs e)
-        {
-            using (var dialog = new FolderBrowserDialog())
-            {
-                dialog.Description = "Select an output directory";
-                dialog.ShowNewFolderButton = true;
-
-                // Set initial directory if the textbox has a valid path
-                if (!string.IsNullOrEmpty(_txtOutputDirectory.Text) && Directory.Exists(_txtOutputDirectory.Text))
-                {
-                    dialog.SelectedPath = _txtOutputDirectory.Text;
-                }
-                else
-                {
-                    // Fallback to the application's base directory
-                    dialog.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
-                }
-
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    _txtOutputDirectory.Text = dialog.SelectedPath;
-                }
-            }
-        }
+        // Legacy: OnBrowseClicked removed with text file output feature
 
         private void OnHotkeyKeyDown(object? sender, KeyEventArgs e)
         {

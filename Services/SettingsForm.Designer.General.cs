@@ -8,98 +8,11 @@ namespace EliteDataRelay.UI
     {
         private void InitializeGeneralTab(TabPage generalTabPage)
         {
-            // GroupBox
-            _grpOutputFormat = new GroupBox
-            {
-                Text = "Text File Output",
-                Location = new Point(12, 12),
-                Size = new Size(520, 298),
-                BackColor = Color.Transparent,
-                ForeColor = Color.FromArgb(31, 41, 55)
-            };
-
-            // Enable/Disable CheckBox
-            _chkEnableFileOutput = new CheckBox
-            {
-                Text = "Enable text file output",
-                Location = new Point(15, 24),
-                AutoSize = true
-            };
-            _chkEnableFileOutput.CheckedChanged += OnEnableOutputCheckedChanged;
-
-            // Description Label
-            _lblDescription = new Label
-            {
-                Text = "Customize the format for the cargo.txt output file:",
-                Location = new Point(15, 54),
-                AutoSize = true
-            };
-
-            // Format TextBox
-            _txtOutputFormat = new TextBox
-            {
-                Location = new Point(18, 70),
-                Size = new Size(487, 20)
-            };
-
-            // Output File Name Label
-            _lblOutputFileName = new Label
-            {
-                Text = "Output file name:",
-                Location = new Point(15, 100),
-                AutoSize = true
-            };
-
-            // Output File Name TextBox
-            _txtOutputFileName = new TextBox
-            {
-                Location = new Point(18, 116),
-                Size = new Size(487, 20)
-            };
-
-            // Output Directory Label
-            _lblOutputDirectory = new Label
-            {
-                Text = "Output directory:",
-                Location = new Point(15, 142),
-                AutoSize = true
-            };
-
-            // Output Directory TextBox
-            _txtOutputDirectory = new TextBox
-            {
-                Location = new Point(18, 158),
-                Size = new Size(400, 20)
-            };
-
-            // Browse Button
-            _btnBrowse = new Button
-            {
-                Text = "Browse...",
-                Location = new Point(425, 157),
-                Size = new Size(75, 22)
-            };
-            _btnBrowse.Click += OnBrowseClicked;
-
-            // Placeholders Label
-            _lblPlaceholders = new Label
-            {
-                Text = "Available placeholders:\n" +
-                       "{count} - Total number of items in cargo\n" +
-                       "{capacity} - Total cargo capacity (blank if unknown)\n" +
-                       "{count_slash_capacity} - e.g., \"128/256\" or just \"128\" if capacity is unknown\n" +
-                       "{items} - Single-line list of items, e.g., \"Gold (10) Silver (5)\"\n" +
-                       "{items_multiline} - Multi-line list of items\n" +
-                       "\\n - Newline character", // Note: Backslash needs to be escaped in C# string literal
-                Location = new Point(15, 188),
-                AutoSize = true
-            };
-
-            // Session Tracking GroupBox
+            // Session Tracking GroupBox (moved up; legacy file output removed)
             _grpSessionTracking = new GroupBox
             {
                 Text = "Session Tracking",
-                Location = new Point(12, 316),
+                Location = new Point(12, 12),
                 Size = new Size(520, 55),
                 BackColor = Color.Transparent,
                 ForeColor = Color.FromArgb(31, 41, 55)
@@ -113,31 +26,14 @@ namespace EliteDataRelay.UI
             _grpSessionTracking.Controls.Add(_chkEnableSessionTracking);
             _chkEnableSessionTracking.ForeColor = Color.FromArgb(31, 41, 55);
 
-
-            // Add controls to the file output groupbox
-            _grpOutputFormat.Controls.Add(_chkEnableFileOutput);
-            _grpOutputFormat.Controls.Add(_lblDescription);
-            _grpOutputFormat.Controls.Add(_txtOutputFormat);
-            _grpOutputFormat.Controls.Add(_lblOutputDirectory);
-            _grpOutputFormat.Controls.Add(_txtOutputDirectory);
-            _grpOutputFormat.Controls.Add(_btnBrowse);
-            _grpOutputFormat.Controls.Add(_lblOutputFileName);
-            _grpOutputFormat.Controls.Add(_txtOutputFileName);
-            _grpOutputFormat.Controls.Add(_lblPlaceholders);
-            foreach (Control c in _grpOutputFormat.Controls)
-            {
-                c.ForeColor = Color.FromArgb(31, 41, 55);
-            }
-
             // Add controls to the General tab
-            generalTabPage.Controls.Add(_grpOutputFormat);
             generalTabPage.Controls.Add(_grpSessionTracking);
 
             // Screenshots group (added after output/session)
             var grpScreenshots = new GroupBox
             {
                 Text = "Screenshots",
-                Location = new Point(12, 380),
+                Location = new Point(12, _grpSessionTracking.Bottom + 12),
                 Size = new Size(520, 80),
                 BackColor = Color.Transparent,
                 ForeColor = Color.FromArgb(31, 41, 55)

@@ -20,7 +20,6 @@ namespace EliteDataRelay
         private readonly ICargoProcessorService _cargoProcessorService;
         private readonly IJournalWatcherService _journalWatcherService;
         private readonly ISoundService _soundService;
-        private readonly IFileOutputService _fileOutputService;
         private readonly ICargoFormUI _cargoFormUI;
         private readonly SessionTrackingService _sessionTrackingService;
         private readonly ISystemInfoService _systemInfoService;
@@ -39,7 +38,6 @@ namespace EliteDataRelay
             _fileMonitoringService = new FileMonitoringService(_journalWatcherService);
             _cargoProcessorService = new CargoProcessorService();
             _soundService = new SoundService();
-            _fileOutputService = new FileOutputService();
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _journalWatcherService);
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);

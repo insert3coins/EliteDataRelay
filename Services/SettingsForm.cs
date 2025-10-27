@@ -12,18 +12,10 @@ namespace EliteDataRelay.UI
     // Form for configuring application settings.
     public partial class SettingsForm : Form
     {
-        private CheckBox _chkEnableFileOutput = null!;
-        private TextBox _txtOutputFormat = null!;
-        private TextBox _txtOutputFileName = null!;
-        private TextBox _txtOutputDirectory = null!;
-        private Button _btnBrowse = null!;
-        private Label _lblDescription = null!;
+        // Legacy text file output controls removed
         private Button _btnOk = null!;
         private Button _btnCancel = null!;
-        private Label _lblPlaceholders = null!;
-        private GroupBox _grpOutputFormat = null!;
-        private Label _lblOutputDirectory = null!;
-        private Label _lblOutputFileName = null!;
+        // Legacy output group removed
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
         private CheckBox _chkEnableShipIconOverlay = null!;
@@ -86,11 +78,7 @@ namespace EliteDataRelay.UI
 
         private void LoadSettings()
         {
-            // Assumes a new boolean property 'EnableFileOutput' in AppConfiguration
-            _chkEnableFileOutput.Checked = AppConfiguration.EnableFileOutput;
-            _txtOutputFormat.Text = AppConfiguration.OutputFileFormat;
-            _txtOutputFileName.Text = AppConfiguration.OutputFileName;
-            _txtOutputDirectory.Text = AppConfiguration.OutputDirectory;
+            // Legacy text file output removed
             _chkEnableSessionTracking.Checked = AppConfiguration.EnableSessionTracking;
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableInfoOverlay;
             _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
@@ -104,7 +92,7 @@ namespace EliteDataRelay.UI
             _showOverlayHotkey = AppConfiguration.ShowOverlayHotkey;
             _hideOverlayHotkey = AppConfiguration.HideOverlayHotkey;
             UpdateHotkeyText();
-            OnEnableOutputCheckedChanged(null, EventArgs.Empty); // Set initial state of controls
+            // Removed: file output initial state
             OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
             OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
 
@@ -161,9 +149,7 @@ namespace EliteDataRelay.UI
         private void SaveSettings()
         {
             // --- Save all settings ---
-            AppConfiguration.EnableFileOutput = _chkEnableFileOutput.Checked;
-            AppConfiguration.OutputFileFormat = _txtOutputFormat.Text;
-            AppConfiguration.OutputFileName = _txtOutputFileName.Text;
+            // Removed legacy text file output persistence
             AppConfiguration.EnableSessionTracking = _chkEnableSessionTracking.Checked;
             AppConfiguration.EnableInfoOverlay = _chkEnableLeftOverlay.Checked;
             AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
@@ -176,7 +162,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
             AppConfiguration.ShowOverlayHotkey = _showOverlayHotkey;
             AppConfiguration.HideOverlayHotkey = _hideOverlayHotkey;
-            AppConfiguration.OutputDirectory = _txtOutputDirectory.Text;
+            // Removed legacy output directory persistence
 
             // Save appearance settings
             AppConfiguration.OverlayFontName = _overlayFont.Name;

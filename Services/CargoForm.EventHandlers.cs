@@ -40,11 +40,7 @@ namespace EliteDataRelay
                     _cargoFormUI.UpdateCargoDisplay(e.Snapshot, _cargoCapacity); // This was the missing call
                     _cargoFormUI.UpdateCargoScrollBar();
 
-                    // --- File Output ---
-                    if (AppConfiguration.EnableFileOutput)
-                    {
-                        _fileOutputService.WriteCargoSnapshot(e.Snapshot, _cargoCapacity);
-                    }
+                    // Legacy text file output removed
 
                     // Web overlay
                     _webOverlayService.UpdateCargo(e.Snapshot.Count, _cargoCapacity);

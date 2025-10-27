@@ -23,7 +23,6 @@ namespace EliteDataRelay.Configuration
             // The static constructor ensures that all dependent properties are initialized
             // in the correct order, resolving the CS8604 warning.
             SettingsFilePath = Path.Combine(AppDataPath, "settings.json");
-            OutputDirectory = Path.Combine(AppDataPath, "output");
             StartSoundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sounds/start.wav");
             StopSoundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sounds/stop.wav");
             // Any other properties that depend on AppDataPath or other static properties can be initialized here.
@@ -45,11 +44,9 @@ namespace EliteDataRelay.Configuration
                     {
                         // Map all properties from the loaded config data
                         WelcomeMessage = config.WelcomeMessage;
-                        OutputDirectory = config.OutputDirectory;
-                        OutputFileName = config.OutputFileName;
+                        // Legacy text file output removed
                         CargoPath = config.CargoPath;
-                        EnableFileOutput = config.EnableFileOutput;
-                        OutputFileFormat = config.OutputFileFormat;
+                        // Legacy text file output removed
                         EnableInfoOverlay = config.EnableInfoOverlay;
                         EnableCargoOverlay = config.EnableCargoOverlay;
                         EnableShipIconOverlay = config.EnableShipIconOverlay;
@@ -112,11 +109,9 @@ namespace EliteDataRelay.Configuration
                 var config = new ConfigData
                 {
                     WelcomeMessage = AppConfiguration.WelcomeMessage,
-                    OutputDirectory = AppConfiguration.OutputDirectory,
-                    OutputFileName = AppConfiguration.OutputFileName,
+                    // Legacy text file output removed
                     CargoPath = AppConfiguration.CargoPath,
-                    EnableFileOutput = AppConfiguration.EnableFileOutput,
-                    OutputFileFormat = AppConfiguration.OutputFileFormat,
+                    // Legacy text file output removed
                     EnableInfoOverlay = AppConfiguration.EnableInfoOverlay,
                     EnableCargoOverlay = AppConfiguration.EnableCargoOverlay,
                     EnableShipIconOverlay = AppConfiguration.EnableShipIconOverlay,
@@ -177,11 +172,9 @@ namespace EliteDataRelay.Configuration
         private class ConfigData
         {
             public string WelcomeMessage { get; set; } = "Welcome, CMDR! Click 'Start' to begin monitoring.";
-            public string OutputDirectory { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "output");
-            public string OutputFileName { get; set; } = "cargo.txt";
+            // Legacy text file output removed
             public string CargoPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @"Saved Games\Frontier Developments\Elite Dangerous\Cargo.json");
-            public bool EnableFileOutput { get; set; } = false;
-            public string OutputFileFormat { get; set; } = "Cargo: {count_slash_capacity}\\n\\n{items_multiline}";
+            // Legacy text file output removed
             public bool EnableInfoOverlay { get; set; } = false;
             public bool EnableCargoOverlay { get; set; } = false;
             public bool EnableShipIconOverlay { get; set; } = false;

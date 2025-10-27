@@ -1,7 +1,5 @@
 # Elite Data Relay v0.60.1 — Web Overlays, Screenshots, Mining QoL
 
-Release Date: October 27, 2025
-
 ## Highlights
 
 - Browser-Source Overlays (new)
@@ -63,3 +61,20 @@ Upgrading
 - Issues: https://github.com/insert3coins/EliteDataRelay/issues
 - Discussions: https://github.com/insert3coins/EliteDataRelay/discussions
 
+## This Build: UI + Cleanup
+
+### Settings and UI Polish
+- Refactor: Settings window uses a left sidebar and larger layout (800×600).
+- Refactor: General/Overlay/Advanced sections scroll when content exceeds view.
+- Tidy: Overlay tab auto-sizes groups to content and removes large gaps.
+- Fix: “Appearance: Colors & Opacity” title now shows literal ampersand.
+- UX: Background Opacity control row compacted (short slider, small percent label).
+- Change: Merged Hotkeys into Advanced; Advanced now hosts both sections without overlap.
+
+### Legacy Feature Removal
+- Removed: Text File Output feature and related Settings UI.
+- Removed: Legacy config properties (EnableFileOutput, OutputFileFormat, OutputFileName, OutputDirectory).
+- Removed: File output code paths and services.
+  - Deleted files: Configuration/AppConfiguration.FileOutput.cs, Services/FileOutputService.cs, Services/IFileOutputService.cs, Models/AppSettings.cs.
+- Cleanup: Deleted two unused empty root files: ICargoFormUI.cs, IMaterialService.cs.
+- Note: Existing keys for the removed feature in settings.json are ignored on load and no longer written on save.
