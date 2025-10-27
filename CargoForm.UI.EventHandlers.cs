@@ -17,7 +17,7 @@ namespace EliteDataRelay
 
         #region UI Event Handlers
 
-        private void OnStartClicked(object? sender, EventArgs e)
+        private async void OnStartClicked(object? sender, EventArgs e)
         {
             // Check for required files/paths before starting.
             if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
@@ -32,7 +32,7 @@ namespace EliteDataRelay
 
             // Attempt an initial read of the cargo file. This serves as a more robust check
             // than just File.Exists, as it also handles an empty or locked file.
-            bool initialReadSuccess = _cargoProcessorService.ProcessCargoFile();
+            bool initialReadSuccess = await _cargoProcessorService.ProcessCargoFileAsync();
 
             if (!initialReadSuccess)
             {

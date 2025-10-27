@@ -48,30 +48,23 @@ namespace EliteDataRelay.Services
                         return false;
                     }
 
-                    // Read the entire file content as a string. This allows us to hash the raw content
-                    // and also check for an empty file before attempting to deserialize.
-                    // Using buffered reading for better performance with larger cargo files.
-                    string fileContent;
-                    using (var stream = new FileStream(AppConfiguration.CargoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize: 4096, useAsync: false))
-                    using (var reader = new StreamReader(stream))
-                    {
-                        fileContent = reader.ReadToEnd();
-                    }
+                    // Read all bytes once; compute hash on bytes and deserialize directly from bytes to reduce allocations.
+                    byte[] fileBytes = File.ReadAllBytes(AppConfiguration.CargoPath);
 
                     // An empty file is a common state. Treat it like a file lock and retry with minimal delay.
-                    if (string.IsNullOrWhiteSpace(fileContent))
+                    if (fileBytes.Length == 0)
                     {
                         Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                         continue;
                     }
 
-                    // Fingerprint guard – skip duplicate file content
-                    string hash = ComputeHash(fileContent);
+                    // Fingerprint guard - skip duplicate file content
+                    string hash = ComputeHash(fileBytes);
                     if (!force && hash == _lastInventoryHash) return true;
 
-                    // Deserialize JSON directly from the stream for better performance.
+                    // Deserialize JSON directly from bytes for better performance.
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(fileContent, options) ?? new CargoSnapshot();
+                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(fileBytes, options) ?? new CargoSnapshot();
                     
                     _lastInventoryHash = hash;
 
@@ -107,12 +100,64 @@ namespace EliteDataRelay.Services
         /// </summary>
         /// <param name="content">The raw string content of the file to hash.</param>
         /// <returns>Base64-encoded SHA256 hash</returns>
-        private string ComputeHash(string content)
+        private string ComputeHash(byte[] bytes)
         {
-            using var sha = SHA256.Create();
-            byte[] bytes = Encoding.UTF8.GetBytes(content);
-            byte[] hashBytes = sha.ComputeHash(bytes);
-            return Convert.ToBase64String(hashBytes);
+            // Hash raw bytes (faster and avoids string allocations)
+            return Convert.ToBase64String(SHA256.HashData(bytes));
+        }
+
+        /// <summary>
+        /// Async version of ProcessCargoFile to avoid blocking threads and improve responsiveness.
+        /// </summary>
+        public async System.Threading.Tasks.Task<bool> ProcessCargoFileAsync(bool force = false)
+        {
+            for (int attempt = 1; attempt <= AppConfiguration.FileReadMaxAttempts; attempt++)
+            {
+                try
+                {
+                    if (!File.Exists(AppConfiguration.CargoPath))
+                    {
+                        if (attempt == AppConfiguration.FileReadMaxAttempts)
+                            Trace.WriteLine($"[CargoProcessorService] Cargo.json not found after {attempt} attempts.");
+                        return false;
+                    }
+
+                    byte[] fileBytes = await File.ReadAllBytesAsync(AppConfiguration.CargoPath).ConfigureAwait(false);
+
+                    if (fileBytes.Length == 0)
+                    {
+                        await System.Threading.Tasks.Task.Delay(AppConfiguration.FileReadRetryDelayMs).ConfigureAwait(false);
+                        continue;
+                    }
+
+                    string hash = ComputeHash(fileBytes);
+                    if (!force && hash == _lastInventoryHash) return true;
+
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var snapshot = JsonSerializer.Deserialize<CargoSnapshot>(fileBytes, options) ?? new CargoSnapshot();
+
+                    _lastInventoryHash = hash;
+                    CargoProcessed?.Invoke(this, new CargoProcessedEventArgs(snapshot, hash));
+                    Trace.WriteLine($"[CargoProcessorService] (async) processed cargo snapshot {hash[..8]}...");
+                    return true;
+                }
+                catch (IOException) when (attempt < AppConfiguration.FileReadMaxAttempts)
+                {
+                    Trace.WriteLine($"[CargoProcessorService] (async) File locked, retry {attempt}/{AppConfiguration.FileReadMaxAttempts}");
+                    await System.Threading.Tasks.Task.Delay(AppConfiguration.FileReadRetryDelayMs).ConfigureAwait(false);
+                }
+                catch (JsonException jsonEx)
+                {
+                    Trace.WriteLine($"[CargoProcessorService] (async) JSON parsing error: {jsonEx.Message}");
+                    await System.Threading.Tasks.Task.Delay(AppConfiguration.FileReadRetryDelayMs).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[CargoProcessorService] (async) Unexpected error: {ex}");
+                    break;
+                }
+            }
+            return false;
         }
     }
 }

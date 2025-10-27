@@ -10,6 +10,7 @@ namespace EliteDataRelay.Services
     {
         event EventHandler<CargoProcessedEventArgs>? CargoProcessed;
         bool ProcessCargoFile(bool force = false);
+        System.Threading.Tasks.Task<bool> ProcessCargoFileAsync(bool force = false);
         void Reset();
     }
 }

@@ -117,7 +117,7 @@ namespace EliteDataRelay.Services
                     // Dispose the old timer to ensure we can create a new one.
                     // This fixes the bug where subsequent updates would not fire.
                     _debounceTimer?.Dispose();
-                    const int debounceTimeMs = 25; // Reduced for faster in-game response
+                    const int debounceTimeMs = 10; // Tighter debounce for faster updates
                     _debounceTimer = new System.Threading.Timer(_ => FileChanged?.Invoke(fileName), null, debounceTimeMs, Timeout.Infinite);
                 }
             }

@@ -204,7 +204,7 @@ namespace EliteDataRelay
                 RefreshAllUIData();
 
                 // Finally, force a re-read of the cargo file to ensure it's perfectly in sync.
-                _ = _cargoProcessorService.ProcessCargoFile(force: true); // The result will update the UI via OnCargoProcessed
+                _ = _cargoProcessorService.ProcessCargoFileAsync(force: true); // The result will update the UI via OnCargoProcessed
             });
         }
 

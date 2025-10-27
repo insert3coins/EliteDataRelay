@@ -169,10 +169,10 @@ namespace EliteDataRelay
             });
         }
 
-        private void OnGameFileChanged(string fileName)
+        private async void OnGameFileChanged(string fileName)
         {
             // This service now only cares about Cargo.json
-            if (fileName.Equals("Cargo.json", StringComparison.OrdinalIgnoreCase)) _ = _cargoProcessorService.ProcessCargoFile();
+            if (fileName.Equals("Cargo.json", StringComparison.OrdinalIgnoreCase)) await _cargoProcessorService.ProcessCargoFileAsync();
         }
 
         protected override void Dispose(bool disposing)

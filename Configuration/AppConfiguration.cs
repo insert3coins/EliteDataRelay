@@ -191,8 +191,8 @@ namespace EliteDataRelay.Configuration
             public Keys StopMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F10;
             public Keys ShowOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F11;
             public Keys HideOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F12;
-            public int FileReadMaxAttempts { get; set; } = 5;
-            public int FileReadRetryDelayMs { get; set; } = 50;
+            public int FileReadMaxAttempts { get; set; } = 3; // fewer retries for lower latency
+            public int FileReadRetryDelayMs { get; set; } = 20; // shorter delay between retries
             public Point WindowLocation { get; set; } = Point.Empty;
             public FormWindowState WindowState { get; set; } = FormWindowState.Normal;
             public float DefaultFontSize { get; set; } = 9f;
