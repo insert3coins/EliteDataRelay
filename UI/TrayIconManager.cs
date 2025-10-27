@@ -38,13 +38,11 @@ namespace EliteDataRelay.UI
                 _trayMenuExit
             });
 
-            _notifyIcon = new NotifyIcon
-            {
-                Text = "Elite Data Relay",
-                Visible = true,
-                ContextMenuStrip = _trayMenu,
-                Icon = appIcon
-            };
+            _notifyIcon = new NotifyIcon();
+            _notifyIcon.Text = "Elite Data Relay";
+            _notifyIcon.Visible = true;
+            _notifyIcon.ContextMenuStrip = _trayMenu;
+            _notifyIcon.Icon = appIcon;
 
             SetupEventHandlers();
         }
