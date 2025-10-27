@@ -23,10 +23,26 @@ namespace EliteDataRelay.Services
             // Get the internal ship name first, as it's not in the strongly-typed model.
             var root = jsonDoc.RootElement;
             string? internalShipName = root.TryGetProperty("Ship", out var shipProp) ? shipProp.GetString() : null;
-            
+
             // The LoadGame event gives us the internal name. We cache it here.
             // The subsequent Loadout event will use this to provide the full ship details.
             _lastInternalShipName = internalShipName;
+
+            // Also update ship info immediately from LoadGame using Ship_Localised if present,
+            // so the UI shows a friendly ship name on startup before Loadout arrives.
+            if (!string.IsNullOrEmpty(internalShipName))
+            {
+                string shipType = loadGameEvent.ShipLocalised ?? ShipIconService.GetShipDisplayName(internalShipName);
+
+                // Use any available ShipName/ShipIdent from LoadGame too
+                UpdateShipInformation(
+                    loadGameEvent.ShipName,
+                    loadGameEvent.ShipIdent,
+                    shipType,
+                    internalShipName,
+                    loadGameEvent.ShipLocalised
+                );
+            }
         }
 
         private void ProcessLoadoutEvent(string journalLine, JsonSerializerOptions options)

@@ -240,7 +240,7 @@ namespace EliteDataRelay.Services
                             var type = jsonDoc.RootElement.TryGetProperty("Type", out var typeElement) ? typeElement.GetString() : null;
                             if (type != null)
                             {
-                                System.Diagnostics.Trace.WriteLine($"[JournalWatcherService] LaunchDrone: {type}");
+                                //System.Diagnostics.Trace.WriteLine($"[JournalWatcherService] LaunchDrone: {type}");
                                 LaunchDrone?.Invoke(this, new LaunchDroneEventArgs(type));
                             }
                         }
@@ -275,7 +275,7 @@ namespace EliteDataRelay.Services
                             var stationName = jsonDoc.RootElement.TryGetProperty("StationName", out var nameElement) ? nameElement.GetString() : "Unknown";
                             // Clear the last docked state when we undock.
                             // This is crucial for the initial scan to correctly determine the player is no longer docked.
-                            Debug.WriteLine($"[JournalWatcherService] Undocked from {stationName}. Clearing docked state.");
+                            //Debug.WriteLine($"[JournalWatcherService] Undocked from {stationName}. Clearing docked state.");
                             _lastDockedEventArgs = null;
                             Undocked?.Invoke(this, new UndockedEventArgs(stationName ?? "Unknown"));
                         }
@@ -379,7 +379,7 @@ namespace EliteDataRelay.Services
                 _lastShipType = shipType;
                 _lastInternalShipName = internalShipName;
                 _lastShipLocalised = shipLocalised;
-                Debug.WriteLine($"[JournalWatcherService] Ship Info Updated. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
+                Trace.WriteLine($"[JournalWatcherService] Ship Info Updated. Name: {shipName}, Ident: {shipIdent}, Type: {shipType}");
                 ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipLocalised ?? shipType ?? "Unknown", internalShipName ?? "unknown"));
             }
         }

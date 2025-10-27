@@ -44,9 +44,10 @@ namespace EliteDataRelay.Services
             { "viper_mkiv", "Viper Mk IV" },
             { "cobramkiii", "Cobra Mk III" },
             { "cobramkiv", "Cobra Mk IV" },
-            { "diamondback", "Diamondback" }, // Journal: "diamondback" -> Scout
+            { "cobramkv", "Cobra Mk V" },
+            { "diamondback", "Diamondback Scout" }, // Journal: "diamondback" -> Scout
             { "dolphin", "Dolphin" },
-            { "empire_courier", "Empire_Courier" },
+            { "empire_courier", "Imperial Courier" },
             { "vulture", "Vulture" },
             { "corsair", "Corsair" },
 
@@ -57,29 +58,32 @@ namespace EliteDataRelay.Services
             { "lakonminer", "Lakon_Miner" }, // Lakon Type-11 Prospector
             { "asp", "Asp Explorer" }, // Journal: "asp" -> Asp Explorer
             { "asp_scout", "Asp Scout" },
-            { "federation_dropship", "Federation Dropship" },
-            { "federation_dropship_mkii", "Federation Dropship Mk II" },
-            { "federation_gunship", "Federation_Gunship" },
+            { "federation_dropship", "Federal Dropship" },
+            { "federation_dropship_mkii", "Federal Assault Ship" },
+            { "federation_gunship", "Federal_Gunship" },
             { "empire_trader", "Imperial Clipper" },
             { "krait_mkii", "Krait Mk II" },
             { "krait_phantom", "Krait Phantom" },
             { "mamba", "Mamba" },
-            { "ferdelance", "FerDeLance" },
+            { "ferdelance", "Fer De Lance" },
             { "python", "Python" },
+            { "python_mkii", "Python Mk II" },
             { "orca", "Orca" },
             { "typex_3" , "Alliance Challenger" },
-            { "typex", "TypeX" }, // Alliance Chieftain
+            { "typex_2" , "Alliance Crusader" },
+            { "typex", "Alliance Chieftain" }, // Alliance Chieftain
             { "type8", "Type-8 Transporter"}, // Type 8
             { "mandalay", "Mandalay" }, 
 
             // --- Large Ships ---
             { "type7", "Type 7 Transporter" },
             { "type9", "Type 9 Heavy" },
-            { "type9_military", "Type 9 Military" },
-            { "belugaliner", "BelugaLiner" },
+            { "type9_military", "Type9_Military" },
+            { "belugaliner", "Beluga Liner" },
             { "anaconda", "Anaconda" },
             { "federation_corvette", "Federation_Corvette" },
             { "cutter", "Cutter" },
+            { "cyclops", "Cyclops" },
             { "panthermkii" , "Panther Clipper Mk II" }
         };
 

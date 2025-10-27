@@ -29,7 +29,7 @@ namespace EliteDataRelay.Services
         public void Reset()
         {
             _lastInventoryHash = null;
-            Trace.WriteLine("[CargoProcessorService] State has been reset.");
+            //Trace.WriteLine("[CargoProcessorService] State has been reset.");
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace EliteDataRelay.Services
                 catch (IOException) when (attempt < AppConfiguration.FileReadMaxAttempts)
                 {
                     // File still locked – wait before retrying
-                    Trace.WriteLine($"[CargoProcessorService] File locked, retry attempt {attempt}/{AppConfiguration.FileReadMaxAttempts}");
+                    //Trace.WriteLine($"[CargoProcessorService] File locked, retry attempt {attempt}/{AppConfiguration.FileReadMaxAttempts}");
                     Thread.Sleep(AppConfiguration.FileReadRetryDelayMs);
                 }
                 catch (JsonException jsonEx)
@@ -143,7 +143,7 @@ namespace EliteDataRelay.Services
                 }
                 catch (IOException) when (attempt < AppConfiguration.FileReadMaxAttempts)
                 {
-                    Trace.WriteLine($"[CargoProcessorService] (async) File locked, retry {attempt}/{AppConfiguration.FileReadMaxAttempts}");
+                    //Trace.WriteLine($"[CargoProcessorService] (async) File locked, retry {attempt}/{AppConfiguration.FileReadMaxAttempts}");
                     await System.Threading.Tasks.Task.Delay(AppConfiguration.FileReadRetryDelayMs).ConfigureAwait(false);
                 }
                 catch (JsonException jsonEx)
