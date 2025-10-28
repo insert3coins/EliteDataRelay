@@ -1,46 +1,39 @@
-# Mini README – Recent Changes
+# Elite Data Relay — Exploration History Import (mini)
 
-## Overview
-This mini README summarizes recent fixes and tweaks to ship display and icon mapping, plus a logging change that was requested and then reverted.
+## What’s New
+- One‑time historical journal import for the Exploration tab.
+- On first launch after update, it scans your old `Journal.*.log` files and populates the exploration database.
+- Runs automatically and silently on startup (no UI needed); refreshes the Exploration log when finished.
 
-## Ship UI – Use Localised Name
-- The ship label in the UI now prefers the localised display name from journals.
-- Change: LoadGame handling now calls the internal updater with `Ship_Localised` when present, and falls back to a friendly display name derived from the internal ship code.
-  - File: Services/JournalWatcherService.PlayerEvents.cs:32–52
+## What Gets Imported
+- System context: `FSDJump`, `Location`, `CarrierJump` (sets current system + visit time).
+- Exploration events: `FSSDiscoveryScan`, `Scan`, `SAAScanComplete`, `FSSBodySignals`, `SAASignalsFound`, `SellExplorationData`.
+- Timestamps preserved:
+  - `LastVisited` uses the journal event time during import.
+  - `FirstVisited` is set from the first event seen for that system.
+  - `LastUpdated` for exploration events uses the original journal timestamps during import.
 
-## Ship Icon Mapping – Align With Images
-Standardized mappings so every internal ship name resolves to an existing PNG in `Images/ships`.
+## Where Data Lives
+- Settings: `%APPDATA%\EliteDataRelay\settings.json`.
+- Exploration DB: `%APPADATA%\EliteDataRelay\exploration.db`.
 
-Adjusted mappings
-- "diamondback" → "Diamondback Scout" (Images/ships/Diamondback Scout.png)
-- "empire_courier" → "Imperial Courier"
-- "federation_dropship" → "Federal Dropship"
-- "federation_dropship_mkii" → "Federal Assault Ship"
-- "federation_gunship" → "Federal_Gunship"
-- "ferdelance" → "Fer De Lance"
-- "typex" → "Alliance Chieftain"
-- "type9_military" → "Type9_Military"
-- "belugaliner" → "Beluga Liner"
+## One‑Time Behavior
+- Controlled by `ExplorationHistoryImported` in `settings.json`.
+- After a successful import this flag is set to `true` and the importer will not run again automatically.
 
-New mappings added
-- "cobramkv" → "Cobra Mk V"
-- "python_mkii" → "Python Mk II"
-- "typex_2" → "Alliance Crusader"
-- "cyclops" → "Cyclops"
+## Re‑Run The Import
+1) Close Elite Data Relay.
+2) Edit `%APPDATA%\EliteDataRelay\settings.json` and set `"ExplorationHistoryImported": false`.
+3) (Optional) Delete `%APPDATA%\EliteDataRelay\exploration.db` to rebuild from scratch.
+4) Start the app; the importer will run again on startup.
 
-All mapping values now match existing image filenames.
-  - File: Services/ShipIconService.cs
+Notes:
+- The database uses keys per system/body, so re‑import is safe; it updates existing rows without duplicating bodies.
 
-## Logging Listener (Reverted)
-- A temporary filtering trace listener was added to suppress `[CargoProcessorService]` in `debug_log.txt`, then removed per request.
-  - Program.cs now uses the standard `TextWriterTraceListener` again.
+## Performance and Stability
+- Import runs in the background, suppressing UI events to avoid cross‑thread updates.
+- The async DB writer is paused during import to keep writes single‑threaded and avoid freezes.
 
-## Quick Verification
-1) Ship name on load
-   - Launch with a LoadGame event containing `Ship` and `Ship_Localised`.
-   - Expected: UI shows the localised name (e.g., "Type-11 Prospector").
-2) Icon display
-   - Switch ships and confirm the icon and name match images in `Images/ships`.
-3) Logs
-   - `debug_log.txt` should include normal trace output (no filtering applied).
-
+## If Nothing Imports
+- If the journal folder isn’t found, the importer skips work and marks as done to avoid retrying every launch.
+- To try again later: ensure journals are present, then set `ExplorationHistoryImported` back to `false` and restart.

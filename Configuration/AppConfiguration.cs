@@ -77,8 +77,11 @@ namespace EliteDataRelay.Configuration
                         // Mining announcements removed
                         // OBS compatibility removed
 
-                        // Performance and extras
-                        FastStartSkipJournalHistory = config.FastStartSkipJournalHistory;
+                    // Performance and extras
+                    FastStartSkipJournalHistory = config.FastStartSkipJournalHistory;
+
+                    // Exploration
+                    ExplorationHistoryImported = config.ExplorationHistoryImported;
 
                         // Screenshot renamer
                         EnableScreenshotRenamer = config.EnableScreenshotRenamer;
@@ -145,6 +148,9 @@ namespace EliteDataRelay.Configuration
 
                     // Performance and extras
                     FastStartSkipJournalHistory = AppConfiguration.FastStartSkipJournalHistory,
+
+                    // Exploration
+                    ExplorationHistoryImported = AppConfiguration.ExplorationHistoryImported,
 
                     // Screenshot renamer
                     EnableScreenshotRenamer = AppConfiguration.EnableScreenshotRenamer,
@@ -223,6 +229,9 @@ namespace EliteDataRelay.Configuration
             public bool EnableWebOverlayServer { get; set; } = false;
             public int WebOverlayPort { get; set; } = 9005;
             public int WebOverlayOpacity { get; set; } = 85;
+
+            // Exploration
+            public bool ExplorationHistoryImported { get; set; } = false;
         }
     }
 }

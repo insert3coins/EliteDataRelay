@@ -18,6 +18,12 @@ namespace EliteDataRelay.Services
         private readonly ExplorationDatabaseService _database;
 
         /// <summary>
+        /// When true, suppresses SystemDataChanged and SessionDataChanged events.
+        /// Useful for background batch imports to avoid cross-thread UI updates.
+        /// </summary>
+        public bool SuppressEvents { get; set; } = false;
+
+        /// <summary>
         /// Event raised when the current system's exploration data changes.
         /// </summary>
         public event EventHandler<SystemExplorationData>? SystemDataChanged;
@@ -30,6 +36,22 @@ namespace EliteDataRelay.Services
         public ExplorationDataService(ExplorationDatabaseService database)
         {
             _database = database ?? throw new ArgumentNullException(nameof(database));
+        }
+
+        private void EmitSystemChanged()
+        {
+            if (!SuppressEvents && _currentSystem != null)
+            {
+                SystemDataChanged?.Invoke(this, _currentSystem);
+            }
+        }
+
+        private void EmitSessionChanged()
+        {
+            if (!SuppressEvents)
+            {
+                SessionDataChanged?.Invoke(this, _sessionData);
+            }
         }
 
         /// <summary>
@@ -50,7 +72,7 @@ namespace EliteDataRelay.Services
             _currentSystem = null;
 
             Debug.WriteLine("[ExplorationDataService] Exploration session started");
-            SessionDataChanged?.Invoke(this, _sessionData);
+            EmitSessionChanged();
         }
 
         /// <summary>
@@ -116,16 +138,16 @@ namespace EliteDataRelay.Services
 
                 _visitedSystems[systemAddress.Value] = _currentSystem;
                 _sessionData.SystemsVisited++;
-                SessionDataChanged?.Invoke(this, _sessionData);
+                EmitSessionChanged();
             }
 
-            SystemDataChanged?.Invoke(this, _currentSystem);
+            EmitSystemChanged();
         }
 
         /// <summary>
         /// Handles an FSS Discovery Scan event.
         /// </summary>
-        public void HandleFSSDiscoveryScan(FSSDiscoveryScanEvent fssEvent)
+        public void HandleFSSDiscoveryScan(FSSDiscoveryScanEvent fssEvent, DateTime? eventTimestamp = null)
         {
             if (_currentSystem == null || fssEvent.SystemAddress != _currentSystem.SystemAddress)
             {
@@ -135,20 +157,20 @@ namespace EliteDataRelay.Services
 
             _currentSystem.TotalBodies = fssEvent.BodyCount;
             _currentSystem.FSSProgress = fssEvent.Progress * 100;
-            _currentSystem.LastUpdated = DateTime.UtcNow;
+            _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
             Debug.WriteLine($"[ExplorationDataService] FSS scan: {fssEvent.BodyCount} bodies, {fssEvent.Progress * 100:F1}% complete");
 
             // Save to database
             _database.SaveSystemAsync(_currentSystem);
 
-            SystemDataChanged?.Invoke(this, _currentSystem);
+            EmitSystemChanged();
         }
 
         /// <summary>
         /// Handles a Scan event (detailed scan of a body).
         /// </summary>
-        public void HandleScan(ScanEvent scanEvent)
+        public void HandleScan(ScanEvent scanEvent, DateTime? eventTimestamp = null)
         {
             if (_currentSystem == null || scanEvent.SystemAddress != _currentSystem.SystemAddress)
             {
@@ -177,21 +199,21 @@ namespace EliteDataRelay.Services
                 }
             }
 
-            _currentSystem.LastUpdated = DateTime.UtcNow;
+            _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
             Debug.WriteLine($"[ExplorationDataService] Scanned body: {scanEvent.BodyName}");
 
             // Save to database
             _database.SaveSystemAsync(_currentSystem);
 
-            SystemDataChanged?.Invoke(this, _currentSystem);
-            SessionDataChanged?.Invoke(this, _sessionData);
+            EmitSystemChanged();
+            EmitSessionChanged();
         }
 
         /// <summary>
         /// Handles a SAA Scan Complete event (detailed surface mapping).
         /// </summary>
-        public void HandleSAAScanComplete(SAAScanCompleteEvent saaEvent)
+        public void HandleSAAScanComplete(SAAScanCompleteEvent saaEvent, DateTime? eventTimestamp = null)
         {
             if (_currentSystem == null || saaEvent.SystemAddress != _currentSystem.SystemAddress)
             {
@@ -219,14 +241,14 @@ namespace EliteDataRelay.Services
                                   $"(Probes: {saaEvent.ProbesUsed}/{saaEvent.EfficiencyTarget})");
                     Debug.WriteLine($"[ExplorationDataService] System mapped count now: {_currentSystem.MappedBodies}, Session total mapped: {_sessionData.TotalMapped}");
 
-                    _currentSystem.LastUpdated = DateTime.UtcNow;
+                    _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
                     // Save to database
                     _database.SaveSystemAsync(_currentSystem);
 
                     Debug.WriteLine($"[ExplorationDataService] Firing SystemDataChanged event...");
-                    SystemDataChanged?.Invoke(this, _currentSystem);
-                    SessionDataChanged?.Invoke(this, _sessionData);
+                    EmitSystemChanged();
+                    EmitSessionChanged();
                 }
             }
         }
@@ -234,7 +256,7 @@ namespace EliteDataRelay.Services
         /// <summary>
         /// Handles FSS Body Signals event.
         /// </summary>
-        public void HandleFSSBodySignals(FSSBodySignalsEvent signalsEvent)
+        public void HandleFSSBodySignals(FSSBodySignalsEvent signalsEvent, DateTime? eventTimestamp = null)
         {
             if (_currentSystem == null || signalsEvent.SystemAddress != _currentSystem.SystemAddress)
             {
@@ -245,19 +267,19 @@ namespace EliteDataRelay.Services
             if (body != null)
             {
                 body.Signals = signalsEvent.Signals;
-                _currentSystem.LastUpdated = DateTime.UtcNow;
+                _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
                 // Save to database
                 _database.SaveSystemAsync(_currentSystem);
 
-                SystemDataChanged?.Invoke(this, _currentSystem);
+                EmitSystemChanged();
             }
         }
 
         /// <summary>
         /// Handles SAA Signals Found event (biological, geological signals during mapping).
         /// </summary>
-        public void HandleSAASignalsFound(SAASignalsFoundEvent signalsEvent)
+        public void HandleSAASignalsFound(SAASignalsFoundEvent signalsEvent, DateTime? eventTimestamp = null)
         {
             if (_currentSystem == null || signalsEvent.SystemAddress != _currentSystem.SystemAddress)
             {
@@ -280,26 +302,26 @@ namespace EliteDataRelay.Services
                                   $"{string.Join(", ", body.BiologicalSignals)}");
                 }
 
-                _currentSystem.LastUpdated = DateTime.UtcNow;
+                _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
                 // Save to database
                 _database.SaveSystemAsync(_currentSystem);
 
-                SystemDataChanged?.Invoke(this, _currentSystem);
+                EmitSystemChanged();
             }
         }
 
         /// <summary>
         /// Handles selling exploration data.
         /// </summary>
-        public void HandleSellExplorationData(SellExplorationDataEvent sellEvent)
+        public void HandleSellExplorationData(SellExplorationDataEvent sellEvent, DateTime? eventTimestamp = null)
         {
             _sessionData.SoldValue += sellEvent.TotalEarnings;
 
             Debug.WriteLine($"[ExplorationDataService] Sold exploration data for {sellEvent.TotalEarnings:N0} CR " +
                           $"({sellEvent.Systems.Count} systems, {sellEvent.Discovered.Count} discoveries)");
 
-            SessionDataChanged?.Invoke(this, _sessionData);
+            EmitSessionChanged();
         }
 
         /// <summary>
@@ -313,13 +335,13 @@ namespace EliteDataRelay.Services
             Debug.WriteLine($"[ExplorationDataService] Sold on-foot data for {sellEvent.TotalEarnings:N0} CR " +
                           $"({sellEvent.FirstFootfallCount} first footfalls)");
 
-            SessionDataChanged?.Invoke(this, _sessionData);
+            EmitSessionChanged();
         }
 
         /// <summary>
         /// Handles touchdown on a planet surface.
         /// </summary>
-        public void HandleTouchdown(TouchdownEvent touchdownEvent)
+        public void HandleTouchdown(TouchdownEvent touchdownEvent, DateTime? eventTimestamp = null)
         {
             if (_currentSystem == null || touchdownEvent.SystemAddress != _currentSystem.SystemAddress)
             {
@@ -344,13 +366,13 @@ namespace EliteDataRelay.Services
 
                     Debug.WriteLine($"[ExplorationDataService] First footfall on {touchdownEvent.Body}!");
 
-                    _currentSystem.LastUpdated = DateTime.UtcNow;
+                    _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
                     // Save to database
                     _database.SaveSystemAsync(_currentSystem);
 
-                    SystemDataChanged?.Invoke(this, _currentSystem);
-                    SessionDataChanged?.Invoke(this, _sessionData);
+                    EmitSystemChanged();
+                    EmitSessionChanged();
                 }
             }
         }

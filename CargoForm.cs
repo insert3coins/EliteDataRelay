@@ -79,6 +79,24 @@ namespace EliteDataRelay
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 
+        private async void RunHistoricalExplorationImportIfNeeded()
+        {
+            try
+            {
+                var importer = new ExplorationHistoryImportService(_explorationDataService);
+                var imported = await importer.ImportIfNeededAsync();
+                if (imported)
+                {
+                    // Refresh the exploration log UI if the import added data.
+                    _cargoFormUI.RefreshExplorationLog();
+                }
+            }
+            catch
+            {
+                // Swallow exceptions to avoid impacting app startup.
+            }
+        }
+
         private void InitializeComponent()
         {
             // Initialize the UI through the UI service

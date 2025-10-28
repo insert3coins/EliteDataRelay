@@ -138,13 +138,13 @@ namespace EliteDataRelay.UI
             // 
             this.labelDescription.Location = new System.Drawing.Point(17, 70);
             this.labelDescription.Name = "labelDescription";
-            this.labelDescription.Size = new System.Drawing.Size(380, 45);
-            this.labelDescription.Text = "A lightweight Windows companion app for Elite Dangerous that provides real-time data overlays, session tracking, and stream-friendly text output.";
+            this.labelDescription.Size = new System.Drawing.Size(380, 75);
+            this.labelDescription.Text = "Windows companion for Elite Dangerous. Watches game journals to track cargo, materials, ship and location; logs and visualizes exploration (FSS/Scan/SAA) in a local database with a one-time history import; provides lightweight overlays and a web overlay for streaming.";
             // 
             // linkLabelGitHub
             // 
             this.linkLabelGitHub.AutoSize = true;
-            this.linkLabelGitHub.Location = new System.Drawing.Point(17, 125);
+            this.linkLabelGitHub.Location = new System.Drawing.Point(17, 150);
             this.linkLabelGitHub.Name = "linkLabelGitHub";
             this.linkLabelGitHub.Size = new System.Drawing.Size(133, 15);
             this.linkLabelGitHub.TabStop = true;
@@ -154,14 +154,14 @@ namespace EliteDataRelay.UI
             // 
             this.labelCopyright.AutoSize = true;
             this.labelCopyright.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.labelCopyright.Location = new System.Drawing.Point(17, 150);
+            this.labelCopyright.Location = new System.Drawing.Point(17, 175);
             this.labelCopyright.Name = "labelCopyright";
             this.labelCopyright.Size = new System.Drawing.Size(166, 15);
             this.labelCopyright.Text = "Copyright © 2024 insert3coins";
             // 
             // closeButton
             // 
-            this.closeButton.Location = new System.Drawing.Point(322, 176);
+            this.closeButton.Location = new System.Drawing.Point(322, 201);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(75, 23);
             this.closeButton.Text = "OK";
@@ -172,7 +172,7 @@ namespace EliteDataRelay.UI
             this.AcceptButton = this.closeButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(414, 211);
+            this.ClientSize = new System.Drawing.Size(414, 236);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.linkLabelGitHub);
             this.Controls.Add(this.labelCopyright);

@@ -25,7 +25,6 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Customizable overlays: Info, Cargo, Ship Icon, and Exploration
 - Draggable positioning with automatic position memory
 - Configurable fonts, colors, transparency, and borders
-- OBS-compatible window capture mode
 - Global hotkeys for show/hide control (Ctrl+Alt+F11/F12)
 
 **Browser-Source Overlays**

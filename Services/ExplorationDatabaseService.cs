@@ -132,7 +132,8 @@ namespace EliteDataRelay.Services
                             INSERT INTO Systems (SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, LastVisited, FirstVisited)
                             VALUES (@systemAddress, @systemName, @totalBodies, @scannedBodies, @mappedBodies, @fssProgress, @lastVisited, @firstVisited)
                         ";
-                        cmd.Parameters.AddWithValue("@firstVisited", DateTime.Now.ToString("o"));
+                        // Preserve journal event time for initial visit
+                        cmd.Parameters.AddWithValue("@firstVisited", system.LastVisited.ToString("o"));
                     }
                     else
                     {

@@ -29,6 +29,10 @@ namespace EliteDataRelay.Configuration
         // Performance
         public static bool FastStartSkipJournalHistory { get; set; } = true;
 
+        // Exploration
+        // Tracks whether we've already imported historical exploration data from old journals.
+        public static bool ExplorationHistoryImported { get; set; } = false;
+
         // Screenshot Renamer
         public static bool EnableScreenshotRenamer { get; set; } = false;
         public static string ScreenshotRenameFormat { get; set; } = "{System} - {Body} - {Timestamp}";
