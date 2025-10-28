@@ -269,7 +269,6 @@ namespace EliteDataRelay.UI
                 MiningNotificationType.BackupRestored => ToolTipIcon.Info,
                 MiningNotificationType.AutoStart => ToolTipIcon.Info,
                 MiningNotificationType.ReportGenerated => ToolTipIcon.Info,
-                MiningNotificationType.Reminder => ToolTipIcon.Warning,
                 MiningNotificationType.ValuableCommodityRefined => ToolTipIcon.Info,
                 _ => ToolTipIcon.None // Default case for Info and any future types
             };

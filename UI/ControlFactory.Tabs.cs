@@ -7,7 +7,6 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
-        private HotspotFinderPanel? _hotspotFinderPanel;
         private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker)
         {
             // Tab control to switch between Cargo and Materials
@@ -20,9 +19,8 @@ namespace EliteDataRelay.UI
             var cargoPage = CreateCargoTabPage(fontManager);
             var shipPage = CreateShipTabPage(fontManager);
             var miningPage = CreateMiningTabPage(fontManager, sessionTracker);
-            var hotspotsPage = CreateHotspotsTabPage();
-
-            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage, hotspotsPage });
+            
+            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage });
         }
 
         private void DisposeTabControls()
@@ -30,17 +28,6 @@ namespace EliteDataRelay.UI
             TabControl.Dispose();
             DisposeCargoTabControls();
             DisposeShipTabControls();
-            _hotspotFinderPanel?.Dispose();
-        }
-
-        private TabPage CreateHotspotsTabPage()
-        {
-            var page = new TabPage("Hotspots");
-            page.BackColor = Color.FromArgb(249, 250, 251);
-            _hotspotFinderPanel = new HotspotFinderPanel(new Services.HotspotFinderService());
-            _hotspotFinderPanel.Dock = DockStyle.Fill;
-            page.Controls.Add(_hotspotFinderPanel);
-            return page;
         }
     }
 }

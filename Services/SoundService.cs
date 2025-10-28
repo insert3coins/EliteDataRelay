@@ -66,21 +66,6 @@ namespace EliteDataRelay.Services
         }
 
         /// <summary>
-        /// Play the reminder sound
-        /// </summary>
-        public void PlayReminderSound()
-        {
-            try
-            {
-                SystemSounds.Asterisk.Play();
-                Debug.WriteLine("[SoundService] Playing reminder sound");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[SoundService] Error playing reminder sound: {ex}");
-            }
-        }
-        /// <summary>
         /// Creates a managed <see cref="MemoryStream"/> from an unmanaged resource stream.
         /// </summary>
         /// <param name="sourceStream">The source <see cref="UnmanagedMemoryStream"/> from application resources.</param>

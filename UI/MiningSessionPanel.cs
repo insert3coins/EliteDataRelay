@@ -24,14 +24,10 @@ namespace EliteDataRelay.UI
         private Label? _creditsValueLabel;
         private Label? _cargoValueLabel;
         private ListBox? _announcementListBox;        
-        private NumericUpDown? _reminderMinutesUpDown;
-        private Label? _reminderStatusLabel;
-        private Button? _reminderButton;
         private Button? _startSessionButton;
         private Button? _stopSessionButton;
         private System.Windows.Forms.Timer? _updateTimer;
-        private System.Windows.Forms.Timer? _reminderTimer;
-        private TimeSpan _reminderRemaining = TimeSpan.Zero;
+        
 
         private const int MaxAnnouncements = 50;
 
@@ -91,9 +87,6 @@ namespace EliteDataRelay.UI
             _updateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _updateTimer.Tick += (s, e) => UpdateStats();
 
-            _reminderTimer = new System.Windows.Forms.Timer { Interval = 1000 };
-            _reminderTimer.Tick += ReminderTimerOnTick;
-            
             UpdateControlsVisibility();
         }
 
@@ -191,39 +184,8 @@ namespace EliteDataRelay.UI
             sessionFlow.Controls.Add(_startSessionButton);
             sessionFlow.Controls.Add(_stopSessionButton);
 
-            // --- Reminder Controls ---
-            var reminderLayout = new TableLayoutPanel { ColumnCount = 2, AutoSize = true };
-            reminderLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            reminderLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-
-            _reminderMinutesUpDown = new NumericUpDown 
-            { 
-                Minimum = 1, 
-                Maximum = 120, 
-                Value = 15, 
-                Width = 70, 
-                BackColor = Color.Black, 
-                ForeColor = Color.White 
-            };
-            _reminderButton = CreateSecondaryButton("Start Reminder", OnReminderButtonClicked);
-            reminderLayout.Controls.Add(new Label { Text = "Reminder (min):", ForeColor = Color.White, AutoSize = true, Anchor = AnchorStyles.Left, Padding = new Padding(0, 5, 0, 0) }, 0, 0);
-            reminderLayout.Controls.Add(_reminderMinutesUpDown, 1, 0);
-            reminderLayout.Controls.Add(_reminderButton, 0, 1);
-            reminderLayout.SetColumnSpan(_reminderButton, 2);
-
-            _reminderStatusLabel = new Label 
-            { 
-                Text = "No reminder active", 
-                ForeColor = secondaryTextColor, 
-                AutoSize = true, 
-                Padding = new Padding(5, 0, 5, 0) 
-            };
-            reminderLayout.Controls.Add(_reminderStatusLabel, 0, 2);
-            reminderLayout.SetColumnSpan(_reminderStatusLabel, 2);
-
             // Add to main flow layout
             mainFlowLayout.Controls.Add(sessionFlow);
-            mainFlowLayout.Controls.Add(reminderLayout);
 
             controlsGroup.Controls.Add(mainFlowLayout);
             return controlsGroup;
@@ -317,38 +279,7 @@ namespace EliteDataRelay.UI
             AutoSize = true
         };
 
-        private void ReminderTimerOnTick(object? sender, EventArgs e)
-        {
-            if (_reminderRemaining <= TimeSpan.Zero)
-            {
-                _reminderTimer?.Stop();
-                _reminderStatusLabel!.Text = "Reminder finished";
-                _reminderButton!.Text = "Start Reminder";
-                _sessionTracker.PublishCustomNotification("Mining reminder completed.", MiningNotificationType.Reminder, true);
-                return;
-            }
-
-            _reminderRemaining -= TimeSpan.FromSeconds(1);
-            _reminderStatusLabel!.Text = $"Reminder active: {_reminderRemaining:hh\\:mm\\:ss}";
-        }
-
-        private void OnReminderButtonClicked(object? sender, EventArgs e)
-        {
-            if (_reminderTimer == null || _reminderMinutesUpDown == null) return;
-
-            if (_reminderTimer.Enabled)
-            {
-                _reminderTimer.Stop();
-                _reminderStatusLabel!.Text = "Reminder cancelled";
-                _reminderButton!.Text = "Start Reminder";
-                return;
-            }
-
-            _reminderRemaining = TimeSpan.FromMinutes((double)_reminderMinutesUpDown.Value);
-            _reminderStatusLabel!.Text = $"Reminder active: {_reminderRemaining:hh\\:mm\\:ss}";
-            _reminderButton!.Text = "Cancel Reminder";
-            _reminderTimer.Start();
-        }
+        
 
         public void UpdateStats()
         {
@@ -398,7 +329,6 @@ namespace EliteDataRelay.UI
             if (disposing)
             {
                 _updateTimer?.Dispose();
-                _reminderTimer?.Dispose();
                 _startSessionButton?.Dispose();
                 _stopSessionButton?.Dispose();
                 _announcementListBox?.Dispose();

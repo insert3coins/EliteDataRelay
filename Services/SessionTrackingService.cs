@@ -319,16 +319,13 @@ namespace EliteDataRelay.Services
             MiningNotificationRaised?.Invoke(this, new MiningNotificationEventArgs(type, message, DateTime.UtcNow, persistent));
         }
 
-        public BackupSnapshot CreateSnapshot(IEnumerable<string>? reportPaths = null, IReadOnlyDictionary<string, HotspotLocation>? hotspotBookmarks = null)
+        public BackupSnapshot CreateSnapshot(IEnumerable<string>? reportPaths = null)
         {
             var snapshot = new BackupSnapshot
             {
                 CreatedOn = DateTime.UtcNow,
                 Preferences = Preferences.Clone(),
-                Reports = reportPaths?.ToList() ?? new List<string>(),
-                HotspotBookmarks = hotspotBookmarks != null
-                    ? new Dictionary<string, HotspotLocation>(hotspotBookmarks, StringComparer.OrdinalIgnoreCase)
-                    : new Dictionary<string, HotspotLocation>(StringComparer.OrdinalIgnoreCase)
+                Reports = reportPaths?.ToList() ?? new List<string>()
             };
 
             lock (_historyLock)

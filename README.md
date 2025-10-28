@@ -9,7 +9,6 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 **Session Tracking**
 - Track credits earned, cargo collected, and session duration
 - Dedicated Mining Session mode with limpet usage, refined materials, and active mining time
-- Session history with detailed statistics and export capabilities
 
 **Exploration Logging**
 - Automatically records every system visited with timestamps
@@ -43,12 +42,9 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Screenshot helper: auto‑rename with {System}/{Body}/{Timestamp} and BMP→PNG conversion
 
 **Advanced Features**
-- Cargo full notifications and mining announcements
 - Global hotkeys for monitoring control (Ctrl+Alt+F9/F10)
 - Comprehensive event tracking from Elite Dangerous journals
 - Performance-optimized file monitoring with 25ms debounce
-- Hotspot Finder UI with search and bookmarks (mining)
-- Mining companion: dock‑side “Restock limpets” reminder when services available
 - Fast start option to skip historic journal lines on initial scan
 
 ---

@@ -10,7 +10,6 @@ namespace EliteDataRelay.Models
         BackupCreated,
         BackupRestored,
         ReportGenerated,
-        Reminder,
         ValuableCommodityRefined
     }
 

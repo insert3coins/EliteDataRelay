@@ -10,7 +10,5 @@ namespace EliteDataRelay.Models
         public List<MiningSessionRecord>? SessionHistory { get; set; }
             = new();
         public List<string>? Reports { get; set; } = new();
-        public Dictionary<string, HotspotLocation>? HotspotBookmarks { get; set; }
-            = new(StringComparer.OrdinalIgnoreCase);
     }
 }

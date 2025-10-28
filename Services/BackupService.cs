@@ -10,14 +10,12 @@ namespace EliteDataRelay.Services
     public class BackupService
     {
         private readonly SessionTrackingService _sessionTrackingService;
-        private readonly HotspotFinderService _hotspotFinderService;
         private readonly List<string> _knownReports = new();
         private readonly object _sync = new();
 
-        public BackupService(SessionTrackingService sessionTrackingService, HotspotFinderService hotspotFinderService)
+        public BackupService(SessionTrackingService sessionTrackingService)
         {
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
-            _hotspotFinderService = hotspotFinderService ?? throw new ArgumentNullException(nameof(hotspotFinderService));
         }
 
         public void RegisterReport(string path)
@@ -50,7 +48,6 @@ namespace EliteDataRelay.Services
             var snapshot = JsonSerializer.Deserialize<BackupSnapshot>(File.ReadAllText(path), options) ?? throw new InvalidOperationException("Invalid backup file");
 
             _sessionTrackingService.RestoreFromSnapshot(snapshot);
-            _hotspotFinderService.RestoreBookmarks(snapshot.HotspotBookmarks);
 
             lock (_sync)
             {
@@ -67,7 +64,7 @@ namespace EliteDataRelay.Services
             lock (_sync)
             {
                 var existingReports = _knownReports.Where(File.Exists).ToList();
-                return _sessionTrackingService.CreateSnapshot(existingReports, _hotspotFinderService.GetBookmarksSnapshot());
+                return _sessionTrackingService.CreateSnapshot(existingReports);
             }
         }
     }
