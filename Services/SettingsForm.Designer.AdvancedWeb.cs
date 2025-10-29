@@ -73,6 +73,33 @@ namespace EliteDataRelay.UI
             grpWeb.Controls.Add(lblOpacityValue);
             foreach (Control c in grpWeb.Controls) c.ForeColor = Color.FromArgb(31, 41, 55);
             tab.Controls.Add(grpWeb);
+
+            // Verbose logging toggle (local to Advanced Web tab)
+            var chkVerbose = new CheckBox
+            {
+                Text = Properties.Strings.Settings_VerboseLogging_Label,
+                Location = new Point(12 + 15, grpWeb.Bottom + 12),
+                AutoSize = true,
+                Checked = AppConfiguration.VerboseLogging
+            };
+            chkVerbose.CheckedChanged += (s, e) => AppConfiguration.VerboseLogging = chkVerbose.Checked;
+            tab.Controls.Add(chkVerbose);
+
+            // Diagnostics window button
+            var btnDiagnostics = new Button
+            {
+                Text = Properties.Strings.Settings_OpenDiagnostics_Button,
+                Location = new Point(chkVerbose.Left, chkVerbose.Bottom + 8),
+                Size = new Size(150, 23)
+            };
+            btnDiagnostics.Click += (s, e) =>
+            {
+                using (var diag = new DiagnosticsForm())
+                {
+                    diag.ShowDialog();
+                }
+            };
+            tab.Controls.Add(btnDiagnostics);
         }
     }
 }
