@@ -313,6 +313,49 @@ namespace EliteDataRelay.Services
         }
 
         /// <summary>
+        /// Loads the most recent system with the given name.
+        /// Useful when we know the current location name but not the SystemAddress.
+        /// </summary>
+        public SystemExplorationData? LoadSystemByName(string systemName)
+        {
+            if (_connection == null)
+                return null;
+
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, LastVisited
+                FROM Systems
+                WHERE SystemName = @name
+                ORDER BY LastVisited DESC
+                LIMIT 1
+            ";
+            cmd.Parameters.AddWithValue("@name", systemName);
+
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+                return null;
+
+            var systemAddress = reader.GetInt64(0);
+
+            var system = new SystemExplorationData
+            {
+                SystemAddress = systemAddress,
+                SystemName = reader.GetString(1),
+                TotalBodies = reader.GetInt32(2),
+                ScannedBodies = reader.GetInt32(3),
+                MappedBodies = reader.GetInt32(4),
+                FSSProgress = reader.GetDouble(5),
+                LastVisited = DateTime.Parse(reader.GetString(6), null, System.Globalization.DateTimeStyles.RoundtripKind)
+            };
+
+            reader.Close();
+
+            // Load bodies for that system
+            system.Bodies = LoadBodies(systemAddress);
+            return system;
+        }
+
+        /// <summary>
         /// Gets all systems visited, ordered by last visited date.
         /// </summary>
         public List<SystemExplorationData> GetVisitedSystems(int limit = 100)

@@ -276,6 +276,24 @@ namespace EliteDataRelay.UI
             _trayIconManager.ShowBalloonTip(3000, "Elite Data Relay", notification.Message, icon);
         }
 
+        public void ShowInfoNotification(string title, string message)
+        {
+            if (_trayIconManager == null) return;
+            _trayIconManager.ShowBalloonTip(3000, title, message, ToolTipIcon.Info);
+        }
+
+        public void ShowInfoPopup(string title, string message)
+        {
+            if (_form != null)
+            {
+                MessageBox.Show(_form, message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
         public void UpdateSessionOverlay(int cargoCollected, long creditsEarned)
         {
             _overlayService?.UpdateSessionOverlay(cargoCollected, creditsEarned);
@@ -346,6 +364,11 @@ namespace EliteDataRelay.UI
         public void RefreshExplorationLog()
         {
             _controlFactory?.ExplorationTab?.RefreshLog();
+        }
+
+        public void UpdateExplorationCurrentSystem(SystemExplorationData data)
+        {
+            _controlFactory?.ExplorationTab?.UpdateSystemData(data);
         }
 
         public void Dispose()

@@ -35,11 +35,14 @@ namespace EliteDataRelay.UI
         void UpdateMiningPreferences(MiningSessionPreferences preferences);
         void AppendMiningAnnouncement(MiningNotificationEventArgs notification);
         void ShowMiningNotification(MiningNotificationEventArgs notification);
+        void ShowInfoNotification(string title, string message);
+        void ShowInfoPopup(string title, string message);
         void UpdateTitle(string title);
         void ShowOverlays();
         void HideOverlays();
         void RefreshOverlay();
         void UpdateCargoScrollBar();
         void RefreshExplorationLog();
+        void UpdateExplorationCurrentSystem(SystemExplorationData data);
     }
 }

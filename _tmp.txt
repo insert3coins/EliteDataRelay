@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -71,8 +71,6 @@ namespace EliteDataRelay
         private long? _lastBalance;
         private uint? _lastShipId;
         private string? _lastLocation;
-        private long? _lastSystemAddress;
-        private DateTime? _lastLocationTimestamp;
         private CargoSnapshot? _lastCargoSnapshot;
         private StationInfoData? _lastStationInfoData;
         private MaterialsEvent? _lastMaterials;
@@ -91,59 +89,6 @@ namespace EliteDataRelay
                 {
                     // Refresh the exploration log UI if the import added data.
                     _cargoFormUI.RefreshExplorationLog();
-                    SafeInvoke(() => _cargoFormUI.ShowInfoPopup("Exploration History Import", "Historical exploration data imported."));
-
-                    // Ensure a current system is selected in exploration after import.
-                    // Prefer current in-game location if available; fall back to most recent DB system
-                    SystemExplorationData? resolved = null;
-                    if (!string.IsNullOrWhiteSpace(_lastLocation))
-                    {
-                        if (_lastSystemAddress.HasValue)
-                        {
-                            _explorationDataService.HandleSystemChange(_lastLocation, _lastSystemAddress, _lastLocationTimestamp ?? DateTime.UtcNow);
-                            resolved = _explorationDataService.GetCurrentSystemData();
-                        }
-                        else
-                        {
-                            // Try resolve by name from database
-                            var byName = _explorationDatabaseService.LoadSystemByName(_lastLocation);
-                            if (byName?.SystemAddress.HasValue == true)
-                            {
-                                _explorationDataService.HandleSystemChange(byName.SystemName, byName.SystemAddress, byName.LastVisited);
-                                resolved = _explorationDataService.GetCurrentSystemData();
-                            }
-                        }
-                    }
-
-                    if (resolved == null)
-                    {
-                        var lastVisited = _explorationDatabaseService.GetVisitedSystems(1).FirstOrDefault();
-                        if (lastVisited != null && lastVisited.SystemAddress.HasValue)
-                        {
-                            _explorationDataService.HandleSystemChange(lastVisited.SystemName, lastVisited.SystemAddress, lastVisited.LastVisited);
-                            resolved = _explorationDataService.GetCurrentSystemData();
-                        }
-                    }
-
-                    if (resolved != null)
-                    {
-                        _cargoFormUI.UpdateExplorationCurrentSystem(resolved);
-                    }
-
-                    // If monitoring is already active, ensure exploration visuals are active like Start did.
-                    if (_fileMonitoringService.IsMonitoring)
-                    {
-                        var currentSystem = _explorationDataService.GetCurrentSystemData();
-                        var session = _explorationDataService.GetSessionData();
-
-                        // Update desktop overlay
-                        _overlayService.UpdateExplorationData(currentSystem);
-                        _overlayService.UpdateExplorationSessionData(session);
-
-                        // Update web overlay
-                        _webOverlayService.UpdateExploration(currentSystem);
-                        _webOverlayService.UpdateExplorationSession(session);
-                    }
                 }
             }
             catch
@@ -270,3 +215,4 @@ namespace EliteDataRelay
         }
     }
 }
+

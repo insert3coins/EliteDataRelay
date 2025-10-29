@@ -243,6 +243,8 @@ namespace EliteDataRelay
         private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
             _lastLocation = e.StarSystem;
+            _lastSystemAddress = e.SystemAddress;
+            _lastLocationTimestamp = e.Timestamp;
 
             // Update exploration service with system change
             _explorationDataService.HandleSystemChange(e.StarSystem, e.SystemAddress, e.Timestamp);

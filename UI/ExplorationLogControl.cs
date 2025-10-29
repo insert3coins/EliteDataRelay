@@ -552,10 +552,9 @@ namespace EliteDataRelay.UI
                 return $"{(int)span.TotalMinutes}m ago";
             if (span.TotalHours < 24)
                 return $"{(int)span.TotalHours}h ago";
-            if (span.TotalDays < 7)
+            // Show days for longer periods so it goes beyond 1 day clearly
+            if (span.TotalDays < 60)
                 return $"{(int)span.TotalDays}d ago";
-            if (span.TotalDays < 30)
-                return $"{(int)(span.TotalDays / 7)}w ago";
             if (span.TotalDays < 365)
                 return $"{(int)(span.TotalDays / 30)}mo ago";
 
