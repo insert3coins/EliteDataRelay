@@ -11,5 +11,51 @@
   <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>语言</value></data>
   <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>语言</value></data>
   <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>语言已更新。部分文本将在重启后更新。</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>设置</value></data>
+  <data name="Settings_Subtitle" xml:space="preserve"><value>自定义您的体验</value></data>
+  <data name="Settings_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>常规</value></data>
+  <data name="Settings_Nav_Overlay" xml:space="preserve"><value>叠加层</value></data>
+  <data name="Settings_Nav_Hotkeys" xml:space="preserve"><value>快捷键</value></data>
+  <data name="Settings_Nav_Advanced" xml:space="preserve"><value>高级</value></data>
+  <data name="Settings_Nav_Localization" xml:space="preserve"><value>语言</value></data>
+  <data name="App_Title" xml:space="preserve"><value>Elite Data Relay</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>确定</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>错误</value></data>
+  <data name="Common_Copied" xml:space="preserve"><value>已复制到剪贴板！</value></data>
+  <data name="Error_OpenUrlFormat" xml:space="preserve"><value>打开 URL 失败: {0}</value></data>
+  <data name="About_WindowTitle" xml:space="preserve"><value>关于 Elite Data Relay</value></data>
+  <data name="About_VersionLabel" xml:space="preserve"><value>版本</value></data>
+  <data name="About_VersionNotFound" xml:space="preserve"><value>未找到版本</value></data>
+  <data name="About_ViewProject" xml:space="preserve"><value>查看 GitHub 项目</value></data>
+  <data name="About_Description" xml:space="preserve"><value>适用于 Elite Dangerous 的 Windows 辅助应用。监视游戏日志以跟踪货物、材料、飞船和位置；将探索（FSS/Scan/SAA）记录并在本地数据库中可视化，并支持一次性历史导入；提供轻量级叠加层和用于直播的 Web 叠加层。</value></data>
+  <data name="Exploration_VisitedSystems_Header" xml:space="preserve"><value>已访问的系统</value></data>
+  <data name="Exploration_SelectSystem" xml:space="preserve"><value>选择一个系统以查看详情</value></data>
+  <data name="Exploration_Col_SystemName" xml:space="preserve"><value>系统名称</value></data>
+  <data name="Exploration_Col_Bodies" xml:space="preserve"><value>天体</value></data>
+  <data name="Exploration_Col_LastVisit" xml:space="preserve"><value>上次访问</value></data>
+  <data name="Exploration_Col_BodyName" xml:space="preserve"><value>天体名称</value></data>
+  <data name="Exploration_Col_Type" xml:space="preserve"><value>类型</value></data>
+  <data name="Exploration_Col_Distance" xml:space="preserve"><value>距离</value></data>
+  <data name="Exploration_Col_Status" xml:space="preserve"><value>状态</value></data>
+  <data name="Exploration_Status_Scanned" xml:space="preserve"><value>已扫描</value></data>
+  <data name="Exploration_Status_Mapped" xml:space="preserve"><value>已制图</value></data>
+  <data name="Exploration_Status_FirstDiscovery" xml:space="preserve"><value>首次发现</value></data>
+  <data name="Exploration_Status_FirstFootfall" xml:space="preserve"><value>首次登陆！</value></data>
+  <data name="Exploration_Status_Known" xml:space="preserve"><value>已知</value></data>
+  <data name="Exploration_History_Empty" xml:space="preserve"><value>探索历史：暂无数据 — 请开始监控并扫描一些系统！</value></data>
+  <data name="Exploration_History_StatsFormat" xml:space="preserve"><value>探索历史：{0}</value></data>
+  <data name="Overlay_NoSystemData" xml:space="preserve"><value>无系统数据</value></data>
+  <data name="Overlay_FSS_ProgressFormat" xml:space="preserve"><value>FSS:     {0:F1}%</value></data>
+  <data name="Overlay_FSS_CompleteFormat" xml:space="preserve"><value>FSS:     完成（{0} 个天体）</value></data>
+  <data name="Overlay_ScannedFormatWithTotal" xml:space="preserve"><value>已扫描：{0} / {1}</value></data>
+  <data name="Overlay_ScannedFormat" xml:space="preserve"><value>已扫描：{0}</value></data>
+  <data name="Overlay_MappedFormat" xml:space="preserve"><value>已制图：{0}</value></data>
+  <data name="Overlay_KnownSystem" xml:space="preserve"><value>已知系统</value></data>
+  <data name="Overlay_SessionFormat" xml:space="preserve"><value>会话：{0} 个系统</value></data>
+  <data name="Overlay_ScansLabel" xml:space="preserve"><value>{0} 次扫描</value></data>
+  <data name="Overlay_MappedLabel" xml:space="preserve"><value>{0} 个制图</value></data>
+  <data name="Tray_Minimized" xml:space="preserve"><value>已最小化到托盘。</value></data>
 </root>
 

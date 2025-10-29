@@ -20,5 +20,42 @@
   <data name="Settings_Nav_Hotkeys" xml:space="preserve"><value>Raccourcis</value></data>
   <data name="Settings_Nav_Advanced" xml:space="preserve"><value>Avancé</value></data>
   <data name="Settings_Nav_Localization" xml:space="preserve"><value>Langue</value></data>
+  <data name="App_Title" xml:space="preserve"><value>Elite Data Relay</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>Erreur</value></data>
+  <data name="Common_Copied" xml:space="preserve"><value>Copié dans le presse‑papiers !</value></data>
+  <data name="Error_OpenUrlFormat" xml:space="preserve"><value>Échec d’ouverture de l’URL : {0}</value></data>
+  <data name="About_WindowTitle" xml:space="preserve"><value>À propos d’Elite Data Relay</value></data>
+  <data name="About_VersionLabel" xml:space="preserve"><value>Version</value></data>
+  <data name="About_VersionNotFound" xml:space="preserve"><value>Version introuvable</value></data>
+  <data name="About_ViewProject" xml:space="preserve"><value>Voir le projet sur GitHub</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Application compagnon Windows pour Elite Dangerous. Surveille les journaux du jeu pour suivre la cargaison, les matériaux, le vaisseau et la localisation ; enregistre et visualise l’exploration (FSS/Scan/SAA) dans une base locale avec une importation historique unique ; fournit des overlays légers et un overlay web pour le streaming.</value></data>
+  <data name="Exploration_VisitedSystems_Header" xml:space="preserve"><value>SYSTÈMES VISITÉS</value></data>
+  <data name="Exploration_SelectSystem" xml:space="preserve"><value>Sélectionnez un système pour afficher les détails</value></data>
+  <data name="Exploration_Col_SystemName" xml:space="preserve"><value>Nom du système</value></data>
+  <data name="Exploration_Col_Bodies" xml:space="preserve"><value>Corps</value></data>
+  <data name="Exploration_Col_LastVisit" xml:space="preserve"><value>Dernière visite</value></data>
+  <data name="Exploration_Col_BodyName" xml:space="preserve"><value>Nom de l’astre</value></data>
+  <data name="Exploration_Col_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Exploration_Col_Distance" xml:space="preserve"><value>Distance</value></data>
+  <data name="Exploration_Col_Status" xml:space="preserve"><value>Statut</value></data>
+  <data name="Exploration_Status_Scanned" xml:space="preserve"><value>Scanné</value></data>
+  <data name="Exploration_Status_Mapped" xml:space="preserve"><value>Cartographié</value></data>
+  <data name="Exploration_Status_FirstDiscovery" xml:space="preserve"><value>Première découverte</value></data>
+  <data name="Exploration_Status_FirstFootfall" xml:space="preserve"><value>Premier pas !</value></data>
+  <data name="Exploration_Status_Known" xml:space="preserve"><value>Connu</value></data>
+  <data name="Exploration_History_Empty" xml:space="preserve"><value>HISTORIQUE D’EXPLORATION : Aucune donnée — démarrez la surveillance et scannez des systèmes !</value></data>
+  <data name="Exploration_History_StatsFormat" xml:space="preserve"><value>HISTORIQUE D’EXPLORATION : {0}</value></data>
+  <data name="Overlay_NoSystemData" xml:space="preserve"><value>AUCUNE DONNÉE SYSTÈME</value></data>
+  <data name="Overlay_FSS_ProgressFormat" xml:space="preserve"><value>FSS :     {0:F1} %</value></data>
+  <data name="Overlay_FSS_CompleteFormat" xml:space="preserve"><value>FSS :     Terminé ({0} corps)</value></data>
+  <data name="Overlay_ScannedFormatWithTotal" xml:space="preserve"><value>Scannés : {0} / {1}</value></data>
+  <data name="Overlay_ScannedFormat" xml:space="preserve"><value>Scannés : {0}</value></data>
+  <data name="Overlay_MappedFormat" xml:space="preserve"><value>Cartographiés :  {0}</value></data>
+  <data name="Overlay_KnownSystem" xml:space="preserve"><value>Système connu</value></data>
+  <data name="Overlay_SessionFormat" xml:space="preserve"><value>Session : {0} systèmes</value></data>
+  <data name="Overlay_ScansLabel" xml:space="preserve"><value>{0} scans</value></data>
+  <data name="Overlay_MappedLabel" xml:space="preserve"><value>{0} cartographiés</value></data>
+  <data name="Tray_Minimized" xml:space="preserve"><value>Réduit dans la zone de notification.</value></data>
 </root>
 

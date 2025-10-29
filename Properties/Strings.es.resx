@@ -11,5 +11,51 @@
   <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>Idioma</value></data>
   <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>Idioma</value></data>
   <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>Idioma actualizado. Algunos textos se actualizarán tras reiniciar.</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Settings_Subtitle" xml:space="preserve"><value>Personaliza tu experiencia</value></data>
+  <data name="Settings_Save" xml:space="preserve"><value>Guardar</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>General</value></data>
+  <data name="Settings_Nav_Overlay" xml:space="preserve"><value>Overlay</value></data>
+  <data name="Settings_Nav_Hotkeys" xml:space="preserve"><value>Atajos</value></data>
+  <data name="Settings_Nav_Advanced" xml:space="preserve"><value>Avanzado</value></data>
+  <data name="Settings_Nav_Localization" xml:space="preserve"><value>Idioma</value></data>
+  <data name="App_Title" xml:space="preserve"><value>Elite Data Relay</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>Aceptar</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Common_Copied" xml:space="preserve"><value>¡Copiado al portapapeles!</value></data>
+  <data name="Error_OpenUrlFormat" xml:space="preserve"><value>Error al abrir la URL: {0}</value></data>
+  <data name="About_WindowTitle" xml:space="preserve"><value>Acerca de Elite Data Relay</value></data>
+  <data name="About_VersionLabel" xml:space="preserve"><value>Versión</value></data>
+  <data name="About_VersionNotFound" xml:space="preserve"><value>Versión no encontrada</value></data>
+  <data name="About_ViewProject" xml:space="preserve"><value>Ver proyecto en GitHub</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Aplicación complementaria de Windows para Elite Dangerous. Supervisa los diarios del juego para rastrear carga, materiales, nave y ubicación; registra y visualiza la exploración (FSS/Scan/SAA) en una base de datos local con una única importación histórica; proporciona overlays ligeros y un overlay web para streaming.</value></data>
+  <data name="Exploration_VisitedSystems_Header" xml:space="preserve"><value>SISTEMAS VISITADOS</value></data>
+  <data name="Exploration_SelectSystem" xml:space="preserve"><value>Selecciona un sistema para ver detalles</value></data>
+  <data name="Exploration_Col_SystemName" xml:space="preserve"><value>Nombre del sistema</value></data>
+  <data name="Exploration_Col_Bodies" xml:space="preserve"><value>Cuerpos</value></data>
+  <data name="Exploration_Col_LastVisit" xml:space="preserve"><value>Última visita</value></data>
+  <data name="Exploration_Col_BodyName" xml:space="preserve"><value>Nombre del cuerpo</value></data>
+  <data name="Exploration_Col_Type" xml:space="preserve"><value>Tipo</value></data>
+  <data name="Exploration_Col_Distance" xml:space="preserve"><value>Distancia</value></data>
+  <data name="Exploration_Col_Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Exploration_Status_Scanned" xml:space="preserve"><value>Escaneado</value></data>
+  <data name="Exploration_Status_Mapped" xml:space="preserve"><value>Mapeado</value></data>
+  <data name="Exploration_Status_FirstDiscovery" xml:space="preserve"><value>Primera descubrimiento</value></data>
+  <data name="Exploration_Status_FirstFootfall" xml:space="preserve"><value>¡Primera huella!</value></data>
+  <data name="Exploration_Status_Known" xml:space="preserve"><value>Conocido</value></data>
+  <data name="Exploration_History_Empty" xml:space="preserve"><value>HISTORIAL DE EXPLORACIÓN: No hay datos — inicia el monitoreo y escanea algunos sistemas.</value></data>
+  <data name="Exploration_History_StatsFormat" xml:space="preserve"><value>HISTORIAL DE EXPLORACIÓN: {0}</value></data>
+  <data name="Overlay_NoSystemData" xml:space="preserve"><value>SIN DATOS DEL SISTEMA</value></data>
+  <data name="Overlay_FSS_ProgressFormat" xml:space="preserve"><value>FSS:     {0:F1}%</value></data>
+  <data name="Overlay_FSS_CompleteFormat" xml:space="preserve"><value>FSS:     Completado ({0} cuerpos)</value></data>
+  <data name="Overlay_ScannedFormatWithTotal" xml:space="preserve"><value>Escaneados: {0} / {1}</value></data>
+  <data name="Overlay_ScannedFormat" xml:space="preserve"><value>Escaneados: {0}</value></data>
+  <data name="Overlay_MappedFormat" xml:space="preserve"><value>Mapeados:  {0}</value></data>
+  <data name="Overlay_KnownSystem" xml:space="preserve"><value>Sistema conocido</value></data>
+  <data name="Overlay_SessionFormat" xml:space="preserve"><value>Sesión: {0} sistemas</value></data>
+  <data name="Overlay_ScansLabel" xml:space="preserve"><value>{0} scans</value></data>
+  <data name="Overlay_MappedLabel" xml:space="preserve"><value>{0} mapeados</value></data>
+  <data name="Tray_Minimized" xml:space="preserve"><value>Minimizado al área de notificación.</value></data>
 </root>
 

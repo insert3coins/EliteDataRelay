@@ -11,5 +11,51 @@
   <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>言語</value></data>
   <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>言語</value></data>
   <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>言語を更新しました。一部のテキストは再起動後に更新されます。</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings_Subtitle" xml:space="preserve"><value>エクスペリエンスをカスタマイズ</value></data>
+  <data name="Settings_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>一般</value></data>
+  <data name="Settings_Nav_Overlay" xml:space="preserve"><value>オーバーレイ</value></data>
+  <data name="Settings_Nav_Hotkeys" xml:space="preserve"><value>ホットキー</value></data>
+  <data name="Settings_Nav_Advanced" xml:space="preserve"><value>詳細設定</value></data>
+  <data name="Settings_Nav_Localization" xml:space="preserve"><value>言語</value></data>
+  <data name="App_Title" xml:space="preserve"><value>Elite Data Relay</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>エラー</value></data>
+  <data name="Common_Copied" xml:space="preserve"><value>クリップボードにコピーしました！</value></data>
+  <data name="Error_OpenUrlFormat" xml:space="preserve"><value>URLを開けませんでした: {0}</value></data>
+  <data name="About_WindowTitle" xml:space="preserve"><value>Elite Data Relay について</value></data>
+  <data name="About_VersionLabel" xml:space="preserve"><value>バージョン</value></data>
+  <data name="About_VersionNotFound" xml:space="preserve"><value>バージョンが見つかりません</value></data>
+  <data name="About_ViewProject" xml:space="preserve"><value>GitHub のプロジェクトを見る</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Elite Dangerous 用の Windows 補助アプリ。貨物、素材、船、位置を追跡するためにゲームのジャーナルを監視し、探索（FSS/Scan/SAA）をローカル データベースに記録・可視化（履歴の一括取込に対応）。配信用の軽量オーバーレイと Web オーバーレイを提供します。</value></data>
+  <data name="Exploration_VisitedSystems_Header" xml:space="preserve"><value>訪問済みシステム</value></data>
+  <data name="Exploration_SelectSystem" xml:space="preserve"><value>システムを選択して詳細を表示</value></data>
+  <data name="Exploration_Col_SystemName" xml:space="preserve"><value>システム名</value></data>
+  <data name="Exploration_Col_Bodies" xml:space="preserve"><value>天体</value></data>
+  <data name="Exploration_Col_LastVisit" xml:space="preserve"><value>最終訪問</value></data>
+  <data name="Exploration_Col_BodyName" xml:space="preserve"><value>天体名</value></data>
+  <data name="Exploration_Col_Type" xml:space="preserve"><value>種別</value></data>
+  <data name="Exploration_Col_Distance" xml:space="preserve"><value>距離</value></data>
+  <data name="Exploration_Col_Status" xml:space="preserve"><value>ステータス</value></data>
+  <data name="Exploration_Status_Scanned" xml:space="preserve"><value>スキャン済み</value></data>
+  <data name="Exploration_Status_Mapped" xml:space="preserve"><value>マップ済み</value></data>
+  <data name="Exploration_Status_FirstDiscovery" xml:space="preserve"><value>初発見</value></data>
+  <data name="Exploration_Status_FirstFootfall" xml:space="preserve"><value>初上陸！</value></data>
+  <data name="Exploration_Status_Known" xml:space="preserve"><value>既知</value></data>
+  <data name="Exploration_History_Empty" xml:space="preserve"><value>探索履歴：データがありません — 監視を開始し、いくつかのシステムをスキャンしてください！</value></data>
+  <data name="Exploration_History_StatsFormat" xml:space="preserve"><value>探索履歴：{0}</value></data>
+  <data name="Overlay_NoSystemData" xml:space="preserve"><value>システム データなし</value></data>
+  <data name="Overlay_FSS_ProgressFormat" xml:space="preserve"><value>FSS:     {0:F1}%</value></data>
+  <data name="Overlay_FSS_CompleteFormat" xml:space="preserve"><value>FSS:     完了（{0} 天体）</value></data>
+  <data name="Overlay_ScannedFormatWithTotal" xml:space="preserve"><value>スキャン済み: {0} / {1}</value></data>
+  <data name="Overlay_ScannedFormat" xml:space="preserve"><value>スキャン済み: {0}</value></data>
+  <data name="Overlay_MappedFormat" xml:space="preserve"><value>マップ済み:  {0}</value></data>
+  <data name="Overlay_KnownSystem" xml:space="preserve"><value>既知のシステム</value></data>
+  <data name="Overlay_SessionFormat" xml:space="preserve"><value>セッション: {0} システム</value></data>
+  <data name="Overlay_ScansLabel" xml:space="preserve"><value>{0} 件のスキャン</value></data>
+  <data name="Overlay_MappedLabel" xml:space="preserve"><value>{0} 件マップ済み</value></data>
+  <data name="Tray_Minimized" xml:space="preserve"><value>トレイに最小化しました。</value></data>
 </root>
 

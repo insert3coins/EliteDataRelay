@@ -11,5 +11,51 @@
   <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>Язык</value></data>
   <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>Язык</value></data>
   <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>Язык обновлён. Некоторые тексты обновятся после перезапуска.</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Настройки</value></data>
+  <data name="Settings_Subtitle" xml:space="preserve"><value>Настройте приложение</value></data>
+  <data name="Settings_Save" xml:space="preserve"><value>Сохранить</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>Общее</value></data>
+  <data name="Settings_Nav_Overlay" xml:space="preserve"><value>Оверлей</value></data>
+  <data name="Settings_Nav_Hotkeys" xml:space="preserve"><value>Горячие клавиши</value></data>
+  <data name="Settings_Nav_Advanced" xml:space="preserve"><value>Дополнительно</value></data>
+  <data name="Settings_Nav_Localization" xml:space="preserve"><value>Язык</value></data>
+  <data name="App_Title" xml:space="preserve"><value>Elite Data Relay</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>ОК</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>Ошибка</value></data>
+  <data name="Common_Copied" xml:space="preserve"><value>Скопировано в буфер обмена!</value></data>
+  <data name="Error_OpenUrlFormat" xml:space="preserve"><value>Не удалось открыть URL: {0}</value></data>
+  <data name="About_WindowTitle" xml:space="preserve"><value>О программе Elite Data Relay</value></data>
+  <data name="About_VersionLabel" xml:space="preserve"><value>Версия</value></data>
+  <data name="About_VersionNotFound" xml:space="preserve"><value>Версия не найдена</value></data>
+  <data name="About_ViewProject" xml:space="preserve"><value>Посмотреть проект на GitHub</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Приложение‑компаньон для Windows для Elite Dangerous. Отслеживает журналы игры, чтобы следить за грузом, материалами, кораблём и местоположением; записывает и визуализирует исследование (FSS/Scan/SAA) в локальной базе данных с однократным историческим импортом; предоставляет лёгкие оверлеи и веб‑оверлей для стриминга.</value></data>
+  <data name="Exploration_VisitedSystems_Header" xml:space="preserve"><value>ПОСЕЩЕННЫЕ СИСТЕМЫ</value></data>
+  <data name="Exploration_SelectSystem" xml:space="preserve"><value>Выберите систему для просмотра подробностей</value></data>
+  <data name="Exploration_Col_SystemName" xml:space="preserve"><value>Название системы</value></data>
+  <data name="Exploration_Col_Bodies" xml:space="preserve"><value>Объекты</value></data>
+  <data name="Exploration_Col_LastVisit" xml:space="preserve"><value>Последний визит</value></data>
+  <data name="Exploration_Col_BodyName" xml:space="preserve"><value>Название объекта</value></data>
+  <data name="Exploration_Col_Type" xml:space="preserve"><value>Тип</value></data>
+  <data name="Exploration_Col_Distance" xml:space="preserve"><value>Расстояние</value></data>
+  <data name="Exploration_Col_Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Exploration_Status_Scanned" xml:space="preserve"><value>Сканировано</value></data>
+  <data name="Exploration_Status_Mapped" xml:space="preserve"><value>Картировано</value></data>
+  <data name="Exploration_Status_FirstDiscovery" xml:space="preserve"><value>Первое открытие</value></data>
+  <data name="Exploration_Status_FirstFootfall" xml:space="preserve"><value>Первый шаг!</value></data>
+  <data name="Exploration_Status_Known" xml:space="preserve"><value>Известно</value></data>
+  <data name="Exploration_History_Empty" xml:space="preserve"><value>ИСТОРИЯ ИССЛЕДОВАНИЙ: Нет данных — включите мониторинг и сканируйте системы!</value></data>
+  <data name="Exploration_History_StatsFormat" xml:space="preserve"><value>ИСТОРИЯ ИССЛЕДОВАНИЙ: {0}</value></data>
+  <data name="Overlay_NoSystemData" xml:space="preserve"><value>НЕТ ДАННЫХ СИСТЕМЫ</value></data>
+  <data name="Overlay_FSS_ProgressFormat" xml:space="preserve"><value>FSS:     {0:F1}%</value></data>
+  <data name="Overlay_FSS_CompleteFormat" xml:space="preserve"><value>FSS:     Завершено ({0} объектов)</value></data>
+  <data name="Overlay_ScannedFormatWithTotal" xml:space="preserve"><value>Сканировано: {0} / {1}</value></data>
+  <data name="Overlay_ScannedFormat" xml:space="preserve"><value>Сканировано: {0}</value></data>
+  <data name="Overlay_MappedFormat" xml:space="preserve"><value>Картировано:  {0}</value></data>
+  <data name="Overlay_KnownSystem" xml:space="preserve"><value>Известная система</value></data>
+  <data name="Overlay_SessionFormat" xml:space="preserve"><value>Сессия: {0} систем</value></data>
+  <data name="Overlay_ScansLabel" xml:space="preserve"><value>{0} сканов</value></data>
+  <data name="Overlay_MappedLabel" xml:space="preserve"><value>{0} картировано</value></data>
+  <data name="Tray_Minimized" xml:space="preserve"><value>Свернуто в трей.</value></data>
 </root>
 
