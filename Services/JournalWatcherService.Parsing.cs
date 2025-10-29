@@ -144,7 +144,7 @@ namespace EliteDataRelay.Services
                             {
                                 _lastStarSystem = starSystem;
                                 _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), true, systemAddress, timestamp);
-                                Debug.WriteLine($"[JournalWatcherService] Found new system event ({eventType}). StarSystem: {starSystem}");
+                                Logger.Verbose($"[JournalWatcherService] Found new system event ({eventType}). StarSystem: {starSystem}");
                                 LocationChanged?.Invoke(this, _lastLocationArgs);
                             }
                             else // This only applies to subsequent "Location" events in the same system.
@@ -275,7 +275,7 @@ namespace EliteDataRelay.Services
                             var stationName = jsonDoc.RootElement.TryGetProperty("StationName", out var nameElement) ? nameElement.GetString() : "Unknown";
                             // Clear the last docked state when we undock.
                             // This is crucial for the initial scan to correctly determine the player is no longer docked.
-                            //Debug.WriteLine($"[JournalWatcherService] Undocked from {stationName}. Clearing docked state.");
+                            //Logger.Verbose($"[JournalWatcherService] Undocked from {stationName}. Clearing docked state.");
                             _lastDockedEventArgs = null;
                             Undocked?.Invoke(this, new UndockedEventArgs(stationName ?? "Unknown"));
                         }
@@ -394,3 +394,4 @@ namespace EliteDataRelay.Services
         }
     }
 }
+

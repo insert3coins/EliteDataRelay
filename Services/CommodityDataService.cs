@@ -29,7 +29,7 @@ namespace EliteDataRelay.Services
             {
                 if (resourceBytes == null || resourceBytes.Length == 0)
                 {
-                    Debug.WriteLine($"[CommodityDataService] Resource content is empty or null: {resourceName}");
+                    Logger.Verbose($"[CommodityDataService] Resource content is empty or null: {resourceName}");
                     return;
                 }
 
@@ -56,11 +56,11 @@ namespace EliteDataRelay.Services
                         }
                     }
                 }
-                Debug.WriteLine($"[CommodityDataService] Loaded commodity data from resource '{resourceName}'");
+                Logger.Verbose($"[CommodityDataService] Loaded commodity data from resource '{resourceName}'");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CommodityDataService] Error loading from resource '{resourceName}': {ex.Message}");
+                Logger.Info($"[CommodityDataService] Error loading from resource '{resourceName}': {ex.Message}");
             }
         }
 

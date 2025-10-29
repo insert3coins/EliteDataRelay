@@ -56,3 +56,4 @@ namespace EliteDataRelay.Models
         public DateTime SessionStart { get; set; } = DateTime.Now;
     }
 }
+

@@ -1,39 +1,44 @@
 # Elite Data Relay — Mini Release Notes
 
 ## Highlights
-- One‑time Exploration History Import now fully seeds the database and activates the Exploration view reliably after completion.
-- Exploration UI and overlays refresh immediately after import; the “No System Selected” state is resolved automatically.
+- Full localization support with in‑app language selection (Localization tab).
+- Exploration History Import reliability improvements and automatic activation of current system.
+- Diagnostics window with live log tail and optional verbose logging.
 
-## Fixes & Improvements
-- Import completion popup: shows a small window popup (“Exploration History Import”) instead of a tray balloon.
-- Current system activation after import:
-  - Uses the app’s current Location event (name + SystemAddress when available).
-  - Falls back to resolving by system name from the database if the address is missing.
-  - Final fallback: most‑recent visited system from the database.
-  - Forces the “Current System” tab header to update immediately.
-- Exploration Log time display: extended beyond 1 day.
-  - Shows minutes, hours, days (up to 60), then months and years for older entries.
-- Overlay/web overlay sync: when monitoring is active, exploration data and session stats are pushed to overlays and the web overlay immediately after import.
-- Safer, smoother import: UI events suppressed and async DB writer paused during import to avoid cross‑thread UI churn and freezes.
+## Changes & Fixes
+- Localization
+  - Added `Settings → Localization` tab with language dropdown (System Default, en, fr, de, es, it, pt‑BR, ru, zh‑Hans, ja).
+  - App applies selected language on startup; most strings update immediately, some after restart (prompt shown).
+  - Localized Settings UI (title, subtitle, nav items, Save/Cancel), Advanced options, Diagnostics window, About window.
+  - Localized Exploration UI: systems header, column headers, empty/history banners, status labels (“Scanned”, “Mapped”, “First Discovery”, “First Footfall”, “Known”).
+  - Localized Exploration overlay: “NO SYSTEM DATA”, FSS progress/completed, scanned/mapped lines, “Known System”, and session summary.
+  - Localized tray tooltip: “Minimized to tray.”
 
-## Exploration History Import
-- Runs automatically once after update; scans historical `Journal.*.log`.
-- Preserves journal timestamps:
-  - `LastVisited` uses the original journal event time.
-  - `FirstVisited` captures the first event seen for that system.
-- Safe re‑runs: updates existing rows without duplicating bodies.
+- Exploration History Import
+  - After import completes, app resolves the current system using live Location (name + SystemAddress when available),
+    falls back to name lookup in the newly imported DB, then to most-recent visited system.
+  - Forces the “Current System” tab to update and pushes exploration data to desktop and web overlays if monitoring is active.
+  - Import completion now shows a window popup (instead of tray balloon). This can be made optional later.
 
-Re‑run the import
-1) Close Elite Data Relay.
-2) Edit `%APPDATA%\EliteDataRelay\settings.json` and set `"ExplorationHistoryImported": false`.
-3) (Optional) Delete `%APPDATA%\EliteDataRelay\exploration.db` to rebuild from scratch.
-4) Start the app; the importer runs again on startup.
+- Exploration Log
+  - “Time ago” extended beyond 1 day (days up to 60, then months/years).
+  - Improved empty/history banners and localized column headers.
 
-## Paths
-- Settings: `%APPDATA%\EliteDataRelay\settings.json`
-- Exploration DB: `%APPDATA%\EliteDataRelay\exploration.db`
-- Logs: `%APPDATA%\EliteDataRelay\debug_log.txt`, `%APPDATA%\EliteDataRelay\crash_log.txt`
+- Diagnostics & Logging
+  - New `Diagnostics` window (Settings → Advanced) tails `%APPDATA%\EliteDataRelay\debug_log.txt` with open/clear/refresh actions.
+  - Added `Verbose Logging` toggle in Settings → Advanced.
+  - Centralized logging via `Logger.Info/Verbose`; replaced `Debug.WriteLine` across services/UI to flow through `Trace`.
 
-## Notes
-- Web overlay endpoints (optional): `http://localhost:9005/info`, `/cargo`, `/ship-icon`, `/exploration`.
-- Overlays are draggable and configurable; use “Reposition Overlays” in Settings.
+- Settings persistence
+  - `settings.json` now includes `UICulture` (language code or empty for system default), persisted via `AppConfiguration`.
+
+## Technical Notes
+- Resource files under `Properties/Strings*.resx` are compiled into satellite assemblies (e.g., `fr/`, `de/`, `es/` in output).
+- Culture is applied at startup in `Program.cs`; the in‑app picker also applies culture immediately where possible.
+- Diagnostics uses the existing `Trace` listener (see `%APPDATA%\EliteDataRelay\debug_log.txt`).
+
+## How To Use
+- Set language: Settings → Localization → choose language → OK. Some texts refresh after restart.
+- Enable verbose logs or open Diagnostics: Settings → Advanced.
+- Re-run exploration import: set `ExplorationHistoryImported` to `false` in `settings.json` (optionally delete `exploration.db`).
+

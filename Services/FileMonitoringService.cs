@@ -44,7 +44,7 @@ namespace EliteDataRelay.Services
             if (_isMonitoring || string.IsNullOrEmpty(_filePath)) return;
             
             _isMonitoring = true;
-            Debug.WriteLine($"[FileMonitoringService] Starting monitoring for {_filePath}");
+            Logger.Verbose($"[FileMonitoringService] Starting monitoring for {_filePath}");
 
             // Attempt to initialize the watcher immediately.
             TryInitializeWatcher();
@@ -77,7 +77,7 @@ namespace EliteDataRelay.Services
                 // The directory now exists, so we can stop the check timer.
                 _directoryCheckTimer?.Dispose();
                 _directoryCheckTimer = null;
-                Debug.WriteLine($"[FileMonitoringService] Successfully initialized watcher for directory: {_filePath}");
+                Logger.Verbose($"[FileMonitoringService] Successfully initialized watcher for directory: {_filePath}");
             }
         }
 
@@ -96,7 +96,7 @@ namespace EliteDataRelay.Services
             }
 
             _isMonitoring = false;
-            Debug.WriteLine("[FileMonitoringService] Stopped monitoring");
+            Logger.Verbose("[FileMonitoringService] Stopped monitoring");
         }
 
         private void OnFileChangeEvent(object sender, FileSystemEventArgs e)
@@ -129,3 +129,4 @@ namespace EliteDataRelay.Services
         }
     }
 }
+

@@ -64,7 +64,7 @@ namespace EliteDataRelay.UI
 
             var systemsHeaderLabel = new Label
             {
-                Text = "VISITED SYSTEMS",
+                Text = Properties.Strings.Exploration_VisitedSystems_Header,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(71, 85, 105),
                 Dock = DockStyle.Fill,
@@ -103,7 +103,7 @@ namespace EliteDataRelay.UI
 
             _selectedSystemLabel = new Label
             {
-                Text = "Select a system to view details",
+                Text = Properties.Strings.Exploration_SelectSystem,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold), // Reduced from 12F to 10F
                 ForeColor = Color.FromArgb(100, 116, 139),
                 AutoSize = false, // Changed to false to allow wrapping
@@ -156,7 +156,7 @@ namespace EliteDataRelay.UI
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Error during initial data load: {ex.Message}");
+                    Logger.Info($"[ExplorationLogControl] Error during initial data load: {ex.Message}");
                 }
             }
         }
@@ -227,21 +227,21 @@ namespace EliteDataRelay.UI
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "SystemName",
-                HeaderText = "System Name",
+                HeaderText = Properties.Strings.Exploration_Col_SystemName,
                 FillWeight = 60
             });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Bodies",
-                HeaderText = "Bodies",
+                HeaderText = Properties.Strings.Exploration_Col_Bodies,
                 FillWeight = 20
             });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "LastVisited",
-                HeaderText = "Last Visit",
+                HeaderText = Properties.Strings.Exploration_Col_LastVisit,
                 FillWeight = 20
             });
 
@@ -299,7 +299,7 @@ namespace EliteDataRelay.UI
 
             grid.AlternatingRowsDefaultCellStyle.BackColor = Color.White;
 
-            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "BodyName", HeaderText = "Body Name", FillWeight = 40 });
+            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "BodyName", HeaderText = Properties.Strings.Exploration_Col_BodyName, FillWeight = 40 });
 
             // Icon column for body type
             var iconColumn = new DataGridViewImageColumn
@@ -321,14 +321,14 @@ namespace EliteDataRelay.UI
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "BodyType",
-                HeaderText = "Type",
+                HeaderText = Properties.Strings.Exploration_Col_Type,
                 FillWeight = 12
             });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Distance",
-                HeaderText = "Distance",
+                HeaderText = Properties.Strings.Exploration_Col_Distance,
                 FillWeight = 15,
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
@@ -339,7 +339,7 @@ namespace EliteDataRelay.UI
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Status",
-                HeaderText = "Status",
+                HeaderText = Properties.Strings.Exploration_Col_Status,
                 FillWeight = 23
             });
 
@@ -352,14 +352,14 @@ namespace EliteDataRelay.UI
             {
                 var systems = _database.GetVisitedSystems(100);
 
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Found {systems.Count} systems in database");
+                Logger.Verbose($"[ExplorationLogControl] Found {systems.Count} systems in database");
 
                 _systemsGrid.SuspendLayout();
                 _systemsGrid.Rows.Clear();
 
                 if (systems.Count == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("[ExplorationLogControl] No systems found - database may be empty");
+                    Logger.Verbose("[ExplorationLogControl] No systems found - database may be empty");
                     _systemsGrid.ResumeLayout();
                     return;
                 }
@@ -381,7 +381,7 @@ namespace EliteDataRelay.UI
                     rows.Add(row);
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Created {rows.Count} rows for grid");
+                Logger.Verbose($"[ExplorationLogControl] Created {rows.Count} rows for grid");
 
                 _systemsGrid.Rows.AddRange(rows.ToArray());
                 _systemsGrid.ClearSelection();
@@ -389,8 +389,8 @@ namespace EliteDataRelay.UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Error loading systems: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Stack trace: {ex.StackTrace}");
+                Logger.Info($"[ExplorationLogControl] Error loading systems: {ex.Message}");
+                Logger.Verbose($"[ExplorationLogControl] Stack trace: {ex.StackTrace}");
             }
         }
 
@@ -465,10 +465,10 @@ namespace EliteDataRelay.UI
                         ? $"{body.DistanceFromArrival.Value:N0}"
                         : "—";
 
-                    string status = body.IsMapped ? "🗺️ Mapped" : "Scanned";
+                    string status = body.IsMapped ? Properties.Strings.Exploration_Status_Mapped : Properties.Strings.Exploration_Status_Scanned;
                     if (body.FirstFootfall)
                     {
-                        status = "👣 First Footfall!";
+                        status = Properties.Strings.Exploration_Status_FirstFootfall;
                     }
                     else if (!body.WasDiscovered)
                     {
@@ -501,7 +501,7 @@ namespace EliteDataRelay.UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Error loading system details: {ex.Message}");
+                Logger.Info($"[ExplorationLogControl] Error loading system details: {ex.Message}");
             }
         }
 
@@ -513,7 +513,7 @@ namespace EliteDataRelay.UI
 
                 if (totalSystems == 0)
                 {
-                    _totalStatsLabel.Text = "EXPLORATION HISTORY: No data yet - start monitoring and scan some systems!";
+                    _totalStatsLabel.Text = "Properties.Strings.Exploration_History_Empty";
                     return;
                 }
 
@@ -533,8 +533,8 @@ namespace EliteDataRelay.UI
             catch (Exception ex)
             {
                 _totalStatsLabel.Text = "Unable to load statistics - check debug output";
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Error loading stats: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Stack trace: {ex.StackTrace}");
+                Logger.Info($"[ExplorationLogControl] Error loading stats: {ex.Message}");
+                Logger.Verbose($"[ExplorationLogControl] Stack trace: {ex.StackTrace}");
             }
         }
 
@@ -544,7 +544,7 @@ namespace EliteDataRelay.UI
             var localDate = date.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(date, DateTimeKind.Utc).ToLocalTime() : date.ToLocalTime();
             var span = DateTime.Now - localDate;
 
-            System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] GetTimeAgo - Date (UTC): {date:o}, Date (Local): {localDate:o}, Now: {DateTime.Now:o}, Span: {span.TotalMinutes:F2} minutes");
+            Logger.Verbose($"[ExplorationLogControl] GetTimeAgo - Date (UTC): {date:o}, Date (Local): {localDate:o}, Now: {DateTime.Now:o}, Span: {span.TotalMinutes:F2} minutes");
 
             if (span.TotalMinutes < 1)
                 return "Just now";
@@ -572,3 +572,11 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+
+
+
+
+
+
+

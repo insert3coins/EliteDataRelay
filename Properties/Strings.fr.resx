@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Diagnostics_Title" xml:space="preserve"><value>Diagnostics</value></data>
+  <data name="Diagnostics_OpenFolder" xml:space="preserve"><value>Ouvrir le dossier</value></data>
+  <data name="Diagnostics_ClearLog" xml:space="preserve"><value>Effacer le journal</value></data>
+  <data name="Diagnostics_Refresh" xml:space="preserve"><value>Rafraîchir</value></data>
+  <data name="Settings_AdvancedGroup_Title" xml:space="preserve"><value>Avancé</value></data>
+  <data name="Settings_FastStart_Label" xml:space="preserve"><value>Démarrage rapide : ignorer l’historique du journal au démarrage</value></data>
+  <data name="Settings_VerboseLogging_Label" xml:space="preserve"><value>Activer la journalisation détaillée</value></data>
+  <data name="Settings_OpenDiagnostics_Button" xml:space="preserve"><value>Ouvrir Diagnostics...</value></data>
+  <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>Langue</value></data>
+  <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>Langue</value></data>
+  <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>Langue mise à jour. Certains textes seront mis à jour après redémarrage.</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Paramètres</value></data>
+  <data name="Settings_Subtitle" xml:space="preserve"><value>Personnalisez votre expérience</value></data>
+  <data name="Settings_Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>Général</value></data>
+  <data name="Settings_Nav_Overlay" xml:space="preserve"><value>Overlay</value></data>
+  <data name="Settings_Nav_Hotkeys" xml:space="preserve"><value>Raccourcis</value></data>
+  <data name="Settings_Nav_Advanced" xml:space="preserve"><value>Avancé</value></data>
+  <data name="Settings_Nav_Localization" xml:space="preserve"><value>Langue</value></data>
+</root>
+

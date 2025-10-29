@@ -165,7 +165,7 @@ namespace EliteDataRelay
                 if (_gameProcess == null)
                 {
                     // If still not found, stop monitoring.
-                    Debug.WriteLine("[CargoForm] Elite Dangerous process no longer found. Stopping monitoring automatically.");
+                    Logger.Verbose("[CargoForm] Elite Dangerous process no longer found. Stopping monitoring automatically.");
                     OnStopClicked(null, EventArgs.Empty);
                     return;
                 }
@@ -177,7 +177,7 @@ namespace EliteDataRelay
             {
                 if (_gameProcess.HasExited)
                 {
-                    Debug.WriteLine("[CargoForm] Elite Dangerous process has exited. Stopping monitoring automatically.");
+                    Logger.Verbose("[CargoForm] Elite Dangerous process has exited. Stopping monitoring automatically.");
                     OnStopClicked(null, EventArgs.Empty);
                 }
             }
@@ -185,7 +185,7 @@ namespace EliteDataRelay
             {
                 // This can happen if the process is forcefully terminated or access is denied.
                 // In either case, we should stop monitoring.
-                Debug.WriteLine("[CargoForm] Could not access game process state. Stopping monitoring automatically.");
+                Logger.Verbose("[CargoForm] Could not access game process state. Stopping monitoring automatically.");
                 OnStopClicked(null, EventArgs.Empty);
             }
             catch (InvalidOperationException)
@@ -198,3 +198,4 @@ namespace EliteDataRelay
         #endregion
     }
 }
+

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using EliteDataRelay.Services;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 
@@ -77,7 +78,7 @@ namespace EliteDataRelay.UI
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[OverlayForm.Exploration] Paint error: {ex.Message}");
+                Logger.Info($"[OverlayForm.Exploration] Paint error: {ex.Message}");
             }
         }
 
@@ -123,7 +124,7 @@ namespace EliteDataRelay.UI
                 if (_currentExplorationData == null || string.IsNullOrEmpty(_currentExplorationData.SystemName))
                 {
                     // No system data
-                    DrawCenteredText(g, "NO SYSTEM DATA", GameColors.FontNormal, GameColors.BrushGrayText,
+                    DrawCenteredText(g, Properties.Strings.Overlay_NoSystemData, GameColors.FontNormal, GameColors.BrushGrayText,
                                      new Rectangle(0, height / 2 - 10, width, 20));
                     return;
                 }
@@ -143,7 +144,7 @@ namespace EliteDataRelay.UI
                 // Show FSS progress if not complete
                 if (data.FSSProgress > 0 && data.FSSProgress < 100)
                 {
-                    string fssText = $"FSS:     {data.FSSProgress:F1}%";
+                    string fssText = $"{0}";
                     if (data.TotalBodies > 0)
                     {
                         // Calculate detected bodies from percentage
@@ -156,21 +157,21 @@ namespace EliteDataRelay.UI
                 else if (data.FSSProgress >= 100 && data.TotalBodies > 0)
                 {
                     // FSS Complete
-                    string fssText = $"FSS:     Complete ({data.TotalBodies} bodies)";
+                    string fssText = string.Format(Properties.Strings.Overlay_FSS_CompleteFormat, data.TotalBodies);
                     g.DrawString(fssText, GameColors.FontNormal, GameColors.BrushGreen, padding, y);
                     y += lineHeight;
                 }
 
                 // === DETAILED SCAN STATUS ===
                 string bodiesText = data.TotalBodies > 0
-                    ? $"Scanned: {data.ScannedBodies} / {data.TotalBodies}"
-                    : $"Scanned: {data.ScannedBodies}";
+                    ? $"{0}"
+                    : string.Format(Properties.Strings.Overlay_ScannedFormat, data.ScannedBodies);
 
                 g.DrawString(bodiesText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
                 y += lineHeight;
 
                 // === MAPPED INFO ===
-                string mappedText = $"Mapped:  {data.MappedBodies}";
+                string mappedText = string.Format(Properties.Strings.Overlay_MappedFormat, data.MappedBodies);
                 g.DrawString(mappedText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
                 y += lineHeight;
 
@@ -213,8 +214,8 @@ namespace EliteDataRelay.UI
                 }
                 else if (data.Bodies.Any(b => b.WasDiscovered))
                 {
-                    // Only show "Known System" if we have scanned bodies that were already discovered
-                    g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                    // Only show Properties.Strings.Overlay_KnownSystem if we have scanned bodies that were already discovered
+                    g.DrawString(Properties.Strings.Overlay_KnownSystem, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                     y += lineHeight;
                 }
 
@@ -225,7 +226,7 @@ namespace EliteDataRelay.UI
                     g.DrawLine(GameColors.PenGrayDim1, padding, y, width - padding, y);
                     y += 6;
 
-                    string sessionText = $"Session: {_currentSessionData.SystemsVisited} systems";
+                    string sessionText = string.Format(Properties.Strings.Overlay_SessionFormat, _currentSessionData.SystemsVisited);
                     if (_currentSessionData.TotalScans > 0)
                         sessionText += $" • {_currentSessionData.TotalScans} scans";
                     if (_currentSessionData.TotalMapped > 0)
@@ -235,7 +236,7 @@ namespace EliteDataRelay.UI
                 }
             }
 
-            Debug.WriteLine($"[OverlayForm.Exploration] Rendered frame: {_currentExplorationData?.SystemName ?? "No System"}");
+            Logger.Verbose($"[OverlayForm.Exploration] Rendered frame: {_currentExplorationData?.SystemName ?? "No System"}");
         }
 
         /// <summary>
@@ -284,3 +285,8 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+
+
+
+

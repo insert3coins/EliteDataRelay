@@ -26,7 +26,7 @@ namespace EliteDataRelay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[SoundService] Error initializing sound players: {ex}");
+                Logger.Info($"[SoundService] Error initializing sound players: {ex}");
                 // Create dummy sound players if resource loading fails
                 _startSound = new SoundPlayer();
                 _stopSound = new SoundPlayer();
@@ -41,11 +41,11 @@ namespace EliteDataRelay.Services
             try
             {
                 _startSound.Play();
-                Debug.WriteLine("[SoundService] Playing start sound");
+                Logger.Verbose("[SoundService] Playing start sound");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[SoundService] Error playing start sound: {ex}");
+                Logger.Info($"[SoundService] Error playing start sound: {ex}");
             }
         }
 
@@ -57,11 +57,11 @@ namespace EliteDataRelay.Services
             try
             {
                 _stopSound.Play();
-                Debug.WriteLine("[SoundService] Playing stop sound");
+                Logger.Verbose("[SoundService] Playing stop sound");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[SoundService] Error playing stop sound: {ex}");
+                Logger.Info($"[SoundService] Error playing stop sound: {ex}");
             }
         }
 
@@ -95,3 +95,4 @@ namespace EliteDataRelay.Services
         }
     }
 }
+

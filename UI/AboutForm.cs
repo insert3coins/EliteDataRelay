@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -23,7 +24,7 @@ namespace EliteDataRelay.UI
         {
             var assembly = Assembly.GetExecutingAssembly();
             var version = assembly.GetName().Version;
-            string versionString = version != null ? $"Version {version.Major}.{version.Minor}.{version.Build}" : "Version not found";
+            string versionString = version != null ? string.Format("{0} {1}.{2}.{3}", Properties.Strings.About_VersionLabel, version.Major, version.Minor, version.Build) : Properties.Strings.About_VersionNotFound;
 
             // Check for informational version (e.g., from GitVersion)
             var productVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
@@ -51,7 +52,7 @@ namespace EliteDataRelay.UI
                     Clipboard.SetText(versionLabel.Text);
                     // Provide feedback to the user
                     var originalText = versionLabel.Text;
-                    versionLabel.Text = "Copied to clipboard!";
+                    versionLabel.Text = Properties.Strings.Common_Copied;
                     var t = new System.Windows.Forms.Timer { Interval = 1500 };
                     t.Tick += (sender, args) =>
                     {
@@ -63,7 +64,7 @@ namespace EliteDataRelay.UI
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[AboutForm] Failed to copy to clipboard: {ex.Message}");
+                    Logger.Info($"[AboutForm] Failed to copy to clipboard: {ex.Message}");
                 }
             };
         }
@@ -76,7 +77,7 @@ namespace EliteDataRelay.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, $"Failed to open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, string.Format(Properties.Strings.Error_OpenUrlFormat, ex.Message), Properties.Strings.Common_Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -123,7 +124,7 @@ namespace EliteDataRelay.UI
             this.labelTitle.Location = new System.Drawing.Point(12, 9);
             this.labelTitle.Name = "labelTitle";
             this.labelTitle.Size = new System.Drawing.Size(158, 25);
-            this.labelTitle.Text = "Elite Data Relay";
+            this.labelTitle.Text = Properties.Strings.App_Title;
             // 
             // versionLabel
             // 
@@ -132,14 +133,14 @@ namespace EliteDataRelay.UI
             this.versionLabel.Location = new System.Drawing.Point(17, 43);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(81, 15);
-            this.versionLabel.Text = "Version 0.0.0";
+            this.versionLabel.Text = Properties.Strings.About_VersionNotFound;
             // 
             // labelDescription
             // 
             this.labelDescription.Location = new System.Drawing.Point(17, 70);
             this.labelDescription.Name = "labelDescription";
             this.labelDescription.Size = new System.Drawing.Size(380, 75);
-            this.labelDescription.Text = "Windows companion for Elite Dangerous. Watches game journals to track cargo, materials, ship and location; logs and visualizes exploration (FSS/Scan/SAA) in a local database with a one-time history import; provides lightweight overlays and a web overlay for streaming.";
+            this.labelDescription.Text = Properties.Strings.About_Description;
             // 
             // linkLabelGitHub
             // 
@@ -148,7 +149,7 @@ namespace EliteDataRelay.UI
             this.linkLabelGitHub.Name = "linkLabelGitHub";
             this.linkLabelGitHub.Size = new System.Drawing.Size(133, 15);
             this.linkLabelGitHub.TabStop = true;
-            this.linkLabelGitHub.Text = "View Project on GitHub";
+            this.linkLabelGitHub.Text = Properties.Strings.About_ViewProject;
             // 
             // labelCopyright
             // 
@@ -164,7 +165,7 @@ namespace EliteDataRelay.UI
             this.closeButton.Location = new System.Drawing.Point(322, 201);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(75, 23);
-            this.closeButton.Text = "OK";
+            this.closeButton.Text = Properties.Strings.Common_OK;
             this.closeButton.UseVisualStyleBackColor = true;
             // 
             // AboutForm
@@ -186,10 +187,14 @@ namespace EliteDataRelay.UI
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "About Elite Data Relay";
+            this.Text = Properties.Strings.About_WindowTitle;
             this.ResumeLayout(false);
             this.PerformLayout();
         }
         #endregion
     }
 }
+
+
+
+

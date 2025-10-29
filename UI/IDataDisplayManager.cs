@@ -70,3 +70,6 @@ namespace EliteDataRelay.UI
         void UpdateShipLoadout(ShipLoadout loadout);
     }
 }
+
+
+

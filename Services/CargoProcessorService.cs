@@ -88,7 +88,7 @@ namespace EliteDataRelay.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[CargoProcessorService] Unexpected error: {ex}");
+                    Logger.Info($"[CargoProcessorService] Unexpected error: {ex}");
                     break; // Unexpected error – stop retrying
                 }
             }
@@ -153,7 +153,7 @@ namespace EliteDataRelay.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[CargoProcessorService] (async) Unexpected error: {ex}");
+                    Logger.Verbose($"[CargoProcessorService] (async) Unexpected error: {ex}");
                     break;
                 }
             }
@@ -161,3 +161,4 @@ namespace EliteDataRelay.Services
         }
     }
 }
+

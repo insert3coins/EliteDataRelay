@@ -30,7 +30,7 @@ namespace EliteDataRelay.Services
             {
                 if (stream == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[ModuleDataService] Error: Embedded resource '{resourceName}' not found.");
+                    Logger.Info($"[ModuleDataService] Error: Embedded resource '{resourceName}' not found.");
                     return;
                 }
                 using (StreamReader reader = new StreamReader(stream))

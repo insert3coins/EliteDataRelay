@@ -13,3 +13,6 @@ namespace EliteDataRelay.UI
         public ExplorationTab? ExplorationTab { get; set; }
     }
 }
+
+
+

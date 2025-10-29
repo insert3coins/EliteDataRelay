@@ -55,7 +55,7 @@ namespace EliteDataRelay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ScreenshotRenamer] Watcher init failed: {ex.Message}");
+                Logger.Info($"[ScreenshotRenamer] Watcher init failed: {ex.Message}");
             }
         }
 
@@ -115,7 +115,7 @@ namespace EliteDataRelay.Services
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[ScreenshotRenamer] BMP->PNG conversion failed: {ex.Message}");
+                        Logger.Info($"[ScreenshotRenamer] BMP->PNG conversion failed: {ex.Message}");
                     }
                 }
 
@@ -146,11 +146,11 @@ namespace EliteDataRelay.Services
                 targetPath = EnsureUniquePath(targetPath);
 
                 File.Move(workingPath, targetPath);
-                Debug.WriteLine($"[ScreenshotRenamer] Saved {Path.GetFileName(targetPath)}");
+                Logger.Verbose($"[ScreenshotRenamer] Saved {Path.GetFileName(targetPath)}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ScreenshotRenamer] Failed to process screenshot: {ex.Message}");
+                Logger.Info($"[ScreenshotRenamer] Failed to process screenshot: {ex.Message}");
             }
         }
 
@@ -185,3 +185,4 @@ namespace EliteDataRelay.Services
         }
     }
 }
+

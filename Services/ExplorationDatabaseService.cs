@@ -27,7 +27,7 @@ namespace EliteDataRelay.Services
             }
 
             _databasePath = Path.Combine(AppConfiguration.AppDataPath, "exploration.db");
-            Debug.WriteLine($"[ExplorationDatabaseService] Database path: {_databasePath}");
+            Logger.Verbose($"[ExplorationDatabaseService] Database path: {_databasePath}");
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace EliteDataRelay.Services
                     PRAGMA temp_store = MEMORY;
                 ";
                 pragmaCmd.ExecuteNonQuery();
-                Debug.WriteLine("[ExplorationDatabaseService] Set SQLite PRAGMA settings for optimized performance");
+                Logger.Verbose("[ExplorationDatabaseService] Set SQLite PRAGMA settings for optimized performance");
             }
 
             using var cmd = _connection.CreateCommand();
@@ -89,7 +89,7 @@ namespace EliteDataRelay.Services
             ";
 
             cmd.ExecuteNonQuery();
-            Debug.WriteLine($"[ExplorationDatabaseService] Database initialized at: {_databasePath}");
+            Logger.Verbose($"[ExplorationDatabaseService] Database initialized at: {_databasePath}");
 
             // Start background writer for async/non-blocking database operations
             StartBackgroundWriter();
@@ -102,13 +102,13 @@ namespace EliteDataRelay.Services
         {
             if (_connection == null)
             {
-                Debug.WriteLine("[ExplorationDatabaseService] Cannot save - database not initialized");
+                Logger.Verbose("[ExplorationDatabaseService] Cannot save - database not initialized");
                 return;
             }
 
             if (system.SystemAddress == null)
             {
-                Debug.WriteLine($"[ExplorationDatabaseService] Cannot save system '{system.SystemName}' - no SystemAddress");
+                Logger.Verbose($"[ExplorationDatabaseService] Cannot save system '{system.SystemName}' - no SystemAddress");
                 return;
             }
 
@@ -176,13 +176,13 @@ namespace EliteDataRelay.Services
                     checkpointCmd.ExecuteNonQuery();
                 }
 
-                Debug.WriteLine($"[ExplorationDatabaseService] Saved system: {system.SystemName} ({system.Bodies.Count} bodies)");
+                Logger.Verbose($"[ExplorationDatabaseService] Saved system: {system.SystemName} ({system.Bodies.Count} bodies)");
             }
             catch (Exception ex)
             {
                 transaction.Rollback();
-                Debug.WriteLine($"[ExplorationDatabaseService] Error saving system: {ex.Message}");
-                Debug.WriteLine($"[ExplorationDatabaseService] Stack trace: {ex.StackTrace}");
+                Logger.Verbose($"[ExplorationDatabaseService] Error saving system: {ex.Message}");
+                Logger.Verbose($"[ExplorationDatabaseService] Stack trace: {ex.StackTrace}");
                 throw;
             }
         }
@@ -261,7 +261,7 @@ namespace EliteDataRelay.Services
             // Load bodies
             system.Bodies = LoadBodies(systemAddress);
 
-            Debug.WriteLine($"[ExplorationDatabaseService] Loaded system from cache: {system.SystemName} ({system.Bodies.Count} bodies)");
+            Logger.Verbose($"[ExplorationDatabaseService] Loaded system from cache: {system.SystemName} ({system.Bodies.Count} bodies)");
             return system;
         }
 
@@ -364,7 +364,7 @@ namespace EliteDataRelay.Services
 
             if (_connection == null)
             {
-                Debug.WriteLine("[ExplorationDatabaseService] GetVisitedSystems - connection is null!");
+                Logger.Verbose("[ExplorationDatabaseService] GetVisitedSystems - connection is null!");
                 return systems;
             }
 
@@ -392,11 +392,11 @@ namespace EliteDataRelay.Services
                     });
                 }
 
-                Debug.WriteLine($"[ExplorationDatabaseService] GetVisitedSystems returned {systems.Count} systems");
+                Logger.Verbose($"[ExplorationDatabaseService] GetVisitedSystems returned {systems.Count} systems");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ExplorationDatabaseService] Error getting visited systems: {ex.Message}");
+                Logger.Verbose($"[ExplorationDatabaseService] Error getting visited systems: {ex.Message}");
             }
 
             return systems;
@@ -409,7 +409,7 @@ namespace EliteDataRelay.Services
         {
             if (_connection == null)
             {
-                Debug.WriteLine("[ExplorationDatabaseService] GetTotalStatistics - connection is null!");
+                Logger.Verbose("[ExplorationDatabaseService] GetTotalStatistics - connection is null!");
                 return (0, 0, 0);
             }
 
@@ -432,13 +432,13 @@ namespace EliteDataRelay.Services
                         reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
                         reader.IsDBNull(2) ? 0 : reader.GetInt32(2)
                     );
-                    Debug.WriteLine($"[ExplorationDatabaseService] GetTotalStatistics: {stats.Item1} systems, {stats.Item2} bodies, {stats.Item3} mapped");
+                    Logger.Verbose($"[ExplorationDatabaseService] GetTotalStatistics: {stats.Item1} systems, {stats.Item2} bodies, {stats.Item3} mapped");
                     return stats;
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ExplorationDatabaseService] Error getting statistics: {ex.Message}");
+                Logger.Verbose($"[ExplorationDatabaseService] Error getting statistics: {ex.Message}");
             }
 
             return (0, 0, 0);
@@ -464,7 +464,7 @@ namespace EliteDataRelay.Services
             int deleted = cmd.ExecuteNonQuery();
             if (deleted > 0)
             {
-                Debug.WriteLine($"[ExplorationDatabaseService] Pruned {deleted} systems older than {daysToKeep} days");
+                Logger.Verbose($"[ExplorationDatabaseService] Pruned {deleted} systems older than {daysToKeep} days");
             }
 
             return deleted;
@@ -482,11 +482,11 @@ namespace EliteDataRelay.Services
                 using var cmd = _connection.CreateCommand();
                 cmd.CommandText = "PRAGMA wal_checkpoint(FULL);";
                 cmd.ExecuteNonQuery();
-                Debug.WriteLine("[ExplorationDatabaseService] Flushed database to disk");
+                Logger.Verbose("[ExplorationDatabaseService] Flushed database to disk");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ExplorationDatabaseService] Error flushing database: {ex.Message}");
+                Logger.Verbose($"[ExplorationDatabaseService] Error flushing database: {ex.Message}");
             }
         }
 
@@ -502,11 +502,11 @@ namespace EliteDataRelay.Services
                     // Ensure all data is written to disk before closing
                     Flush();
                     _connection.Close();
-                    Debug.WriteLine("[ExplorationDatabaseService] Database connection closed");
+                    Logger.Verbose("[ExplorationDatabaseService] Database connection closed");
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ExplorationDatabaseService] Error during disposal: {ex.Message}");
+                    Logger.Verbose($"[ExplorationDatabaseService] Error during disposal: {ex.Message}");
                 }
                 finally
                 {
@@ -517,3 +517,6 @@ namespace EliteDataRelay.Services
         }
     }
 }
+
+
+

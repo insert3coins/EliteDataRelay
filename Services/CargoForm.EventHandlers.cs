@@ -197,7 +197,7 @@ namespace EliteDataRelay
             // actual cargo contents, resolving the "empty on start" issue.
             SafeInvoke(() =>
             {
-                Debug.WriteLine("[CargoForm] Journal initial scan complete. Performing full UI refresh.");
+                Logger.Verbose("[CargoForm] Journal initial scan complete. Performing full UI refresh.");
                 _isInitializing = false; // Initial scan is done, allow normal UI updates now.
 
                 // Now that all initial data is cached, update the entire UI at once.
@@ -307,3 +307,4 @@ namespace EliteDataRelay
         #endregion
     }
 }
+

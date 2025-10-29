@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Diagnostics_Title" xml:space="preserve"><value>诊断</value></data>
+  <data name="Diagnostics_OpenFolder" xml:space="preserve"><value>打开文件夹</value></data>
+  <data name="Diagnostics_ClearLog" xml:space="preserve"><value>清空日志</value></data>
+  <data name="Diagnostics_Refresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="Settings_AdvancedGroup_Title" xml:space="preserve"><value>高级</value></data>
+  <data name="Settings_FastStart_Label" xml:space="preserve"><value>快速启动：启动时跳过日志历史</value></data>
+  <data name="Settings_VerboseLogging_Label" xml:space="preserve"><value>启用详细日志</value></data>
+  <data name="Settings_OpenDiagnostics_Button" xml:space="preserve"><value>打开诊断...</value></data>
+  <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>语言</value></data>
+  <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>语言</value></data>
+  <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>语言已更新。部分文本将在重启后更新。</value></data>
+</root>
+

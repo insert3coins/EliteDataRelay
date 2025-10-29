@@ -46,3 +46,7 @@ namespace EliteDataRelay.UI
         void UpdateExplorationCurrentSystem(SystemExplorationData data);
     }
 }
+
+
+
+

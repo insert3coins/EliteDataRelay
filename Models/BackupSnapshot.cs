@@ -12,3 +12,4 @@ namespace EliteDataRelay.Models
         public List<string>? Reports { get; set; } = new();
     }
 }
+

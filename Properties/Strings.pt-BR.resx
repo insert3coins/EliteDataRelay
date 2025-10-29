@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Diagnostics_Title" xml:space="preserve"><value>Diagnóstico</value></data>
+  <data name="Diagnostics_OpenFolder" xml:space="preserve"><value>Abrir pasta</value></data>
+  <data name="Diagnostics_ClearLog" xml:space="preserve"><value>Limpar log</value></data>
+  <data name="Diagnostics_Refresh" xml:space="preserve"><value>Atualizar</value></data>
+  <data name="Settings_AdvancedGroup_Title" xml:space="preserve"><value>Avançado</value></data>
+  <data name="Settings_FastStart_Label" xml:space="preserve"><value>Inicialização rápida: pular histórico do diário na inicialização</value></data>
+  <data name="Settings_VerboseLogging_Label" xml:space="preserve"><value>Ativar log detalhado</value></data>
+  <data name="Settings_OpenDiagnostics_Button" xml:space="preserve"><value>Abrir Diagnóstico...</value></data>
+  <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>Idioma atualizado. Alguns textos serão atualizados após reiniciar.</value></data>
+</root>
+

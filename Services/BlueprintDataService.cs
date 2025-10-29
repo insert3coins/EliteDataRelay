@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
@@ -26,7 +26,7 @@ namespace EliteDataRelay.Services
             {
                 if (stream == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[BlueprintDataService] Error: Embedded resource '{resourceName}' not found.");
+                    Logger.Info($"[BlueprintDataService] Error: Embedded resource '{resourceName}' not found.");
                     return;
                 }
                 using (StreamReader reader = new StreamReader(stream))

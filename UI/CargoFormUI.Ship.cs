@@ -36,7 +36,7 @@ namespace EliteDataRelay.UI
         {
             if (_controlFactory == null) return;
             _currentLoadout = loadout;
-            System.Diagnostics.Debug.WriteLine($"[CargoFormUI] UpdateShipLoadout called for ship: {loadout.Ship}, Mass: {loadout.UnladenMass}");
+            Logger.Verbose($"[CargoFormUI] UpdateShipLoadout called for ship: {loadout.Ship}, Mass: {loadout.UnladenMass}");
 
             UpdateShipStatsPanel(loadout);
             UpdateModuleList();
@@ -48,7 +48,7 @@ namespace EliteDataRelay.UI
             var statsPanel = _controlFactory?.ShipStatsPanel;
             if (statsPanel is null) return;
 
-            System.Diagnostics.Debug.WriteLine("[CargoFormUI] Updating ship stats panel...");
+            Logger.Verbose("[CargoFormUI] Updating ship stats panel...");
             statsPanel.SuspendLayout();
 
 
@@ -345,3 +345,6 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+
+

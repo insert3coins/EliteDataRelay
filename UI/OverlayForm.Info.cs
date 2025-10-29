@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -31,7 +32,7 @@ namespace EliteDataRelay.UI
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[OverlayForm.Info] Paint error: {ex.Message}");
+                Logger.Info($"[OverlayForm.Info] Paint error: {ex.Message}");
             }
         }
 
@@ -93,7 +94,11 @@ namespace EliteDataRelay.UI
                 g.DrawString(balanceText, GameColors.FontNormal, GameColors.BrushOrange, padding + labelWidth, y);
             }
 
-            Debug.WriteLine($"[OverlayForm.Info] Rendered frame: {_commanderName}");
+            Logger.Verbose($"[OverlayForm.Info] Rendered frame: {_commanderName}");
         }
     }
 }
+
+
+
+

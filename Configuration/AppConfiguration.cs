@@ -79,6 +79,7 @@ namespace EliteDataRelay.Configuration
 
                     // Performance and extras
                     FastStartSkipJournalHistory = config.FastStartSkipJournalHistory;
+                    VerboseLogging = config.VerboseLogging;
 
                     // Exploration
                     ExplorationHistoryImported = config.ExplorationHistoryImported;
@@ -89,12 +90,15 @@ namespace EliteDataRelay.Configuration
 
                         // Webhook removed
 
-                        // Web overlay
-                        EnableWebOverlayServer = config.EnableWebOverlayServer;
-                        WebOverlayPort = config.WebOverlayPort;
-                        WebOverlayOpacity = config.WebOverlayOpacity;
-                    }
+                    // Web overlay
+                    EnableWebOverlayServer = config.EnableWebOverlayServer;
+                    WebOverlayPort = config.WebOverlayPort;
+                    WebOverlayOpacity = config.WebOverlayOpacity;
+
+                    // Localization
+                    UICulture = config.UICulture ?? string.Empty;
                 }
+            }
             }
             catch (Exception ex)
             {
@@ -148,6 +152,7 @@ namespace EliteDataRelay.Configuration
 
                     // Performance and extras
                     FastStartSkipJournalHistory = AppConfiguration.FastStartSkipJournalHistory,
+                    VerboseLogging = AppConfiguration.VerboseLogging,
 
                     // Exploration
                     ExplorationHistoryImported = AppConfiguration.ExplorationHistoryImported,
@@ -162,6 +167,9 @@ namespace EliteDataRelay.Configuration
                     EnableWebOverlayServer = AppConfiguration.EnableWebOverlayServer,
                     WebOverlayPort = AppConfiguration.WebOverlayPort,
                     WebOverlayOpacity = AppConfiguration.WebOverlayOpacity,
+
+                    // Localization
+                    UICulture = AppConfiguration.UICulture,
                 };
 
                 var options = new JsonSerializerOptions 
@@ -179,8 +187,8 @@ namespace EliteDataRelay.Configuration
         }
 
         // A private class to hold the data for serialization
-        private class ConfigData
-        {
+            private class ConfigData
+            {
             public string WelcomeMessage { get; set; } = "Welcome, CMDR! Click 'Start' to begin monitoring.";
             // Legacy text file output removed
             public string CargoPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @"Saved Games\Frontier Developments\Elite Dangerous\Cargo.json");
@@ -218,6 +226,7 @@ namespace EliteDataRelay.Configuration
 
             // Performance and extras
             public bool FastStartSkipJournalHistory { get; set; } = true;
+            public bool VerboseLogging { get; set; } = false;
 
             // Screenshot renamer
             public bool EnableScreenshotRenamer { get; set; } = false;
@@ -232,7 +241,11 @@ namespace EliteDataRelay.Configuration
 
             // Exploration
             public bool ExplorationHistoryImported { get; set; } = false;
+
+            // Localization
+            public string? UICulture { get; set; } = string.Empty;
         }
     }
 }
+
 

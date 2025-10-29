@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Diagnostics_Title" xml:space="preserve"><value>Diagnose</value></data>
+  <data name="Diagnostics_OpenFolder" xml:space="preserve"><value>Ordner öffnen</value></data>
+  <data name="Diagnostics_ClearLog" xml:space="preserve"><value>Protokoll löschen</value></data>
+  <data name="Diagnostics_Refresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="Settings_AdvancedGroup_Title" xml:space="preserve"><value>Erweitert</value></data>
+  <data name="Settings_FastStart_Label" xml:space="preserve"><value>Schnellstart: Journalverlauf beim Start überspringen</value></data>
+  <data name="Settings_VerboseLogging_Label" xml:space="preserve"><value>Ausführliches Logging aktivieren</value></data>
+  <data name="Settings_OpenDiagnostics_Button" xml:space="preserve"><value>Diagnose öffnen...</value></data>
+  <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>Sprache</value></data>
+  <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>Sprache</value></data>
+  <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>Sprache aktualisiert. Einige Texte werden nach einem Neustart aktualisiert.</value></data>
+</root>
+

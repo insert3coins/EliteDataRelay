@@ -71,7 +71,7 @@ namespace EliteDataRelay.Services
             _visitedSystems.Clear();
             _currentSystem = null;
 
-            Debug.WriteLine("[ExplorationDataService] Exploration session started");
+            Logger.Verbose("[ExplorationDataService] Exploration session started");
             EmitSessionChanged();
         }
 
@@ -80,7 +80,7 @@ namespace EliteDataRelay.Services
         /// </summary>
         public void StopSession()
         {
-            Debug.WriteLine($"[ExplorationDataService] Exploration session ended. " +
+            Logger.Verbose($"[ExplorationDataService] Exploration session ended. " +
                           $"Systems visited: {_sessionData.SystemsVisited}, " +
                           $"Total scans: {_sessionData.TotalScans}, " +
                           $"Total mapped: {_sessionData.TotalMapped}");
@@ -93,7 +93,7 @@ namespace EliteDataRelay.Services
         {
             if (!systemAddress.HasValue)
             {
-                Debug.WriteLine("[ExplorationDataService] System change event without SystemAddress, skipping");
+                Logger.Verbose("[ExplorationDataService] System change event without SystemAddress, skipping");
                 return;
             }
 
@@ -101,7 +101,7 @@ namespace EliteDataRelay.Services
             if (_visitedSystems.TryGetValue(systemAddress.Value, out var existingSystem))
             {
                 _currentSystem = existingSystem;
-                Debug.WriteLine($"[ExplorationDataService] Returned to previously visited system: {systemName}");
+                Logger.Verbose($"[ExplorationDataService] Returned to previously visited system: {systemName}");
             }
             else
             {
@@ -118,7 +118,7 @@ namespace EliteDataRelay.Services
                         LastVisited = eventTimestamp,
                         LastUpdated = eventTimestamp,
                     };
-                    Debug.WriteLine($"[ExplorationDataService] Entered new system: {systemName}");
+                    Logger.Verbose($"[ExplorationDataService] Entered new system: {systemName}");
 
                     // Save immediately so all visited systems are tracked
                     _database.SaveSystemAsync(_currentSystem);
@@ -130,7 +130,7 @@ namespace EliteDataRelay.Services
                     {
                         _currentSystem.LastVisited = eventTimestamp;
                         _currentSystem.LastUpdated = eventTimestamp;
-                        Debug.WriteLine($"[ExplorationDataService] Updating last visit time for {systemName} to {eventTimestamp:o}");
+                        Logger.Verbose($"[ExplorationDataService] Updating last visit time for {systemName} to {eventTimestamp:o}");
                         // Save the updated visit time to the database.
                         _database.SaveSystemAsync(_currentSystem);
                     }
@@ -151,7 +151,7 @@ namespace EliteDataRelay.Services
         {
             if (_currentSystem == null || fssEvent.SystemAddress != _currentSystem.SystemAddress)
             {
-                Debug.WriteLine("[ExplorationDataService] FSS scan event for different system, skipping");
+                Logger.Verbose("[ExplorationDataService] FSS scan event for different system, skipping");
                 return;
             }
 
@@ -159,7 +159,7 @@ namespace EliteDataRelay.Services
             _currentSystem.FSSProgress = fssEvent.Progress * 100;
             _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
-            Debug.WriteLine($"[ExplorationDataService] FSS scan: {fssEvent.BodyCount} bodies, {fssEvent.Progress * 100:F1}% complete");
+            Logger.Verbose($"[ExplorationDataService] FSS scan: {fssEvent.BodyCount} bodies, {fssEvent.Progress * 100:F1}% complete");
 
             // Save to database
             _database.SaveSystemAsync(_currentSystem);
@@ -174,7 +174,7 @@ namespace EliteDataRelay.Services
         {
             if (_currentSystem == null || scanEvent.SystemAddress != _currentSystem.SystemAddress)
             {
-                Debug.WriteLine("[ExplorationDataService] Scan event for different system, skipping");
+                Logger.Verbose("[ExplorationDataService] Scan event for different system, skipping");
                 return;
             }
 
@@ -201,7 +201,7 @@ namespace EliteDataRelay.Services
 
             _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
-            Debug.WriteLine($"[ExplorationDataService] Scanned body: {scanEvent.BodyName}");
+            Logger.Verbose($"[ExplorationDataService] Scanned body: {scanEvent.BodyName}");
 
             // Save to database
             _database.SaveSystemAsync(_currentSystem);
@@ -217,7 +217,7 @@ namespace EliteDataRelay.Services
         {
             if (_currentSystem == null || saaEvent.SystemAddress != _currentSystem.SystemAddress)
             {
-                Debug.WriteLine("[ExplorationDataService] SAA scan event for different system, skipping");
+                Logger.Verbose("[ExplorationDataService] SAA scan event for different system, skipping");
                 return;
             }
 
@@ -237,16 +237,16 @@ namespace EliteDataRelay.Services
                         _sessionData.FirstMappings++;
                     }
 
-                    Debug.WriteLine($"[ExplorationDataService] Mapped body: {saaEvent.BodyName} " +
+                    Logger.Verbose($"[ExplorationDataService] Mapped body: {saaEvent.BodyName} " +
                                   $"(Probes: {saaEvent.ProbesUsed}/{saaEvent.EfficiencyTarget})");
-                    Debug.WriteLine($"[ExplorationDataService] System mapped count now: {_currentSystem.MappedBodies}, Session total mapped: {_sessionData.TotalMapped}");
+                    Logger.Verbose($"[ExplorationDataService] System mapped count now: {_currentSystem.MappedBodies}, Session total mapped: {_sessionData.TotalMapped}");
 
                     _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
                     // Save to database
                     _database.SaveSystemAsync(_currentSystem);
 
-                    Debug.WriteLine($"[ExplorationDataService] Firing SystemDataChanged event...");
+                    Logger.Verbose($"[ExplorationDataService] Firing SystemDataChanged event...");
                     EmitSystemChanged();
                     EmitSessionChanged();
                 }
@@ -298,7 +298,7 @@ namespace EliteDataRelay.Services
                         .Select(g => g.NameLocalised ?? g.Name)
                         .ToList();
 
-                    Debug.WriteLine($"[ExplorationDataService] Found biological signals on {signalsEvent.BodyName}: " +
+                    Logger.Verbose($"[ExplorationDataService] Found biological signals on {signalsEvent.BodyName}: " +
                                   $"{string.Join(", ", body.BiologicalSignals)}");
                 }
 
@@ -318,7 +318,7 @@ namespace EliteDataRelay.Services
         {
             _sessionData.SoldValue += sellEvent.TotalEarnings;
 
-            Debug.WriteLine($"[ExplorationDataService] Sold exploration data for {sellEvent.TotalEarnings:N0} CR " +
+            Logger.Verbose($"[ExplorationDataService] Sold exploration data for {sellEvent.TotalEarnings:N0} CR " +
                           $"({sellEvent.Systems.Count} systems, {sellEvent.Discovered.Count} discoveries)");
 
             EmitSessionChanged();
@@ -332,7 +332,7 @@ namespace EliteDataRelay.Services
             _sessionData.SoldValue += sellEvent.TotalEarnings;
             _sessionData.FirstFootfalls += sellEvent.FirstFootfallCount;
 
-            Debug.WriteLine($"[ExplorationDataService] Sold on-foot data for {sellEvent.TotalEarnings:N0} CR " +
+            Logger.Verbose($"[ExplorationDataService] Sold on-foot data for {sellEvent.TotalEarnings:N0} CR " +
                           $"({sellEvent.FirstFootfallCount} first footfalls)");
 
             EmitSessionChanged();
@@ -345,7 +345,7 @@ namespace EliteDataRelay.Services
         {
             if (_currentSystem == null || touchdownEvent.SystemAddress != _currentSystem.SystemAddress)
             {
-                Debug.WriteLine("[ExplorationDataService] Touchdown event for different system, skipping");
+                Logger.Verbose("[ExplorationDataService] Touchdown event for different system, skipping");
                 return;
             }
 
@@ -364,7 +364,7 @@ namespace EliteDataRelay.Services
                     body.FirstFootfall = true;
                     _sessionData.FirstFootfalls++;
 
-                    Debug.WriteLine($"[ExplorationDataService] First footfall on {touchdownEvent.Body}!");
+                    Logger.Verbose($"[ExplorationDataService] First footfall on {touchdownEvent.Body}!");
 
                     _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
@@ -387,7 +387,7 @@ namespace EliteDataRelay.Services
             _sessionData = new ExplorationSessionData();
             _visitedSystems.Clear();
 
-            Debug.WriteLine("[ExplorationDataService] All exploration data has been reset");
+            Logger.Verbose("[ExplorationDataService] All exploration data has been reset");
         }
 
         /// <summary>
@@ -436,3 +436,6 @@ namespace EliteDataRelay.Services
         }
     }
 }
+
+
+

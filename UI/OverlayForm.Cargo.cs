@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using EliteDataRelay.Services;
 using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.UI
@@ -33,7 +34,7 @@ namespace EliteDataRelay.UI
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[OverlayForm.Cargo] Paint error: {ex.Message}");
+                Logger.Info($"[OverlayForm.Cargo] Paint error: {ex.Message}");
             }
         }
 
@@ -154,7 +155,11 @@ namespace EliteDataRelay.UI
                 }
             }
 
-            Debug.WriteLine($"[OverlayForm.Cargo] Rendered frame: {_cargoCount} items");
+            Logger.Verbose($"[OverlayForm.Cargo] Rendered frame: {_cargoCount} items");
         }
     }
 }
+
+
+
+

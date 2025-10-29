@@ -11,17 +11,19 @@ namespace EliteDataRelay.UI
         private Button _btnNavOverlay = null!;
         private Button _btnNavHotkeys = null!;
         private Button _btnNavAdvanced = null!;
+        private Button _btnNavLocalization = null!;
         private Panel _leftNavPanel = null!;
         private Panel _contentHost = null!;
         private Panel _panelGeneral = null!;
         private Panel _panelOverlay = null!;
         private Panel _panelHotkeys = null!;
         private Panel _panelAdvanced = null!;
+        private Panel _panelLocalization = null!;
 
         private void InitializeComponent()
         {
             // Form Properties
-            Text = "Settings";
+            Text = Properties.Strings.Settings_Title;
             ClientSize = new Size(800, 600);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
@@ -42,7 +44,7 @@ namespace EliteDataRelay.UI
             };
             var headerTitle = new Label
             {
-                Text = "Settings",
+                Text = Properties.Strings.Settings_Title,
                 AutoSize = true,
                 Font = new Font(Font.FontFamily, 12f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(17, 24, 39),
@@ -50,7 +52,7 @@ namespace EliteDataRelay.UI
             };
             var headerSubtitle = new Label
             {
-                Text = "Customize your experience",
+                Text = Properties.Strings.Settings_Subtitle,
                 AutoSize = true,
                 Font = new Font(Font.FontFamily, 9f, FontStyle.Regular),
                 ForeColor = Color.FromArgb(107, 114, 128),
@@ -77,7 +79,7 @@ namespace EliteDataRelay.UI
             // OK Button
             _btnOk = new Button
             {
-                Text = "Save",
+                Text = Properties.Strings.Settings_Save,
                 DialogResult = DialogResult.OK,
                 Size = new Size(100, 32),
                 Anchor = AnchorStyles.Right | AnchorStyles.Top,
@@ -92,7 +94,7 @@ namespace EliteDataRelay.UI
             // Cancel Button
             _btnCancel = new Button
             {
-                Text = "Cancel",
+                Text = Properties.Strings.Settings_Cancel,
                 DialogResult = DialogResult.Cancel,
                 Size = new Size(100, 32),
                 Anchor = AnchorStyles.Right | AnchorStyles.Top,
@@ -116,6 +118,9 @@ namespace EliteDataRelay.UI
             var leftDivider = new Panel { Dock = DockStyle.Right, Width = 1, BackColor = Color.FromArgb(229, 231, 235) };
             _leftNavPanel.Controls.Add(leftDivider);
 
+            // Localization nav button (add icon prefix to match others)
+            _btnNavLocalization = CreateNavButton("??  " + Properties.Strings.Settings_Nav_Localization);
+
             _btnNavGeneral = CreateNavButton("📊  General");
             _btnNavOverlay = CreateNavButton("🖥️  Overlay");
             _btnNavHotkeys = CreateNavButton("⌨️  Hotkeys");
@@ -126,17 +131,21 @@ namespace EliteDataRelay.UI
             _btnNavOverlay.Location = new Point(0, 12 + 44);
             _btnNavHotkeys.Location = new Point(0, 12 + 88);
             _btnNavAdvanced.Location = new Point(0, 12 + 132);
+            _btnNavLocalization.Location = new Point(0, 12 + 176);
 
             _btnNavGeneral.Click += (s, e) => ActivateTab("general");
             _btnNavOverlay.Click += (s, e) => ActivateTab("overlay");
             _btnNavHotkeys.Click += (s, e) => ActivateTab("hotkeys");
             _btnNavAdvanced.Click += (s, e) => ActivateTab("advanced");
+            _btnNavLocalization.Click += (s, e) => ActivateTab("localization");
 
             // Hide Hotkeys nav and shift Advanced up under Overlay
             _btnNavHotkeys.Visible = false;
             _btnNavAdvanced.Location = new Point(0, 12 + 88);
+            _btnNavLocalization.Location = new Point(0, 12 + 132);
 
             _leftNavPanel.Controls.Add(_btnNavAdvanced);
+            _leftNavPanel.Controls.Add(_btnNavLocalization);
             _leftNavPanel.Controls.Add(_btnNavHotkeys);
             _leftNavPanel.Controls.Add(_btnNavOverlay);
             _leftNavPanel.Controls.Add(_btnNavGeneral);
@@ -153,14 +162,16 @@ namespace EliteDataRelay.UI
             _panelOverlay = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
             _panelHotkeys = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
             _panelAdvanced = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
+            _panelLocalization = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
 
             // Build temporary TabPages using existing initializers, then move their controls
             var tmpGeneral = new TabPage("General");
             var tmpOverlay = new TabPage("Overlay");
             var tmpHotkeys = new TabPage("Hotkeys");
             var tmpAdvanced = new TabPage("Advanced + Web");
+            var tmpLocalization = new TabPage("Localization");
 
-            foreach (var page in new[] { tmpGeneral, tmpOverlay, tmpHotkeys, tmpAdvanced })
+            foreach (var page in new[] { tmpGeneral, tmpOverlay, tmpHotkeys, tmpAdvanced, tmpLocalization })
             {
                 page.BackColor = Color.White;
                 page.ForeColor = Color.FromArgb(17, 24, 39);
@@ -171,6 +182,7 @@ namespace EliteDataRelay.UI
             InitializeOverlayTab(tmpOverlay);
             InitializeHotkeysTab(tmpHotkeys);
             InitializeAdvancedWebTab(tmpAdvanced);
+            InitializeLocalizationTab(tmpLocalization);
 
             // Move controls from temp pages into our panels
             MoveChildren(tmpGeneral, _panelGeneral);
@@ -178,11 +190,13 @@ namespace EliteDataRelay.UI
             // Merge Hotkeys + Advanced into Advanced panel, stacking to avoid overlap
             MoveChildren(tmpAdvanced, _panelAdvanced); // add Advanced first
             MoveChildrenStacked(tmpHotkeys, _panelAdvanced); // then place Hotkeys below
+            MoveChildren(tmpLocalization, _panelLocalization);
 
             // Add content panels (bring active to front later)
             _contentHost.Controls.Add(_panelGeneral);
             _contentHost.Controls.Add(_panelOverlay);
             _contentHost.Controls.Add(_panelAdvanced);
+            _contentHost.Controls.Add(_panelLocalization);
 
             // Add Controls
             Controls.Add(_contentHost);
@@ -275,17 +289,20 @@ namespace EliteDataRelay.UI
                 _panelGeneral.Visible = key == "general";
                 _panelOverlay.Visible = key == "overlay";
                 _panelAdvanced.Visible = key == "advanced";
+                _panelLocalization.Visible = key == "localization";
 
                 if (_panelGeneral.Visible) _panelGeneral.BringToFront();
                 if (_panelOverlay.Visible) _panelOverlay.BringToFront();
                 if (_panelAdvanced.Visible) _panelAdvanced.BringToFront();
+                if (_panelLocalization.Visible) _panelLocalization.BringToFront();
 
                 // Nav button styles
                 SetActiveNav(key switch
                 {
                     "general" => _btnNavGeneral,
                     "overlay" => _btnNavOverlay,
-                    _ => _btnNavAdvanced
+                    "advanced" => _btnNavAdvanced,
+                    _ => _btnNavLocalization
                 });
             }
         }
@@ -304,3 +321,5 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+

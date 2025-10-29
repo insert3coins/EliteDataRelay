@@ -38,7 +38,7 @@ namespace EliteDataRelay.Services
                 var journalDir = AppConfiguration.JournalPath;
                 if (string.IsNullOrWhiteSpace(journalDir) || !Directory.Exists(journalDir))
                 {
-                    Debug.WriteLine("[ExplorationHistoryImport] Journal directory not found; skipping import.");
+                    Logger.Info("[ExplorationHistoryImport] Journal directory not found; skipping import.");
                     AppConfiguration.ExplorationHistoryImported = true; // avoid retrying every launch
                     AppConfiguration.Save();
                     return false;
@@ -49,13 +49,13 @@ namespace EliteDataRelay.Services
                                       .ToList();
                 if (files.Count == 0)
                 {
-                    Debug.WriteLine("[ExplorationHistoryImport] No journal files found; skipping import.");
+                    Logger.Info("[ExplorationHistoryImport] No journal files found; skipping import.");
                     AppConfiguration.ExplorationHistoryImported = true;
                     AppConfiguration.Save();
                     return false;
                 }
 
-                Debug.WriteLine($"[ExplorationHistoryImport] Starting historical import across {files.Count} files...");
+                Logger.Verbose($"[ExplorationHistoryImport] Starting historical import across {files.Count} files...");
 
                 // Suppress UI events and use synchronous DB writes during import
                 _explorationDataService.SuppressEvents = true;
@@ -76,12 +76,12 @@ namespace EliteDataRelay.Services
                 AppConfiguration.ExplorationHistoryImported = true;
                 AppConfiguration.Save();
 
-                Debug.WriteLine("[ExplorationHistoryImport] Historical import completed.");
+                Logger.Info("[ExplorationHistoryImport] Historical import completed.");
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ExplorationHistoryImport] Failed during import: {ex}");
+                Logger.Verbose($"[ExplorationHistoryImport] Failed during import: {ex}");
                 // Do not set the flag on failure so we can try again next launch.
                 return false;
             }
@@ -185,9 +185,13 @@ namespace EliteDataRelay.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ExplorationHistoryImport] Error processing file '{Path.GetFileName(file)}': {ex.Message}");
+                    Logger.Verbose($"[ExplorationHistoryImport] Error processing file '{Path.GetFileName(file)}': {ex.Message}");
                 }
             }
         }
     }
 }
+
+
+
+

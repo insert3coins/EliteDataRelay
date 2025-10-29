@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
@@ -126,3 +126,6 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+
+

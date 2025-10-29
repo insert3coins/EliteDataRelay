@@ -31,3 +31,4 @@ namespace EliteDataRelay.Models
         public override string ToString() => $"[{Timestamp.ToLocalTime():HH:mm}] {Message}";
     }
 }
+

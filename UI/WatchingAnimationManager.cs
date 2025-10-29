@@ -66,3 +66,6 @@ namespace EliteDataRelay.UI
         public void Dispose() => _animationTimer.Dispose();
     }
 }
+
+
+

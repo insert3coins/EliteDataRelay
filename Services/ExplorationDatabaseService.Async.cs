@@ -33,7 +33,7 @@ namespace EliteDataRelay.Services
 
             _enableBackgroundWrites = true;
             _backgroundWriterTask = Task.Run(BackgroundWriterLoop, _backgroundCts.Token);
-            Debug.WriteLine("[ExplorationDatabaseService] Background writer started");
+            Logger.Verbose("[ExplorationDatabaseService] Background writer started");
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace EliteDataRelay.Services
             // Flush any remaining items
             FlushWriteQueue();
 
-            Debug.WriteLine("[ExplorationDatabaseService] Background writer stopped");
+            Logger.Verbose("[ExplorationDatabaseService] Background writer stopped");
         }
 
         /// <summary>
@@ -115,11 +115,11 @@ namespace EliteDataRelay.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ExplorationDatabaseService] Background writer error: {ex.Message}");
+                    Logger.Info($"[ExplorationDatabaseService] Background writer error: {ex.Message}");
                 }
             }
 
-            Debug.WriteLine("[ExplorationDatabaseService] Background writer loop exited");
+            Logger.Verbose("[ExplorationDatabaseService] Background writer loop exited");
         }
 
         /// <summary>
@@ -145,11 +145,11 @@ namespace EliteDataRelay.Services
                 }
 
                 stopwatch.Stop();
-                Debug.WriteLine($"[ExplorationDatabaseService] Batch write completed: {systems.Count} systems in {stopwatch.ElapsedMilliseconds}ms");
+                Logger.Verbose($"[ExplorationDatabaseService] Batch write completed: {systems.Count} systems in {stopwatch.ElapsedMilliseconds}ms");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ExplorationDatabaseService] Batch write failed: {ex.Message}");
+                Logger.Info($"[ExplorationDatabaseService] Batch write failed: {ex.Message}");
                 throw;
             }
         }
@@ -164,7 +164,7 @@ namespace EliteDataRelay.Services
 
             if (!system.SystemAddress.HasValue)
             {
-                Debug.WriteLine("[ExplorationDatabaseService] Cannot save system without SystemAddress");
+                Logger.Verbose("[ExplorationDatabaseService] Cannot save system without SystemAddress");
                 return;
             }
 
@@ -282,8 +282,9 @@ namespace EliteDataRelay.Services
             if (batch.Count > 0)
             {
                 WriteBatch(batch);
-                Debug.WriteLine($"[ExplorationDatabaseService] Flushed {batch.Count} pending writes");
+                Logger.Verbose($"[ExplorationDatabaseService] Flushed {batch.Count} pending writes");
             }
         }
     }
 }
+

@@ -99,11 +99,11 @@ namespace EliteDataRelay.Services
                         catch (OperationCanceledException)
                         {
                             // This is expected when a new jump happens quickly.
-                            System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Debounced or cancelled fetch for '{e.StarSystem}'.");
+                            Logger.Verbose($"[SystemInfoService] Debounced or cancelled fetch for '{e.StarSystem}'.");
                         }
                         catch (Exception ex)
                         {
-                            System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Error fetching system info: {ex.Message}");
+                            Logger.Info($"[SystemInfoService] Error fetching system info: {ex.Message}");
                         }
                     });
                 }
@@ -141,7 +141,7 @@ namespace EliteDataRelay.Services
                 if (jsonDoc.RootElement.ValueKind == JsonValueKind.Array)
                 {
                     // System not found in EDSM, return default data
-                    System.Diagnostics.Debug.WriteLine($"[SystemInfoService] System '{systemName}' not found on EDSM.");
+                    Logger.Verbose($"[SystemInfoService] System '{systemName}' not found on EDSM.");
                     return new SystemInfoData { SystemName = systemName };
                 }
 
@@ -162,12 +162,12 @@ namespace EliteDataRelay.Services
             }
             catch (HttpRequestException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[SystemInfoService] EDSM API request failed for '{systemName}': {ex.Message}");
+                Logger.Info($"[SystemInfoService] EDSM API request failed for '{systemName}': {ex.Message}");
                 return new SystemInfoData { SystemName = systemName, Allegiance = "Network Error" };
             }
             catch (JsonException ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Failed to parse EDSM response for '{systemName}': {ex.Message}");
+                Logger.Info($"[SystemInfoService] Failed to parse EDSM response for '{systemName}': {ex.Message}");
                 return new SystemInfoData { SystemName = systemName, Allegiance = "API Error" };
             }
         }

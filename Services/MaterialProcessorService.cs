@@ -76,7 +76,7 @@ namespace EliteDataRelay.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[MaterialProcessorService] Unexpected error: {ex}");
+                    Logger.Info($"[MaterialProcessorService] Unexpected error: {ex}");
                     break;
                 }
             }

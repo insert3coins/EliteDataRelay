@@ -1,4 +1,4 @@
-﻿namespace EliteDataRelay.Models
+namespace EliteDataRelay.Models
 {
     public class MaterialDefinition
     {

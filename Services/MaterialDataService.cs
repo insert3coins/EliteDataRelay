@@ -1,4 +1,4 @@
-﻿﻿using EliteDataRelay.Models;
+using EliteDataRelay.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,7 +38,7 @@ namespace EliteDataRelay.Services
             {
                 if (stream == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[MaterialDataService] Error: Embedded resource '{resourceName}' not found.");
+                    Logger.Info($"[MaterialDataService] Error: Embedded resource '{resourceName}' not found.");
                     return;
                 }
                 using (StreamReader reader = new StreamReader(stream))

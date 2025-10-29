@@ -43,13 +43,13 @@ namespace EliteDataRelay.Services
 
                 if (status != null)
                 {
-                    Debug.WriteLine($"[JournalWatcherService] Found Status.json update. Fuel: {status.Fuel?.FuelMain}, Cargo: {status.Cargo}");
+                    Logger.Verbose($"[JournalWatcherService] Found Status.json update. Fuel: {status.Fuel?.FuelMain}, Cargo: {status.Cargo}");
                     StatusChanged?.Invoke(this, new StatusChangedEventArgs(status));
 
                     // Also handle balance changes to replace StatusWatcherService
                     if (status.Balance.HasValue && status.Balance.Value != _lastKnownBalance)
                     {
-                        Debug.WriteLine($"[JournalWatcherService] Balance changed. Old: {_lastKnownBalance}, New: {status.Balance.Value}. Firing event.");
+                        Logger.Verbose($"[JournalWatcherService] Balance changed. Old: {_lastKnownBalance}, New: {status.Balance.Value}. Firing event.");
                         _lastKnownBalance = status.Balance.Value;
                         BalanceChanged?.Invoke(this, new BalanceChangedEventArgs(_lastKnownBalance));
                     }
@@ -57,7 +57,7 @@ namespace EliteDataRelay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[JournalWatcherService] Error processing Status.json: {ex}");
+                Logger.Info($"[JournalWatcherService] Error processing Status.json: {ex}");
             }
         }
 

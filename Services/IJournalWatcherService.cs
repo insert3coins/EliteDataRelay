@@ -40,3 +40,4 @@ namespace EliteDataRelay.Services
         DockedEventArgs? GetLastKnownDockedState();
     }
 }
+

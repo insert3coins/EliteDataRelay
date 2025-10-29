@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Diagnostics_Title" xml:space="preserve"><value>Diagnostics</value></data>
+  <data name="Diagnostics_OpenFolder" xml:space="preserve"><value>Open Folder</value></data>
+  <data name="Diagnostics_ClearLog" xml:space="preserve"><value>Clear Log</value></data>
+  <data name="Diagnostics_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Settings_AdvancedGroup_Title" xml:space="preserve"><value>Advanced</value></data>
+  <data name="Settings_FastStart_Label" xml:space="preserve"><value>Fast start: skip journal history at startup</value></data>
+  <data name="Settings_VerboseLogging_Label" xml:space="preserve"><value>Enable verbose logging</value></data>
+  <data name="Settings_OpenDiagnostics_Button" xml:space="preserve"><value>Open Diagnostics...</value></data>
+  <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>Localization</value></data>
+  <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>Language updated. Some texts will update after restart.</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="Settings_Subtitle" xml:space="preserve"><value>Customize your experience</value></data>
+  <data name="Settings_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>General</value></data>
+  <data name="Settings_Nav_Overlay" xml:space="preserve"><value>Overlay</value></data>
+  <data name="Settings_Nav_Hotkeys" xml:space="preserve"><value>Hotkeys</value></data>
+  <data name="Settings_Nav_Advanced" xml:space="preserve"><value>Advanced</value></data>
+  <data name="Settings_Nav_Localization" xml:space="preserve"><value>Localization</value></data>
+  <data name="App_Title" xml:space="preserve"><value>Elite Data Relay</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Common_Copied" xml:space="preserve"><value>Copied to clipboard!</value></data>
+  <data name="Error_OpenUrlFormat" xml:space="preserve"><value>Failed to open URL: {0}</value></data>
+  <data name="About_WindowTitle" xml:space="preserve"><value>About Elite Data Relay</value></data>
+  <data name="About_VersionLabel" xml:space="preserve"><value>Version</value></data>
+  <data name="About_VersionNotFound" xml:space="preserve"><value>Version not found</value></data>
+  <data name="About_ViewProject" xml:space="preserve"><value>View Project on GitHub</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Windows companion for Elite Dangerous. Watches game journals to track cargo, materials, ship and location; logs and visualizes exploration (FSS/Scan/SAA) in a local database with a one-time history import; provides lightweight overlays and a web overlay for streaming.</value></data>
+  <data name="Exploration_VisitedSystems_Header" xml:space="preserve"><value>VISITED SYSTEMS</value></data>
+  <data name="Exploration_SelectSystem" xml:space="preserve"><value>Select a system to view details</value></data>
+  <data name="Exploration_Col_SystemName" xml:space="preserve"><value>System Name</value></data>
+  <data name="Exploration_Col_Bodies" xml:space="preserve"><value>Bodies</value></data>
+  <data name="Exploration_Col_LastVisit" xml:space="preserve"><value>Last Visit</value></data>
+  <data name="Exploration_Col_BodyName" xml:space="preserve"><value>Body Name</value></data>
+  <data name="Exploration_Col_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Exploration_Col_Distance" xml:space="preserve"><value>Distance</value></data>
+  <data name="Exploration_Col_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Exploration_Status_Scanned" xml:space="preserve"><value>Scanned</value></data>
+  <data name="Exploration_Status_Mapped" xml:space="preserve"><value>Mapped</value></data>
+  <data name="Exploration_Status_FirstDiscovery" xml:space="preserve"><value>First Discovery</value></data>
+  <data name="Exploration_Status_FirstFootfall" xml:space="preserve"><value>First Footfall!</value></data>
+  <data name="Exploration_Status_Known" xml:space="preserve"><value>Known</value></data>
+  <data name="Exploration_History_Empty" xml:space="preserve"><value>EXPLORATION HISTORY: No data yet - start monitoring and scan some systems!</value></data>
+  <data name="Exploration_History_StatsFormat" xml:space="preserve"><value>EXPLORATION HISTORY: {0}</value></data>
+  <data name="Overlay_NoSystemData" xml:space="preserve"><value>NO SYSTEM DATA</value></data>
+  <data name="Overlay_FSS_ProgressFormat" xml:space="preserve"><value>FSS:     {0:F1}%</value></data>
+  <data name="Overlay_FSS_CompleteFormat" xml:space="preserve"><value>FSS:     Complete ({0} bodies)</value></data>
+  <data name="Overlay_ScannedFormatWithTotal" xml:space="preserve"><value>Scanned: {0} / {1}</value></data>
+  <data name="Overlay_ScannedFormat" xml:space="preserve"><value>Scanned: {0}</value></data>
+  <data name="Overlay_MappedFormat" xml:space="preserve"><value>Mapped:  {0}</value></data>
+  <data name="Overlay_KnownSystem" xml:space="preserve"><value>Known System</value></data>
+  <data name="Overlay_SessionFormat" xml:space="preserve"><value>Session: {0} systems</value></data>
+  <data name="Overlay_ScansLabel" xml:space="preserve"><value>{0} scans</value></data>
+  <data name="Overlay_MappedLabel" xml:space="preserve"><value>{0} mapped</value></data>
+  <data name="Tray_Minimized" xml:space="preserve"><value>Minimized to tray.</value></data>
+</root>

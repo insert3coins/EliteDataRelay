@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Diagnostics_Title" xml:space="preserve"><value>Диагностика</value></data>
+  <data name="Diagnostics_OpenFolder" xml:space="preserve"><value>Открыть папку</value></data>
+  <data name="Diagnostics_ClearLog" xml:space="preserve"><value>Очистить журнал</value></data>
+  <data name="Diagnostics_Refresh" xml:space="preserve"><value>Обновить</value></data>
+  <data name="Settings_AdvancedGroup_Title" xml:space="preserve"><value>Дополнительно</value></data>
+  <data name="Settings_FastStart_Label" xml:space="preserve"><value>Быстрый запуск: пропускать историю журнала при старте</value></data>
+  <data name="Settings_VerboseLogging_Label" xml:space="preserve"><value>Включить подробное логирование</value></data>
+  <data name="Settings_OpenDiagnostics_Button" xml:space="preserve"><value>Открыть диагностику...</value></data>
+  <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>Язык</value></data>
+  <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>Язык</value></data>
+  <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>Язык обновлён. Некоторые тексты обновятся после перезапуска.</value></data>
+</root>
+

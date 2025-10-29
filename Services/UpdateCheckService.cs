@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -40,7 +40,7 @@ namespace EliteDataRelay.Services
 
                     if (release == null || string.IsNullOrEmpty(release.TagName))
                     {
-                        Debug.WriteLine("[UpdateCheck] Could not parse release information from GitHub.");
+                        Logger.Verbose("[UpdateCheck] Could not parse release information from GitHub.");
                         return;
                     }
 
@@ -69,7 +69,7 @@ namespace EliteDataRelay.Services
             catch (Exception ex)
             {
                 // Fail silently. We don't want to bother the user if the update check fails.
-                Debug.WriteLine($"[UpdateCheck] Failed to check for updates: {ex.Message}");
+                Logger.Info($"[UpdateCheck] Failed to check for updates: {ex.Message}");
             }
         }
 

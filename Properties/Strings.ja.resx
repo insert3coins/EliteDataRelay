@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Diagnostics_Title" xml:space="preserve"><value>診断</value></data>
+  <data name="Diagnostics_OpenFolder" xml:space="preserve"><value>フォルダーを開く</value></data>
+  <data name="Diagnostics_ClearLog" xml:space="preserve"><value>ログをクリア</value></data>
+  <data name="Diagnostics_Refresh" xml:space="preserve"><value>更新</value></data>
+  <data name="Settings_AdvancedGroup_Title" xml:space="preserve"><value>詳細設定</value></data>
+  <data name="Settings_FastStart_Label" xml:space="preserve"><value>高速起動: 起動時にジャーナル履歴をスキップ</value></data>
+  <data name="Settings_VerboseLogging_Label" xml:space="preserve"><value>詳細ログを有効にする</value></data>
+  <data name="Settings_OpenDiagnostics_Button" xml:space="preserve"><value>診断を開く...</value></data>
+  <data name="Settings_Localization_GroupTitle" xml:space="preserve"><value>言語</value></data>
+  <data name="Settings_Localization_LanguageLabel" xml:space="preserve"><value>言語</value></data>
+  <data name="Settings_Localization_RestartNote" xml:space="preserve"><value>言語を更新しました。一部のテキストは再起動後に更新されます。</value></data>
+</root>
+

@@ -72,13 +72,13 @@ namespace EliteDataRelay.Services
             }
             catch (HttpListenerException ex)
             {
-                Debug.WriteLine($"[WebOverlay] Failed to start HttpListener: {ex.Message}");
+                Logger.Info($"[WebOverlay] Failed to start HttpListener: {ex.Message}");
                 Stop();
                 return;
             }
 
             _ = Task.Run(() => AcceptLoopAsync(token), token);
-            Debug.WriteLine($"[WebOverlay] Listening on http://localhost:{AppConfiguration.WebOverlayPort}/");
+            Logger.Verbose($"[WebOverlay] Listening on http://localhost:{AppConfiguration.WebOverlayPort}/");
         }
 
         public void Stop()
@@ -108,7 +108,7 @@ namespace EliteDataRelay.Services
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[WebOverlay] Accept failed: {ex.Message}");
+                    Logger.Info($"[WebOverlay] Accept failed: {ex.Message}");
                     continue;
                 }
 
@@ -168,7 +168,7 @@ namespace EliteDataRelay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[WebOverlay] HandleContext error: {ex.Message}");
+                Logger.Info($"[WebOverlay] HandleContext error: {ex.Message}");
             }
             finally
             {
@@ -456,4 +456,5 @@ namespace EliteDataRelay.Services
         public void Dispose() => Stop();
     }
 }
+
 

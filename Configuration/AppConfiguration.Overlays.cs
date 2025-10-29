@@ -23,3 +23,4 @@ namespace EliteDataRelay.Configuration
         public static int OverlayOpacity { get; set; } = 85;
     }
 }
+

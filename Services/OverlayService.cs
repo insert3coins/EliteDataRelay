@@ -39,7 +39,7 @@ namespace EliteDataRelay.Services
                 // Only show overlays if the game process is actually running.
                 if (!gameProcesses.Any())
                 {
-                    System.Diagnostics.Debug.WriteLine("[OverlayService] Elite Dangerous not running. Overlays will not be shown.");
+                    Logger.Verbose("[OverlayService] Elite Dangerous not running. Overlays will not be shown.");
                     return;
                 }
             }
@@ -48,7 +48,7 @@ namespace EliteDataRelay.Services
             var primaryScreen = Screen.PrimaryScreen;
             if (primaryScreen == null)
             {
-                System.Diagnostics.Debug.WriteLine("[OverlayService] No primary screen detected. Overlays will not be shown.");
+                Logger.Verbose("[OverlayService] No primary screen detected. Overlays will not be shown.");
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace EliteDataRelay.Services
             {
                 _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag);
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
-                System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
+                Logger.Verbose("[OverlayService] Exploration overlay created");
             }
 
             PositionOverlays(screen);
@@ -108,13 +108,13 @@ namespace EliteDataRelay.Services
             // Show and restore data for Exploration overlay
             if (_explorationOverlayForm != null)
             {
-                System.Diagnostics.Debug.WriteLine($"[OverlayService] Showing exploration overlay at {_explorationOverlayForm.Location}");
+                Logger.Verbose($"[OverlayService] Showing exploration overlay at {_explorationOverlayForm.Location}");
                 _explorationOverlayForm.Show();
 
                 // Restore last known exploration data after recreating overlay
                 if (_lastExplorationData != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[OverlayService] Restoring exploration data: {_lastExplorationData.SystemName}");
+                    Logger.Verbose($"[OverlayService] Restoring exploration data: {_lastExplorationData.SystemName}");
                     _explorationOverlayForm.UpdateExplorationData(_lastExplorationData);
                 }
                 if (_lastExplorationSessionData != null)

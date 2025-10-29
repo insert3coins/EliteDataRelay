@@ -22,6 +22,19 @@ namespace EliteDataRelay
             // Load user settings from the configuration file.
             AppConfiguration.Load();
 
+            // Apply UI culture if configured
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(AppConfiguration.UICulture))
+                {
+                    var culture = new System.Globalization.CultureInfo(AppConfiguration.UICulture);
+                    System.Threading.Thread.CurrentThread.CurrentUICulture = culture;
+                    System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+                    EliteDataRelay.Properties.Strings.Culture = culture;
+                }
+            }
+            catch { }
+
             // To customize application configuration such as high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
@@ -81,3 +94,4 @@ namespace EliteDataRelay
         }
     }
 }
+

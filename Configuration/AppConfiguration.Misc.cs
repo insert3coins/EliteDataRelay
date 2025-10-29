@@ -29,6 +29,9 @@ namespace EliteDataRelay.Configuration
         // Performance
         public static bool FastStartSkipJournalHistory { get; set; } = true;
 
+        // Logging
+        public static bool VerboseLogging { get; set; } = false;
+
         // Exploration
         // Tracks whether we've already imported historical exploration data from old journals.
         public static bool ExplorationHistoryImported { get; set; } = false;
@@ -42,5 +45,9 @@ namespace EliteDataRelay.Configuration
         // Web Overlay Server
         public static bool EnableWebOverlayServer { get; set; } = false;
         public static int WebOverlayPort { get; set; } = 9005;
+
+        // UI Culture (empty = system default)
+        public static string UICulture { get; set; } = string.Empty;
     }
 }
+

@@ -98,7 +98,7 @@ namespace EliteDataRelay.Services
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[BodyIconService] Failed to load icon '{fullPath}': {ex.Message}");
+                        Logger.Info($"[BodyIconService] Failed to load icon '{fullPath}': {ex.Message}");
                         // Cache a null to prevent repeated file access attempts for a bad file
                         _iconCache[bodyType] = null!;
                         return null;

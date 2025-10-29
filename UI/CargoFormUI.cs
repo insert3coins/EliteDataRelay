@@ -141,7 +141,7 @@ namespace EliteDataRelay.UI
             if (_form?.WindowState == FormWindowState.Minimized)
             {
                 _form.Hide();
-                _trayIconManager?.ShowBalloonTip(1000, "Elite Data Relay", "Minimized to tray.", ToolTipIcon.Info);
+                _trayIconManager?.ShowBalloonTip(1000, Properties.Strings.App_Title, Properties.Strings.Tray_Minimized, ToolTipIcon.Info);
             }
             else if (_form?.WindowState == FormWindowState.Normal || _form?.WindowState == FormWindowState.Maximized)
             {
@@ -166,7 +166,7 @@ namespace EliteDataRelay.UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error initializing application icon: {ex}");
+                Logger.Info($"[CargoFormUI] Error initializing application icon: {ex}");
                 // If icon fails to load, _appIcon will remain null, and the form/tray will use defaults.
             }
         }
@@ -379,3 +379,7 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+
+
+

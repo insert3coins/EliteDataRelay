@@ -19,3 +19,6 @@ namespace EliteDataRelay.UI
         void UpdateMonitoringVisuals(bool isMonitoring);
     }
 }
+
+
+

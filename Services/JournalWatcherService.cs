@@ -188,7 +188,7 @@ namespace EliteDataRelay.Services
 
             _pollTimer?.Change(AppConfiguration.PollingIntervalMs, AppConfiguration.PollingIntervalMs); // Start polling after an initial delay.
             _isMonitoring = true;
-            Debug.WriteLine("[JournalWatcherService] Started monitoring");
+            Logger.Verbose("[JournalWatcherService] Started monitoring");
         }
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace EliteDataRelay.Services
             _lastCommanderName = null;
             _lastLocationArgs = null;
             _lastDockedEventArgs = null;
-            Debug.WriteLine("[JournalWatcherService] State has been reset.");
+            Logger.Verbose("[JournalWatcherService] State has been reset.");
         }
 
         public void StopMonitoring()
@@ -222,7 +222,7 @@ namespace EliteDataRelay.Services
             _journalDirectoryWatcher = null;
 
             _isMonitoring = false;
-            Debug.WriteLine("[JournalWatcherService] Stopped monitoring");
+            Logger.Verbose("[JournalWatcherService] Stopped monitoring");
 
             Reset();
         }
@@ -236,7 +236,7 @@ namespace EliteDataRelay.Services
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[JournalWatcherService] Error finding latest journal file: {ex}");
+                Logger.Info($"[JournalWatcherService] Error finding latest journal file: {ex}");
                 return null;
             }
         }
@@ -253,7 +253,7 @@ namespace EliteDataRelay.Services
         /// </summary>
         private void OnJournalFileCreated(object sender, FileSystemEventArgs e)
         {
-            Debug.WriteLine($"[JournalWatcherService] FileSystemWatcher detected new journal: {e.Name}. Triggering immediate poll.");
+            Logger.Verbose($"[JournalWatcherService] FileSystemWatcher detected new journal: {e.Name}. Triggering immediate poll.");
             // Run the poll on a background thread to avoid holding up the FileSystemWatcher event.
             ThreadPool.QueueUserWorkItem(_ => PollTimer_Tick(null));
         }
@@ -275,3 +275,4 @@ namespace EliteDataRelay.Services
         }
     }
 }
+
