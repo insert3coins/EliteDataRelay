@@ -61,6 +61,7 @@ namespace EliteDataRelay.Services
                     ScannedBodies INTEGER NOT NULL DEFAULT 0,
                     MappedBodies INTEGER NOT NULL DEFAULT 0,
                     FSSProgress REAL NOT NULL DEFAULT 0,
+                    NonBodySignals INTEGER NOT NULL DEFAULT 0,
                     LastVisited TEXT NOT NULL,
                     FirstVisited TEXT NOT NULL
                 );
@@ -106,6 +107,15 @@ namespace EliteDataRelay.Services
             cmd.ExecuteNonQuery();
             Debug.WriteLine($"[ExplorationDatabaseService] Database initialized at: {_databasePath}");
 
+            // Attempt to add NonBodySignals column for existing databases
+            try
+            {
+                using var alter = _connection.CreateCommand();
+                alter.CommandText = "ALTER TABLE Systems ADD COLUMN NonBodySignals INTEGER NOT NULL DEFAULT 0;";
+                alter.ExecuteNonQuery();
+            }
+            catch { /* ignore if column already exists */ }
+
             // Start background writer for async/non-blocking database operations
             StartBackgroundWriter();
         }
@@ -144,8 +154,8 @@ namespace EliteDataRelay.Services
                     {
                         // New system
                         cmd.CommandText = @"
-                            INSERT INTO Systems (SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, LastVisited, FirstVisited)
-                            VALUES (@systemAddress, @systemName, @totalBodies, @scannedBodies, @mappedBodies, @fssProgress, @lastVisited, @firstVisited)
+                            INSERT INTO Systems (SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, NonBodySignals, LastVisited, FirstVisited)
+                            VALUES (@systemAddress, @systemName, @totalBodies, @scannedBodies, @mappedBodies, @fssProgress, @nonBodySignals, @lastVisited, @firstVisited)
                         ";
                         // Preserve journal event time for initial visit
                         cmd.Parameters.AddWithValue("@firstVisited", system.LastVisited.ToString("o"));
@@ -160,6 +170,7 @@ namespace EliteDataRelay.Services
                                 ScannedBodies = @scannedBodies,
                                 MappedBodies = @mappedBodies,
                                 FSSProgress = @fssProgress,
+                                NonBodySignals = @nonBodySignals,
                                 LastVisited = @lastVisited
                             WHERE SystemAddress = @systemAddress
                         ";
@@ -171,6 +182,7 @@ namespace EliteDataRelay.Services
                     cmd.Parameters.AddWithValue("@scannedBodies", system.ScannedBodies);
                     cmd.Parameters.AddWithValue("@mappedBodies", system.MappedBodies);
                     cmd.Parameters.AddWithValue("@fssProgress", system.FSSProgress);
+                    cmd.Parameters.AddWithValue("@nonBodySignals", system.NonBodySignalsDetected);
                     cmd.Parameters.AddWithValue("@lastVisited", system.LastVisited.ToString("o"));
 
                     cmd.ExecuteNonQuery();
@@ -291,7 +303,7 @@ namespace EliteDataRelay.Services
 
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = @"
-                SELECT SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, LastVisited
+                SELECT SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, NonBodySignals, LastVisited
                 FROM Systems
                 WHERE SystemAddress = @systemAddress
             ";
@@ -309,7 +321,8 @@ namespace EliteDataRelay.Services
                 ScannedBodies = reader.GetInt32(3),
                 MappedBodies = reader.GetInt32(4),
                 FSSProgress = reader.GetDouble(5),
-                LastVisited = DateTime.Parse(reader.GetString(6), null, System.Globalization.DateTimeStyles.RoundtripKind)
+                NonBodySignalsDetected = reader.GetInt32(6),
+                LastVisited = DateTime.Parse(reader.GetString(7), null, System.Globalization.DateTimeStyles.RoundtripKind)
             };
 
             reader.Close();
@@ -403,7 +416,7 @@ namespace EliteDataRelay.Services
 
             using var cmd = _connection.CreateCommand();
             cmd.CommandText = @"
-                SELECT SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, LastVisited
+                SELECT SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies, FSSProgress, NonBodySignals, LastVisited
                 FROM Systems
                 WHERE SystemName = @name
                 ORDER BY LastVisited DESC
@@ -425,7 +438,8 @@ namespace EliteDataRelay.Services
                 ScannedBodies = reader.GetInt32(3),
                 MappedBodies = reader.GetInt32(4),
                 FSSProgress = reader.GetDouble(5),
-                LastVisited = DateTime.Parse(reader.GetString(6), null, System.Globalization.DateTimeStyles.RoundtripKind)
+                NonBodySignalsDetected = reader.GetInt32(6),
+                LastVisited = DateTime.Parse(reader.GetString(7), null, System.Globalization.DateTimeStyles.RoundtripKind)
             };
 
             reader.Close();

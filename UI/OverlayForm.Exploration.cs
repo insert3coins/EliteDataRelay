@@ -163,11 +163,21 @@ namespace EliteDataRelay.UI
                 }
 
                 // === DETAILED SCAN STATUS ===
-                string bodiesText = data.TotalBodies > 0
-                    ? $"Scanned: {data.ScannedBodies} / {data.TotalBodies}"
-                    : $"Scanned: {data.ScannedBodies}";
+                // Filter out barycentres and belt clusters when counting scanned bodies for display
+                int scannedDisplay = data.Bodies.Count(b =>
+                    (b.BodyType?.IndexOf("bary", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf("belt cluster", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf(" ring", StringComparison.OrdinalIgnoreCase) ?? -1) < 0);
 
-                g.DrawString(bodiesText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                if (data.TotalBodies > 0)
+                {
+                    int shown = Math.Min(scannedDisplay, data.TotalBodies);
+                    g.DrawString($"Scanned: {shown} / {data.TotalBodies}", GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                }
+                else
+                {
+                    g.DrawString($"Scanned: {scannedDisplay}", GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                }
                 y += lineHeight;
 
                 // === MAPPED INFO ===
@@ -191,7 +201,7 @@ namespace EliteDataRelay.UI
                 }
 
                 // === NON-BODY SIGNALS SUMMARY (count only) ===
-                int totalSignals = data.SystemSignals?.Sum(s => s.Count) ?? 0;
+                int totalSignals = data.NonBodySignalsDetected > 0 ? data.NonBodySignalsDetected : (data.SystemSignals?.Count ?? 0);
                 if (totalSignals > 0)
                 {
                     string sigText = "Signals: " + totalSignals;

@@ -336,16 +336,20 @@ namespace EliteDataRelay.UI
             {
                 // Update system header
                 _systemNameLabel.Text = systemData.SystemName;
-
                 var statsParts = new List<string>();
-
+                // Display scanned count excluding barycentres and belt clusters
+                int scannedDisplay = systemData.Bodies.Count(b =>
+                    (b.BodyType?.IndexOf("bary", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf("belt cluster", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf(" ring", StringComparison.OrdinalIgnoreCase) ?? -1) < 0);
                 if (systemData.TotalBodies > 0)
                 {
-                    statsParts.Add($"{systemData.ScannedBodies}/{systemData.TotalBodies} bodies scanned");
+                    int shown = Math.Min(scannedDisplay, systemData.TotalBodies);
+                    statsParts.Add($"{shown}/{systemData.TotalBodies} bodies scanned");
                 }
                 else
                 {
-                    statsParts.Add($"{systemData.ScannedBodies} bodies scanned");
+                    statsParts.Add($"{scannedDisplay} bodies scanned");
                 }
 
                 if (systemData.MappedBodies > 0)
@@ -371,7 +375,7 @@ namespace EliteDataRelay.UI
                 }
 
                 // Non-body signals summary
-                int totalSignals = systemData.SystemSignals?.Sum(s => s.Count) ?? 0;
+                int totalSignals = systemData.NonBodySignalsDetected > 0 ? systemData.NonBodySignalsDetected : (systemData.SystemSignals?.Count ?? 0);
                 if (totalSignals > 0)
                 {
                     statsParts.Add($"Signals: {totalSignals}");

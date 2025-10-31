@@ -157,6 +157,7 @@ namespace EliteDataRelay.Services
 
             _currentSystem.TotalBodies = fssEvent.BodyCount;
             _currentSystem.FSSProgress = fssEvent.Progress * 100;
+            _currentSystem.NonBodySignalsDetected = fssEvent.NonBodyCount;
             _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
             Debug.WriteLine($"[ExplorationDataService] FSS scan: {fssEvent.BodyCount} bodies, {fssEvent.Progress * 100:F1}% complete");
@@ -219,12 +220,9 @@ namespace EliteDataRelay.Services
             // Choose a friendly display name prioritising localised values
             string name = evt.USSTypeLocalised ?? evt.SignalNameLocalised ?? evt.USSType ?? evt.SignalName ?? "Signal";
 
+            // Deduplicate by name per system: count represents distinct types encountered
             var existing = _currentSystem.SystemSignals.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
-            if (existing != null)
-            {
-                existing.Count++;
-            }
-            else
+            if (existing == null)
             {
                 _currentSystem.SystemSignals.Add(new SystemSignal { Name = name, Count = 1 });
             }

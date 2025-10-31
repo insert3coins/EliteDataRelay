@@ -35,6 +35,7 @@ namespace EliteDataRelay.Models
         public int ScannedBodies { get; set; }
         public int MappedBodies { get; set; }
         public double FSSProgress { get; set; }
+        public int NonBodySignalsDetected { get; set; }
         public List<ScannedBody> Bodies { get; set; } = new List<ScannedBody>();
         // System-level non-body signals discovered via FSS
         public List<SystemSignal> SystemSignals { get; set; } = new List<SystemSignal>();
