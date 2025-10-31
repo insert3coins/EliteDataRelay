@@ -157,6 +157,9 @@ namespace EliteDataRelay.Services
 
             _currentSystem.TotalBodies = fssEvent.BodyCount;
             _currentSystem.FSSProgress = fssEvent.Progress * 100;
+            // Stop tracking system-level signals
+            _currentSystem.NonBodySignalsDetected = 0;
+            _currentSystem.SystemSignals.Clear();
             _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
 
             Debug.WriteLine($"[ExplorationDataService] FSS scan: {fssEvent.BodyCount} bodies, {fssEvent.Progress * 100:F1}% complete");
@@ -213,24 +216,8 @@ namespace EliteDataRelay.Services
         /// </summary>
         public void HandleFSSSignalDiscovered(FSSSignalDiscoveredEvent evt)
         {
-            Debug.WriteLine($"[ExplorationDataService] FSS signal discovered: {evt.SignalNameLocalised ?? evt.SignalName} (Threat {evt.ThreatLevel})");
-            if (_currentSystem == null) return;
-
-            // Choose a friendly display name prioritising localised values
-            string name = evt.USSTypeLocalised ?? evt.SignalNameLocalised ?? evt.USSType ?? evt.SignalName ?? "Signal";
-
-            var existing = _currentSystem.SystemSignals.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
-            if (existing != null)
-            {
-                existing.Count++;
-            }
-            else
-            {
-                _currentSystem.SystemSignals.Add(new SystemSignal { Name = name, Count = 1 });
-            }
-
-            _currentSystem.LastUpdated = DateTime.UtcNow;
-            EmitSystemChanged();
+            // Signals tracking disabled by request
+            return;
         }
 
         /// <summary>

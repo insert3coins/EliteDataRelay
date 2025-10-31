@@ -174,15 +174,16 @@ namespace EliteDataRelay.Services
                 cmd.Transaction = transaction;
                 cmd.CommandText = @"
                     INSERT INTO Systems (SystemAddress, SystemName, TotalBodies, ScannedBodies, MappedBodies,
-                                        FSSProgress, LastVisited, FirstVisited)
+                                        FSSProgress, NonBodySignals, LastVisited, FirstVisited)
                     VALUES (@systemAddress, @systemName, @totalBodies, @scannedBodies, @mappedBodies,
-                           @fssProgress, @lastVisited, @firstVisited)
+                           @fssProgress, @nonBodySignals, @lastVisited, @firstVisited)
                     ON CONFLICT(SystemAddress) DO UPDATE SET
                         SystemName = @systemName,
                         TotalBodies = @totalBodies,
                         ScannedBodies = @scannedBodies,
                         MappedBodies = @mappedBodies,
                         FSSProgress = @fssProgress,
+                        NonBodySignals = @nonBodySignals,
                         LastVisited = @lastVisited;
                 ";
 
@@ -192,6 +193,7 @@ namespace EliteDataRelay.Services
                 cmd.Parameters.AddWithValue("@scannedBodies", system.ScannedBodies);
                 cmd.Parameters.AddWithValue("@mappedBodies", system.MappedBodies);
                 cmd.Parameters.AddWithValue("@fssProgress", system.FSSProgress);
+                cmd.Parameters.AddWithValue("@nonBodySignals", system.NonBodySignalsDetected);
                 cmd.Parameters.AddWithValue("@lastVisited", system.LastVisited.ToString("o"));
                 cmd.Parameters.AddWithValue("@firstVisited", system.LastVisited.ToString("o"));
 

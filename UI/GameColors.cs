@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using EliteDataRelay.Configuration;
@@ -23,11 +24,8 @@ namespace EliteDataRelay.UI
         public static readonly Color GrayText = Color.FromArgb(160, 160, 160);
         public static readonly Color White = Color.FromArgb(220, 220, 220);
 
-        // Background colors - use configuration
-        public static Color BackgroundDark => Color.FromArgb(220,
-            AppConfiguration.OverlayBackgroundColor.R,
-            AppConfiguration.OverlayBackgroundColor.G,
-            AppConfiguration.OverlayBackgroundColor.B);
+        // Background color uses configured ARGB directly (historical behavior)
+        public static Color BackgroundDark => AppConfiguration.OverlayBackgroundColor;
         public static readonly Color BackgroundMedium = Color.FromArgb(180, 20, 20, 20);
 
         // Border color - use configuration

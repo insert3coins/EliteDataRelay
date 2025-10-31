@@ -6,6 +6,24 @@ namespace EliteDataRelay.UI
 {
     public partial class OverlayForm
     {
+        private const int OverlayCornerRadius = 12;
+
+        private void ApplyRoundedRegion()
+        {
+            try
+            {
+                using (var path = DrawingUtils.CreateRoundedRectPath(new Rectangle(0, 0, this.Width, this.Height), OverlayCornerRadius))
+                {
+                    this.Region?.Dispose();
+                    this.Region = new Region(path);
+                }
+            }
+            catch
+            {
+                // If shaping fails, fall back to normal rectangular region.
+            }
+        }
+
         private void InitializeControls()
         {
             if (_position == OverlayPosition.Info)
@@ -23,6 +41,7 @@ namespace EliteDataRelay.UI
                 _renderPanel.Paint += OnInfoPanelPaint;
 
                 Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
             }
             else if (_position == OverlayPosition.Cargo)
             {
@@ -39,6 +58,7 @@ namespace EliteDataRelay.UI
                 _renderPanel.Paint += OnCargoPanelPaint;
 
                 Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
             }
             else if (_position == OverlayPosition.ShipIcon)
             {
@@ -55,6 +75,7 @@ namespace EliteDataRelay.UI
                 _renderPanel.Paint += OnShipIconPanelPaint;
 
                 Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
             }
             else if (_position == OverlayPosition.Exploration)
             {
@@ -73,6 +94,7 @@ namespace EliteDataRelay.UI
                 _renderPanel.Paint += OnExplorationPanelPaint;
 
                 Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
             }
         }
 

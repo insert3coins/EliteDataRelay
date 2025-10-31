@@ -36,6 +36,8 @@ namespace EliteDataRelay.UI
                 {
                     _overlayTextColor = colorDialog.Color;
                     UpdateAppearanceControls();
+                    AppConfiguration.OverlayTextColor = _overlayTextColor;
+                    LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -49,6 +51,9 @@ namespace EliteDataRelay.UI
                 {
                     _overlayBackColor = colorDialog.Color;
                     UpdateAppearanceControls();
+                    // Apply live so users can preview immediately
+                    AppConfiguration.OverlayBackgroundColor = _overlayBackColor;
+                    LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -62,6 +67,8 @@ namespace EliteDataRelay.UI
                 {
                     _overlayBorderColor = colorDialog.Color;
                     UpdateAppearanceControls();
+                    AppConfiguration.OverlayBorderColor = _overlayBorderColor;
+                    LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -70,6 +77,9 @@ namespace EliteDataRelay.UI
         {
             _overlayOpacity = _trackBarOpacity.Value;
             UpdateAppearanceControls();
+            // Apply live so the background translucency updates immediately
+            AppConfiguration.OverlayOpacity = _overlayOpacity;
+            LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnResetOverlaySettingsClicked(object? sender, EventArgs e)

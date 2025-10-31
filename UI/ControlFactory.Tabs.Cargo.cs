@@ -99,14 +99,10 @@ namespace EliteDataRelay.UI
             };
 
             // Add columns
-            CargoGridView.Columns.Add(new DataGridViewTextBoxColumn { Name = "Commodity", HeaderText = "COMMODITY" });
-            CargoGridView.Columns.Add(new DataGridViewTextBoxColumn { Name = "Quantity", HeaderText = "QUANTITY" });
-            CargoGridView.Columns.Add(new DataGridViewTextBoxColumn { Name = "Category", HeaderText = "CATEGORY" });
-
-            // Manually set column widths for better control over layout and scrolling
-            CargoGridView.Columns["Commodity"].FillWeight = 60;
-            CargoGridView.Columns["Quantity"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            CargoGridView.Columns["Category"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            var colCommodity = new DataGridViewTextBoxColumn { Name = "Commodity", HeaderText = "COMMODITY", FillWeight = 60 };
+            var colQuantity = new DataGridViewTextBoxColumn { Name = "Quantity", HeaderText = "QUANTITY", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells };
+            var colCategory = new DataGridViewTextBoxColumn { Name = "Category", HeaderText = "CATEGORY", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill };
+            CargoGridView.Columns.AddRange(colCommodity, colQuantity, colCategory);
 
             // Events
             CargoGridView!.CellPainting += CargoGrid_CellPainting;

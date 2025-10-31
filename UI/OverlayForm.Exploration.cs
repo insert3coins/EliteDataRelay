@@ -107,14 +107,15 @@ namespace EliteDataRelay.UI
                 // Clear background
                 g.Clear(Color.Transparent);
 
-                // Draw semi-transparent background
+                // Draw semi-transparent rounded background and border
+                var rect = new Rectangle(0, 0, width - 1, height - 1);
+                using (var path = DrawingUtils.CreateRoundedRectPath(rect, 12))
                 using (var bgBrush = new SolidBrush(GameColors.BackgroundDark))
+                using (var borderPen = GameColors.PenBorder2)
                 {
-                    g.FillRectangle(bgBrush, 0, 0, width, height);
+                    g.FillPath(bgBrush, path);
+                    g.DrawPath(borderPen, path);
                 }
-
-                // Draw border
-                g.DrawRectangle(GameColors.PenBorder2, 0, 0, width - 1, height - 1);
 
                 // Layout constants
                 const int padding = 12;
@@ -163,11 +164,21 @@ namespace EliteDataRelay.UI
                 }
 
                 // === DETAILED SCAN STATUS ===
-                string bodiesText = data.TotalBodies > 0
-                    ? $"Scanned: {data.ScannedBodies} / {data.TotalBodies}"
-                    : $"Scanned: {data.ScannedBodies}";
+                // Filter out barycentres and belt clusters when counting scanned bodies for display
+                int scannedDisplay = data.Bodies.Count(b =>
+                    (b.BodyType?.IndexOf("bary", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf("belt cluster", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf(" ring", StringComparison.OrdinalIgnoreCase) ?? -1) < 0);
 
-                g.DrawString(bodiesText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                if (data.TotalBodies > 0)
+                {
+                    int shown = Math.Min(scannedDisplay, data.TotalBodies);
+                    g.DrawString($"Scanned: {shown} / {data.TotalBodies}", GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                }
+                else
+                {
+                    g.DrawString($"Scanned: {scannedDisplay}", GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                }
                 y += lineHeight;
 
                 // === MAPPED INFO ===
@@ -190,14 +201,7 @@ namespace EliteDataRelay.UI
                     y += lineHeight;
                 }
 
-                // === NON-BODY SIGNALS SUMMARY (count only) ===
-                int totalSignals = data.SystemSignals?.Sum(s => s.Count) ?? 0;
-                if (totalSignals > 0)
-                {
-                    string sigText = "Signals: " + totalSignals;
-                    g.DrawString(sigText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
-                    y += lineHeight;
-                }
+                // Signals removed from overlay
 
                 // === BIOLOGICAL CODEX SUMMARY ===
                 int bioCodex = data.CodexBiologicalEntries?.Count ?? 0;

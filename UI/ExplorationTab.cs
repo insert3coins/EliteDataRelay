@@ -311,12 +311,7 @@ namespace EliteDataRelay.UI
                 }
             });
 
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "Signals",
-                HeaderText = "Signals",
-                FillWeight = 13
-            });
+            // Signals column removed
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -336,16 +331,20 @@ namespace EliteDataRelay.UI
             {
                 // Update system header
                 _systemNameLabel.Text = systemData.SystemName;
-
                 var statsParts = new List<string>();
-
+                // Display scanned count excluding barycentres and belt clusters
+                int scannedDisplay = systemData.Bodies.Count(b =>
+                    (b.BodyType?.IndexOf("bary", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf("belt cluster", StringComparison.OrdinalIgnoreCase) ?? -1) < 0 &&
+                    (b.BodyName?.IndexOf(" ring", StringComparison.OrdinalIgnoreCase) ?? -1) < 0);
                 if (systemData.TotalBodies > 0)
                 {
-                    statsParts.Add($"{systemData.ScannedBodies}/{systemData.TotalBodies} bodies scanned");
+                    int shown = Math.Min(scannedDisplay, systemData.TotalBodies);
+                    statsParts.Add($"{shown}/{systemData.TotalBodies} bodies scanned");
                 }
                 else
                 {
-                    statsParts.Add($"{systemData.ScannedBodies} bodies scanned");
+                    statsParts.Add($"{scannedDisplay} bodies scanned");
                 }
 
                 if (systemData.MappedBodies > 0)
@@ -370,12 +369,7 @@ namespace EliteDataRelay.UI
                     }
                 }
 
-                // Non-body signals summary
-                int totalSignals = systemData.SystemSignals?.Sum(s => s.Count) ?? 0;
-                if (totalSignals > 0)
-                {
-                    statsParts.Add($"Signals: {totalSignals}");
-                }
+                // Signals summary removed
 
                 // Codex bio entries
                 int bioCodex = systemData.CodexBiologicalEntries?.Count ?? 0;
@@ -424,18 +418,7 @@ namespace EliteDataRelay.UI
                         ? (body.Landable.Value ? "✓" : "—")
                         : "—";
 
-                    // Signals summary
-                    string signals = "—";
-                    if (body.BiologicalSignals.Any())
-                    {
-                        var bioCount = body.BiologicalSignals.Count;
-                        signals = $"🧬 {bioCount} bio";
-                    }
-                    else if (body.Signals.Any())
-                    {
-                        var totalSigCount = body.Signals.Sum(s => s.Count);
-                        signals = totalSigCount.ToString();
-                    }
+                    // Signals summary removed
 
                     // Status with icon
                     string status = "Scanned";
@@ -460,7 +443,7 @@ namespace EliteDataRelay.UI
                         status = "Known";
                     }
 
-                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, landable, signals, status);
+                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, landable, status);
 
                     // Subtle color coding
                     if (body.FirstFootfall)
@@ -544,3 +527,4 @@ namespace EliteDataRelay.UI
         }
     }
 }
+

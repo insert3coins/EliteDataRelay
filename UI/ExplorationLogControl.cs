@@ -231,12 +231,14 @@ namespace EliteDataRelay.UI
                 FillWeight = 60
             });
 
-            grid.Columns.Add(new DataGridViewTextBoxColumn
+            var bodiesColumn = new DataGridViewTextBoxColumn
             {
                 Name = "Bodies",
                 HeaderText = "Bodies",
                 FillWeight = 20
-            });
+            };
+            bodiesColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            grid.Columns.Add(bodiesColumn);
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -252,7 +254,7 @@ namespace EliteDataRelay.UI
                 Visible = false
             });
 
-            grid.Columns["Bodies"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            
 
             grid.SelectionChanged += OnSystemSelected;
 
@@ -377,7 +379,13 @@ namespace EliteDataRelay.UI
 
                     var timeAgo = GetTimeAgo(system.LastVisited);
 
-                    row.CreateCells(_systemsGrid, system.SystemName, bodiesText, timeAgo, system.SystemAddress.ToString());
+                    row.CreateCells(_systemsGrid, new object[]
+                    {
+                        system.SystemName ?? string.Empty,
+                        bodiesText ?? string.Empty,
+                        timeAgo ?? string.Empty,
+                        system.SystemAddress.ToString() ?? string.Empty
+                    });
                     rows.Add(row);
                 }
 
