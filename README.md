@@ -12,9 +12,10 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 
 **Exploration Logging**
 - Automatically records every system visited with timestamps
-- Logs all scanned and mapped bodies, highlighting first discoveries and first footfalls
-- SQLite database for persistent exploration history with FSS progress tracking
-- Estimates and tracks exploration data value
+- Logs all scanned and mapped bodies, highlighting first discoveries, first mappings, and first footfalls
+- Tracks FSS progress and completion (via FSSDiscoveryScan, FSSAllBodiesFound, NavBeaconScan, legacy DiscoveryScan)
+- Records non-body signals discovered by FSS (system-level counts) and biological Codex entries
+- SQLite database for persistent exploration history; includes system signals and Codex bio entries
 
 **Real-Time Data Monitoring**
 - Ship status, cargo hold, and material inventory tracking
@@ -32,6 +33,19 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Matching styles and sizes for Info, Cargo, Ship Icon, and Exploration
 - Auto‑updates live via WebSocket (no scene refresh required)
 - Endpoints: `/info`, `/cargo`, `/ship-icon`, `/exploration`
+
+---
+
+## Exploration Enhancements (latest)
+
+- Accurate FSS completion and body totals (FSSAllBodiesFound, NavBeaconScan, DiscoveryScan)
+- Completion badges: “All scanned” and “All mapped” based on planet-class mappability
+- Mappability parity with game intent using a planet-class whitelist
+- Non-body signals (USS/POI) shown as counts, with top categories in desktop overlay
+- Biological Codex entries tracked and surfaced as a count
+- Web overlay: corrected FSS percentage, added Completion/Signals/Codex rows
+- Persistence: signals and Codex bio entries saved to SQLite and restored on load
+- Importer: backfills new fields from historical journals safely and efficiently
 
 **Streaming & Content Creation**
 - Text file output with customizable format templates

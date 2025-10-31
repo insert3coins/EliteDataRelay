@@ -86,6 +86,21 @@ namespace EliteDataRelay.Services
 
                 CREATE INDEX IF NOT EXISTS idx_bodies_system ON Bodies(SystemAddress);
                 CREATE INDEX IF NOT EXISTS idx_systems_last_visited ON Systems(LastVisited);
+
+                CREATE TABLE IF NOT EXISTS SystemSignals (
+                    SystemAddress INTEGER NOT NULL,
+                    Name TEXT NOT NULL,
+                    Count INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (SystemAddress, Name),
+                    FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS CodexBiologicalEntries (
+                    SystemAddress INTEGER NOT NULL,
+                    Entry TEXT NOT NULL,
+                    PRIMARY KEY (SystemAddress, Entry),
+                    FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
+                );
             ";
 
             cmd.ExecuteNonQuery();
@@ -165,6 +180,47 @@ namespace EliteDataRelay.Services
                 foreach (var body in system.Bodies)
                 {
                     SaveBody(body, system.SystemAddress.Value);
+                }
+
+                // Replace system-level signals with current snapshot
+                using (var delSig = _connection.CreateCommand())
+                {
+                    delSig.CommandText = "DELETE FROM SystemSignals WHERE SystemAddress = @sa";
+                    delSig.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                    delSig.ExecuteNonQuery();
+                }
+                if (system.SystemSignals != null && system.SystemSignals.Count > 0)
+                {
+                    foreach (var sig in system.SystemSignals)
+                    {
+                        using var insSig = _connection.CreateCommand();
+                        insSig.CommandText = @"INSERT OR REPLACE INTO SystemSignals (SystemAddress, Name, Count)
+                                               VALUES (@sa, @name, @count)";
+                        insSig.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                        insSig.Parameters.AddWithValue("@name", sig.Name);
+                        insSig.Parameters.AddWithValue("@count", sig.Count);
+                        insSig.ExecuteNonQuery();
+                    }
+                }
+
+                // Replace codex biological entries with current snapshot
+                using (var delCod = _connection.CreateCommand())
+                {
+                    delCod.CommandText = "DELETE FROM CodexBiologicalEntries WHERE SystemAddress = @sa";
+                    delCod.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                    delCod.ExecuteNonQuery();
+                }
+                if (system.CodexBiologicalEntries != null && system.CodexBiologicalEntries.Count > 0)
+                {
+                    foreach (var entry in system.CodexBiologicalEntries)
+                    {
+                        using var insCod = _connection.CreateCommand();
+                        insCod.CommandText = @"INSERT OR REPLACE INTO CodexBiologicalEntries (SystemAddress, Entry)
+                                               VALUES (@sa, @entry)";
+                        insCod.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                        insCod.Parameters.AddWithValue("@entry", entry);
+                        insCod.ExecuteNonQuery();
+                    }
                 }
 
                 transaction.Commit();
@@ -261,7 +317,31 @@ namespace EliteDataRelay.Services
             // Load bodies
             system.Bodies = LoadBodies(systemAddress);
 
-            Debug.WriteLine($"[ExplorationDatabaseService] Loaded system from cache: {system.SystemName} ({system.Bodies.Count} bodies)");
+            // Load system-level signals
+            using (var sigCmd = _connection.CreateCommand())
+            {
+                sigCmd.CommandText = "SELECT Name, Count FROM SystemSignals WHERE SystemAddress = @sa ORDER BY Count DESC, Name";
+                sigCmd.Parameters.AddWithValue("@sa", systemAddress);
+                using var r = sigCmd.ExecuteReader();
+                while (r.Read())
+                {
+                    system.SystemSignals.Add(new SystemSignal { Name = r.GetString(0), Count = r.GetInt32(1) });
+                }
+            }
+
+            // Load biological codex entries
+            using (var codCmd = _connection.CreateCommand())
+            {
+                codCmd.CommandText = "SELECT Entry FROM CodexBiologicalEntries WHERE SystemAddress = @sa ORDER BY Entry";
+                codCmd.Parameters.AddWithValue("@sa", systemAddress);
+                using var r2 = codCmd.ExecuteReader();
+                while (r2.Read())
+                {
+                    system.CodexBiologicalEntries.Add(r2.GetString(0));
+                }
+            }
+
+            Debug.WriteLine($"[ExplorationDatabaseService] Loaded system from cache: {system.SystemName} ({system.Bodies.Count} bodies, {system.SystemSignals.Count} signals, {system.CodexBiologicalEntries.Count} codex bio)");
             return system;
         }
 
@@ -352,6 +432,30 @@ namespace EliteDataRelay.Services
 
             // Load bodies for that system
             system.Bodies = LoadBodies(systemAddress);
+
+            // Load system-level signals
+            using (var sigCmd = _connection.CreateCommand())
+            {
+                sigCmd.CommandText = "SELECT Name, Count FROM SystemSignals WHERE SystemAddress = @sa ORDER BY Count DESC, Name";
+                sigCmd.Parameters.AddWithValue("@sa", systemAddress);
+                using var r = sigCmd.ExecuteReader();
+                while (r.Read())
+                {
+                    system.SystemSignals.Add(new SystemSignal { Name = r.GetString(0), Count = r.GetInt32(1) });
+                }
+            }
+
+            // Load biological codex entries
+            using (var codCmd = _connection.CreateCommand())
+            {
+                codCmd.CommandText = "SELECT Entry FROM CodexBiologicalEntries WHERE SystemAddress = @sa ORDER BY Entry";
+                codCmd.Parameters.AddWithValue("@sa", systemAddress);
+                using var r2 = codCmd.ExecuteReader();
+                while (r2.Read())
+                {
+                    system.CodexBiologicalEntries.Add(r2.GetString(0));
+                }
+            }
             return system;
         }
 

@@ -143,6 +143,24 @@ namespace EliteDataRelay.Services
                                         if (e != null) _explorationDataService.HandleFSSDiscoveryScan(e, timestamp);
                                         break;
                                     }
+                                case "FSSAllBodiesFound":
+                                    {
+                                        var e = JsonSerializer.Deserialize<FSSAllBodiesFoundEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleFSSAllBodiesFound(e, timestamp);
+                                        break;
+                                    }
+                                case "DiscoveryScan":
+                                    {
+                                        var e = JsonSerializer.Deserialize<DiscoveryScanEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleDiscoveryScan(e, timestamp);
+                                        break;
+                                    }
+                                case "NavBeaconScan":
+                                    {
+                                        var e = JsonSerializer.Deserialize<NavBeaconScanEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleNavBeaconScan(e, timestamp);
+                                        break;
+                                    }
                                 case "Scan":
                                     {
                                         var e = JsonSerializer.Deserialize<ScanEvent>(line, options);
@@ -167,10 +185,40 @@ namespace EliteDataRelay.Services
                                         if (e != null) _explorationDataService.HandleSAASignalsFound(e, timestamp);
                                         break;
                                     }
+                                case "FirstFootfall":
+                                    {
+                                        var e = JsonSerializer.Deserialize<FirstFootfallEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleFirstFootfall(e, timestamp);
+                                        break;
+                                    }
+                                case "ScanOrganic":
+                                    {
+                                        var e = JsonSerializer.Deserialize<ScanOrganicEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleScanOrganic(e, timestamp);
+                                        break;
+                                    }
+                                case "CodexEntry":
+                                    {
+                                        var e = JsonSerializer.Deserialize<CodexEntryEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleCodexEntry(e);
+                                        break;
+                                    }
+                                case "FSSSignalDiscovered":
+                                    {
+                                        var e = JsonSerializer.Deserialize<FSSSignalDiscoveredEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleFSSSignalDiscovered(e);
+                                        break;
+                                    }
                                 case "SellExplorationData":
                                     {
                                         var e = JsonSerializer.Deserialize<SellExplorationDataEvent>(line, options);
                                         if (e != null) _explorationDataService.HandleSellExplorationData(e, timestamp);
+                                        break;
+                                    }
+                                case "SellOrganicData":
+                                    {
+                                        var e = JsonSerializer.Deserialize<SellOrganicDataEvent>(line, options);
+                                        if (e != null) _explorationDataService.HandleSellOrganicData(e);
                                         break;
                                     }
                                 default:

@@ -134,6 +134,46 @@ namespace EliteDataRelay.Services
         public event EventHandler<SAASignalsFoundEvent>? SAASignalsFound;
 
         /// <summary>
+        /// Event raised when FSS reports all bodies found in a system.
+        /// </summary>
+        public event EventHandler<FSSAllBodiesFoundEvent>? FSSAllBodiesFound;
+
+        /// <summary>
+        /// Event raised for legacy DiscoveryScan (pre-FSS) body count.
+        /// </summary>
+        public event EventHandler<DiscoveryScanEvent>? DiscoveryScan;
+
+        /// <summary>
+        /// Event raised when FSS discovers a non-body signal (USS/POI).
+        /// </summary>
+        public event EventHandler<FSSSignalDiscoveredEvent>? FSSSignalDiscovered;
+
+        /// <summary>
+        /// Event raised when a Nav Beacon scan provides system body count.
+        /// </summary>
+        public event EventHandler<NavBeaconScanEvent>? NavBeaconScan;
+
+        /// <summary>
+        /// Event raised when first footfall is achieved (Odyssey).
+        /// </summary>
+        public event EventHandler<FirstFootfallEvent>? FirstFootfall;
+
+        /// <summary>
+        /// Event raised when organic scan is performed (Odyssey).
+        /// </summary>
+        public event EventHandler<ScanOrganicEvent>? ScanOrganic;
+
+        /// <summary>
+        /// Event raised when organic data is sold (Vista Genomics).
+        /// </summary>
+        public event EventHandler<SellOrganicDataEvent>? SellOrganicData;
+
+        /// <summary>
+        /// Event raised for general Codex entries.
+        /// </summary>
+        public event EventHandler<CodexEntryEvent>? CodexEntry;
+
+        /// <summary>
         /// Event raised when exploration data is sold.
         /// </summary>
         public event EventHandler<SellExplorationDataEvent>? SellExplorationData;

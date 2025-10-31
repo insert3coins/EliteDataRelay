@@ -1,39 +1,36 @@
 # Elite Data Relay — Mini Release Notes
 
-## Highlights
-- One‑time Exploration History Import now fully seeds the database and activates the Exploration view reliably after completion.
-- Exploration UI and overlays refresh immediately after import; the “No System Selected” state is resolved automatically.
+## What’s New (Exploration)
 
-## Fixes & Improvements
-- Import completion popup: shows a small window popup (“Exploration History Import”) instead of a tray balloon.
-- Current system activation after import:
-  - Uses the app’s current Location event (name + SystemAddress when available).
-  - Falls back to resolving by system name from the database if the address is missing.
-  - Final fallback: most‑recent visited system from the database.
-  - Forces the “Current System” tab header to update immediately.
-- Exploration Log time display: extended beyond 1 day.
-  - Shows minutes, hours, days (up to 60), then months and years for older entries.
-- Overlay/web overlay sync: when monitoring is active, exploration data and session stats are pushed to overlays and the web overlay immediately after import.
-- Safer, smoother import: UI events suppressed and async DB writer paused during import to avoid cross‑thread UI churn and freezes.
+- Accurate FSS completion and totals
+  - Handles FSSDiscoveryScan, FSSAllBodiesFound, NavBeaconScan, and legacy DiscoveryScan.
+  - Shows completion badges: “All scanned” and “All mapped”.
 
-## Exploration History Import
-- Runs automatically once after update; scans historical `Journal.*.log`.
-- Preserves journal timestamps:
-  - `LastVisited` uses the original journal event time.
-  - `FirstVisited` captures the first event seen for that system.
-- Safe re‑runs: updates existing rows without duplicating bodies.
+- Mappability parity
+  - Uses a planet‑class whitelist to determine DSS‑mappable bodies (matches game intent).
 
-Re‑run the import
-1) Close Elite Data Relay.
-2) Edit `%APPDATA%\EliteDataRelay\settings.json` and set `"ExplorationHistoryImported": false`.
-3) (Optional) Delete `%APPDATA%\EliteDataRelay\exploration.db` to rebuild from scratch.
-4) Start the app; the importer runs again on startup.
+- Signals and Codex
+  - Aggregates non‑body signals (USS/POI) per system and shows counts in UI/overlays.
+  - Records biological Codex entries; shows count in UI/overlays.
 
-## Paths
-- Settings: `%APPDATA%\EliteDataRelay\settings.json`
-- Exploration DB: `%APPDATA%\EliteDataRelay\exploration.db`
-- Logs: `%APPDATA%\EliteDataRelay\debug_log.txt`, `%APPDATA%\EliteDataRelay\crash_log.txt`
+- Overlays updates
+  - Desktop overlay: FSS %, mapped/scanned, completion badges, Signals (count only), Codex bio count.
+  - Web overlay: fixed FSS percent (no double scaling) and added Completion/Signals/Codex rows.
+
+- Persistence
+  - New SQLite tables persist system‑level signals and biological Codex entries.
+  - Data is restored on load and visible in UI/overlays.
+
+- Importer
+  - Backfills FSS totals, signals, Codex bio, exobiology, first footfall, and SAA from historical journals.
+  - Runs with UI events suppressed and background writer paused for smooth imports.
+
+## Quick Tips
+
+- Start monitoring, jump into a new system, run FSS: the overlay/tab should flip to “FSS: Complete” when done and show Signals if found.
+- Map a body to trigger “All mapped” when all mappable bodies are done.
 
 ## Notes
-- Web overlay endpoints (optional): `http://localhost:9005/info`, `/cargo`, `/ship-icon`, `/exploration`.
-- Overlays are draggable and configurable; use “Reposition Overlays” in Settings.
+
+- Web Overlay endpoints: `http://localhost:9005/info`, `/cargo`, `/ship-icon`, `/exploration`.
+- Settings/DB: `%APPDATA%\EliteDataRelay\settings.json`, `%APPDATA%\EliteDataRelay\exploration.db`.

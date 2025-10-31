@@ -212,10 +212,18 @@ namespace EliteDataRelay
 
             // Wire up exploration events
             _journalWatcherService.FSSDiscoveryScan += (sender, e) => _explorationDataService.HandleFSSDiscoveryScan(e);
+            _journalWatcherService.FSSAllBodiesFound += (sender, e) => _explorationDataService.HandleFSSAllBodiesFound(e);
+            _journalWatcherService.NavBeaconScan += (sender, e) => _explorationDataService.HandleNavBeaconScan(e);
+            _journalWatcherService.FSSSignalDiscovered += (sender, e) => _explorationDataService.HandleFSSSignalDiscovered(e);
+            _journalWatcherService.DiscoveryScan += (sender, e) => _explorationDataService.HandleDiscoveryScan(e);
             _journalWatcherService.BodyScanned += (sender, e) => _explorationDataService.HandleScan(e);
             _journalWatcherService.SAAScanComplete += (sender, e) => _explorationDataService.HandleSAAScanComplete(e);
             _journalWatcherService.FSSBodySignals += (sender, e) => _explorationDataService.HandleFSSBodySignals(e);
             _journalWatcherService.SAASignalsFound += (sender, e) => _explorationDataService.HandleSAASignalsFound(e);
+            _journalWatcherService.FirstFootfall += (sender, e) => _explorationDataService.HandleFirstFootfall(e);
+            _journalWatcherService.ScanOrganic += (sender, e) => _explorationDataService.HandleScanOrganic(e);
+            _journalWatcherService.SellOrganicData += (sender, e) => _explorationDataService.HandleSellOrganicData(e);
+            _journalWatcherService.CodexEntry += (sender, e) => _explorationDataService.HandleCodexEntry(e);
             _journalWatcherService.Touchdown += (sender, e) => _explorationDataService.HandleTouchdown(e);
             _journalWatcherService.SellExplorationData += (sender, e) => {
                 _explorationDataService.HandleSellExplorationData(e);

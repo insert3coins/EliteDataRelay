@@ -168,6 +168,177 @@ namespace EliteDataRelay.Services
         }
 
         /// <summary>
+        /// Handles FSSAllBodiesFound event (explicit FSS completion and total bodies).
+        /// </summary>
+        public void HandleFSSAllBodiesFound(FSSAllBodiesFoundEvent evt, DateTime? eventTimestamp = null)
+        {
+            if (_currentSystem == null || evt.SystemAddress != _currentSystem.SystemAddress)
+            {
+                Debug.WriteLine("[ExplorationDataService] FSSAllBodiesFound for different system, skipping");
+                return;
+            }
+
+            _currentSystem.TotalBodies = Math.Max(_currentSystem.TotalBodies, evt.Count);
+            _currentSystem.FSSProgress = 100;
+            _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
+
+            Debug.WriteLine($"[ExplorationDataService] FSSAllBodiesFound: {_currentSystem.TotalBodies} bodies");
+            _database.SaveSystemAsync(_currentSystem);
+            EmitSystemChanged();
+        }
+
+        /// <summary>
+        /// Handles NavBeaconScan which provides NumBodies for the current system.
+        /// Treat as equivalent to FSS completion for totals.
+        /// </summary>
+        public void HandleNavBeaconScan(NavBeaconScanEvent evt, DateTime? eventTimestamp = null)
+        {
+            if (_currentSystem == null || evt.SystemAddress != _currentSystem.SystemAddress)
+            {
+                Debug.WriteLine("[ExplorationDataService] NavBeaconScan for different system, skipping");
+                return;
+            }
+
+            _currentSystem.TotalBodies = Math.Max(_currentSystem.TotalBodies, evt.NumBodies);
+            _currentSystem.FSSProgress = 100;
+            _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
+
+            Debug.WriteLine($"[ExplorationDataService] NavBeaconScan: {_currentSystem.TotalBodies} bodies");
+            _database.SaveSystemAsync(_currentSystem);
+            EmitSystemChanged();
+        }
+
+        /// <summary>
+        /// Optionally handle FSSSignalDiscovered (non-body signals). Currently informational.
+        /// </summary>
+        public void HandleFSSSignalDiscovered(FSSSignalDiscoveredEvent evt)
+        {
+            Debug.WriteLine($"[ExplorationDataService] FSS signal discovered: {evt.SignalNameLocalised ?? evt.SignalName} (Threat {evt.ThreatLevel})");
+            if (_currentSystem == null) return;
+
+            // Choose a friendly display name prioritising localised values
+            string name = evt.USSTypeLocalised ?? evt.SignalNameLocalised ?? evt.USSType ?? evt.SignalName ?? "Signal";
+
+            var existing = _currentSystem.SystemSignals.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+            {
+                existing.Count++;
+            }
+            else
+            {
+                _currentSystem.SystemSignals.Add(new SystemSignal { Name = name, Count = 1 });
+            }
+
+            _currentSystem.LastUpdated = DateTime.UtcNow;
+            EmitSystemChanged();
+        }
+
+        /// <summary>
+        /// Handles legacy DiscoveryScan event.
+        /// </summary>
+        public void HandleDiscoveryScan(DiscoveryScanEvent evt, DateTime? eventTimestamp = null)
+        {
+            if (_currentSystem == null) return;
+            if (evt.SystemAddress.HasValue && evt.SystemAddress != _currentSystem.SystemAddress) return;
+
+            _currentSystem.TotalBodies = Math.Max(_currentSystem.TotalBodies, evt.Bodies);
+            // DiscoveryScan implies the ping completed; treat like FSS complete for totals-only.
+            _currentSystem.FSSProgress = Math.Max(_currentSystem.FSSProgress, 100);
+            _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
+
+            Debug.WriteLine($"[ExplorationDataService] DiscoveryScan: {_currentSystem.TotalBodies} bodies");
+            _database.SaveSystemAsync(_currentSystem);
+            EmitSystemChanged();
+        }
+
+        /// <summary>
+        /// Handles FirstFootfall event (definitive).
+        /// </summary>
+        public void HandleFirstFootfall(FirstFootfallEvent evt, DateTime? eventTimestamp = null)
+        {
+            if (_currentSystem == null || evt.SystemAddress != _currentSystem.SystemAddress) return;
+
+            var body = _currentSystem.Bodies.FirstOrDefault(b => b.BodyID == evt.BodyID);
+            if (body != null && !body.FirstFootfall)
+            {
+                body.FirstFootfall = true;
+                _sessionData.FirstFootfalls++;
+                _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
+                _database.SaveSystemAsync(_currentSystem);
+                EmitSystemChanged();
+                EmitSessionChanged();
+            }
+        }
+
+        /// <summary>
+        /// Handles ScanOrganic (exobiology) event.
+        /// </summary>
+        public void HandleScanOrganic(ScanOrganicEvent evt, DateTime? eventTimestamp = null)
+        {
+            if (_currentSystem == null || evt.SystemAddress != _currentSystem.SystemAddress) return;
+
+            var body = _currentSystem.Bodies.FirstOrDefault(b => b.BodyID == evt.BodyID);
+            if (body == null && evt.BodyID.HasValue)
+            {
+                // Create a minimal placeholder body if needed
+                body = new ScannedBody
+                {
+                    BodyID = evt.BodyID,
+                    BodyName = evt.BodyName ?? $"Body {evt.BodyID}",
+                    BodyType = "Unknown"
+                };
+                _currentSystem.Bodies.Add(body);
+            }
+
+            if (body != null)
+            {
+                var parts = new List<string>();
+                if (!string.IsNullOrWhiteSpace(evt.Genus)) parts.Add(evt.Genus!);
+                if (!string.IsNullOrWhiteSpace(evt.Species)) parts.Add(evt.Species!);
+                if (!string.IsNullOrWhiteSpace(evt.Variant)) parts.Add(evt.Variant!);
+                var label = string.Join(" ", parts);
+                if (!string.IsNullOrWhiteSpace(label) && !body.BiologicalSignals.Contains(label))
+                {
+                    body.BiologicalSignals.Add(label);
+                }
+
+                _currentSystem.LastUpdated = eventTimestamp ?? DateTime.UtcNow;
+                _database.SaveSystemAsync(_currentSystem);
+                EmitSystemChanged();
+            }
+        }
+
+        /// <summary>
+        /// Handles SellOrganicData (Vista Genomics) event.
+        /// </summary>
+        public void HandleSellOrganicData(SellOrganicDataEvent evt)
+        {
+            _sessionData.SoldValue += evt.TotalEarnings;
+            Debug.WriteLine($"[ExplorationDataService] Sold organic data for {evt.TotalEarnings:N0} CR");
+            EmitSessionChanged();
+        }
+
+        /// <summary>
+        /// Handles CodexEntry event (currently informational only for exploration UI).
+        /// </summary>
+        public void HandleCodexEntry(CodexEntryEvent evt)
+        {
+            // For now, we simply log biological codex entries.
+            if (!string.IsNullOrEmpty(evt.Category) && evt.Category.Equals("Biological", StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.WriteLine($"[ExplorationDataService] Codex biological entry: {evt.NameLocalised ?? evt.Name}");
+                if (_currentSystem == null) return;
+                var label = evt.NameLocalised ?? evt.Name;
+                if (!string.IsNullOrWhiteSpace(label) && !_currentSystem.CodexBiologicalEntries.Contains(label, StringComparer.OrdinalIgnoreCase))
+                {
+                    _currentSystem.CodexBiologicalEntries.Add(label);
+                    _currentSystem.LastUpdated = DateTime.UtcNow;
+                    EmitSystemChanged();
+                }
+            }
+        }
+
+        /// <summary>
         /// Handles a Scan event (detailed scan of a body).
         /// </summary>
         public void HandleScan(ScanEvent scanEvent, DateTime? eventTimestamp = null)
