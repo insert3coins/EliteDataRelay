@@ -103,8 +103,9 @@ namespace EliteDataRelay.UI
 
             // Add columns
             grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Material", HeaderText = "MATERIAL", FillWeight = 75 });
-            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Count", HeaderText = "COUNT", FillWeight = 25 });
-            grid.Columns["Count"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            var countColumn = new DataGridViewTextBoxColumn { Name = "Count", HeaderText = "COUNT", FillWeight = 25 };
+            countColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            grid.Columns.Add(countColumn);
 
             return grid;
         }

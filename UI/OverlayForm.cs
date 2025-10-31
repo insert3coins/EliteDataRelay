@@ -163,7 +163,7 @@ namespace EliteDataRelay.UI
         {
             base.OnLoad(e);
 
-            // Set the form's opacity to achieve a semi-transparent effect.
+            // Restore historical behavior: slider controls window opacity.
             this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
 
             _animationTimer?.Start();
@@ -215,13 +215,8 @@ namespace EliteDataRelay.UI
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            // Base painting only; borders and backgrounds are drawn in panel renderers.
             base.OnPaint(e);
-
-            // Draw a standard border for all overlays
-            using (var pen = new Pen(Color.FromArgb(100, 100, 100)))
-            {
-                e.Graphics.DrawRectangle(pen, 0, 0, this.ClientSize.Width - 1, this.ClientSize.Height - 1);
-            }
         }
 
         private void AnimationTimer_Tick(object? sender, EventArgs e)

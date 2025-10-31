@@ -70,6 +70,7 @@ namespace EliteDataRelay.Configuration
                         OverlayTextColor = config.OverlayTextColor;
                         OverlayBackgroundColor = config.OverlayBackgroundColor;
                         OverlayBorderColor = config.OverlayBorderColor;
+                        OverlayOpacity = config.OverlayOpacity;
                         InfoOverlayLocation = config.InfoOverlayLocation;
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
@@ -162,6 +163,7 @@ namespace EliteDataRelay.Configuration
                     EnableWebOverlayServer = AppConfiguration.EnableWebOverlayServer,
                     WebOverlayPort = AppConfiguration.WebOverlayPort,
                     WebOverlayOpacity = AppConfiguration.WebOverlayOpacity,
+                    OverlayOpacity = AppConfiguration.OverlayOpacity,
                 };
 
                 var options = new JsonSerializerOptions 
@@ -179,8 +181,8 @@ namespace EliteDataRelay.Configuration
         }
 
         // A private class to hold the data for serialization
-        private class ConfigData
-        {
+            private class ConfigData
+            {
             public string WelcomeMessage { get; set; } = "Welcome, CMDR! Click 'Start' to begin monitoring.";
             // Legacy text file output removed
             public string CargoPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @"Saved Games\Frontier Developments\Elite Dangerous\Cargo.json");
@@ -209,6 +211,7 @@ namespace EliteDataRelay.Configuration
             public Color OverlayBackgroundColor { get; set; } = Color.FromArgb(0, 0, 0);
             [JsonConverter(typeof(ColorJsonConverter))]
             public Color OverlayBorderColor { get; set; } = Color.FromArgb(255, 111, 0);
+            public int OverlayOpacity { get; set; } = 85;
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;

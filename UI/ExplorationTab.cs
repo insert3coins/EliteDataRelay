@@ -311,12 +311,7 @@ namespace EliteDataRelay.UI
                 }
             });
 
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "Signals",
-                HeaderText = "Signals",
-                FillWeight = 13
-            });
+            // Signals column removed
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -374,12 +369,7 @@ namespace EliteDataRelay.UI
                     }
                 }
 
-                // Non-body signals summary
-                int totalSignals = systemData.NonBodySignalsDetected > 0 ? systemData.NonBodySignalsDetected : (systemData.SystemSignals?.Count ?? 0);
-                if (totalSignals > 0)
-                {
-                    statsParts.Add($"Signals: {totalSignals}");
-                }
+                // Signals summary removed
 
                 // Codex bio entries
                 int bioCodex = systemData.CodexBiologicalEntries?.Count ?? 0;
@@ -428,18 +418,7 @@ namespace EliteDataRelay.UI
                         ? (body.Landable.Value ? "✓" : "—")
                         : "—";
 
-                    // Signals summary
-                    string signals = "—";
-                    if (body.BiologicalSignals.Any())
-                    {
-                        var bioCount = body.BiologicalSignals.Count;
-                        signals = $"🧬 {bioCount} bio";
-                    }
-                    else if (body.Signals.Any())
-                    {
-                        var totalSigCount = body.Signals.Sum(s => s.Count);
-                        signals = totalSigCount.ToString();
-                    }
+                    // Signals summary removed
 
                     // Status with icon
                     string status = "Scanned";
@@ -464,7 +443,7 @@ namespace EliteDataRelay.UI
                         status = "Known";
                     }
 
-                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, landable, signals, status);
+                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, landable, status);
 
                     // Subtle color coding
                     if (body.FirstFootfall)
@@ -548,3 +527,4 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
