@@ -36,8 +36,21 @@ namespace EliteDataRelay.Models
         public int MappedBodies { get; set; }
         public double FSSProgress { get; set; }
         public List<ScannedBody> Bodies { get; set; } = new List<ScannedBody>();
+        // System-level non-body signals discovered via FSS
+        public List<SystemSignal> SystemSignals { get; set; } = new List<SystemSignal>();
+        // Biological Codex entries encountered in this system (localised names preferred)
+        public List<string> CodexBiologicalEntries { get; set; } = new List<string>();
         public DateTime LastVisited { get; set; } = DateTime.Now;
         public DateTime LastUpdated { get; set; } = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Aggregated non-body signal information for a system.
+    /// </summary>
+    public class SystemSignal
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Count { get; set; }
     }
 
     /// <summary>

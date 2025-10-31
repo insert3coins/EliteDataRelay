@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
+using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -173,6 +174,39 @@ namespace EliteDataRelay.UI
                 string mappedText = $"Mapped:  {data.MappedBodies}";
                 g.DrawString(mappedText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
                 y += lineHeight;
+
+                // === COMPLETION BADGES (All scanned / All mapped) ===
+                bool allScanned = data.TotalBodies > 0 && data.ScannedBodies >= data.TotalBodies;
+                int mappable = data.Bodies.Count(b => Services.MappabilityService.IsMappable(b));
+                int mapped = data.Bodies.Count(b => b.IsMapped && Services.MappabilityService.IsMappable(b));
+
+                var completionParts = new System.Collections.Generic.List<string>();
+                if (allScanned) completionParts.Add("All scanned");
+                if (mappable > 0 && mapped >= mappable) completionParts.Add("All mapped");
+                if (completionParts.Count > 0)
+                {
+                    string completionText = "Completion: " + string.Join(" \u2022 ", completionParts);
+                    g.DrawString(completionText, GameColors.FontSmall, GameColors.BrushGreen, padding, y);
+                    y += lineHeight;
+                }
+
+                // === NON-BODY SIGNALS SUMMARY (count only) ===
+                int totalSignals = data.SystemSignals?.Sum(s => s.Count) ?? 0;
+                if (totalSignals > 0)
+                {
+                    string sigText = "Signals: " + totalSignals;
+                    g.DrawString(sigText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                    y += lineHeight;
+                }
+
+                // === BIOLOGICAL CODEX SUMMARY ===
+                int bioCodex = data.CodexBiologicalEntries?.Count ?? 0;
+                if (bioCodex > 0)
+                {
+                    string codexText = $"Codex:  {bioCodex} bio";
+                    g.DrawString(codexText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                    y += lineHeight;
+                }
 
                 // === FIRST DISCOVERIES / MAPPINGS / FOOTFALLS ===
                 var firstDiscoveries = data.Bodies.Count(b => !b.WasDiscovered);

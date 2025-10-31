@@ -231,4 +231,138 @@ namespace EliteDataRelay.Models
         [JsonPropertyName("NearestDestination")]
         public string? NearestDestination { get; set; }
     }
+
+    /// <summary>
+    /// Represents the "FSSAllBodiesFound" event from the journal.
+    /// Indicates all bodies have been discovered by FSS in a system.
+    /// </summary>
+    public class FSSAllBodiesFoundEvent
+    {
+        [JsonPropertyName("SystemName")]
+        public string? SystemName { get; set; }
+
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+
+        [JsonPropertyName("Count")]
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the legacy "DiscoveryScan" event (pre-FSS) that reports total bodies.
+    /// </summary>
+    public class DiscoveryScanEvent
+    {
+        [JsonPropertyName("SystemName")]
+        public string? SystemName { get; set; }
+
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+
+        [JsonPropertyName("Bodies")]
+        public int Bodies { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the "FirstFootfall" event from the journal (Odyssey).
+    /// </summary>
+    public class FirstFootfallEvent
+    {
+        [JsonPropertyName("Body")]
+        public string? BodyName { get; set; }
+
+        [JsonPropertyName("BodyID")]
+        public int? BodyID { get; set; }
+
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the "ScanOrganic" event (Odyssey exobiology scan).
+    /// </summary>
+    public class ScanOrganicEvent
+    {
+        [JsonPropertyName("Body")]
+        public string? BodyName { get; set; }
+
+        [JsonPropertyName("BodyID")]
+        public int? BodyID { get; set; }
+
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+
+        [JsonPropertyName("Genus")]
+        public string? Genus { get; set; }
+
+        [JsonPropertyName("Species")]
+        public string? Species { get; set; }
+
+        [JsonPropertyName("Variant")]
+        public string? Variant { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the "SellOrganicData" event (Vista Genomics sale).
+    /// </summary>
+    public class SellOrganicDataEvent
+    {
+        [JsonPropertyName("TotalEarnings")]
+        public long TotalEarnings { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the general "CodexEntry" event.
+    /// Minimal fields for potential biological discovery enrichment.
+    /// </summary>
+    public class CodexEntryEvent
+    {
+        [JsonPropertyName("Category")]
+        public string? Category { get; set; }
+
+        [JsonPropertyName("Name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("Name_Localised")]
+        public string? NameLocalised { get; set; }
+
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the "FSSSignalDiscovered" event (USS/POI signals discovered by FSS).
+    /// </summary>
+    public class FSSSignalDiscoveredEvent
+    {
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+
+        [JsonPropertyName("SignalName")]
+        public string? SignalName { get; set; }
+
+        [JsonPropertyName("SignalName_Localised")]
+        public string? SignalNameLocalised { get; set; }
+
+        [JsonPropertyName("USSType")]
+        public string? USSType { get; set; }
+
+        [JsonPropertyName("USSType_Localised")]
+        public string? USSTypeLocalised { get; set; }
+
+        [JsonPropertyName("ThreatLevel")]
+        public int? ThreatLevel { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the "NavBeaconScan" event which provides total bodies in system when scanning the nav beacon.
+    /// </summary>
+    public class NavBeaconScanEvent
+    {
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+
+        [JsonPropertyName("NumBodies")]
+        public int NumBodies { get; set; }
+    }
 }

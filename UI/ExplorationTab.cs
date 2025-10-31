@@ -353,6 +353,37 @@ namespace EliteDataRelay.UI
                     statsParts.Add($"{systemData.MappedBodies} mapped");
                 }
 
+                // Completion cues
+                if (systemData.TotalBodies > 0 && systemData.ScannedBodies >= systemData.TotalBodies)
+                {
+                    statsParts.Add("All scanned");
+                }
+
+                // Determine mappable bodies using planet-class whitelist
+                int mappable = systemData.Bodies.Count(b => MappabilityService.IsMappable(b));
+                if (mappable > 0)
+                {
+                    int mapped = systemData.Bodies.Count(b => b.IsMapped && MappabilityService.IsMappable(b));
+                    if (mapped >= mappable)
+                    {
+                        statsParts.Add("All mapped");
+                    }
+                }
+
+                // Non-body signals summary
+                int totalSignals = systemData.SystemSignals?.Sum(s => s.Count) ?? 0;
+                if (totalSignals > 0)
+                {
+                    statsParts.Add($"Signals: {totalSignals}");
+                }
+
+                // Codex bio entries
+                int bioCodex = systemData.CodexBiologicalEntries?.Count ?? 0;
+                if (bioCodex > 0)
+                {
+                    statsParts.Add($"Codex: {bioCodex} bio");
+                }
+
                 if (systemData.FSSProgress > 0 && systemData.FSSProgress < 100)
                 {
                     statsParts.Add($"FSS: {systemData.FSSProgress:F1}%");
@@ -402,8 +433,8 @@ namespace EliteDataRelay.UI
                     }
                     else if (body.Signals.Any())
                     {
-                        var totalSignals = body.Signals.Sum(s => s.Count);
-                        signals = $"📡 {totalSignals}";
+                        var totalSigCount = body.Signals.Sum(s => s.Count);
+                        signals = totalSigCount.ToString();
                     }
 
                     // Status with icon

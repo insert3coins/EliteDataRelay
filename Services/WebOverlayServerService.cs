@@ -327,10 +327,11 @@ namespace EliteDataRelay.Services
             var css = string.Join("\n", new[]
             {
                 "body{margin:0;background:rgba(0,0,0,0)}",
-                ".card{width:340px;height:195px;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidth() + " solid " + CssBorderColor() + ";padding:10px 14px;box-sizing:border-box}",
+                ".card{width:380px;height:255px;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidth() + " solid " + CssBorderColor() + ";padding:10px 14px;box-sizing:border-box}",
                 ".label{color:" + CssGrayText() + ";font-size:" + FontSmall() + "px}",
                 ".value{color:" + CssCyan() + ";font-size:" + FontNormal() + "px}",
-                ".orange{color:" + CssOrange() + "}"
+                ".orange{color:" + CssOrange() + "}",
+                ".green{color:" + CssGreen() + "}"
             });
             var html = "<!doctype html><html><head><meta charset=\"utf-8\"><title>Exploration Overlay</title>"+
                        "<style>" + css + "</style></head><body>"+
@@ -338,9 +339,12 @@ namespace EliteDataRelay.Services
                        "<div><span class='label'>System:</span> <span id='sys' class='value'>...</span></div>"+
                        "<div><span class='label'>Bodies:</span> <span id='bod' class='value'>0</span> &nbsp; <span class='label'>Scanned:</span> <span id='sca' class='value'>0</span> &nbsp; <span class='label'>Mapped:</span> <span id='map' class='value'>0</span></div>"+
                        "<div><span class='label'>FSS:</span> <span id='fss' class='value'>0%</span></div>"+
+                       "<div><span class='label'>Completion:</span> <span id='comp' class='green'></span></div>"+
+                       "<div><span class='label'>Signals:</span> <span id='sig' class='value'>0</span></div>"+
+                       "<div><span class='label'>Codex:</span> <span id='cod' class='value'>0 bio</span></div>"+
                        "<div><span class='label'>Session:</span> <span id='sess' class='orange'>0 systems / 0 scans / 0 mapped</span></div>"+
                        "</div>"+
-                       "<script>const g=(id)=>document.getElementById(id);function apply(s){ if(!s) return; const x=s.exploration; if(x){ g('sys').textContent=x.systemName||''; g('bod').textContent=x.totalBodies||0; g('sca').textContent=x.scannedBodies||0; g('map').textContent=x.mappedBodies||0; g('fss').textContent=((x.fssProgress||0)*100).toFixed(0)+'%'; } const ses=s.explorationSession; if(ses){ g('sess').textContent=(ses.systemsVisited||0)+' systems / '+(ses.totalScans||0)+' scans / '+(ses.totalMapped||0)+' mapped'; } }"+
+                       "<script>const g=(id)=>document.getElementById(id);const MAP_CLASSES=new Set(['earth-like world','water world','ammonia world','metal-rich body','high metal content world','rocky body','icy body','rocky ice world','class i gas giant','class ii gas giant','class iii gas giant','class iv gas giant','class v gas giant','helium-rich gas giant','gas giant with water-based life','gas giant with ammonia-based life','water giant','supercritical water world']);function isMappableType(t){ return !!t && MAP_CLASSES.has(String(t).toLowerCase()); }function apply(s){ if(!s) return; const x=s.exploration; if(x){ g('sys').textContent=x.systemName||''; g('bod').textContent=x.totalBodies||0; g('sca').textContent=x.scannedBodies||0; g('map').textContent=x.mappedBodies||0; g('fss').textContent=((x.fssProgress||0)).toFixed(0)+'%'; let comp=[]; const tb=(x.totalBodies||0), sb=(x.scannedBodies||0); if(tb>0 && sb>=tb) comp.push('All scanned'); let mappable=0, mapped=0; if(Array.isArray(x.bodies)){ for(const b of x.bodies){ if(isMappableType(b.bodyType)){ mappable++; if(b.isMapped) mapped++; } } } if(mappable>0 && mapped>=mappable) comp.push('All mapped'); g('comp').textContent=comp.join(' \u2022 '); const sigs=(Array.isArray(x.systemSignals)?x.systemSignals.reduce((a,b)=>a+(b.count||0),0):0); g('sig').textContent=sigs; const cod=(Array.isArray(x.codexBiologicalEntries)?x.codexBiologicalEntries.length:0); g('cod').textContent=cod+ ' bio'; } const ses=s.explorationSession; if(ses){ g('sess').textContent=(ses.systemsVisited||0)+' systems / '+(ses.totalScans||0)+' scans / '+(ses.totalMapped||0)+' mapped'; } }"+
                        "fetch('/api/state').then(r=>r.json()).then(apply);let ws; function connect(){ ws=new WebSocket((location.protocol=='https:'?'wss://':'ws://')+location.host+'/ws'); ws.onmessage=(e)=>{ try{apply(JSON.parse(e.data));}catch{} }; ws.onclose=()=>setTimeout(connect,1000);} connect();"+
                        "</script></body></html>";
             return html;
@@ -357,6 +361,7 @@ namespace EliteDataRelay.Services
         private static string CssGrayText() => CssColor(160,160,160);
         private static string CssCyan() => CssColor(84,223,237);
         private static string CssOrange() => CssColor(AppConfiguration.OverlayTextColor.R, AppConfiguration.OverlayTextColor.G, AppConfiguration.OverlayTextColor.B);
+        private static string CssGreen() => CssColor(34,139,34);
         private static string CssBorderColor() => CssColor(AppConfiguration.OverlayBorderColor.R, AppConfiguration.OverlayBorderColor.G, AppConfiguration.OverlayBorderColor.B);
         private static string CssBackground()
         {

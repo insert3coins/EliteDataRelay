@@ -288,6 +288,22 @@ namespace EliteDataRelay.Services
                                 FSSDiscoveryScan?.Invoke(this, fssEvent);
                             }
                         }
+                        else if (eventType == "FSSAllBodiesFound")
+                        {
+                            var allBodies = JsonSerializer.Deserialize<FSSAllBodiesFoundEvent>(journalLine, options);
+                            if (allBodies != null)
+                            {
+                                FSSAllBodiesFound?.Invoke(this, allBodies);
+                            }
+                        }
+                        else if (eventType == "DiscoveryScan")
+                        {
+                            var legacy = JsonSerializer.Deserialize<DiscoveryScanEvent>(journalLine, options);
+                            if (legacy != null)
+                            {
+                                DiscoveryScan?.Invoke(this, legacy);
+                            }
+                        }
                         else if (eventType == "Scan")
                         {
                             var scanEvent = JsonSerializer.Deserialize<ScanEvent>(journalLine, options);
@@ -312,12 +328,36 @@ namespace EliteDataRelay.Services
                                 FSSBodySignals?.Invoke(this, signalsEvent);
                             }
                         }
+                        else if (eventType == "FSSSignalDiscovered")
+                        {
+                            var sig = JsonSerializer.Deserialize<FSSSignalDiscoveredEvent>(journalLine, options);
+                            if (sig != null)
+                            {
+                                FSSSignalDiscovered?.Invoke(this, sig);
+                            }
+                        }
                         else if (eventType == "SAASignalsFound")
                         {
                             var signalsEvent = JsonSerializer.Deserialize<SAASignalsFoundEvent>(journalLine, options);
                             if (signalsEvent != null)
                             {
                                 SAASignalsFound?.Invoke(this, signalsEvent);
+                            }
+                        }
+                        else if (eventType == "FirstFootfall")
+                        {
+                            var ff = JsonSerializer.Deserialize<FirstFootfallEvent>(journalLine, options);
+                            if (ff != null)
+                            {
+                                FirstFootfall?.Invoke(this, ff);
+                            }
+                        }
+                        else if (eventType == "ScanOrganic")
+                        {
+                            var so = JsonSerializer.Deserialize<ScanOrganicEvent>(journalLine, options);
+                            if (so != null)
+                            {
+                                ScanOrganic?.Invoke(this, so);
                             }
                         }
                         else if (eventType == "SellExplorationData")
@@ -328,12 +368,36 @@ namespace EliteDataRelay.Services
                                 SellExplorationData?.Invoke(this, sellEvent);
                             }
                         }
+                        else if (eventType == "NavBeaconScan")
+                        {
+                            var nbs = JsonSerializer.Deserialize<NavBeaconScanEvent>(journalLine, options);
+                            if (nbs != null)
+                            {
+                                NavBeaconScan?.Invoke(this, nbs);
+                            }
+                        }
+                        else if (eventType == "SellOrganicData")
+                        {
+                            var sellOrg = JsonSerializer.Deserialize<SellOrganicDataEvent>(journalLine, options);
+                            if (sellOrg != null)
+                            {
+                                SellOrganicData?.Invoke(this, sellOrg);
+                            }
+                        }
                         else if (eventType == "MultiSellExplorationData")
                         {
                             var multiSellEvent = JsonSerializer.Deserialize<MultiSellExplorationDataEvent>(journalLine, options);
                             if (multiSellEvent != null)
                             {
                                 MultiSellExplorationData?.Invoke(this, multiSellEvent);
+                            }
+                        }
+                        else if (eventType == "CodexEntry")
+                        {
+                            var codex = JsonSerializer.Deserialize<CodexEntryEvent>(journalLine, options);
+                            if (codex != null)
+                            {
+                                CodexEntry?.Invoke(this, codex);
                             }
                         }
                         else if (eventType == "Touchdown")

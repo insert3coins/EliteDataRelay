@@ -203,6 +203,51 @@ namespace EliteDataRelay.Services
             {
                 SaveBodyInternal(body, system.SystemAddress.Value, transaction);
             }
+
+            // Replace system-level signals for this system
+            using (var delSig = _connection.CreateCommand())
+            {
+                delSig.Transaction = transaction;
+                delSig.CommandText = "DELETE FROM SystemSignals WHERE SystemAddress = @sa";
+                delSig.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                delSig.ExecuteNonQuery();
+            }
+            if (system.SystemSignals != null && system.SystemSignals.Count > 0)
+            {
+                foreach (var sig in system.SystemSignals)
+                {
+                    using var insSig = _connection.CreateCommand();
+                    insSig.Transaction = transaction;
+                    insSig.CommandText = @"INSERT OR REPLACE INTO SystemSignals (SystemAddress, Name, Count)
+                                           VALUES (@sa, @name, @count)";
+                    insSig.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                    insSig.Parameters.AddWithValue("@name", sig.Name);
+                    insSig.Parameters.AddWithValue("@count", sig.Count);
+                    insSig.ExecuteNonQuery();
+                }
+            }
+
+            // Replace Codex biological entries
+            using (var delCod = _connection.CreateCommand())
+            {
+                delCod.Transaction = transaction;
+                delCod.CommandText = "DELETE FROM CodexBiologicalEntries WHERE SystemAddress = @sa";
+                delCod.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                delCod.ExecuteNonQuery();
+            }
+            if (system.CodexBiologicalEntries != null && system.CodexBiologicalEntries.Count > 0)
+            {
+                foreach (var entry in system.CodexBiologicalEntries)
+                {
+                    using var insCod = _connection.CreateCommand();
+                    insCod.Transaction = transaction;
+                    insCod.CommandText = @"INSERT OR REPLACE INTO CodexBiologicalEntries (SystemAddress, Entry)
+                                           VALUES (@sa, @entry)";
+                    insCod.Parameters.AddWithValue("@sa", system.SystemAddress.Value);
+                    insCod.Parameters.AddWithValue("@entry", entry);
+                    insCod.ExecuteNonQuery();
+                }
+            }
         }
 
         /// <summary>
