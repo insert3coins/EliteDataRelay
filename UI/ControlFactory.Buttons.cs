@@ -50,6 +50,8 @@ namespace EliteDataRelay.UI
             {
                 ToolTip.SetToolTip(btn, null);
                 btn.Paint -= Button_Paint;
+                // Ensure the control no longer references shared fonts that may be disposed
+                try { btn.Font = SystemFonts.DefaultFont; } catch { }
                 btn.Dispose();
             }
         }

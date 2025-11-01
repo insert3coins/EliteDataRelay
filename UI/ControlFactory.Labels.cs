@@ -70,6 +70,14 @@ namespace EliteDataRelay.UI
 
         private void DisposeLabels()
         {
+            // Break font references before disposing controls to avoid GDI+ issues
+            try { WatchingLabel.Font = SystemFonts.DefaultFont; } catch { }
+            try { CargoHeaderLabel.Font = SystemFonts.DefaultFont; } catch { }
+            try { CargoSizeLabel.Font = SystemFonts.DefaultFont; } catch { }
+            try { CommanderLabel.Font = SystemFonts.DefaultFont; } catch { }
+            try { ShipLabel.Font = SystemFonts.DefaultFont; } catch { }
+            try { BalanceLabel.Font = SystemFonts.DefaultFont; } catch { }
+
             WatchingLabel.Dispose();
             CargoHeaderLabel.Dispose();
             CargoSizeLabel.Dispose();

@@ -99,7 +99,7 @@ namespace EliteDataRelay.UI
             else if (_position == OverlayPosition.JumpInfo)
             {
                 // Expanded next-jump overlay to match redesigned layout
-                this.Size = new Size(680, 180);
+                this.Size = new Size(680, 140);
 
                 _renderPanel = new DoubleBufferedPanel
                 {

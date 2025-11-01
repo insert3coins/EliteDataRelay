@@ -348,8 +348,8 @@ namespace EliteDataRelay.UI
                 if (disposing)
                 {
                     // Dispose managed state (managed objects)
-                    _fontManager?.Dispose();
                     _controlFactory?.Dispose();
+                    _fontManager?.Dispose();
                     _trayIconManager?.Dispose();
                     _iconStream?.Dispose();
                     _appIcon?.Dispose();
