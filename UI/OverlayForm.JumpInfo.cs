@@ -111,12 +111,6 @@ namespace EliteDataRelay.UI
                 string classPart = ""; // star info disabled
                 if (!string.IsNullOrEmpty(classPart))
                 {
-                if (false)
-                {
-                    string subDraw = TruncateText(g, classPart, GameColors.FontSmall, width - padding * 2);
-                    g.DrawString(subDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-                    y += lineHeight - 2;
-                }
 
                 // Quick hints for star type (boost/scoopable/hazard)
                 {

@@ -46,6 +46,10 @@ namespace EliteDataRelay
             // Set a flag to prevent piecemeal UI updates during the initial scan.
             _isInitializing = true;
 
+            // Suppress exploration events during the initial journal scan so the
+            // Exploration tab doesn't iterate through historical systems.
+            _explorationDataService.SuppressEvents = true;
+
             // Play start sound
             _soundService.PlayStartSound();
 

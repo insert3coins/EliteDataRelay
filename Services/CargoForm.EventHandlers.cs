@@ -203,6 +203,21 @@ namespace EliteDataRelay
                 // Now that all initial data is cached, update the entire UI at once.
                 RefreshAllUIData();
 
+                // Set exploration current system exactly once, then re-enable events
+                if (!string.IsNullOrWhiteSpace(_lastLocation))
+                {
+                    _explorationDataService.HandleSystemChange(_lastLocation, _lastSystemAddress, _lastLocationTimestamp ?? DateTime.UtcNow);
+                }
+                _explorationDataService.SuppressEvents = false;
+                var currentSystem = _explorationDataService.GetCurrentSystemData();
+                var session = _explorationDataService.GetSessionData();
+                if (currentSystem != null)
+                {
+                    _cargoFormUI.UpdateExplorationCurrentSystem(currentSystem);
+                    _overlayService.UpdateExplorationData(currentSystem);
+                }
+                _overlayService.UpdateExplorationSessionData(session);
+
                 // Finally, force a re-read of the cargo file to ensure it's perfectly in sync.
                 _ = _cargoProcessorService.ProcessCargoFileAsync(force: true); // The result will update the UI via OnCargoProcessed
             });
@@ -296,7 +311,11 @@ namespace EliteDataRelay
             _lastLocationTimestamp = e.Timestamp;
 
             // Update exploration service with system change
-            _explorationDataService.HandleSystemChange(e.StarSystem, e.SystemAddress, e.Timestamp);
+            // Suppress during initial scan to avoid iterating historical systems.
+            if (!_isInitializing)
+            {
+                _explorationDataService.HandleSystemChange(e.StarSystem, e.SystemAddress, e.Timestamp);
+            }
             // Next jump overlay removed: no action here
 
             SafeInvoke(() =>
