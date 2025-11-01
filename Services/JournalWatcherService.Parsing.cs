@@ -74,6 +74,10 @@ namespace EliteDataRelay.Services
                 // we created, preventing memory leaks.
                 try
                 { 
+                // --- Pre-Pass: Status File ---
+                // Process Status.json first to get the most up-to-date FSDTarget before handling jump events.
+                ProcessStatusFile();
+
                 // Create serializer options once and reuse to avoid allocations in the loop.
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -152,6 +156,16 @@ namespace EliteDataRelay.Services
                                 _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), false, systemAddress, timestamp);
                                 LocationChanged?.Invoke(this, _lastLocationArgs);
                             }
+
+                            // Handle FSDTarget to get next jump system
+                            if (eventType == "FSDTarget")
+                            {
+                                if (jsonDoc.RootElement.TryGetProperty("Name", out var nameElement) && nameElement.GetString() is string nextSystemName)
+                                {
+                                    var nextSystemArgs = new NextJumpSystemChangedEventArgs(nextSystemName);
+                                    NextJumpSystemChanged?.Invoke(this, nextSystemArgs);
+                                }
+                            }
                         }
                     }
                     catch (JsonException ex)
@@ -174,7 +188,7 @@ namespace EliteDataRelay.Services
                         string? eventType = eventElement.GetString();
 
                         // Skip location events as they were handled in the first pass
-                        if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump")
+                        if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump" || eventType == "FSDTarget")
                         {
                             continue;
                         }

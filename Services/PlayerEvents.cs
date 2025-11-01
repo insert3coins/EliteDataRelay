@@ -47,6 +47,19 @@ namespace EliteDataRelay.Services
         }
     }
 
+    /// <summary>
+    /// Provides data for the NextJumpSystemChanged event.
+    /// </summary>
+    public class NextJumpSystemChangedEventArgs : EventArgs
+    {
+        public string NextSystemName { get; }
+
+        public NextJumpSystemChangedEventArgs(string nextSystemName)
+        {
+            NextSystemName = nextSystemName;
+        }
+    }
+
     public class LoadGameEvent
     {
         public string Commander { get; set; } = string.Empty;

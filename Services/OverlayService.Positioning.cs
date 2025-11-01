@@ -68,6 +68,7 @@ namespace EliteDataRelay.Services
                 AppConfiguration.ShipIconOverlayLocation = newLocation;
             else if (sender == _explorationOverlayForm)
                 AppConfiguration.ExplorationOverlayLocation = newLocation;
+            
 
             AppConfiguration.Save();
 

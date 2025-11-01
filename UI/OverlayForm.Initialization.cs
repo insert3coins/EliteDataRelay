@@ -96,6 +96,7 @@ namespace EliteDataRelay.UI
                 Controls.Add(_renderPanel);
                 ApplyRoundedRegion();
             }
+            
         }
 
         private Label CreateOverlayLabel(Point location, Font? font = null)

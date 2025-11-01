@@ -25,7 +25,6 @@ namespace EliteDataRelay.Services
         private CancellationTokenSource? _fetchCancellationTokenSource; // Manages cancellation for the actual API fetch
         private readonly object _lock = new object();
         private CancellationTokenSource? _debounceCancellationTokenSource; // Manages cancellation for the debounce delay
-        private bool _disposedValue;
 
         public event EventHandler<SystemInfoData>? SystemInfoUpdated;
 
@@ -38,6 +37,7 @@ namespace EliteDataRelay.Services
         {
             if (_isStarted) return;
             _journalWatcher.LocationChanged += OnLocationChanged;
+            _journalWatcher.NextJumpSystemChanged += OnNextJumpSystemChanged;
             _isStarted = true;
 
             // On startup, proactively get the last known location from the journal watcher.
@@ -58,7 +58,28 @@ namespace EliteDataRelay.Services
             _fetchCancellationTokenSource?.Cancel();
 
             _journalWatcher.LocationChanged -= OnLocationChanged;
+            _journalWatcher.NextJumpSystemChanged -= OnNextJumpSystemChanged;
             _isStarted = false;
+        }
+
+        private void OnNextJumpSystemChanged(object? sender, NextJumpSystemChangedEventArgs e)
+        {
+            lock (_lock)
+            {
+                if (!_isStarted) return;
+
+                // This is for the "Next Jump" overlay. We want this to be immediate.
+                _fetchCancellationTokenSource?.Cancel();
+                _fetchCancellationTokenSource = new CancellationTokenSource();
+                var fetchToken = _fetchCancellationTokenSource.Token;
+
+                Task.Run(async () =>
+                {
+                    var systemInfo = await FetchSystemInfoAsync(e.NextSystemName, fetchToken) ?? new SystemInfoData { SystemName = e.NextSystemName };
+                    _lastSystemInfo = systemInfo;
+                    SystemInfoUpdated?.Invoke(this, systemInfo);
+                });
+            }
         }
 
         private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -129,7 +150,7 @@ namespace EliteDataRelay.Services
             {
                 // EDSM API endpoint for system information
                 var url = $"https://www.edsm.net/api-v1/system?systemName={Uri.EscapeDataString(systemName)}&showInformation=1";
-                
+
                 // Pass the cancellation token to the HTTP client.
                 var response = await _httpClient.GetAsync(url, cancellationToken);
                 response.EnsureSuccessStatusCode();
@@ -148,7 +169,7 @@ namespace EliteDataRelay.Services
                 var edsmSystem = jsonDoc.RootElement.Deserialize<EdsmSystem>(_jsonOptions);
                 var info = edsmSystem?.Information;
 
-                return new SystemInfoData
+                var result = new SystemInfoData
                 {
                     SystemName = edsmSystem?.Name ?? systemName,
                     Allegiance = info?.Allegiance ?? "N/A",
@@ -159,6 +180,25 @@ namespace EliteDataRelay.Services
                     ControllingFaction = info?.Faction ?? "N/A",
                     FactionState = info?.FactionState ?? "N/A"
                 };
+
+                // Also fetch traffic stats (arrivals/departures) from EDSM
+                try
+                {
+                    var traffic = await FetchTrafficAsync(systemName, cancellationToken);
+                    if (traffic.HasValue)
+                    {
+                        var t = traffic.Value;
+                        result.TrafficDay = t.Day;
+                        result.TrafficWeek = t.Week;
+                        result.TrafficTotal = t.Total;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Traffic fetch failed for '{systemName}': {ex.Message}");
+                }
+
+                return result;
             }
             catch (HttpRequestException ex)
             {
@@ -170,6 +210,29 @@ namespace EliteDataRelay.Services
                 System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Failed to parse EDSM response for '{systemName}': {ex.Message}");
                 return new SystemInfoData { SystemName = systemName, Allegiance = "API Error" };
             }
+        }
+
+        private async Task<(int Day, int Week, int Total)?> FetchTrafficAsync(string systemName, CancellationToken cancellationToken)
+        {
+            var url = $"https://www.edsm.net/api-system-v1/traffic?systemName={Uri.EscapeDataString(systemName)}";
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var jsonDoc = await JsonDocument.ParseAsync(content, cancellationToken: cancellationToken);
+            var root = jsonDoc.RootElement;
+
+            if (root.ValueKind != JsonValueKind.Object)
+                return null;
+
+            if (!root.TryGetProperty("traffic", out var traffic) || traffic.ValueKind != JsonValueKind.Object)
+                return null;
+
+            int day = traffic.TryGetProperty("day", out var d) && d.TryGetInt32(out var dv) ? dv : 0;
+            int week = traffic.TryGetProperty("week", out var w) && w.TryGetInt32(out var wv) ? wv : 0;
+            int total = traffic.TryGetProperty("total", out var t) && t.TryGetInt32(out var tv) ? tv : 0;
+
+            return (day, week, total);
         }
 
         private string? CleanEdsmSecurity(string? edsmSecurity)
@@ -185,59 +248,14 @@ namespace EliteDataRelay.Services
                 "low" => "Low",
                 "medium" => "Medium",
                 "high" => "High",
-                "anarchy" => "Anarchy",
-                var s => s
+                _ => edsmSecurity
             };
         }
 
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
+            Stop();
             GC.SuppressFinalize(this);
         }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            lock (_lock)
-            {
-                if (!_disposedValue)
-                {
-                    if (disposing)
-                    {
-                        // First, stop listening to new events.
-                        Stop();
-
-                        // Signal any ongoing async operations to cancel and dispose the sources.
-                        _fetchCancellationTokenSource?.Cancel();
-                        _debounceCancellationTokenSource?.Cancel();
-                        _fetchCancellationTokenSource?.Dispose();
-                        _debounceCancellationTokenSource?.Dispose();
-                    }
-                    _disposedValue = true;
-                }
-            }
-        }
-        #region EDSM Data Models
-        // These classes are defined here because they are only used by this service
-        // to deserialize the response from the EDSM API.
-
-        private class EdsmSystem
-        {
-            public string? Name { get; set; }
-            public EdsmSystemInformation? Information { get; set; }
-        }
-
-        private class EdsmSystemInformation
-        {
-            public string? Allegiance { get; set; }
-            public string? Government { get; set; }
-            public string? Economy { get; set; }
-            public string? Security { get; set; }
-            public long? Population { get; set; }
-            public string? Faction { get; set; }
-            public string? FactionState { get; set; }
-        }
-        #endregion
     }
 }

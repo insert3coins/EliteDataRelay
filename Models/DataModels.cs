@@ -40,6 +40,36 @@ namespace EliteDataRelay.Models
 
         [JsonPropertyName("LegalState")]
         public string LegalState { get; set; } = string.Empty;
+
+        [JsonPropertyName("FSDTarget")]
+        public FsdTarget? FSDTarget { get; set; }
+
+        [JsonPropertyName("Destination")]
+        public Destination? Destination { get; set; }
+    }
+
+    public class FsdTarget
+    {
+        [JsonPropertyName("Name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("SystemAddress")]
+        public long? SystemAddress { get; set; }
+
+        [JsonPropertyName("StarClass")]
+        public string? StarClass { get; set; }
+    }
+
+    public class Destination
+    {
+        [JsonPropertyName("System")]
+        public long? System { get; set; }
+
+        [JsonPropertyName("Body")]
+        public int? Body { get; set; }
+
+        [JsonPropertyName("Name")]
+        public string? Name { get; set; }
     }
 
     /// <summary>

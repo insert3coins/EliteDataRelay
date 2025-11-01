@@ -10,5 +10,10 @@ namespace EliteDataRelay.Models
         public long Population { get; set; } = 0;
         public string ControllingFaction { get; set; } = "N/A";
         public string FactionState { get; set; } = "N/A";
+
+        // EDSM traffic (arrivals/departures) summary
+        public int TrafficDay { get; set; }
+        public int TrafficWeek { get; set; }
+        public int TrafficTotal { get; set; }
     }
 }

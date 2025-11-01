@@ -218,6 +218,7 @@ namespace EliteDataRelay
                 {
                     _cargoFormUI.UpdateShipStatus(e.Status);
                 }
+                // Next jump overlay removed: no action here
             });
         }
 
@@ -248,6 +249,7 @@ namespace EliteDataRelay
 
             // Update exploration service with system change
             _explorationDataService.HandleSystemChange(e.StarSystem, e.SystemAddress, e.Timestamp);
+            // Next jump overlay removed: no action here
 
             SafeInvoke(() =>
             {

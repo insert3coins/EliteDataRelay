@@ -144,9 +144,6 @@ namespace EliteDataRelay.Configuration
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
-                    
-     
-
                     // Performance and extras
                     FastStartSkipJournalHistory = AppConfiguration.FastStartSkipJournalHistory,
 
@@ -238,4 +235,3 @@ namespace EliteDataRelay.Configuration
         }
     }
 }
-

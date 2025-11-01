@@ -56,6 +56,7 @@ namespace EliteDataRelay.UI
         // Exploration overlay data
         private SystemExplorationData? _currentExplorationData;
         private ExplorationSessionData? _currentSessionData;
+        private SystemInfoData? _currentSystemInfo;
 
         private readonly bool _allowDrag;
 

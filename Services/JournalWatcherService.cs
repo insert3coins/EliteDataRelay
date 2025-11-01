@@ -190,6 +190,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<ScreenshotEventArgs>? ScreenshotTaken;
 
         /// <summary>
+        /// Event raised when a new jump target is selected (FSDTarget event).
+        /// </summary>
+        public event EventHandler<NextJumpSystemChangedEventArgs>? NextJumpSystemChanged;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;
@@ -284,7 +289,6 @@ namespace EliteDataRelay.Services
         private void PollTimer_Tick(object? state)
         {
             ProcessNewJournalEntries();
-            ProcessStatusFile();
         }
 
         /// <summary>

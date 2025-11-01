@@ -18,6 +18,7 @@ namespace EliteDataRelay.Services
         // Cache last known data to restore on overlay refresh
         private SystemExplorationData? _lastExplorationData;
         private ExplorationSessionData? _lastExplorationSessionData;
+        private SystemInfoData? _lastSystemInfoData;
         private string? _lastCommanderName;
         private string? _lastShipType;
         private long? _lastBalance;
@@ -28,6 +29,13 @@ namespace EliteDataRelay.Services
         private long? _lastSessionCredits;
         private Image? _lastShipIcon;
         private CargoSnapshot? _lastCargoSnapshot;
+
+        // Debounce for exploration overlay updates to avoid rapid churn at startup
+        private System.Threading.Timer? _explorationDebounceTimer;
+        private readonly object _explorationDebounceLock = new object();
+        private TimeSpan _explorationDebounceDelay = TimeSpan.FromMilliseconds(500);
+
+        
 
         public void Start()
         {
@@ -75,6 +83,7 @@ namespace EliteDataRelay.Services
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
             }
+            
 
             PositionOverlays(screen);
 
@@ -121,7 +130,13 @@ namespace EliteDataRelay.Services
                 {
                     _explorationOverlayForm.UpdateExplorationSessionData(_lastExplorationSessionData);
                 }
+                if (_lastSystemInfoData != null)
+                {
+                    _explorationOverlayForm.UpdateSystemInfo(_lastSystemInfoData);
+                }
             }
+
+            // Do not auto-show Jump Info; it is shown on FSD charge
 
             // Export overlay positions for OBS
             ExportObsPositions();
@@ -138,6 +153,12 @@ namespace EliteDataRelay.Services
             _rightOverlayForm = null;
             _shipIconOverlayForm = null;
             _explorationOverlayForm = null;
+
+            lock (_explorationDebounceLock)
+            {
+                _explorationDebounceTimer?.Dispose();
+                _explorationDebounceTimer = null;
+            }
         }
 
         public void Show()

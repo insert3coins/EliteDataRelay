@@ -54,6 +54,24 @@ namespace EliteDataRelay.UI
         }
 
         /// <summary>
+        /// Updates system info (e.g., EDSM traffic) for the exploration overlay.
+        /// </summary>
+        public void UpdateSystemInfo(SystemInfoData data)
+        {
+            if (_position != OverlayPosition.Exploration) return;
+
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => UpdateSystemInfo(data)));
+                return;
+            }
+
+            _currentSystemInfo = data;
+            _stale = true;
+            _renderPanel?.Invalidate();
+        }
+
+        /// <summary>
         /// Paint handler for exploration panel - uses bitmap caching for smooth rendering.
         /// Based on SrvSurvey's PlotBase2 pattern.
         /// </summary>
@@ -181,6 +199,8 @@ namespace EliteDataRelay.UI
                 }
                 y += lineHeight;
 
+                // (Traffic moved to Known System location below)
+
                 // === MAPPED INFO ===
                 string mappedText = $"Mapped:  {data.MappedBodies}";
                 g.DrawString(mappedText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
@@ -251,8 +271,16 @@ namespace EliteDataRelay.UI
                 }
                 else if (data.Bodies.Any(b => b.WasDiscovered))
                 {
-                    // Only show "Known System" if we have scanned bodies that were already discovered
-                    g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                    // Instead of "Known System", display EDSM traffic here if available
+                    if (_currentSystemInfo != null &&
+                        (_currentSystemInfo.TrafficDay > 0 || _currentSystemInfo.TrafficWeek > 0 || _currentSystemInfo.TrafficTotal > 0))
+                    {
+                        // Compact, readable formatting with bullet separators
+                        string trafficText = $"Traffic:  {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
+                        g.DrawString(trafficText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                        // Source tag removed per request; show only values
+                    }
+                    else { if (_currentSystemInfo != null) { string infoText = $"Allegiance: {_currentSystemInfo.Allegiance}  \u2022  Security: {_currentSystemInfo.Security}"; if (_currentSystemInfo.Population > 0) { infoText += $"  \u2022  Pop: {_currentSystemInfo.Population:N0}"; } g.DrawString(infoText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y); } else { g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y); } }
                     y += lineHeight;
                 }
 

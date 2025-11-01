@@ -39,6 +39,7 @@ namespace EliteDataRelay.Services
         event EventHandler<MultiSellExplorationDataEvent>? MultiSellExplorationData;
         event EventHandler<TouchdownEvent>? Touchdown;
         event EventHandler<ScreenshotEventArgs>? ScreenshotTaken;
+        event EventHandler<NextJumpSystemChangedEventArgs>? NextJumpSystemChanged;
 
         void StartMonitoring();
         void StopMonitoring();

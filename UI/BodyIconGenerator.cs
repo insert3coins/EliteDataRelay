@@ -11,6 +11,63 @@ namespace EliteDataRelay.UI
     {
         private const int IconSize = 20;
 
+        private static void DrawShadedSphere(Graphics g, Rectangle rect, Color baseColor, float lightDx, float lightDy, Color? rimColor = null, bool addSpecular = true)
+        {
+            using (var path = new GraphicsPath())
+            {
+                path.AddEllipse(rect);
+
+                using (var pgb = new PathGradientBrush(path))
+                {
+                    var centerX = rect.X + rect.Width * (0.5f + lightDx * 0.25f);
+                    var centerY = rect.Y + rect.Height * (0.5f + lightDy * 0.25f);
+                    pgb.CenterPoint = new PointF(centerX, centerY);
+                    pgb.CenterColor = Lighten(baseColor, 0.35f);
+                    pgb.SurroundColors = new[] { Darken(baseColor, 0.35f) };
+                    g.FillPath(pgb, path);
+                }
+
+                if (addSpecular)
+                {
+                    // Small specular highlight towards light direction
+                    var specW = Math.Max(2, rect.Width / 6);
+                    var specH = Math.Max(2, rect.Height / 6);
+                    var specX = rect.X + rect.Width * (0.5f + lightDx * 0.25f) - specW / 2f;
+                    var specY = rect.Y + rect.Height * (0.5f + lightDy * 0.25f) - specH / 2f;
+                    using (var specBrush = new SolidBrush(Color.FromArgb(120, 255, 255, 255)))
+                    {
+                        g.FillEllipse(specBrush, specX, specY, specW, specH);
+                    }
+                }
+
+                if (rimColor.HasValue)
+                {
+                    using (var pen = new Pen(Color.FromArgb(100, rimColor.Value), 1))
+                    {
+                        g.DrawEllipse(pen, rect.X + 0.5f, rect.Y + 0.5f, rect.Width - 1, rect.Height - 1);
+                    }
+                }
+            }
+        }
+
+        private static Color Lighten(Color c, float amount)
+        {
+            amount = Math.Clamp(amount, 0f, 1f);
+            int r = c.R + (int)((255 - c.R) * amount);
+            int g = c.G + (int)((255 - c.G) * amount);
+            int b = c.B + (int)((255 - c.B) * amount);
+            return Color.FromArgb(c.A, r, g, b);
+        }
+
+        private static Color Darken(Color c, float amount)
+        {
+            amount = Math.Clamp(amount, 0f, 1f);
+            int r = c.R - (int)(c.R * amount);
+            int g = c.G - (int)(c.G * amount);
+            int b = c.B - (int)(c.B * amount);
+            return Color.FromArgb(c.A, Math.Max(0, r), Math.Max(0, g), Math.Max(0, b));
+        }
+
         /// <summary>
         /// Gets an icon for a specific body type.
         /// </summary>
@@ -104,21 +161,27 @@ namespace EliteDataRelay.UI
                 else if (starType.Contains("l ") || starType.Contains("t ")) starColor = Color.FromArgb(139, 69, 19); // Brown dwarf
                 else starColor = Color.FromArgb(255, 255, 200); // Default yellow
 
-                // Draw star with glow
+                // Core glow using radial gradient
+                var sphereRect = new Rectangle(2, 2, IconSize - 4, IconSize - 4);
                 using (var path = new GraphicsPath())
                 {
-                    // Create star shape (simple circle)
-                    path.AddEllipse(2, 2, IconSize - 4, IconSize - 4);
-
-                    using (var brush = new SolidBrush(starColor))
+                    path.AddEllipse(sphereRect);
+                    using (var pgb = new PathGradientBrush(path))
                     {
-                        g.FillPath(brush, path);
+                        pgb.CenterPoint = new PointF(sphereRect.X + sphereRect.Width / 2f, sphereRect.Y + sphereRect.Height / 2f);
+                        pgb.CenterColor = Lighten(starColor, 0.45f);
+                        pgb.SurroundColors = new[] { Darken(starColor, 0.25f) };
+                        g.FillPath(pgb, path);
                     }
+                }
 
-                    // Add glow effect
-                    using (var pen = new Pen(Color.FromArgb(80, starColor), 2))
+                // Soft outer halo
+                using (var haloPath = new GraphicsPath())
+                {
+                    haloPath.AddEllipse(0.5f, 0.5f, IconSize - 1f, IconSize - 1f);
+                    using (var haloPen = new Pen(Color.FromArgb(90, starColor), 2))
                     {
-                        g.DrawEllipse(pen, 1, 1, IconSize - 2, IconSize - 2);
+                        g.DrawPath(haloPen, haloPath);
                     }
                 }
             }
@@ -131,22 +194,24 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                var base1 = Color.FromArgb(218, 165, 122);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), base1, -0.6f, -0.4f, null, addSpecular: false);
 
-                // Draw planet circle
-                using (var brush = new LinearGradientBrush(
-                    new Rectangle(0, 0, IconSize, IconSize),
-                    Color.FromArgb(218, 165, 122), // Sandy brown
-                    Color.FromArgb(244, 164, 96),   // Sandy
-                    LinearGradientMode.Vertical))
+                // Curved bands
+                var bandColors = new[]
                 {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Draw horizontal bands
-                using (var pen = new Pen(Color.FromArgb(100, 139, 101, 77), 1))
+                    Color.FromArgb(110, 139, 101, 77),
+                    Color.FromArgb(110, 205, 133, 63),
+                    Color.FromArgb(110, 222, 184, 135)
+                };
+                for (int i = -2; i <= 2; i++)
                 {
-                    g.DrawLine(pen, 4, IconSize / 2 - 2, IconSize - 4, IconSize / 2 - 2);
-                    g.DrawLine(pen, 3, IconSize / 2 + 2, IconSize - 3, IconSize / 2 + 2);
+                    var h = Math.Max(1, 2 - Math.Abs(i));
+                    var color = bandColors[(i + bandColors.Length * 10) % bandColors.Length];
+                    using (var pen = new Pen(color, h))
+                    {
+                        g.DrawArc(pen, 3, 5, IconSize - 6, IconSize - 10, 0, 180);
+                    }
                 }
             }
             return bitmap;
@@ -158,25 +223,21 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                var ocean = Color.FromArgb(65, 105, 225);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), ocean, -0.6f, -0.5f, Color.FromArgb(135, 173, 255));
 
-                // Draw blue ocean
-                using (var brush = new SolidBrush(Color.FromArgb(65, 105, 225))) // Royal blue
+                // Continents (slightly translucent and irregular)
+                using (var land = new SolidBrush(Color.FromArgb(180, 34, 139, 34)))
                 {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
+                    g.FillEllipse(land, 4, 6, 7, 5);
+                    g.FillEllipse(land, 10, 8, 4, 6);
                 }
 
-                // Draw green continents (simple shapes)
-                using (var brush = new SolidBrush(Color.FromArgb(34, 139, 34))) // Forest green
+                // Cloud streaks
+                using (var cloud = new SolidBrush(Color.FromArgb(110, 255, 255, 255)))
                 {
-                    g.FillEllipse(brush, 5, 5, 6, 5);
-                    g.FillEllipse(brush, 10, 8, 5, 6);
-                }
-
-                // White clouds
-                using (var brush = new SolidBrush(Color.FromArgb(120, 255, 255, 255)))
-                {
-                    g.FillEllipse(brush, 3, 3, 4, 3);
-                    g.FillEllipse(brush, 12, 11, 5, 3);
+                    g.FillEllipse(cloud, 5, 4, 6, 3);
+                    g.FillEllipse(cloud, 9, 11, 6, 3);
                 }
             }
             return bitmap;
@@ -188,18 +249,13 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                var deep = Color.FromArgb(0, 119, 190);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), deep, -0.6f, -0.5f, Color.FromArgb(120, 180, 230), addSpecular: true);
 
-                // Deep blue water
-                using (var brush = new SolidBrush(Color.FromArgb(0, 119, 190)))
+                using (var pen = new Pen(Color.FromArgb(90, 200, 230, 255), 1))
                 {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Wave patterns
-                using (var pen = new Pen(Color.FromArgb(100, 135, 206, 235), 1))
-                {
-                    g.DrawArc(pen, 4, 6, 8, 6, 0, 180);
-                    g.DrawArc(pen, 8, 10, 6, 4, 0, 180);
+                    g.DrawArc(pen, 5, 7, 8, 5, 0, 180);
+                    g.DrawArc(pen, 7, 10, 6, 4, 0, 180);
                 }
             }
             return bitmap;
@@ -211,17 +267,12 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                var atm = Color.FromArgb(138, 43, 226);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), atm, -0.6f, -0.4f, Color.FromArgb(170, 120, 230));
 
-                // Purple/violet ammonia atmosphere
-                using (var brush = new SolidBrush(Color.FromArgb(138, 43, 226))) // Blue violet
-                {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Toxic swirls
                 using (var pen = new Pen(Color.FromArgb(100, 186, 85, 211), 1))
                 {
-                    g.DrawEllipse(pen, 6, 6, 8, 8);
+                    g.DrawArc(pen, 4, 6, 10, 8, 20, 140);
                 }
             }
             return bitmap;
@@ -233,18 +284,8 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-
-                // Metallic brown/red
-                using (var brush = new SolidBrush(Color.FromArgb(165, 42, 42))) // Brown
-                {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Metallic sheen
-                using (var brush = new SolidBrush(Color.FromArgb(80, 255, 255, 255)))
-                {
-                    g.FillEllipse(brush, 5, 4, 6, 5);
-                }
+                var metal = Color.FromArgb(165, 42, 42);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), metal, -0.6f, -0.5f, null, addSpecular: true);
             }
             return bitmap;
         }
@@ -255,18 +296,8 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-
-                // Dark metallic
-                using (var brush = new SolidBrush(Color.FromArgb(105, 105, 105))) // Dim gray
-                {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Bright metallic highlight
-                using (var brush = new SolidBrush(Color.FromArgb(120, 192, 192, 192)))
-                {
-                    g.FillEllipse(brush, 6, 5, 5, 4);
-                }
+                var darkMetal = Color.FromArgb(105, 105, 105);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), darkMetal, -0.6f, -0.5f, null, addSpecular: true);
             }
             return bitmap;
         }
@@ -277,18 +308,16 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                var surface = Color.FromArgb(128, 128, 128);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), surface, -0.6f, -0.5f, null, addSpecular: false);
 
-                // Gray rocky surface
-                using (var brush = new SolidBrush(Color.FromArgb(128, 128, 128)))
+                using (var shadow = new Pen(Color.FromArgb(100, 0, 0, 0), 1))
+                using (var light = new Pen(Color.FromArgb(120, 220, 220, 220), 1))
                 {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Craters
-                using (var pen = new Pen(Color.FromArgb(80, 0, 0, 0), 1))
-                {
-                    g.DrawEllipse(pen, 5, 6, 3, 3);
-                    g.DrawEllipse(pen, 11, 8, 2, 2);
+                    g.DrawArc(shadow, 5, 6, 3, 3, 200, 160);
+                    g.DrawArc(light, 5, 6, 3, 3, 20, 160);
+                    g.DrawArc(shadow, 10, 8, 2, 2, 200, 160);
+                    g.DrawArc(light, 10, 8, 2, 2, 20, 160);
                 }
             }
             return bitmap;
@@ -300,18 +329,13 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                var iceRock = Color.FromArgb(176, 196, 222);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), iceRock, -0.6f, -0.5f, null, addSpecular: true);
 
-                // Light blue-gray
-                using (var brush = new SolidBrush(Color.FromArgb(176, 196, 222))) // Light steel blue
+                using (var patch = new SolidBrush(Color.FromArgb(130, 255, 255, 255)))
                 {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Ice patches (white)
-                using (var brush = new SolidBrush(Color.FromArgb(150, 255, 255, 255)))
-                {
-                    g.FillEllipse(brush, 6, 5, 4, 3);
-                    g.FillEllipse(brush, 11, 9, 3, 3);
+                    g.FillEllipse(patch, 6, 5, 4, 3);
+                    g.FillEllipse(patch, 11, 9, 3, 3);
                 }
             }
             return bitmap;
@@ -323,15 +347,10 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
+                var ice = Color.FromArgb(224, 255, 255);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), ice, -0.6f, -0.5f, Color.FromArgb(200, 235, 255), addSpecular: true);
 
-                // White/light cyan ice
-                using (var brush = new SolidBrush(Color.FromArgb(224, 255, 255))) // Light cyan
-                {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
-
-                // Ice crystals (sparkles)
-                using (var pen = new Pen(Color.FromArgb(150, 255, 255, 255), 1))
+                using (var pen = new Pen(Color.FromArgb(140, 255, 255, 255), 1))
                 {
                     g.DrawLine(pen, 7, 7, 9, 9);
                     g.DrawLine(pen, 9, 7, 7, 9);
@@ -347,12 +366,8 @@ namespace EliteDataRelay.UI
             using (var g = Graphics.FromImage(bitmap))
             {
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-
-                // Generic gray planet
-                using (var brush = new SolidBrush(Color.FromArgb(169, 169, 169)))
-                {
-                    g.FillEllipse(brush, 2, 2, IconSize - 4, IconSize - 4);
-                }
+                var generic = Color.FromArgb(169, 169, 169);
+                DrawShadedSphere(g, new Rectangle(2, 2, IconSize - 4, IconSize - 4), generic, -0.5f, -0.5f, null, addSpecular: false);
             }
             return bitmap;
         }

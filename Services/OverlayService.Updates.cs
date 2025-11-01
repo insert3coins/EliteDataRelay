@@ -63,14 +63,27 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.UpdateSessionCargoCollected(cargo);
         }
 
-        public void UpdateSystemInfo(SystemInfoData data) { }
+        public void UpdateSystemInfo(SystemInfoData data)
+        {
+            _lastSystemInfoData = data;
+            _explorationOverlayForm?.UpdateSystemInfo(data);
+        }
         public void UpdateStationInfo(StationInfoData data) { }
 
         public void UpdateExplorationData(SystemExplorationData? data)
         {
             // Cache the data so we can restore it after overlay refresh
             _lastExplorationData = data;
-            _explorationOverlayForm?.UpdateExplorationData(data);
+            // Debounce rapid updates (e.g., during startup) so we only render the latest
+            lock (_explorationDebounceLock)
+            {
+                _explorationDebounceTimer?.Dispose();
+                _explorationDebounceTimer = new System.Threading.Timer(_ =>
+                {
+                    try { _explorationOverlayForm?.UpdateExplorationData(_lastExplorationData); }
+                    catch { /* ignore */ }
+                }, null, _explorationDebounceDelay, System.TimeSpan.FromMilliseconds(-1));
+            }
         }
 
         public void UpdateExplorationSessionData(ExplorationSessionData? data)
@@ -79,6 +92,7 @@ namespace EliteDataRelay.Services
             _lastExplorationSessionData = data;
             _explorationOverlayForm?.UpdateExplorationSessionData(data);
         }
+
 
         #endregion
     }
