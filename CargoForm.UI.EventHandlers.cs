@@ -19,6 +19,10 @@ namespace EliteDataRelay
 
         private async void OnStartClicked(object? sender, EventArgs e)
         {
+            // Reset Status priming and ensure Next Jump overlay is hidden before starting
+            _statusPrimed = false;
+            _overlayService.HideNextJumpOverlay();
+
             // Check for required files/paths before starting.
             if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
             {

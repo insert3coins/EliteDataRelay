@@ -15,6 +15,9 @@ namespace EliteDataRelay.Services
     {
         private void ProcessNewJournalEntries()
         {
+            // Always process Status.json each poll to catch FSDCharging immediately,
+            // even when there are no new journal lines.
+            try { ProcessStatusFile(); } catch { /* ignore status read errors */ }
             // On each poll, first check if there's a newer journal file than the one we're watching.
             var latestJournal = FindLatestJournalFile();
             if (latestJournal != null && latestJournal != _currentJournalFile)
@@ -24,7 +27,7 @@ namespace EliteDataRelay.Services
                 _lastPosition = 0; // Reset position for the new file.
             }
 
-            // If we have no file to watch, there's nothing to do.
+            // If we have no file to watch, there's nothing more to do for journals.
             if (_currentJournalFile == null || !File.Exists(_currentJournalFile))
             {
                 return;
@@ -75,8 +78,7 @@ namespace EliteDataRelay.Services
                 try
                 { 
                 // --- Pre-Pass: Status File ---
-                // Process Status.json first to get the most up-to-date FSDTarget before handling jump events.
-                ProcessStatusFile();
+                // Already processed at the start of the poll; keep comments for clarity.
 
                 // Create serializer options once and reuse to avoid allocations in the loop.
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -157,12 +159,19 @@ namespace EliteDataRelay.Services
                                 LocationChanged?.Invoke(this, _lastLocationArgs);
                             }
 
-                            // Handle FSDTarget to get next jump system
+                            // Handle FSDTarget to get next jump system and route metadata
                             if (eventType == "FSDTarget")
                             {
-                                if (jsonDoc.RootElement.TryGetProperty("Name", out var nameElement) && nameElement.GetString() is string nextSystemName)
+                                var root = jsonDoc.RootElement;
+                                if (root.TryGetProperty("Name", out var nameElement) && nameElement.GetString() is string nextSystemName)
                                 {
-                                    var nextSystemArgs = new NextJumpSystemChangedEventArgs(nextSystemName);
+                                    string? starClass = root.TryGetProperty("StarClass", out var sc) ? sc.GetString() : null;
+                                    double? jumpDist = null;
+                                    if (root.TryGetProperty("JumpDist", out var jd) && jd.TryGetDouble(out var jdVal)) jumpDist = jdVal;
+                                    int? remaining = null;
+                                    if (root.TryGetProperty("RemainingJumpsInRoute", out var rj) && rj.TryGetInt32(out var rjVal)) remaining = rjVal;
+
+                                    var nextSystemArgs = new NextJumpSystemChangedEventArgs(nextSystemName, starClass, jumpDist, remaining);
                                     NextJumpSystemChanged?.Invoke(this, nextSystemArgs);
                                 }
                             }
@@ -187,10 +196,58 @@ namespace EliteDataRelay.Services
 
                         string? eventType = eventElement.GetString();
 
-                        // Skip location events as they were handled in the first pass
-                        if (eventType == "Location" || eventType == "FSDJump" || eventType == "CarrierJump" || eventType == "FSDTarget")
+                        // Skip location events as they were handled in the first pass (allow FSDJump for JumpCompleted)
+                        if (eventType == "Location" || eventType == "CarrierJump" || eventType == "FSDTarget")
                         {
                             continue;
+                        }
+                        else if (eventType == "StartJump")
+                        {
+                            // FSD starts charging for a hyperspace jump
+                            var root = jsonDoc.RootElement;
+                            string? jumpType = root.TryGetProperty("JumpType", out var jt) ? jt.GetString() : null;
+                            if (string.Equals(jumpType, "Hyperspace", StringComparison.OrdinalIgnoreCase))
+                            {
+                                string? target = root.TryGetProperty("StarSystem", out var sys) ? sys.GetString() : null;
+                                string? starClass = root.TryGetProperty("StarClass", out var sc) ? sc.GetString() : null;
+
+                                // RemainingJumps and JumpDist commonly come with FSDTarget; if available in Status cache, we won't handle here
+                                // Fire event for UI overlay
+                                if (!string.IsNullOrEmpty(target))
+                                {
+                                    JumpInitiated?.Invoke(this, new JumpInitiatedEventArgs(target, starClass, null, null));
+                                }
+                                else
+                                {
+                                    JumpInitiated?.Invoke(this, new JumpInitiatedEventArgs(string.Empty, starClass, null, null));
+                                }
+                            }
+                        }
+                        else if (eventType == "FSDJump")
+                        {
+                            var root = jsonDoc.RootElement;
+                            string? system = root.TryGetProperty("StarSystem", out var ss) ? ss.GetString() : null;
+                            string? starClass = root.TryGetProperty("StarClass", out var sc) ? sc.GetString() : null;
+                            double? jumpDist = null;
+                            if (root.TryGetProperty("JumpDist", out var jd) && jd.TryGetDouble(out var jdv)) jumpDist = jdv;
+                            if (!string.IsNullOrEmpty(system))
+                            {
+                                JumpCompleted?.Invoke(this, new JumpCompletedEventArgs(system!, starClass, jumpDist));
+                            }
+                            else
+                            {
+                                JumpCompleted?.Invoke(this, new JumpCompletedEventArgs(_lastStarSystem ?? "", starClass, jumpDist));
+                            }
+                        }
+                        else if (eventType == "Music")
+                        {
+                            // Some setups do not emit StartJump reliably; use Music:Jump as a fallback signal
+                            var root = jsonDoc.RootElement;
+                            string? track = root.TryGetProperty("MusicTrack", out var mt) ? mt.GetString() : null;
+                            if (string.Equals(track, "Jump", StringComparison.OrdinalIgnoreCase))
+                            {
+                                JumpInitiated?.Invoke(this, new JumpInitiatedEventArgs(string.Empty, null, null, null));
+                            }
                         }
                         else if (eventType == "Loadout")
                         {

@@ -8,6 +8,8 @@ namespace EliteDataRelay.Services
 {
     public partial class OverlayService
     {
+        // Auto-hide timer removed; overlay hides on JumpCompleted
+        private System.Threading.Timer? _jumpOverlayHideDelayTimer;
         #region Data Update Methods
         // These methods update the UI controls on the specific overlay forms.
         // The OverlayForm itself handles thread safety with InvokeRequired checks.
@@ -93,6 +95,33 @@ namespace EliteDataRelay.Services
             _explorationOverlayForm?.UpdateExplorationSessionData(data);
         }
 
+        public void ShowNextJumpOverlay(NextJumpOverlayData data)
+        {
+            _lastNextJumpData = data;
+            EnsureJumpOverlay();
+            if (_jumpOverlayForm == null) return;
+            _jumpOverlayForm.UpdateJumpInfo(data);
+            _jumpOverlayForm.Show();
+        }
+
+        public void HideNextJumpOverlay()
+        {
+            _jumpOverlayForm?.Hide();
+        }
+
+        public void HideNextJumpOverlayAfter(TimeSpan delay)
+        {
+            try
+            {
+                _jumpOverlayHideDelayTimer?.Dispose();
+                _jumpOverlayHideDelayTimer = new System.Threading.Timer(_ =>
+                {
+                    try { HideNextJumpOverlay(); }
+                    catch { /* ignore */ }
+                }, null, delay, TimeSpan.FromMilliseconds(-1));
+            }
+            catch { /* ignore */ }
+        }
 
         #endregion
     }

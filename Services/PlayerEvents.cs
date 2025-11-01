@@ -53,10 +53,53 @@ namespace EliteDataRelay.Services
     public class NextJumpSystemChangedEventArgs : EventArgs
     {
         public string NextSystemName { get; }
+        public string? StarClass { get; }
+        public double? JumpDistanceLy { get; }
+        public int? RemainingJumps { get; }
 
-        public NextJumpSystemChangedEventArgs(string nextSystemName)
+        public NextJumpSystemChangedEventArgs(string nextSystemName, string? starClass = null, double? jumpDistanceLy = null, int? remainingJumps = null)
         {
             NextSystemName = nextSystemName;
+            StarClass = starClass;
+            JumpDistanceLy = jumpDistanceLy;
+            RemainingJumps = remainingJumps;
+        }
+    }
+
+    /// <summary>
+    /// Provides data when a hyperspace jump is initiated (FSD charging).
+    /// </summary>
+    public class JumpInitiatedEventArgs : EventArgs
+    {
+        public string TargetSystemName { get; }
+        public string? StarClass { get; }
+        public double? JumpDistanceLy { get; }
+        public int? RemainingJumps { get; }
+
+        public JumpInitiatedEventArgs(string targetSystemName, string? starClass, double? jumpDistanceLy, int? remainingJumps)
+        {
+            TargetSystemName = targetSystemName;
+            StarClass = starClass;
+            JumpDistanceLy = jumpDistanceLy;
+            RemainingJumps = remainingJumps;
+        }
+    }
+
+    /// <summary>
+    /// Provides data when a hyperspace jump completes (FSDJump).
+    /// Mirrors how SrvSurvey surfaces destination info post-jump.
+    /// </summary>
+    public class JumpCompletedEventArgs : EventArgs
+    {
+        public string SystemName { get; }
+        public string? StarClass { get; }
+        public double? JumpDistanceLy { get; }
+
+        public JumpCompletedEventArgs(string systemName, string? starClass, double? jumpDistanceLy)
+        {
+            SystemName = systemName;
+            StarClass = starClass;
+            JumpDistanceLy = jumpDistanceLy;
         }
     }
 

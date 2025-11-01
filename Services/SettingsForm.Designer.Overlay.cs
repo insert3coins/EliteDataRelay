@@ -50,10 +50,18 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            // Enable Next Jump Overlay CheckBox
+            _chkEnableJumpOverlay = new CheckBox
+            {
+                Text = "Enable next jump overlay",
+                Location = new Point(15, 120),
+                AutoSize = true
+            };
+
             _chkShowSessionOnOverlay = new CheckBox
             {
                 Text = "Show session stats on cargo overlay",
-                Location = new Point(15, 145),
+                Location = new Point(15, 145 + 25),
                 AutoSize = true
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
@@ -62,7 +70,7 @@ namespace EliteDataRelay.UI
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(15, 165),
+                Location = new Point(15, 165 + 25),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -72,6 +80,7 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableShipIconOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableJumpOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
             foreach (Control c in _grpOverlaySettings.Controls)

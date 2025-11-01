@@ -17,6 +17,8 @@ namespace EliteDataRelay.Services
     {
         private readonly string _journalDir;
         private FileSystemWatcher? _journalDirectoryWatcher;
+        private FileSystemWatcher? _navRouteWatcher;
+        private System.Threading.Timer? _navRouteDebounce;
         private System.Threading.Timer? _pollTimer;
         private string? _currentJournalFile;
         private string? _lastStarSystem;
@@ -195,6 +197,16 @@ namespace EliteDataRelay.Services
         public event EventHandler<NextJumpSystemChangedEventArgs>? NextJumpSystemChanged;
 
         /// <summary>
+        /// Event raised when FSD starts charging for a hyperspace jump.
+        /// </summary>
+        public event EventHandler<JumpInitiatedEventArgs>? JumpInitiated;
+
+        /// <summary>
+        /// Event raised when the hyperspace jump completes (FSDJump event processed).
+        /// </summary>
+        public event EventHandler<JumpCompletedEventArgs>? JumpCompleted;
+
+        /// <summary>
         /// Gets whether the monitoring service is currently active.
         /// </summary>
         public bool IsMonitoring => _isMonitoring;
@@ -231,6 +243,16 @@ namespace EliteDataRelay.Services
             };
             _journalDirectoryWatcher.Created += OnJournalFileCreated;
 
+            // Watch NavRoute.json to keep next-hop info in sync (SrvSurvey-style)
+            _navRouteWatcher = new FileSystemWatcher(_journalDir)
+            {
+                Filter = "NavRoute.json",
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
+                EnableRaisingEvents = true
+            };
+            _navRouteWatcher.Changed += OnNavRouteChanged;
+            _navRouteWatcher.Created += OnNavRouteChanged;
+
             _pollTimer?.Change(AppConfiguration.PollingIntervalMs, AppConfiguration.PollingIntervalMs); // Start polling after an initial delay.
             _isMonitoring = true;
             Debug.WriteLine("[JournalWatcherService] Started monitoring");
@@ -265,11 +287,104 @@ namespace EliteDataRelay.Services
             _pollTimer?.Change(Timeout.Infinite, Timeout.Infinite); // Stop the timer.
             _journalDirectoryWatcher?.Dispose();
             _journalDirectoryWatcher = null;
+            _navRouteWatcher?.Dispose();
+            _navRouteWatcher = null;
+            _navRouteDebounce?.Dispose();
+            _navRouteDebounce = null;
 
             _isMonitoring = false;
             Debug.WriteLine("[JournalWatcherService] Stopped monitoring");
 
             Reset();
+        }
+
+        private void OnNavRouteChanged(object sender, FileSystemEventArgs e)
+        {
+            // debounce rapid writes
+            _navRouteDebounce?.Dispose();
+            _navRouteDebounce = new System.Threading.Timer(_ =>
+            {
+                try { ProcessNavRouteFile(); }
+                catch (Exception ex) { Debug.WriteLine($"[JournalWatcherService] NavRoute processing error: {ex.Message}"); }
+            }, null, 50, System.Threading.Timeout.Infinite);
+        }
+
+        private void ProcessNavRouteFile()
+        {
+            var path = Path.Combine(_journalDir, "NavRoute.json");
+            if (!File.Exists(path)) return;
+
+            // handle file lock with small retries
+            string json = string.Empty;
+            for (int i = 0; i < 5; i++)
+            {
+                try
+                {
+                    using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var sr = new StreamReader(fs, Encoding.UTF8);
+                    json = sr.ReadToEnd();
+                    break;
+                }
+                catch { System.Threading.Thread.Sleep(20); }
+            }
+            if (string.IsNullOrWhiteSpace(json)) return;
+
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("Route", out var routeEl) || routeEl.ValueKind != JsonValueKind.Array) return;
+
+            int count = routeEl.GetArrayLength();
+            if (count == 0) return;
+
+            // find current system index in route
+            string? currentName = _lastLocationArgs?.StarSystem ?? _lastStarSystem;
+            long? currentAddr = _lastLocationArgs?.SystemAddress;
+            int currentIdx = -1;
+            for (int i = 0; i < count; i++)
+            {
+                var el = routeEl[i];
+                string? name = el.TryGetProperty("StarSystem", out var ns) ? ns.GetString() : null;
+                long? addr = null;
+                if (el.TryGetProperty("SystemAddress", out var sa) && sa.TryGetInt64(out var sav)) addr = sav;
+                if ((currentAddr.HasValue && addr.HasValue && addr.Value == currentAddr.Value) ||
+                    (!string.IsNullOrEmpty(currentName) && string.Equals(name, currentName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    currentIdx = i;
+                    break;
+                }
+            }
+
+            int nextIdx = (currentIdx >= 0 && currentIdx + 1 < count) ? currentIdx + 1 : 0;
+            var nextEl = routeEl[nextIdx];
+            string? nextName = nextEl.TryGetProperty("StarSystem", out var nn) ? nn.GetString() : null;
+            string? starClass = nextEl.TryGetProperty("StarClass", out var sc) ? sc.GetString() : null;
+
+            // compute remaining jumps
+            int? remaining = (currentIdx >= 0) ? (count - (currentIdx + 1) - 0) : (int?)null; // remaining including next
+            if (remaining.HasValue && remaining.Value < 0) remaining = 0;
+
+            // compute distance from current to next using StarPos if available
+            double? jumpDist = null;
+            try
+            {
+                if (currentIdx >= 0)
+                {
+                    var curEl = routeEl[currentIdx];
+                    if (curEl.TryGetProperty("StarPos", out var cp) && nextEl.TryGetProperty("StarPos", out var np) &&
+                        cp.ValueKind == JsonValueKind.Array && np.ValueKind == JsonValueKind.Array && cp.GetArrayLength() == 3 && np.GetArrayLength() == 3)
+                    {
+                        double cx = cp[0].GetDouble(); double cy = cp[1].GetDouble(); double cz = cp[2].GetDouble();
+                        double nx = np[0].GetDouble(); double ny = np[1].GetDouble(); double nz = np[2].GetDouble();
+                        jumpDist = Math.Sqrt(Math.Pow(nx - cx, 2) + Math.Pow(ny - cy, 2) + Math.Pow(nz - cz, 2));
+                    }
+                }
+            }
+            catch { /* ignore math/json issues */ }
+
+            if (!string.IsNullOrEmpty(nextName))
+            {
+                var args = new NextJumpSystemChangedEventArgs(nextName!, starClass, jumpDist, remaining);
+                NextJumpSystemChanged?.Invoke(this, args);
+            }
         }
         private string? FindLatestJournalFile()
         {

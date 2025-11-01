@@ -78,6 +78,7 @@ namespace EliteDataRelay
         private MaterialsEvent? _lastMaterials;
         private SystemInfoData? _lastSystemInfoData;
         private Status? _lastStatus;
+        private bool _statusPrimed;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
 
@@ -207,6 +208,10 @@ namespace EliteDataRelay
             _journalWatcherService.InitialScanComplete += OnInitialScanComplete;
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
+
+            // Next Jump overlay events
+            _journalWatcherService.JumpInitiated += OnJumpInitiated;
+            _journalWatcherService.JumpCompleted += OnJumpCompleted;
 
             // Mining companion removed
 

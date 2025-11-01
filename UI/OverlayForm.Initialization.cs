@@ -96,6 +96,23 @@ namespace EliteDataRelay.UI
                 Controls.Add(_renderPanel);
                 ApplyRoundedRegion();
             }
+            else if (_position == OverlayPosition.JumpInfo)
+            {
+                // Expanded next-jump overlay for route strip
+                this.Size = new Size(640, 150);
+
+                _renderPanel = new DoubleBufferedPanel
+                {
+                    Location = new Point(0, 0),
+                    Size = this.ClientSize,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
+                _renderPanel.Paint += OnJumpInfoPanelPaint;
+
+                Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
+            }
             
         }
 

@@ -14,11 +14,13 @@ namespace EliteDataRelay.Services
         private OverlayForm? _rightOverlayForm;
         private OverlayForm? _shipIconOverlayForm;
         private OverlayForm? _explorationOverlayForm;
+        private OverlayForm? _jumpOverlayForm;
 
         // Cache last known data to restore on overlay refresh
         private SystemExplorationData? _lastExplorationData;
         private ExplorationSessionData? _lastExplorationSessionData;
         private SystemInfoData? _lastSystemInfoData;
+        private NextJumpOverlayData? _lastNextJumpData;
         private string? _lastCommanderName;
         private string? _lastShipType;
         private long? _lastBalance;
@@ -83,6 +85,13 @@ namespace EliteDataRelay.Services
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
             }
+            if (AppConfiguration.EnableJumpOverlay)
+            {
+                _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag);
+                _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
+                // Ensure it starts hidden; it will only be shown on FSD charge
+                _jumpOverlayForm.Hide();
+            }
             
 
             PositionOverlays(screen);
@@ -137,6 +146,12 @@ namespace EliteDataRelay.Services
             }
 
             // Do not auto-show Jump Info; it is shown on FSD charge
+            if (_jumpOverlayForm != null && _lastNextJumpData != null)
+            {
+                // Keep hidden; will show on StartJump
+                _jumpOverlayForm.UpdateJumpInfo(_lastNextJumpData);
+                _jumpOverlayForm.Hide();
+            }
 
             // Export overlay positions for OBS
             ExportObsPositions();
@@ -148,11 +163,13 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.Close();
             _shipIconOverlayForm?.Close();
             _explorationOverlayForm?.Close();
+            _jumpOverlayForm?.Close();
 
             _leftOverlayForm = null;
             _rightOverlayForm = null;
             _shipIconOverlayForm = null;
             _explorationOverlayForm = null;
+            _jumpOverlayForm = null;
 
             lock (_explorationDebounceLock)
             {
@@ -167,6 +184,7 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
             _explorationOverlayForm?.Show();
+            // Jump overlay is transient; do not force show here
         }
 
         public void Hide()
@@ -175,6 +193,7 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.Hide();
             _shipIconOverlayForm?.Hide();
             _explorationOverlayForm?.Hide();
+            _jumpOverlayForm?.Hide();
         }
 
         /// <summary>
@@ -213,6 +232,7 @@ namespace EliteDataRelay.Services
                 OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
                 OverlayForm.OverlayPosition.ShipIcon => _shipIconOverlayForm,
                 OverlayForm.OverlayPosition.Exploration => _explorationOverlayForm,
+                OverlayForm.OverlayPosition.JumpInfo => _jumpOverlayForm,
                 _ => null
             };
         }
@@ -220,6 +240,24 @@ namespace EliteDataRelay.Services
         public void Dispose()
         {
             Stop();
+        }
+
+        private void EnsureJumpOverlay()
+        {
+            if (!AppConfiguration.EnableJumpOverlay) return;
+            if (_jumpOverlayForm != null && !_jumpOverlayForm.IsDisposed) return;
+
+            // Create lazily if needed (e.g., game check missed earlier)
+            _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag);
+            _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
+
+            var primaryScreen = Screen.PrimaryScreen;
+            if (primaryScreen != null)
+            {
+                var screen = primaryScreen.WorkingArea;
+                var def = new Point((screen.Width / 2) - (_jumpOverlayForm.Width / 2), 20);
+                _jumpOverlayForm.Location = AppConfiguration.JumpOverlayLocation != Point.Empty ? AppConfiguration.JumpOverlayLocation : def;
+            }
         }
     }
 }

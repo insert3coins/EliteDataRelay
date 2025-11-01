@@ -17,7 +17,8 @@ namespace EliteDataRelay.UI
             Info,
             Cargo,
             ShipIcon,
-            Exploration
+            Exploration,
+            JumpInfo
         }
 
         public event EventHandler<Point>? PositionChanged;
@@ -135,6 +136,9 @@ namespace EliteDataRelay.UI
                     break;
                 case OverlayPosition.Exploration:
                     this.Text = "Elite Data Relay: Exploration";
+                    break;
+                case OverlayPosition.JumpInfo:
+                    this.Text = "Elite Data Relay: Next Jump";
                     break;
                 default:
                     this.Text = "Elite Data Relay Overlay";

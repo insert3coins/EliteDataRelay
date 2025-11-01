@@ -213,12 +213,60 @@ namespace EliteDataRelay
         {
             SafeInvoke(() =>
             {
+                const long StatusFlagFsdCharging = 1L << 17; // 0x20000
+                bool wasCharging = _lastStatus != null && ((_lastStatus.Flags & StatusFlagFsdCharging) != 0);
+                bool isCharging = (e.Status.Flags & StatusFlagFsdCharging) != 0;
+
                 _lastStatus = e.Status;
                 if (!_isInitializing)
                 {
                     _cargoFormUI.UpdateShipStatus(e.Status);
                 }
-                // Next jump overlay removed: no action here
+
+
+                // If FSDCharging just started, show Next Jump overlay immediately (SrvSurvey-style fallback)
+                // Ignore the very first Status event after start to avoid false positives
+                if (_statusPrimed && !wasCharging && isCharging && AppConfiguration.EnableJumpOverlay)
+                {
+                    try
+                    {
+                        string? targetName = e.Status.FSDTarget?.Name;
+                        var data = new NextJumpOverlayData
+                        {
+                            TargetSystemName = targetName,
+                            StarClass = e.Status.FSDTarget?.StarClass,
+                        };
+
+                        var route = NavRouteService.TryReadSummary(_journalWatcherService.JournalDirectoryPath!, _lastLocation, _lastSystemAddress);
+                        if (route != null)
+                        {
+                            data.Hops = route.Hops;
+                            data.CurrentJumpIndex = route.CurrentIndex;
+                            data.TotalJumps = route.Total;
+                            data.NextDistanceLy = route.NextDistanceLy;
+                            data.TotalRemainingLy = route.RemainingLy;
+                            if (!data.JumpDistanceLy.HasValue && route.NextDistanceLy.HasValue)
+                                data.JumpDistanceLy = route.NextDistanceLy;
+                            if (!data.RemainingJumps.HasValue && route.CurrentIndex.HasValue)
+                                data.RemainingJumps = Math.Max(0, route.Total - (route.CurrentIndex.Value + 1));
+                            if (string.IsNullOrWhiteSpace(data.TargetSystemName) && route.Hops.Count > 0)
+                                data.TargetSystemName = route.Hops[0].Name;
+                        }
+
+                        _overlayService.ShowNextJumpOverlay(data);
+                    }
+                    catch { /* ignore overlay errors */ }
+                }
+
+                // If FSDCharging was active and is now off (without a jump), hide the overlay (canceled charge)
+                if (_statusPrimed && wasCharging && !isCharging)
+                {
+                    _overlayService.HideNextJumpOverlay();
+                    _overlayService.HideNextJumpOverlay();
+                }
+
+                // Mark status primed after processing first event
+                if (!_statusPrimed) _statusPrimed = true;
             });
         }
 
@@ -285,6 +333,61 @@ namespace EliteDataRelay
                     _cargoFormUI.UpdateSystemInfo(e);
                 }
             });
+        }
+
+        private void OnJumpInitiated(object? sender, JumpInitiatedEventArgs e)
+        {
+            // Show Next Jump overlay when FSD starts charging (SrvSurvey-style)
+            SafeInvoke(() =>
+            {
+                // Additional guard: ignore StartJump-triggered show until we have processed at least one Status.json update
+                if (!_statusPrimed) { return; }
+
+                // If we have a recent status and it's not charging, don't show yet
+                const long StatusFlagFsdCharging = 1L << 17;
+                if (_lastStatus != null && (_lastStatus.Flags & StatusFlagFsdCharging) == 0)
+                {
+                    return;
+                }
+                if (!AppConfiguration.EnableJumpOverlay) return;
+                var targetName = e.TargetSystemName;
+                var data = new NextJumpOverlayData
+                {
+                    TargetSystemName = targetName,
+                    StarClass = e.StarClass,
+                    JumpDistanceLy = e.JumpDistanceLy,
+                    SystemInfo = null
+                };
+
+                // Enrich with current NavRoute summary
+                var route = NavRouteService.TryReadSummary(_journalWatcherService.JournalDirectoryPath!, _lastLocation, _lastSystemAddress);
+                if (route != null)
+                {
+                    data.Hops = route.Hops;
+                    data.CurrentJumpIndex = route.CurrentIndex;
+                    data.TotalJumps = route.Total;
+                    data.NextDistanceLy = route.NextDistanceLy;
+                    data.TotalRemainingLy = route.RemainingLy;
+                    if (!data.JumpDistanceLy.HasValue && route.NextDistanceLy.HasValue)
+                        data.JumpDistanceLy = route.NextDistanceLy;
+                    if (!data.RemainingJumps.HasValue && route.CurrentIndex.HasValue)
+                        data.RemainingJumps = Math.Max(0, route.Total - (route.CurrentIndex.Value + 1));
+
+                    // If StartJump didn't provide a system name, fall back to the next hop from NavRoute
+                    if (string.IsNullOrWhiteSpace(targetName) && route.Hops.Count > 0)
+                    {
+                        data.TargetSystemName = route.Hops[0].Name;
+                    }
+                }
+
+                _overlayService.ShowNextJumpOverlay(data);
+            });
+        }
+
+        private void OnJumpCompleted(object? sender, JumpCompletedEventArgs e)
+        {
+            // Hide Next Jump overlay on arrival (SrvSurvey-style)
+            SafeInvoke(() => { System.Diagnostics.Trace.WriteLine("[CargoForm] FSDJump detected. Hiding Next Jump overlay after delay."); _overlayService.HideNextJumpOverlayAfter(TimeSpan.FromSeconds(2)); });
         }
 
         private void OnMultiSellExplorationData(object? sender, MultiSellExplorationDataEvent e)

@@ -11,7 +11,8 @@ namespace EliteDataRelay.UI
             if (AppConfiguration.EnableInfoOverlay ||
                 AppConfiguration.EnableCargoOverlay ||
                 AppConfiguration.EnableShipIconOverlay ||
-                AppConfiguration.EnableExplorationOverlay)
+                AppConfiguration.EnableExplorationOverlay ||
+                AppConfiguration.EnableJumpOverlay)
             {
                 _overlayService?.Start();
             }

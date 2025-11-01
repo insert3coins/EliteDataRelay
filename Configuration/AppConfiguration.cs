@@ -53,6 +53,7 @@ namespace EliteDataRelay.Configuration
                         EnableCargoOverlay = config.EnableCargoOverlay;
                         EnableShipIconOverlay = config.EnableShipIconOverlay;
                         EnableExplorationOverlay = config.EnableExplorationOverlay;
+                        EnableJumpOverlay = config.EnableJumpOverlay;
                         AllowOverlayDrag = config.AllowOverlayDrag;
                         EnableSessionTracking = config.EnableSessionTracking;
                         ShowSessionOnOverlay = config.ShowSessionOnOverlay;
@@ -75,6 +76,7 @@ namespace EliteDataRelay.Configuration
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
                         ExplorationOverlayLocation = config.ExplorationOverlayLocation;
+                        JumpOverlayLocation = config.JumpOverlayLocation;
                         // Mining announcements removed
                         // OBS compatibility removed
 
@@ -123,6 +125,7 @@ namespace EliteDataRelay.Configuration
                     EnableCargoOverlay = AppConfiguration.EnableCargoOverlay,
                     EnableShipIconOverlay = AppConfiguration.EnableShipIconOverlay,
                     EnableExplorationOverlay = AppConfiguration.EnableExplorationOverlay,
+                    EnableJumpOverlay = AppConfiguration.EnableJumpOverlay,
                     AllowOverlayDrag = AppConfiguration.AllowOverlayDrag,
                     EnableSessionTracking = AppConfiguration.EnableSessionTracking,
                     ShowSessionOnOverlay = AppConfiguration.ShowSessionOnOverlay,
@@ -144,6 +147,7 @@ namespace EliteDataRelay.Configuration
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
+                    JumpOverlayLocation = AppConfiguration.JumpOverlayLocation,
                     // Performance and extras
                     FastStartSkipJournalHistory = AppConfiguration.FastStartSkipJournalHistory,
 
@@ -188,6 +192,7 @@ namespace EliteDataRelay.Configuration
             public bool EnableCargoOverlay { get; set; } = false;
             public bool EnableShipIconOverlay { get; set; } = false;
             public bool EnableExplorationOverlay { get; set; } = false;
+            public bool EnableJumpOverlay { get; set; } = true;
             public bool AllowOverlayDrag { get; set; } = true;
             public bool EnableSessionTracking { get; set; } = true;
             public bool ShowSessionOnOverlay { get; set; } = false;
@@ -213,6 +218,7 @@ namespace EliteDataRelay.Configuration
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
             public Point ExplorationOverlayLocation { get; set; } = new Point(20, 20);
+            public Point JumpOverlayLocation { get; set; } = Point.Empty;
             // Mining announcements removed
             // OBS compatibility removed
 

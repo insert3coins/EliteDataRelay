@@ -56,6 +56,13 @@ namespace EliteDataRelay.Services
             // Exploration overlay defaults to top-left (already set in config default)
             if (_explorationOverlayForm != null)
                 _explorationOverlayForm.Location = AppConfiguration.ExplorationOverlayLocation != Point.Empty ? AppConfiguration.ExplorationOverlayLocation : new Point(screenEdgePadding, screenEdgePadding);
+
+            // Jump overlay defaults to top-center below top edge
+            if (_jumpOverlayForm != null)
+            {
+                var def = new Point((screen.Width / 2) - (_jumpOverlayForm.Width / 2), screenEdgePadding);
+                _jumpOverlayForm.Location = AppConfiguration.JumpOverlayLocation != Point.Empty ? AppConfiguration.JumpOverlayLocation : def;
+            }
         }
 
         private void OnOverlayPositionChanged(object? sender, Point newLocation)
@@ -68,7 +75,9 @@ namespace EliteDataRelay.Services
                 AppConfiguration.ShipIconOverlayLocation = newLocation;
             else if (sender == _explorationOverlayForm)
                 AppConfiguration.ExplorationOverlayLocation = newLocation;
-            
+            else if (sender == _jumpOverlayForm)
+                AppConfiguration.JumpOverlayLocation = newLocation;
+
 
             AppConfiguration.Save();
 

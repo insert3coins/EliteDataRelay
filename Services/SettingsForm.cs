@@ -20,6 +20,7 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableRightOverlay = null!;
         private CheckBox _chkEnableShipIconOverlay = null!;
         private CheckBox _chkEnableExplorationOverlay = null!;
+        private CheckBox _chkEnableJumpOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
         private CheckBox _chkFastStart = null!;
@@ -86,7 +87,7 @@ namespace EliteDataRelay.UI
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
             _chkEnableShipIconOverlay.Checked = AppConfiguration.EnableShipIconOverlay;
             _chkEnableExplorationOverlay.Checked = AppConfiguration.EnableExplorationOverlay;
-            // Next Jump overlay removed
+            _chkEnableJumpOverlay.Checked = AppConfiguration.EnableJumpOverlay;
             _chkFastStart.Checked = AppConfiguration.FastStartSkipJournalHistory;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
@@ -158,7 +159,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableShipIconOverlay = _chkEnableShipIconOverlay.Checked;
             AppConfiguration.EnableExplorationOverlay = _chkEnableExplorationOverlay.Checked;
-            // Next Jump overlay removed
+            AppConfiguration.EnableJumpOverlay = _chkEnableJumpOverlay.Checked;
             AppConfiguration.FastStartSkipJournalHistory = _chkFastStart.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;

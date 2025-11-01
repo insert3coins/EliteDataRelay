@@ -40,6 +40,8 @@ namespace EliteDataRelay.Services
         event EventHandler<TouchdownEvent>? Touchdown;
         event EventHandler<ScreenshotEventArgs>? ScreenshotTaken;
         event EventHandler<NextJumpSystemChangedEventArgs>? NextJumpSystemChanged;
+        event EventHandler<JumpInitiatedEventArgs>? JumpInitiated;
+        event EventHandler<JumpCompletedEventArgs>? JumpCompleted;
 
         void StartMonitoring();
         void StopMonitoring();
