@@ -77,6 +77,7 @@ namespace EliteDataRelay.Configuration
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
                         ExplorationOverlayLocation = config.ExplorationOverlayLocation;
                         JumpOverlayLocation = config.JumpOverlayLocation;
+                        ShowNextJumpJumpsLeft = config.ShowNextJumpJumpsLeft;
                         // Mining announcements removed
                         // OBS compatibility removed
 
@@ -148,6 +149,7 @@ namespace EliteDataRelay.Configuration
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
                     JumpOverlayLocation = AppConfiguration.JumpOverlayLocation,
+                    ShowNextJumpJumpsLeft = AppConfiguration.ShowNextJumpJumpsLeft,
                     // Performance and extras
                     FastStartSkipJournalHistory = AppConfiguration.FastStartSkipJournalHistory,
 
@@ -219,6 +221,7 @@ namespace EliteDataRelay.Configuration
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
             public Point ExplorationOverlayLocation { get; set; } = new Point(20, 20);
             public Point JumpOverlayLocation { get; set; } = Point.Empty;
+            public bool ShowNextJumpJumpsLeft { get; set; } = true;
             // Mining announcements removed
             // OBS compatibility removed
 

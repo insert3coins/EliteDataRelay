@@ -79,12 +79,24 @@ namespace EliteDataRelay.Services
             // Debounce rapid updates (e.g., during startup) so we only render the latest
             lock (_explorationDebounceLock)
             {
+                // If this is the first update or the system changed, push immediately to keep UI snappy
+                bool pushImmediate = _lastExplorationData == null || data == null ||
+                                     (_lastExplorationData?.SystemAddress != data.SystemAddress);
+
                 _explorationDebounceTimer?.Dispose();
-                _explorationDebounceTimer = new System.Threading.Timer(_ =>
+                if (pushImmediate)
                 {
                     try { _explorationOverlayForm?.UpdateExplorationData(_lastExplorationData); }
                     catch { /* ignore */ }
-                }, null, _explorationDebounceDelay, System.TimeSpan.FromMilliseconds(-1));
+                }
+                else
+                {
+                    _explorationDebounceTimer = new System.Threading.Timer(_ =>
+                    {
+                        try { _explorationOverlayForm?.UpdateExplorationData(_lastExplorationData); }
+                        catch { /* ignore */ }
+                    }, null, _explorationDebounceDelay, System.TimeSpan.FromMilliseconds(-1));
+                }
             }
         }
 

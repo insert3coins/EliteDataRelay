@@ -23,5 +23,8 @@ namespace EliteDataRelay.Configuration
         public static Color OverlayBackgroundColor { get; set; } = Color.FromArgb(200, 0, 0, 0);
         public static Color OverlayBorderColor { get; set; } = Color.FromArgb(255, 111, 0); // Elite Dangerous Orange
         public static int OverlayOpacity { get; set; } = 85;
+
+        // Next Jump overlay options
+        public static bool ShowNextJumpJumpsLeft { get; set; } = true;
     }
 }

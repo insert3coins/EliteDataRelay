@@ -98,8 +98,8 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.JumpInfo)
             {
-                // Expanded next-jump overlay for route strip
-                this.Size = new Size(640, 150);
+                // Expanded next-jump overlay to match redesigned layout
+                this.Size = new Size(680, 180);
 
                 _renderPanel = new DoubleBufferedPanel
                 {

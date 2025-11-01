@@ -84,22 +84,23 @@ namespace EliteDataRelay.UI
                     return;
                 }
 
-                // Header: Next system (left) and next distance (right)
+                // Header: Next system (left)
                 string header = _currentJump.SystemInfo?.SystemName ?? _currentJump.TargetSystemName ?? "Unknown";
-                string rightDistance = _currentJump.NextDistanceLy.HasValue ? $"{_currentJump.NextDistanceLy.Value:F1} ly" : (_currentJump.JumpDistanceLy.HasValue ? $"{_currentJump.JumpDistanceLy.Value:F1} ly" : "");
-
-                float rightWidth = 0;
-                if (!string.IsNullOrEmpty(rightDistance))
+                // Right distance (no pill)
+                string distText = _currentJump.NextDistanceLy.HasValue ? $"{_currentJump.NextDistanceLy.Value:F1} ly" : (_currentJump.JumpDistanceLy.HasValue ? $"{_currentJump.JumpDistanceLy.Value:F1} ly" : "");
+                int distWidth = 0;
+                if (!string.IsNullOrEmpty(distText))
                 {
-                    var size = g.MeasureString(rightDistance, GameColors.FontHeader);
-                    rightWidth = size.Width;
-                    g.DrawString(rightDistance, GameColors.FontHeader, GameColors.BrushCyan, width - padding - rightWidth, y);
+                    var size = g.MeasureString(distText, GameColors.FontHeader);
+                    distWidth = (int)Math.Ceiling(size.Width);
+                    g.DrawString(distText, GameColors.FontHeader, GameColors.BrushCyan, width - padding - distWidth, y);
                 }
-                // Truncate header to avoid hitting the right distance or border
-                int maxHeaderWidth = (int)(width - padding * 2 - rightWidth - 10);
-                string headerDraw = TruncateText(g, header, GameColors.FontHeader, Math.Max(10, maxHeaderWidth));
+
+                // Truncate header to avoid overlapping the distance on the right
+                int maxHeaderWidth = Math.Max(10, width - padding * 2 - distWidth - 10);
+                string headerDraw = TruncateText(g, header, GameColors.FontHeader, maxHeaderWidth);
                 g.DrawString(headerDraw, GameColors.FontHeader, GameColors.BrushOrange, padding, y);
-                y += lineHeight + 4;
+                y += lineHeight + 6;
 
                 // Divider
                 g.DrawLine(GameColors.PenGrayDim1, padding, y, width - padding, y);
@@ -107,13 +108,34 @@ namespace EliteDataRelay.UI
 
                 // Subheader: Star class + scoopability and remaining jumps
                 bool scoopable = IsScoopable(_currentJump.StarClass);
-                string classPart = !string.IsNullOrEmpty(_currentJump.StarClass) ? (scoopable ? $"{_currentJump.StarClass} ★" : _currentJump.StarClass!) : "";
+                string classPart = ""; // star info disabled
                 if (!string.IsNullOrEmpty(classPart))
+                {
+                if (false)
                 {
                     string subDraw = TruncateText(g, classPart, GameColors.FontSmall, width - padding * 2);
                     g.DrawString(subDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                     y += lineHeight - 2;
                 }
+
+                // Quick hints for star type (boost/scoopable/hazard)
+                {
+                    var sci = StarClassHelper.FromCode(_currentJump.StarClass);
+                    var hintParts = new System.Collections.Generic.List<string>();
+                    if (sci.IsBoostStar) hintParts.Add("Supercharge available");
+                    if (!sci.IsScoopable) hintParts.Add("Non-scoopable");
+                    if (sci.IsHazard) hintParts.Add("Hazard");
+                    if (hintParts.Count > 0)
+                    {
+                        string hint = string.Join("  •  ", hintParts.ToArray());
+                        string hintDraw = TruncateText(g, hint, GameColors.FontSmall, width - padding * 2);
+                        g.DrawString(hintDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                        y += lineHeight - 4;
+                    }
+                }
+                }
+                else { /* keep spacing minimal when hidden */ y += 2; }
+                // Distance is shown in the right-side pill; omit duplicate under the header
 
                 // Route strip (up to ~7 hops)
                 y += 2; // add a little space before the strip
@@ -134,8 +156,10 @@ namespace EliteDataRelay.UI
             int stripHeight = 30;
             int dotRadius = 5;
             int cy = y + stripHeight / 2;
-            int left = padding;
-            int right = width - padding;
+            // Add an inner margin so line/dots/labels don't hug the window edges
+            int innerMargin = padding + 10;
+            int left = innerMargin;
+            int right = width - innerMargin;
             using (var pen = GameColors.PenGrayDim1)
             {
                 g.DrawLine(pen, left, cy, right, cy);
@@ -154,30 +178,91 @@ namespace EliteDataRelay.UI
                 {
                     g.FillEllipse(brush, cx - r, cy - r, r * 2, r * 2);
                 }
-                // Optional small distance labels under first few hops where we have data
-                if (hop.DistanceLy.HasValue && i < 4)
+                // Stronger active-hop mark glow on first hop
+                if (i == 0)
+                {
+                    using (var glow = new Pen(Color.FromArgb(120, 0, 180, 255), 3f))
+                    {
+                        g.DrawEllipse(glow, cx - (r + 4), cy - (r + 4), (r + 4) * 2, (r + 4) * 2);
+                    }
+                }
+                // Destination ring highlight on final hop
+                if (i == n - 1)
+                {
+                    using (var ring = new Pen(Color.FromArgb(200, 0, 180, 255), 2f))
+                    {
+                        g.DrawEllipse(ring, cx - (r + 3), cy - (r + 3), (r + 3) * 2, (r + 3) * 2);
+                    }
+                }
+
+                // Distance labels: baseline at left, then per-hop segment distances when available
+                if (i == 0)
+                {
+                    string dl0 = "0.0";
+                    var sz0 = g.MeasureString(dl0, GameColors.FontSmall);
+                    float lx0 = left - sz0.Width / 2f;
+                    lx0 = Math.Max(innerMargin, Math.Min(width - innerMargin - sz0.Width, lx0));
+                    g.DrawString(dl0, GameColors.FontSmall, GameColors.BrushGrayText, lx0, cy + r + 2);
+                }
+                if (hop.DistanceLy.HasValue)
                 {
                     string dl = $"{hop.DistanceLy.Value:F1}";
                     var size = g.MeasureString(dl, GameColors.FontSmall);
-                    g.DrawString(dl, GameColors.FontSmall, GameColors.BrushGrayText, cx - size.Width / 2, cy + r + 2);
+                    // Clamp label within inner margins to avoid hitting borders
+                    float lx = cx - size.Width / 2f;
+                    lx = Math.Max(innerMargin, Math.Min(width - innerMargin - size.Width, lx));
+                    g.DrawString(dl, GameColors.FontSmall, GameColors.BrushGrayText, lx, cy + r + 2);
                 }
             }
 
-            // Footer: Jump idx/total and remaining
-            y += stripHeight + 6;
+            // Progress bar under strip
+            y += stripHeight + 8;
+            var barRect = new Rectangle(padding + 10, y, width - (padding + 10) * 2, 8);
+            using (var bg = new SolidBrush(Color.FromArgb(60, 255, 255, 255)))
+            using (var fill = new SolidBrush(Color.FromArgb(180, 0, 180, 255)))
+            using (var pen = GameColors.PenGrayDim1)
+            {
+                g.FillRectangle(bg, barRect);
+                double frac = 0;
+                if (data.CurrentJumpIndex.HasValue && data.TotalJumps.HasValue && data.TotalJumps.Value > 0)
+                {
+                    frac = Math.Min(1.0, Math.Max(0.0, (double)(data.CurrentJumpIndex.Value + 1) / data.TotalJumps.Value));
+                }
+                var fillRect = new Rectangle(barRect.X, barRect.Y, (int)(barRect.Width * frac), barRect.Height);
+                g.FillRectangle(fill, fillRect);
+                g.DrawRectangle(pen, barRect);
+            }
+
+            // Footer: Jump idx/total (left subtle) and Remaining (right emphasis)
+            y += 14;
             string footerL = string.Empty;
             if (data.CurrentJumpIndex.HasValue && data.TotalJumps.HasValue)
             {
                 footerL = $"Jump {data.CurrentJumpIndex.Value + 1} of {data.TotalJumps.Value}";
             }
-            string footerR = data.TotalRemainingLy.HasValue ? $"Remaining: {data.TotalRemainingLy.Value:F1} ly" : string.Empty;
-            if (!string.IsNullOrEmpty(footerL)) g.DrawString(footerL, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-            if (!string.IsNullOrEmpty(footerR))
+            if (!string.IsNullOrEmpty(footerL)) g.DrawString(footerL, GameColors.FontSmall, GameColors.BrushGrayText, padding + 2, y);
+            if (data.TotalRemainingLy.HasValue)
             {
-                var size = g.MeasureString(footerR, GameColors.FontSmall);
-                g.DrawString(footerR, GameColors.FontSmall, GameColors.BrushGrayText, width - padding - size.Width, y);
+                string num = $"{data.TotalRemainingLy.Value:F1} ly";
+                string label = "Remaining ";
+                var numSize = g.MeasureString(num, GameColors.FontSmall);
+                var labelSize = g.MeasureString(label, GameColors.FontSmall);
+                float rx = width - padding - numSize.Width - 2;
+                g.DrawString(label, GameColors.FontSmall, GameColors.BrushGrayText, rx - labelSize.Width, y);
+                using (var gold = new SolidBrush(GameColors.Gold))
+                {
+                    g.DrawString(num, GameColors.FontSmall, gold, rx, y);
+                }
             }
             y += 18;
+        }
+
+        // (Removed DrawPill; distance is rendered as plain text.)
+
+        private void DrawBulletText(Graphics g, int x, int y, string text)
+        {
+            g.DrawString("•", GameColors.FontSmall, GameColors.BrushGrayText, x, y);
+            g.DrawString(" " + text, GameColors.FontSmall, GameColors.BrushGrayText, x + 10, y);
         }
 
         private static bool IsScoopable(string? starClass)
@@ -202,3 +287,6 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+
+

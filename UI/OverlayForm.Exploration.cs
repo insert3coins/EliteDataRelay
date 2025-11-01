@@ -280,7 +280,35 @@ namespace EliteDataRelay.UI
                         g.DrawString(trafficText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                         // Source tag removed per request; show only values
                     }
-                    else { if (_currentSystemInfo != null) { string infoText = $"Allegiance: {_currentSystemInfo.Allegiance}  \u2022  Security: {_currentSystemInfo.Security}"; if (_currentSystemInfo.Population > 0) { infoText += $"  \u2022  Pop: {_currentSystemInfo.Population:N0}"; } g.DrawString(infoText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y); } else { g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y); } }
+                    else
+                    {
+                        if (_currentSystemInfo != null)
+                        {
+                            var parts = new List<string>();
+
+                            bool hasAllegiance = !string.IsNullOrWhiteSpace(_currentSystemInfo.Allegiance) &&
+                                                 !string.Equals(_currentSystemInfo.Allegiance, "N/A", StringComparison.OrdinalIgnoreCase);
+                            bool hasSecurity = !string.IsNullOrWhiteSpace(_currentSystemInfo.Security) &&
+                                               !string.Equals(_currentSystemInfo.Security, "N/A", StringComparison.OrdinalIgnoreCase);
+
+                            if (hasAllegiance)
+                                parts.Add($"Allegiance: {_currentSystemInfo.Allegiance}");
+                            if (hasSecurity)
+                                parts.Add($"Security: {_currentSystemInfo.Security}");
+                            if (_currentSystemInfo.Population > 0)
+                                parts.Add($"Pop: {_currentSystemInfo.Population:N0}");
+
+                            string infoText = parts.Count > 0
+                                ? string.Join("  \u2022  ", parts)
+                                : "Known System";
+
+                            g.DrawString(infoText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                        }
+                        else
+                        {
+                            g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                        }
+                    }
                     y += lineHeight;
                 }
 
