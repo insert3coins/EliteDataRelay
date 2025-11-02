@@ -30,6 +30,12 @@ namespace EliteDataRelay.UI
         private double _animationPhase;
         private const int ANIMATION_AMPLITUDE = 5; // How many pixels up/down it will move
         private const double ANIMATION_SPEED = 0.05; // How fast it will move
+        // Fade animation for Jump overlay
+        private System.Windows.Forms.Timer? _fadeTimer;
+        private double _fadeDelta;
+        private bool _fadeHideOnComplete;
+        private double _fadeTarget;
+        private bool _suppressOpacityOnLoad;
 
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
 
@@ -168,10 +174,116 @@ namespace EliteDataRelay.UI
         {
             base.OnLoad(e);
 
-            // Restore historical behavior: slider controls window opacity.
-            this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+            // Restore historical behavior: slider controls window opacity, unless we're doing a fade-in
+            if (!_suppressOpacityOnLoad)
+            {
+                this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+            }
 
             _animationTimer?.Start();
+        }
+
+        // Public helpers to fade the Next Jump overlay in and out
+        public void FadeIn(int durationMs = 200)
+        {
+            if (_position != OverlayPosition.JumpInfo)
+            {
+                // Non-jump overlays: just show
+                if (this.InvokeRequired) { this.BeginInvoke(new Action(() => this.Show())); } else { this.Show(); }
+                return;
+            }
+            void DoFadeIn()
+            {
+                StopFade();
+                double target = AppConfiguration.OverlayOpacity / 100.0;
+                // If already visible and near target, don't replay fade
+                if (this.Visible && Math.Abs(this.Opacity - target) < 0.02)
+                {
+                    return;
+                }
+                this.Opacity = 0.0;
+                _suppressOpacityOnLoad = true;
+                this.Show();
+                _suppressOpacityOnLoad = false;
+                _fadeHideOnComplete = false;
+                StartFadeTo(target, durationMs);
+            }
+            if (this.InvokeRequired) this.BeginInvoke(new Action(DoFadeIn)); else DoFadeIn();
+        }
+
+        public void FadeOutAndHide(int durationMs = 200)
+        {
+            if (_position != OverlayPosition.JumpInfo)
+            {
+                if (this.InvokeRequired) { this.BeginInvoke(new Action(() => this.Hide())); } else { this.Hide(); }
+                return;
+            }
+            void DoFadeOut()
+            {
+                StopFade();
+                if (!this.Visible || this.Opacity <= 0.01)
+                {
+                    // Already hidden or fully transparent
+                    this.Hide();
+                    this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+                    return;
+                }
+                _fadeHideOnComplete = true;
+                StartFadeTo(0.0, durationMs);
+            }
+            if (this.InvokeRequired) this.BeginInvoke(new Action(DoFadeOut)); else DoFadeOut();
+        }
+
+        private void StartFadeTo(double targetOpacity, int durationMs)
+        {
+            double current = this.Opacity;
+            int interval = 16; // ~60fps
+            int steps = Math.Max(1, durationMs / interval);
+            _fadeTarget = targetOpacity;
+            _fadeDelta = (targetOpacity - current) / steps;
+            _fadeTimer = new System.Windows.Forms.Timer { Interval = interval };
+            _fadeTimer.Tick += FadeTimer_Tick;
+            _fadeTimer.Start();
+        }
+
+        private void FadeTimer_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                double next = this.Opacity + _fadeDelta;
+                // Clamp when crossing target
+                if ((_fadeDelta > 0 && next >= _fadeTarget) || (_fadeDelta < 0 && next <= _fadeTarget))
+                {
+                    next = Math.Max(0.0, Math.Min(1.0, _fadeTarget));
+                }
+                this.Opacity = next;
+
+                bool done = Math.Abs(this.Opacity - _fadeTarget) < 0.002;
+                if (done)
+                {
+                    StopFade();
+                    if (_fadeHideOnComplete)
+                    {
+                        this.Hide();
+                        // Reset to configured opacity for next show
+                        this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
+                    }
+                }
+            }
+            catch
+            {
+                StopFade();
+            }
+        }
+
+        private void StopFade()
+        {
+            if (_fadeTimer != null)
+            {
+                try { _fadeTimer.Stop(); } catch { }
+                try { _fadeTimer.Dispose(); } catch { }
+                _fadeTimer = null;
+            }
         }
 
         private void AttachDragHandlers(Control control)
@@ -254,6 +366,7 @@ namespace EliteDataRelay.UI
                 _textBrush?.Dispose();
                 _grayBrush?.Dispose();
                 _animationTimer?.Dispose();
+                _fadeTimer?.Dispose();
                 _frameCache?.Dispose();
                 _shipIconBackgroundCache?.Dispose();
                 // Don't dispose _shipIcon - it's managed by the service layer

@@ -112,13 +112,21 @@ namespace EliteDataRelay.Services
             _lastNextJumpData = data;
             EnsureJumpOverlay();
             if (_jumpOverlayForm == null) return;
+            // If already visible, just update content without replaying fade
+            if (_jumpOverlayForm.Visible)
+            {
+                _jumpOverlayForm.UpdateJumpInfo(data);
+                return;
+            }
             _jumpOverlayForm.UpdateJumpInfo(data);
-            _jumpOverlayForm.Show();
+            _jumpOverlayForm.FadeIn(200);
         }
 
         public void HideNextJumpOverlay()
         {
-            _jumpOverlayForm?.Hide();
+            if (_jumpOverlayForm == null) return;
+            if (!_jumpOverlayForm.Visible) return;
+            _jumpOverlayForm.FadeOutAndHide(200);
         }
 
         public void HideNextJumpOverlayAfter(TimeSpan delay)

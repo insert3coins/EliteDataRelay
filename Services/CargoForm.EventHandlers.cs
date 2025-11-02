@@ -277,7 +277,6 @@ namespace EliteDataRelay
                 if (_statusPrimed && wasCharging && !isCharging)
                 {
                     _overlayService.HideNextJumpOverlay();
-                    _overlayService.HideNextJumpOverlay();
                 }
 
                 // Mark status primed after processing first event
