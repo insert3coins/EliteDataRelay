@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.IO;
+using System.Linq;
+using System.Linq;
 
 using System.Reflection;
 namespace EliteDataRelay.Services
@@ -14,8 +18,96 @@ namespace EliteDataRelay.Services
     public static class ShipIconService
     {
         private static readonly Dictionary<string, Image> _iconCache = new Dictionary<string, Image>(StringComparer.OrdinalIgnoreCase);
-        private static readonly string _shipIconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images", "ships");
+        //private static readonly string _shipIconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images", "ships");
         private static Image? _defaultIcon;
+        private static readonly Dictionary<string, string> _embeddedResourceIndex = new(StringComparer.OrdinalIgnoreCase);
+
+        // Display names and common aliases -> file base name
+        // This lets callers pass user-facing names (e.g., "Cobra MkIII", "Type-6 Transporter", "Fer-de-Lance")
+        // and we resolve them to the actual filename we ship with.
+        private static readonly Dictionary<string, string> _aliasToFileNameMap = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // Core names (as displayed) mapped to our filenames
+            { "Adder", "Adder" },
+            { "Alliance Challenger", "Alliance Challenger" },
+            { "Alliance Chieftain", "Alliance Chieftain" },
+            { "Alliance Crusader", "Alliance Crusader" },
+            { "Anaconda", "Anaconda" },
+            { "Asp Explorer", "Asp Explorer" },
+            { "Asp Scout", "Asp Scout" },
+            { "Beluga Liner", "Beluga Liner" },
+            { "Cobra Mk III", "Cobra Mk III" },
+            { "Cobra Mk IV", "Cobra Mk IV" },
+            { "Cobra Mk V", "Cobra Mk V" },
+            { "Corsair", "Corsair" },
+            { "Cyclops", "Cyclops" },
+            { "Diamondback Explorer", "DiamondBack Explorer" },
+            { "Diamondback Scout", "Diamondback Scout" },
+            { "Dolphin", "Dolphin" },
+            { "Eagle Mk II", "Eagle Mk II" },
+            { "Federal Assault Ship", "Federal Assault Ship" },
+            { "Federal Dropship", "Federal Dropship" },
+            { "Federal Gunship", "Federal_Gunship" },
+            { "Federal Corvette", "Federation_Corvette" },
+            { "Federation Corvette", "Federation_Corvette" },
+            { "Fer De Lance", "Fer De Lance" },
+            { "Hauler", "Hauler" },
+            { "Imperial Clipper", "Imperial Clipper" },
+            { "Imperial Courier", "Imperial Courier" },
+            { "Imperial Eagle", "Imperial Eagle" },
+            { "Imperial Cutter", "Cutter" },
+            { "Cutter", "Cutter" },
+            { "Keelback", "Keelback" },
+            { "Krait Mk II", "Krait Mk II" },
+            { "Krait Phantom", "Krait Phantom" },
+            { "Mamba", "Mamba" },
+            { "Mandalay", "Mandalay" },
+            { "Orca", "Orca" },
+            { "Panther Clipper Mk II", "Panther Clipper Mk II" },
+            { "Python Mk II", "Python Mk II" },
+            { "Python", "Python" },
+            { "Sidewinder", "Sidewinder" },
+            { "Type 6 Transporter", "Type 6 Transporter" },
+            { "Type 7 Transporter", "Type 7 Transporter" },
+            { "Type 9 Heavy", "Type 9 Heavy" },
+            { "Type 9 Military", "Type9_Military" },
+            { "Type9 Military", "Type9_Military" },
+            { "Type 10 Defender", "Type 10 Defender" },
+            { "Type-10 Defender", "Type 10 Defender" },
+            { "Type-11 Prospector", "Type-11 Prospector" },
+            { "Type 11 Prospector", "Type-11 Prospector" },
+            { "Type-8 Transporter", "Type-8 Transporter" },
+            { "Viper Mk III", "Viper Mk III" },
+            { "Viper Mk IV", "Viper Mk IV" },
+            { "Vulture", "Vulture" },
+
+            // Mk with no space variants
+            { "Cobra MkIII", "Cobra Mk III" },
+            { "Cobra MkIV", "Cobra Mk IV" },
+            { "Cobra MkV", "Cobra Mk V" },
+            { "Eagle MkII", "Eagle Mk II" },
+            { "Krait MkII", "Krait Mk II" },
+            { "Python MkII", "Python Mk II" },
+            { "Viper MkIII", "Viper Mk III" },
+            { "Viper MkIV", "Viper Mk IV" },
+            { "Panther Clipper MkII", "Panther Clipper Mk II" },
+
+            // Hyphen/space variants for Type series
+            { "Type-6 Transporter", "Type 6 Transporter" },
+            { "Type-7 Transporter", "Type 7 Transporter" },
+            { "Type 8 Transporter", "Type-8 Transporter" },
+            { "Type9 Heavy", "Type 9 Heavy" },
+
+            // Fer-de-Lance punctuation variant
+            { "Fer-de-Lance", "Fer De Lance" },
+
+            // Minor spacing/casing aliases
+            // Note: dictionary is case-insensitive; a single alias covers case variants
+
+            // Redirect our internal-based display names to named files
+            { "Type9_Military", "Type 10 Defender" },
+            { "Lakon_Miner", "Type-11 Prospector" }
+        };
 
         /// <summary>
         /// Static constructor to log the ship icon mappings on startup.
@@ -23,11 +115,43 @@ namespace EliteDataRelay.Services
         static ShipIconService()
         {
             Trace.WriteLine("[ShipIconService] Initializing ship icon mappings...");
+            // Index embedded PNG resources by filename (without extension)
+            try
+            {
+                var asm = Assembly.GetExecutingAssembly();
+                var names = asm.GetManifestResourceNames();
+                foreach (var res in names)
+                {
+                    if (!res.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    var withoutExt = res.Substring(0, res.Length - 4);
+                    var lastDot = withoutExt.LastIndexOf('.');
+                    var baseName = lastDot >= 0 ? withoutExt.Substring(lastDot + 1) : withoutExt;
+
+                    if (!string.IsNullOrWhiteSpace(baseName) && !_embeddedResourceIndex.ContainsKey(baseName))
+                    {
+                        _embeddedResourceIndex[baseName] = res;
+                    }
+                }
+                Trace.WriteLine($"[ShipIconService] Embedded PNGs indexed: {_embeddedResourceIndex.Count}");
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[ShipIconService] Failed to index embedded resources: {ex.Message}");
+            }
             foreach (var mapping in _shipToFileNameMap)
             {
                 Trace.WriteLine($"[ShipIconService] Mapping: '{mapping.Key}' -> '{mapping.Value}.png'");
             }
             Trace.WriteLine($"[ShipIconService] Total mappings loaded: {_shipToFileNameMap.Count}");
+
+            Trace.WriteLine("[ShipIconService] Initializing alias/display name mappings...");
+            foreach (var alias in _aliasToFileNameMap)
+            {
+                Trace.WriteLine($"[ShipIconService] Alias: '{alias.Key}' -> '{alias.Value}.png'");
+            }
+            Trace.WriteLine($"[ShipIconService] Total aliases loaded: {_aliasToFileNameMap.Count}");
         }
 
         // Maps the journal's internal ship name (usually lowercase) to a specific icon file name.
@@ -105,26 +229,27 @@ namespace EliteDataRelay.Services
                 return cachedIcon;
             }
 
-            // Use the mapping to find the correct file name for the given internal ship name.
-            if (_shipToFileNameMap.TryGetValue(internalShipName, out var fileName))
+            // First, try treating the input as a display name/alias.
+            // This enables callers to pass user-facing names directly.
+            if (TryResolveAliasToFileBase(internalShipName, out var fileName))
             {
-                string filePath = Path.Combine(_shipIconPath, $"{fileName}.png");
-                Trace.WriteLine($"[ShipIconService] Mapped '{internalShipName}' to file '{filePath}'.");
-
-                try
+                var icon = TryLoadIcon(fileName);
+                if (icon != null)
                 {
-                    if (File.Exists(filePath))
-                    {
-                        var icon = Image.FromFile(filePath);
-                        _iconCache[internalShipName] = icon; // Cache under the original name for performance
-                        Trace.WriteLine($"[ShipIconService] Successfully loaded and cached icon for '{internalShipName}'.");
-                        return icon;
-                    }
-                    Trace.WriteLine($"[ShipIconService] Icon file not found: '{filePath}'.");
+                    _iconCache[internalShipName] = icon;
+                    return icon;
                 }
-                catch (Exception ex)
+            }
+
+            // Otherwise, use the internal->display mapping then resolve aliases
+            if (_shipToFileNameMap.TryGetValue(internalShipName, out var displayName)
+                && TryResolveAliasToFileBase(displayName, out fileName))
+            {
+                var icon = TryLoadIcon(fileName);
+                if (icon != null)
                 {
-                    Trace.WriteLine($"[ShipIconService] Failed to load icon from file '{filePath}': {ex.Message}");
+                    _iconCache[internalShipName] = icon;
+                    return icon;
                 }
             }
             else
@@ -163,24 +288,123 @@ namespace EliteDataRelay.Services
                 return _defaultIcon;
             }
 
-            string filePath = Path.Combine(_shipIconPath, "unknown.png");
-            Trace.WriteLine($"[ShipIconService] Attempting to load default icon from file '{filePath}'.");
+            // Filesystem fallback removed; rely on embedded resources or placeholder
+            _defaultIcon = CreateTextPlaceholder("No image found");
+            return _defaultIcon;
+        }
 
+        private static bool TryResolveAliasToFileBase(string nameOrAlias, out string fileBase)
+        {
+            // Direct alias lookup
+            if (_aliasToFileNameMap.TryGetValue(nameOrAlias, out var resolved) && !string.IsNullOrEmpty(resolved))
+            {
+                fileBase = resolved;
+                return true;
+            }
+
+            // As a fallback, if the alias appears to already be an embedded file base, accept it
+            if (_embeddedResourceIndex.ContainsKey(nameOrAlias))
+            {
+                fileBase = nameOrAlias;
+                return true;
+            }
+
+            fileBase = string.Empty;
+            return false;
+        }
+
+        private static Image? TryLoadIcon(string fileBase)
+        {
+            // Try embedded resource first (preferred for single-file publish)
+            var embedded = TryLoadEmbeddedIcon(fileBase);
+            if (embedded != null)
+            {
+                return embedded;
+            }
+
+            // Filesystem fallback removed; rely solely on embedded resources
+            return null;
+        }
+
+        private static Image? TryLoadEmbeddedIcon(string fileBase)
+        {
             try
             {
-                if (File.Exists(filePath))
+                if (_embeddedResourceIndex.TryGetValue(fileBase, out var resName)
+                    || _embeddedResourceIndex.TryGetValue(Path.GetFileNameWithoutExtension(fileBase), out resName))
                 {
-                    _defaultIcon = Image.FromFile(filePath);
-                    Trace.WriteLine($"[ShipIconService] Successfully loaded and cached default icon.");
-                    return _defaultIcon;
+                    var asm = Assembly.GetExecutingAssembly();
+                    using var stream = asm.GetManifestResourceStream(resName);
+                    if (stream != null)
+                    {
+                        using var temp = Image.FromStream(stream);
+                        var bmp = new Bitmap(temp);
+                        Trace.WriteLine($"[ShipIconService] Loaded embedded icon '{fileBase}' from '{resName}'.");
+                        return bmp;
+                    }
                 }
-                Trace.WriteLine($"[ShipIconService] Default icon file not found: '{filePath}'.");
+                else
+                {
+                    var match = _embeddedResourceIndex.FirstOrDefault(kvp => kvp.Key.Equals(fileBase, StringComparison.OrdinalIgnoreCase));
+                    if (!string.IsNullOrEmpty(match.Key))
+                    {
+                        var asm = Assembly.GetExecutingAssembly();
+                        using var stream = asm.GetManifestResourceStream(match.Value);
+                        if (stream != null)
+                        {
+                            using var temp = Image.FromStream(stream);
+                            var bmp = new Bitmap(temp);
+                            Trace.WriteLine($"[ShipIconService] Loaded embedded icon '{fileBase}' via loose match '{match.Value}'.");
+                            return bmp;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"[ShipIconService] Failed to load default icon from file: {ex.Message}");
+                Trace.WriteLine($"[ShipIconService] Failed to load embedded icon for '{fileBase}': {ex.Message}");
             }
-            return null; // Ultimate fallback if even the default is missing.
+            return null;
+        }
+
+        private static Image CreateTextPlaceholder(string text, int width = 160, int height = 160)
+        {
+            var bmp = new Bitmap(width, height);
+            try
+            {
+                using (var g = Graphics.FromImage(bmp))
+                using (var bg = new SolidBrush(Color.FromArgb(40, 40, 40)))
+                using (var border = new Pen(Color.DimGray))
+                using (var brush = new SolidBrush(Color.Gainsboro))
+                {
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+                    g.Clear(Color.Transparent);
+                    g.FillRectangle(bg, 0, 0, width, height);
+                    g.DrawRectangle(border, 0, 0, width - 1, height - 1);
+
+                    var rect = new RectangleF(8, 8, width - 16, height - 16);
+                    using (var font = new Font("Segoe UI", 12f, FontStyle.Bold, GraphicsUnit.Point))
+                    {
+                        var sf = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center,
+                            Trimming = StringTrimming.EllipsisWord
+                        };
+                        g.DrawString(text, font, brush, rect, sf);
+                    }
+                }
+                return bmp;
+            }
+            catch
+            {
+                // As a last resort, return a 1x1 transparent pixel
+                bmp.Dispose();
+                var tiny = new Bitmap(1, 1);
+                tiny.SetPixel(0, 0, Color.Transparent);
+                return tiny;
+            }
         }
     }
 }

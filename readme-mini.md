@@ -1,21 +1,22 @@
-Mini Release Notes - Exploration & Startup v0.70.2
+Mini Release Notes - Ship Icons v0.70.3
 
 What's new
-- Exploration tab: Current system only at startup
-  - Suppresses exploration UI/events during the initial journal scan to avoid iterating historical systems.
-  - After the scan completes, resolves the last known location and publishes exactly that system to the tab and overlays.
-  - Prevents session stats from spiking due to historical entries.
-- Faster, cleaner startup behavior
-  - Uses the existing Fast Start option (skip journal history) for snappier first paint.
-  - OnLocationChanged is ignored during initialization; live updates resume immediately after the initial scan.
-- Build cleanup
-  - Removed an unreachable code path in the Next Jump overlay, fixing the sole build warning (CS0162).
-  - Build is now clean: 0 warnings, 0 errors.
-Fixes
-- Prevented rare shutdown crash (GDI+ "Parameter is not valid") when disposing UI.
-  - Root cause: controls were disposed after shared fonts, causing text measurement to hit disposed FontFamily.
-  - Fix: dispose UI controls before `FontManager` (ControlFactory before fonts) and defensively reset control fonts to `SystemFonts.DefaultFont` before disposal.
-  - Touched files: `UI/CargoFormUI.cs`, `UI/ControlFactory.Buttons.cs`, `UI/ControlFactory.Labels.cs`.
-Notes
-- To maximize instant feel, enable the setting: "Fast start: skip journal history at startup".
-  This makes the app jump straight to live events; the Exploration tab still resolves the current system once the initial scan finishes.
+- Ship Icons
+  - Display-name + alias matching for ship icons.
+    - Supports Mk spacing variants (e.g., "Cobra MkIII" vs "Cobra Mk III").
+    - Supports hyphen/space variants (e.g., "Type-7 Transporter" vs "Type 7 Transporter").
+    - Handles punctuation variants (e.g., "Fer-de-Lance").
+  - Internal ship names remain supported via mapping, with caching unchanged.
+  - Added ship images and redirects:
+    - New images: `Images/Ships/Type 10 Defender.png`, `Images/Ships/Type-11 Prospector.png`.
+    - Internal names mapped: `type9_military` -> Type 10 Defender, `lakonminer` -> Type-11 Prospector.
+  - Embedded ship PNGs into the executable (no runtime file I/O required).
+    - Project: `EliteDataRelay.csproj` now embeds `Images/Ships/**/*.png` as resources.
+    - Removed copy-to-output of `images/ships`; ShipIconService now loads embedded resources only.
+  - Fallback behavior updated:
+    - Replaced `unknown.png` with a generated placeholder image containing the text "No image found".
+  - Stability/quality fixes:
+    - Removed duplicate alias keys causing static initializer exceptions.
+    - Resolved nullable warning (CS8601) in alias resolution.
+
+---
