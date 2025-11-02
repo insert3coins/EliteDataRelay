@@ -157,17 +157,21 @@ namespace EliteDataRelay.UI
         {
             try
             {
-                // Create a MemoryStream from the icon resource. This stream must be kept open
-                // for the lifetime of the Icon object. We store it in a field and dispose of
-                // it when the UI is disposed. This prevents heap corruption (0xc0000374) that
-                // can occur if the stream is garbage collected while the Icon is still in use.
-                _iconStream = new MemoryStream(Properties.Resources.AppIcon);
-                _appIcon = new Icon(_iconStream);
+                // Prefer freshly-rendered app icon reflecting current theme colors
+                _appIcon = AppIconFactory.CreateAppIcon(32);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error initializing application icon: {ex}");
-                // If icon fails to load, _appIcon will remain null, and the form/tray will use defaults.
+                System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Error generating app icon, falling back to resource: {ex}");
+                try
+                {
+                    _iconStream = new MemoryStream(Properties.Resources.AppIcon);
+                    _appIcon = new Icon(_iconStream);
+                }
+                catch (Exception ex2)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CargoFormUI] Resource icon load failed: {ex2}");
+                }
             }
         }
 

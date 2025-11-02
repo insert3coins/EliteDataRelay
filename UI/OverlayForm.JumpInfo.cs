@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 
@@ -71,7 +72,10 @@ namespace EliteDataRelay.UI
                 using (var borderPen = GameColors.PenBorder2)
                 {
                     g.FillPath(bgBrush, path);
-                    g.DrawPath(borderPen, path);
+                    if (AppConfiguration.OverlayShowBorderJump)
+                    {
+                        g.DrawPath(borderPen, path);
+                    }
                 }
 
                 const int padding = 12;

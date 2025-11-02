@@ -270,7 +270,7 @@ namespace EliteDataRelay.Services
             var css = string.Join("\n", new[]
             {
                 "body{margin:0;background:rgba(0,0,0,0)}",
-                ".card{width:320px;height:85px;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidth() + " solid " + CssBorderColor() + ";padding:10px 14px;box-sizing:border-box}",
+                ".card{width:320px;height:85px;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidthInfo() + " solid " + CssBorderColor() + ";padding:10px 14px;box-sizing:border-box}",
                 ".label{color:" + CssGrayText() + ";font-size:" + FontSmall() + "px}",
                 ".value{color:" + CssCyan() + ";font-size:" + FontNormal() + "px}",
                 ".orange{color:" + CssOrange() + "}"
@@ -293,7 +293,7 @@ namespace EliteDataRelay.Services
             var css = string.Join("\n", new[]
             {
                 "body{margin:0;background:rgba(0,0,0,0)}",
-                ".card{width:280px;height:600px;position:relative;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidth() + " solid " + CssBorderColor() + ";padding:10px 12px;box-sizing:border-box;overflow:hidden}",
+                ".card{width:280px;height:600px;position:relative;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidthCargo() + " solid " + CssBorderColor() + ";padding:10px 12px;box-sizing:border-box;overflow:hidden}",
                 ".row{display:flex;justify-content:space-between;align-items:center}",
                 ".label{color:" + CssGrayText() + ";font-size:" + FontSmall() + "px}",
                 ".value{color:" + CssCyan() + ";font-size:" + FontNormal() + "px}",
@@ -321,7 +321,7 @@ namespace EliteDataRelay.Services
             var css = string.Join("\n", new[]
             {
                 "body{margin:0;background:rgba(0,0,0,0)}",
-                ".wrap{display:inline-block;width:320px;height:320px;background:" + CssBackground() + ";border:" + BorderWidth() + " solid " + CssBorderColor() + ";padding:6px;box-sizing:border-box}",
+                ".wrap{display:inline-block;width:320px;height:320px;background:" + CssBackground() + ";border:" + BorderWidthShipIcon() + " solid " + CssBorderColor() + ";padding:6px;box-sizing:border-box}",
                 "img{display:block;max-width:100%;max-height:100%}",
                 ".name{font-family:" + CssFontFamily() + ";color:" + CssCyan() + ";text-align:center;margin-top:6px}"
             });
@@ -339,7 +339,7 @@ namespace EliteDataRelay.Services
             var css = string.Join("\n", new[]
             {
                 "body{margin:0;background:rgba(0,0,0,0)}",
-                ".card{width:380px;height:255px;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidth() + " solid " + CssBorderColor() + ";padding:10px 14px;box-sizing:border-box}",
+                ".card{width:380px;height:255px;font-family:" + CssFontFamily() + ";color:" + CssWhite() + ";background:" + CssBackground() + ";border:" + BorderWidthExploration() + " solid " + CssBorderColor() + ";padding:10px 14px;box-sizing:border-box}",
                 ".label{color:" + CssGrayText() + ";font-size:" + FontSmall() + "px}",
                 ".value{color:" + CssCyan() + ";font-size:" + FontNormal() + "px}",
                 ".orange{color:" + CssOrange() + "}",
@@ -381,7 +381,10 @@ namespace EliteDataRelay.Services
             var a = Math.Clamp(AppConfiguration.WebOverlayOpacity/100.0, 0.0, 1.0);
             return $"rgba({c.R},{c.G},{c.B},{a.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
         }
-        private static string BorderWidth() => "2px";
+        private static string BorderWidthInfo() => AppConfiguration.OverlayShowBorderInfo ? "2px" : "0";
+        private static string BorderWidthCargo() => AppConfiguration.OverlayShowBorderCargo ? "2px" : "0";
+        private static string BorderWidthShipIcon() => AppConfiguration.OverlayShowBorderShipIcon ? "2px" : "0";
+        private static string BorderWidthExploration() => AppConfiguration.OverlayShowBorderExploration ? "2px" : "0";
         private static string FontNormal() => AppConfiguration.OverlayFontSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
         private static string FontSmall() => Math.Max(6, AppConfiguration.OverlayFontSize - 2).ToString(System.Globalization.CultureInfo.InvariantCulture);
 

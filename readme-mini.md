@@ -1,4 +1,4 @@
-Mini Release Notes - Ship Icons v0.70.3
+Mini Release Notes - Ship Icons v0.70.4
 
 What's new
 - Ship Icons
@@ -20,3 +20,8 @@ What's new
     - Resolved nullable warning (CS8601) in alias resolution.
 
 ---
+Additional tweaks
+- Overlay borders: added per‑overlay “Show border” toggles for Info, Cargo, Ship Icon, Exploration, and Next Jump. Changes apply live; web overlays also honor the setting.
+- Next Jump overlay: border now respects the toggle.
+- Settings UI: fixed overlap between border checkboxes and background opacity; the slider now sits below with proper spacing.
+- App icon: refreshed to an Elite‑styled design. The running app/tray render it dynamically; the EXE/installer use the updated `Resources/Appicon.ico`.

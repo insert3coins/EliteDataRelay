@@ -23,6 +23,11 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableJumpOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
+        private CheckBox _chkShowBorderInfo = null!;
+        private CheckBox _chkShowBorderCargo = null!;
+        private CheckBox _chkShowBorderShipIcon = null!;
+        private CheckBox _chkShowBorderExploration = null!;
+        private CheckBox _chkShowBorderJump = null!;
         private CheckBox _chkFastStart = null!;
         private GroupBox _grpSessionTracking = null!;
         private CheckBox _chkEnableSessionTracking = null!;
@@ -54,6 +59,11 @@ namespace EliteDataRelay.UI
         private Color _overlayBackColor;
         private Color _overlayBorderColor;
         private int _overlayOpacity;
+        private bool _overlayShowBorderInfo;
+        private bool _overlayShowBorderCargo;
+        private bool _overlayShowBorderShipIcon;
+        private bool _overlayShowBorderExploration;
+        private bool _overlayShowBorderJump;
 
         // Cache for original settings to allow for cancellation of live changes
         private Font _originalOverlayFont = null!;
@@ -61,6 +71,11 @@ namespace EliteDataRelay.UI
         private Color _originalOverlayBackColor;
         private Color _originalOverlayBorderColor;
         private int _originalOverlayOpacity;
+        private bool _originalShowBorderInfo;
+        private bool _originalShowBorderCargo;
+        private bool _originalShowBorderShipIcon;
+        private bool _originalShowBorderExploration;
+        private bool _originalShowBorderJump;
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
         private Point _originalShipIconOverlayLocation;
@@ -105,6 +120,11 @@ namespace EliteDataRelay.UI
             _overlayBackColor = AppConfiguration.OverlayBackgroundColor;
             _overlayBorderColor = AppConfiguration.OverlayBorderColor;
             _overlayOpacity = AppConfiguration.OverlayOpacity;
+            _overlayShowBorderInfo = AppConfiguration.OverlayShowBorderInfo;
+            _overlayShowBorderCargo = AppConfiguration.OverlayShowBorderCargo;
+            _overlayShowBorderShipIcon = AppConfiguration.OverlayShowBorderShipIcon;
+            _overlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration;
+            _overlayShowBorderJump = AppConfiguration.OverlayShowBorderJump;
 
             // Store original values for cancellation
             _originalOverlayFont = (Font)_overlayFont.Clone();
@@ -112,6 +132,11 @@ namespace EliteDataRelay.UI
             _originalOverlayBackColor = _overlayBackColor;
             _originalOverlayBorderColor = _overlayBorderColor;
             _originalOverlayOpacity = _overlayOpacity;
+            _originalShowBorderInfo = _overlayShowBorderInfo;
+            _originalShowBorderCargo = _overlayShowBorderCargo;
+            _originalShowBorderShipIcon = _overlayShowBorderShipIcon;
+            _originalShowBorderExploration = _overlayShowBorderExploration;
+            _originalShowBorderJump = _overlayShowBorderJump;
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
             _originalShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation;
@@ -147,6 +172,11 @@ namespace EliteDataRelay.UI
             _pnlBorderColor.BackColor = _overlayBorderColor;
             _trackBarOpacity.Value = _overlayOpacity;
             _lblOpacityValue.Text = $"{_overlayOpacity}%";
+            if (_chkShowBorderInfo != null) _chkShowBorderInfo.Checked = _overlayShowBorderInfo;
+            if (_chkShowBorderCargo != null) _chkShowBorderCargo.Checked = _overlayShowBorderCargo;
+            if (_chkShowBorderShipIcon != null) _chkShowBorderShipIcon.Checked = _overlayShowBorderShipIcon;
+            if (_chkShowBorderExploration != null) _chkShowBorderExploration.Checked = _overlayShowBorderExploration;
+            if (_chkShowBorderJump != null) _chkShowBorderJump.Checked = _overlayShowBorderJump;
         }
 
         private void SaveSettings()
@@ -175,6 +205,11 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayBackgroundColor = _overlayBackColor;
             AppConfiguration.OverlayBorderColor = _overlayBorderColor;
             AppConfiguration.OverlayOpacity = _overlayOpacity;
+            AppConfiguration.OverlayShowBorderInfo = _chkShowBorderInfo.Checked;
+            AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
+            AppConfiguration.OverlayShowBorderShipIcon = _chkShowBorderShipIcon.Checked;
+            AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
+            AppConfiguration.OverlayShowBorderJump = _chkShowBorderJump.Checked;
 
             AppConfiguration.Save();
         }
@@ -227,6 +262,11 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayBackgroundColor = _originalOverlayBackColor;
             AppConfiguration.OverlayBorderColor = _originalOverlayBorderColor;
             AppConfiguration.OverlayOpacity = _originalOverlayOpacity;
+            AppConfiguration.OverlayShowBorderInfo = _originalShowBorderInfo;
+            AppConfiguration.OverlayShowBorderCargo = _originalShowBorderCargo;
+            AppConfiguration.OverlayShowBorderShipIcon = _originalShowBorderShipIcon;
+            AppConfiguration.OverlayShowBorderExploration = _originalShowBorderExploration;
+            AppConfiguration.OverlayShowBorderJump = _originalShowBorderJump;
 
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }

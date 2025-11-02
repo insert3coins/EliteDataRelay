@@ -131,8 +131,23 @@ namespace EliteDataRelay.UI
             _pnlBorderColor = new Panel { Location = new Point(130, 95), Size = new Size(23, 23), BorderStyle = BorderStyle.FixedSingle };
             var btnChangeBorderColor = new Button { Text = "...", Location = new Point(160, 95), Size = new Size(23, 23) };
             btnChangeBorderColor.Click += OnChangeBorderColorClicked;
-            var lblOpacity = new Label { Text = "Background Opacity:", Location = new Point(15, 130), AutoSize = true };
-            _trackBarOpacity = new TrackBar { AutoSize = false, Location = new Point(125, 125), Size = new Size(180, 16), Minimum = 10, Maximum = 100, TickFrequency = 10, TickStyle = TickStyle.None, Value = 85 };
+
+            // Per-overlay border toggles
+            int bx = 200; int by = 95; int bdy = 18;
+            _chkShowBorderInfo = new CheckBox { Text = "Info", Location = new Point(bx, by), AutoSize = true };
+            _chkShowBorderCargo = new CheckBox { Text = "Cargo", Location = new Point(bx + 60, by), AutoSize = true };
+            _chkShowBorderShipIcon = new CheckBox { Text = "Ship Icon", Location = new Point(bx + 130, by), AutoSize = true };
+            _chkShowBorderExploration = new CheckBox { Text = "Exploration", Location = new Point(bx, by + bdy), AutoSize = true };
+            _chkShowBorderJump = new CheckBox { Text = "Next Jump", Location = new Point(bx + 100, by + bdy), AutoSize = true };
+            _chkShowBorderInfo.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderCargo.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderShipIcon.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderExploration.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderJump.CheckedChanged += OnShowOverlayBordersChanged;
+            // Place opacity row below the per-overlay checkboxes
+            int opacityY = by + bdy + 24; // add extra spacing after second row
+            var lblOpacity = new Label { Text = "Background Opacity:", Location = new Point(15, opacityY), AutoSize = true };
+            _trackBarOpacity = new TrackBar { AutoSize = false, Location = new Point(125, opacityY), Size = new Size(180, 16), Minimum = 10, Maximum = 100, TickFrequency = 10, TickStyle = TickStyle.None, Value = 85 };
             _trackBarOpacity.Scroll += OnOpacityTrackBarScroll;
             _lblOpacityValue = new Label { Text = "85%", AutoSize = false, Size = new Size(34, 14), TextAlign = ContentAlignment.MiddleLeft, Font = new Font(Font.FontFamily, 7f, FontStyle.Regular), ForeColor = Color.FromArgb(107, 114, 128), BackColor = Color.Transparent };
             grpColors.Controls.Add(lblTextColor);
@@ -144,6 +159,11 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(lblBorderColor);
             grpColors.Controls.Add(_pnlBorderColor);
             grpColors.Controls.Add(btnChangeBorderColor);
+            grpColors.Controls.Add(_chkShowBorderInfo);
+            grpColors.Controls.Add(_chkShowBorderCargo);
+            grpColors.Controls.Add(_chkShowBorderShipIcon);
+            grpColors.Controls.Add(_chkShowBorderExploration);
+            grpColors.Controls.Add(_chkShowBorderJump);
             grpColors.Controls.Add(lblOpacity);
             grpColors.Controls.Add(_trackBarOpacity);
             grpColors.Controls.Add(_lblOpacityValue);

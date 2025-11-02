@@ -72,6 +72,28 @@ namespace EliteDataRelay.Configuration
                         OverlayBackgroundColor = config.OverlayBackgroundColor;
                         OverlayBorderColor = config.OverlayBorderColor;
                         OverlayOpacity = config.OverlayOpacity;
+                        OverlayShowBorder = config.OverlayShowBorder;
+                        OverlayShowBorderInfo = config.OverlayShowBorderInfo;
+                        OverlayShowBorderCargo = config.OverlayShowBorderCargo;
+                        OverlayShowBorderShipIcon = config.OverlayShowBorderShipIcon;
+                        OverlayShowBorderExploration = config.OverlayShowBorderExploration;
+                        OverlayShowBorderJump = config.OverlayShowBorderJump;
+
+                        // Migration: if legacy global border is explicitly false and all per-overlay toggles are still defaults,
+                        // apply the global value to each overlay.
+                        if (config.OverlayShowBorder == false &&
+                            config.OverlayShowBorderInfo == true &&
+                            config.OverlayShowBorderCargo == true &&
+                            config.OverlayShowBorderShipIcon == true &&
+                            config.OverlayShowBorderExploration == true &&
+                            config.OverlayShowBorderJump == true)
+                        {
+                            OverlayShowBorderInfo = false;
+                            OverlayShowBorderCargo = false;
+                            OverlayShowBorderShipIcon = false;
+                            OverlayShowBorderExploration = false;
+                            OverlayShowBorderJump = false;
+                        }
                         InfoOverlayLocation = config.InfoOverlayLocation;
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         ShipIconOverlayLocation = config.ShipIconOverlayLocation;
@@ -144,6 +166,12 @@ namespace EliteDataRelay.Configuration
                     OverlayTextColor = AppConfiguration.OverlayTextColor,
                     OverlayBackgroundColor = AppConfiguration.OverlayBackgroundColor,
                     OverlayBorderColor = AppConfiguration.OverlayBorderColor,
+                    OverlayShowBorder = AppConfiguration.OverlayShowBorder,
+                    OverlayShowBorderInfo = AppConfiguration.OverlayShowBorderInfo,
+                    OverlayShowBorderCargo = AppConfiguration.OverlayShowBorderCargo,
+                    OverlayShowBorderShipIcon = AppConfiguration.OverlayShowBorderShipIcon,
+                    OverlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration,
+                    OverlayShowBorderJump = AppConfiguration.OverlayShowBorderJump,
                     InfoOverlayLocation = AppConfiguration.InfoOverlayLocation,
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
@@ -216,6 +244,12 @@ namespace EliteDataRelay.Configuration
             [JsonConverter(typeof(ColorJsonConverter))]
             public Color OverlayBorderColor { get; set; } = Color.FromArgb(255, 111, 0);
             public int OverlayOpacity { get; set; } = 85;
+            public bool OverlayShowBorder { get; set; } = true;
+            public bool OverlayShowBorderInfo { get; set; } = true;
+            public bool OverlayShowBorderCargo { get; set; } = true;
+            public bool OverlayShowBorderShipIcon { get; set; } = true;
+            public bool OverlayShowBorderExploration { get; set; } = true;
+            public bool OverlayShowBorderJump { get; set; } = true;
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;

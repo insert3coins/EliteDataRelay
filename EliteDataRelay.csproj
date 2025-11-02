@@ -11,7 +11,7 @@
 	<ApplicationIcon>Resources\Appicon.ico</ApplicationIcon>
 
     <!-- Assembly Information for File Details -->
-    <Version>0.70.4</Version> <!-- This sets the product version and is used for file version. -->
+    <Version>0.70.5</Version> <!-- This sets the product version and is used for file version. -->
     <Company>insert3coins</Company>
     <Product>Elite Data Relay</Product>
     <Copyright>Copyright © 2024 insert3coins</Copyright>
@@ -27,10 +27,6 @@
     <!-- Embed native libraries (like SQLite) into the single-file executable for release builds. -->
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Appicon.ico" />
-  </ItemGroup>
 
   <ItemGroup>
      <EmbeddedResource Include="Resources\blueprints.txt" />

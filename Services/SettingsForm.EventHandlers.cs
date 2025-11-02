@@ -82,6 +82,16 @@ namespace EliteDataRelay.UI
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        private void OnShowOverlayBordersChanged(object? sender, EventArgs e)
+        {
+            AppConfiguration.OverlayShowBorderInfo = _chkShowBorderInfo.Checked;
+            AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
+            AppConfiguration.OverlayShowBorderShipIcon = _chkShowBorderShipIcon.Checked;
+            AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
+            AppConfiguration.OverlayShowBorderJump = _chkShowBorderJump.Checked;
+            LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         private void OnResetOverlaySettingsClicked(object? sender, EventArgs e)
         {
             // Set temporary fields to defaults for the UI
@@ -90,6 +100,11 @@ namespace EliteDataRelay.UI
             _overlayBackColor = Color.FromArgb(200, 0, 0, 0);
             _overlayBorderColor = Color.FromArgb(255, 111, 0); // Elite Dangerous Orange
             _overlayOpacity = 85;
+            _chkShowBorderInfo.Checked = true;
+            _chkShowBorderCargo.Checked = true;
+            _chkShowBorderShipIcon.Checked = true;
+            _chkShowBorderExploration.Checked = true;
+            _chkShowBorderJump.Checked = true;
             UpdateAppearanceControls();
 
             // Also update the static configuration directly to apply the changes live.
@@ -99,6 +114,11 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayBackgroundColor = _overlayBackColor;
             AppConfiguration.OverlayBorderColor = _overlayBorderColor;
             AppConfiguration.OverlayOpacity = _overlayOpacity;
+            AppConfiguration.OverlayShowBorderInfo = true;
+            AppConfiguration.OverlayShowBorderCargo = true;
+            AppConfiguration.OverlayShowBorderShipIcon = true;
+            AppConfiguration.OverlayShowBorderExploration = true;
+            AppConfiguration.OverlayShowBorderJump = true;
 
             // Also reset overlay positions
             AppConfiguration.InfoOverlayLocation = Point.Empty;

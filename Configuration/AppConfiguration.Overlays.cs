@@ -23,6 +23,15 @@ namespace EliteDataRelay.Configuration
         public static Color OverlayBackgroundColor { get; set; } = Color.FromArgb(200, 0, 0, 0);
         public static Color OverlayBorderColor { get; set; } = Color.FromArgb(255, 111, 0); // Elite Dangerous Orange
         public static int OverlayOpacity { get; set; } = 85;
+        // Global toggle (legacy). Still persisted for migration.
+        public static bool OverlayShowBorder { get; set; } = true;
+
+        // Per-overlay border toggles
+        public static bool OverlayShowBorderInfo { get; set; } = true;
+        public static bool OverlayShowBorderCargo { get; set; } = true;
+        public static bool OverlayShowBorderShipIcon { get; set; } = true;
+        public static bool OverlayShowBorderExploration { get; set; } = true;
+        public static bool OverlayShowBorderJump { get; set; } = true;
 
         // Next Jump overlay options
         public static bool ShowNextJumpJumpsLeft { get; set; } = true;

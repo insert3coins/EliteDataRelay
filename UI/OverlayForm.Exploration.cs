@@ -125,14 +125,17 @@ namespace EliteDataRelay.UI
                 // Clear background
                 g.Clear(Color.Transparent);
 
-                // Draw semi-transparent rounded background and border
+                // Draw semi-transparent rounded background and optional border
                 var rect = new Rectangle(0, 0, width - 1, height - 1);
                 using (var path = DrawingUtils.CreateRoundedRectPath(rect, 12))
                 using (var bgBrush = new SolidBrush(GameColors.BackgroundDark))
                 using (var borderPen = GameColors.PenBorder2)
                 {
                     g.FillPath(bgBrush, path);
-                    g.DrawPath(borderPen, path);
+                    if (AppConfiguration.OverlayShowBorderExploration)
+                    {
+                        g.DrawPath(borderPen, path);
+                    }
                 }
 
                 // Layout constants
