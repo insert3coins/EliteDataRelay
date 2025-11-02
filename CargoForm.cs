@@ -86,8 +86,27 @@ namespace EliteDataRelay
         {
             try
             {
+                if (AppConfiguration.ExplorationHistoryImported)
+                {
+                    return;
+                }
+
                 var importer = new ExplorationHistoryImportService(_explorationDataService);
-                var imported = await importer.ImportIfNeededAsync();
+
+                using var progressForm = new UI.ImportProgressForm();
+                SafeInvoke(() => progressForm.Show(this));
+
+                var progress = new Progress<Models.ImportProgress>(p =>
+                {
+                    progressForm.UpdateProgress(p);
+                });
+
+                var imported = await importer.ImportIfNeededAsync(progress);
+
+                SafeInvoke(() =>
+                {
+                    if (!progressForm.IsDisposed) progressForm.Close();
+                });
                 if (imported)
                 {
                     // Refresh the exploration log UI if the import added data.

@@ -25,8 +25,9 @@ namespace EliteDataRelay.Services
 
         /// <summary>
         /// Runs the import if it hasn't been done yet. Returns true if an import was performed.
+        /// Reports progress if a handler is supplied.
         /// </summary>
-        public async Task<bool> ImportIfNeededAsync()
+        public async Task<bool> ImportIfNeededAsync(IProgress<ImportProgress>? progress = null)
         {
             try
             {
@@ -56,6 +57,15 @@ namespace EliteDataRelay.Services
                 }
 
                 Debug.WriteLine($"[ExplorationHistoryImport] Starting historical import across {files.Count} files...");
+                progress?.Report(new ImportProgress
+                {
+                    TotalFiles = files.Count,
+                    CurrentFileIndex = 0,
+                    CurrentFileName = string.Empty,
+                    CurrentFilePercent = 0,
+                    OverallPercent = 0,
+                    Message = "Starting import..."
+                });
 
                 // Suppress UI events and use synchronous DB writes during import
                 _explorationDataService.SuppressEvents = true;
@@ -64,7 +74,7 @@ namespace EliteDataRelay.Services
                 try
                 {
                     // Process on a background thread to avoid blocking UI
-                    await Task.Run(() => ProcessFiles(files));
+                    await Task.Run(() => ProcessFiles(files, progress));
                 }
                 finally
                 {
@@ -77,6 +87,15 @@ namespace EliteDataRelay.Services
                 AppConfiguration.Save();
 
                 Debug.WriteLine("[ExplorationHistoryImport] Historical import completed.");
+                progress?.Report(new ImportProgress
+                {
+                    TotalFiles = 1,
+                    CurrentFileIndex = 1,
+                    CurrentFileName = string.Empty,
+                    CurrentFilePercent = 100,
+                    OverallPercent = 100,
+                    Message = "Import complete"
+                });
                 return true;
             }
             catch (Exception ex)
@@ -87,18 +106,31 @@ namespace EliteDataRelay.Services
             }
         }
 
-        private void ProcessFiles(List<string> files)
+        private void ProcessFiles(List<string> files, IProgress<ImportProgress>? progress)
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-            foreach (var file in files)
+            var total = files.Count;
+            for (int index = 0; index < total; index++)
             {
+                var file = files[index];
                 try
                 {
                     using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     using var reader = new StreamReader(fs);
+                    var fileLength = reader.BaseStream.CanSeek ? Math.Max(1L, reader.BaseStream.Length) : 1L;
+
+                    progress?.Report(new ImportProgress
+                    {
+                        TotalFiles = total,
+                        CurrentFileIndex = index + 1,
+                        CurrentFileName = file,
+                        CurrentFilePercent = 0,
+                        OverallPercent = (int)Math.Round((double)index / total * 100.0),
+                        Message = "Scanning journals..."
+                    });
 
                     string? line;
+                    var lastFilePercent = -1;
                     while ((line = reader.ReadLine()) != null)
                     {
                         if (string.IsNullOrWhiteSpace(line)) continue;
@@ -229,7 +261,39 @@ namespace EliteDataRelay.Services
                         {
                             // Skip malformed lines; historical files sometimes contain partial lines
                         }
+
+                        if (reader.BaseStream.CanSeek)
+                        {
+                            var pos = reader.BaseStream.Position;
+                            var filePercent = (int)Math.Min(100, Math.Max(0, Math.Round(pos * 100.0 / fileLength)));
+                            if (filePercent != lastFilePercent)
+                            {
+                                lastFilePercent = filePercent;
+                                var overall = (int)Math.Min(100, Math.Round(((index + (filePercent / 100.0)) / total) * 100.0));
+                                progress?.Report(new ImportProgress
+                                {
+                                    TotalFiles = total,
+                                    CurrentFileIndex = index + 1,
+                                    CurrentFileName = file,
+                                    CurrentFilePercent = filePercent,
+                                    OverallPercent = overall,
+                                    Message = null
+                                });
+                            }
+                        }
                     }
+
+                    // Ensure we report completion for this file
+                    var overallDone = (int)Math.Round(((index + 1) / (double)total) * 100.0);
+                    progress?.Report(new ImportProgress
+                    {
+                        TotalFiles = total,
+                        CurrentFileIndex = index + 1,
+                        CurrentFileName = file,
+                        CurrentFilePercent = 100,
+                        OverallPercent = overallDone,
+                        Message = null
+                    });
                 }
                 catch (Exception ex)
                 {
