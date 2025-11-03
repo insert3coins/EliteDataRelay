@@ -81,6 +81,15 @@ namespace EliteDataRelay.Services
             { "Viper Mk IV", "Viper Mk IV" },
             { "Vulture", "Vulture" },
 
+            // Special modes (allow real PNGs to be shipped)
+            { "SRV", "SRV" },
+            { "Fighter", "Fighter" },
+            { "OnFoot", "On Foot" },
+            { "On Foot", "On Foot" },
+            { "Artemis", "Artemis" },
+            { "Maverick", "Maverick" },
+            { "Dominator", "Dominator" },
+
             // Mk with no space variants
             { "Cobra MkIII", "Cobra Mk III" },
             { "Cobra MkIV", "Cobra Mk IV" },
@@ -229,10 +238,22 @@ namespace EliteDataRelay.Services
                 return cachedIcon;
             }
 
-            // Special modes without dedicated art: generate styled placeholders
+            // Special modes: prefer an embedded PNG if present, otherwise generate a styled vector icon
             if (IsSpecialMode(internalShipName, out var modeLabel))
             {
-                var modeIcon = CreateModeIcon(modeLabel);
+                // Try to resolve a filename from aliases first (allows shipping real PNGs named accordingly)
+                if (TryResolveAliasToFileBase(internalShipName, out var specialFile) || TryResolveAliasToFileBase(modeLabel, out specialFile))
+                {
+                    var embedded = TryLoadIcon(specialFile);
+                    if (embedded != null)
+                    {
+                        _iconCache[internalShipName] = embedded;
+                        return embedded;
+                    }
+                }
+
+                // Fallback to generated vector icon styled like our assets
+                var modeIcon = CreateModeIcon(modeLabel, internalShipName);
                 _iconCache[internalShipName] = modeIcon;
                 return modeIcon;
             }
@@ -291,7 +312,7 @@ namespace EliteDataRelay.Services
             if (string.IsNullOrWhiteSpace(internalShipName)) return false;
             if (!IsSpecialMode(internalShipName, out var label)) return false;
 
-            using var bmp = CreateModeIcon(label);
+            using var bmp = CreateModeIcon(label, internalShipName);
             using var ms = new MemoryStream();
             bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
             var base64 = Convert.ToBase64String(ms.ToArray());
@@ -299,7 +320,7 @@ namespace EliteDataRelay.Services
             return true;
         }
 
-        private static Image CreateModeIcon(string text)
+        private static Image CreateModeIcon(string text, string? internalKey = null)
         {
             // Slightly different styling than generic placeholder
             int width = 160, height = 160;
@@ -326,13 +347,112 @@ namespace EliteDataRelay.Services
                 g.DrawLine(accentPen, 8, 20, width - 8, 20);
                 g.DrawLine(accentPen, 8, height - 20, width - 8, height - 20);
 
+                // Draw a simple vector glyph representing the mode
+                var glyphArea = new Rectangle(20, 30, width - 40, height - 80);
+                DrawModeGlyph(g, glyphArea, internalKey, text);
+
                 // Text
-                var rect = new RectangleF(10, 48, width - 20, height - 96);
+                var rect = new RectangleF(10, 104, width - 20, height - 112);
                 using var font = new Font("Segoe UI", 18f, FontStyle.Bold, GraphicsUnit.Pixel);
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisWord };
                 g.DrawString(text, font, textBrush, rect, sf);
             }
             return bmp;
+        }
+
+        private static void DrawModeGlyph(Graphics g, Rectangle area, string? internalKey, string modeLabel)
+        {
+            // Normalize
+            string key = (internalKey ?? modeLabel ?? string.Empty).Trim();
+            bool isSrv = key.Equals("SRV", StringComparison.OrdinalIgnoreCase);
+            bool isFighter = key.Equals("Fighter", StringComparison.OrdinalIgnoreCase);
+            bool isOnFoot = key.Equals("OnFoot", StringComparison.OrdinalIgnoreCase)
+                            || key.Equals("On Foot", StringComparison.OrdinalIgnoreCase)
+                            || ((modeLabel?.IndexOf("Foot", StringComparison.OrdinalIgnoreCase)) ?? -1) >= 0;
+            bool isSuit = string.Equals(modeLabel, "Artemis", StringComparison.OrdinalIgnoreCase)
+                          || string.Equals(modeLabel, "Maverick", StringComparison.OrdinalIgnoreCase)
+                          || string.Equals(modeLabel, "Dominator", StringComparison.OrdinalIgnoreCase);
+
+            using var orangePen = new Pen(Color.FromArgb(255,128,0), 3f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round };
+            using var grayPen = new Pen(Color.FromArgb(180,180,180), 2f) { LineJoin = System.Drawing.Drawing2D.LineJoin.Round };
+            using var fillBrush = new SolidBrush(Color.FromArgb(36,36,36));
+            using var accentBrush = new SolidBrush(Color.FromArgb(255,128,0));
+
+            if (isSrv)
+            {
+                // Simple rover: body + wheels + antenna
+                var body = new Rectangle(area.X + area.Width/8, area.Y + area.Height/3, area.Width * 3/4, area.Height/3);
+                g.FillRoundedRectangle(fillBrush, body, 8);
+                g.DrawRoundedRectangle(orangePen, body, 8);
+                int wheelR = Math.Max(6, area.Width/10);
+                int wy = body.Bottom + 4;
+                int wx1 = body.Left + wheelR/2;
+                int wx2 = body.Left + body.Width/2 - wheelR/2;
+                int wx3 = body.Right - wheelR - wheelR/2;
+                g.FillEllipse(accentBrush, wx1, wy, wheelR, wheelR);
+                g.FillEllipse(accentBrush, wx2, wy, wheelR, wheelR);
+                g.FillEllipse(accentBrush, wx3, wy, wheelR, wheelR);
+                // Antenna
+                g.DrawLine(grayPen, body.Left + body.Width*3/4, body.Top, body.Left + body.Width*3/4 + 8, body.Top - 12);
+                g.FillEllipse(accentBrush, body.Left + body.Width*3/4 + 8 - 2, body.Top - 12 - 2, 4, 4);
+                return;
+            }
+            if (isFighter)
+            {
+                // Delta shape fighter
+                var pts = new[] {
+                    new Point(area.X + area.Width/2, area.Y),
+                    new Point(area.X + area.Width, area.Bottom),
+                    new Point(area.X, area.Bottom)
+                };
+                g.FillPolygon(accentBrush, pts);
+                g.DrawPolygon(orangePen, pts);
+                return;
+            }
+            if (isOnFoot || isSuit)
+            {
+                // Helmet silhouette: circle + visor bar
+                int d = Math.Max(10, Math.Min(area.Width, area.Height) - 6);
+                int cx = area.X + area.Width/2 - d/2;
+                int cy = area.Y + area.Height/2 - d/2 - 6;
+                var head = new Rectangle(cx, cy, d, d);
+                g.FillEllipse(fillBrush, head);
+                g.DrawEllipse(orangePen, head);
+                // Visor
+                var visor = new Rectangle(head.X + d/5, head.Y + d/2 - d/10, d*3/5, d/5);
+                g.FillRoundedRectangle(accentBrush, visor, 6);
+                // Collar
+                var collar = new Rectangle(head.X + d/4, head.Bottom - d/6, d/2, d/6);
+                g.FillRoundedRectangle(fillBrush, collar, 6);
+                g.DrawRoundedRectangle(orangePen, collar, 6);
+                return;
+            }
+            // Default: simple badge
+            g.DrawEllipse(orangePen, area);
+        }
+
+        // Rounded rectangle helpers
+        private static void FillRoundedRectangle(this Graphics g, Brush brush, Rectangle rect, int radius)
+        {
+            using var gp = RoundedRect(rect, radius);
+            g.FillPath(brush, gp);
+        }
+        private static void DrawRoundedRectangle(this Graphics g, Pen pen, Rectangle rect, int radius)
+        {
+            using var gp = RoundedRect(rect, radius);
+            g.DrawPath(pen, gp);
+        }
+        private static System.Drawing.Drawing2D.GraphicsPath RoundedRect(Rectangle rect, int radius)
+        {
+            var path = new System.Drawing.Drawing2D.GraphicsPath();
+            int r = Math.Max(1, radius);
+            int d = r * 2;
+            path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+            path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
         }
 
         /// <summary>
