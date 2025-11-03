@@ -13,13 +13,26 @@ namespace EliteDataRelay.UI
         private DataGridView _bodiesGrid = null!;
         private Label _systemNameLabel = null!;
         private Label _systemStatsLabel = null!;
+        private TextBox _searchBox = null!;
+        private AutoCompleteStringCollection _searchAutoComplete = new AutoCompleteStringCollection();
+        private string _searchTerm = string.Empty;
+        private FlowLayoutPanel _filtersPanel = null!;
+        private BodyKindFilter _activeFilter = BodyKindFilter.All;
         private Panel _sessionPanel = null!;
         private Label _sessionLabel = null!;
         private Label _sessionStatsLabel = null!;
         private readonly ExplorationLogControl? _logControl;
-    private readonly TabControl _subTabControl;
+        private readonly TabControl _subTabControl;
         private SystemExplorationData? _currentSystemData;
         private ExplorationSessionData _sessionData = new ExplorationSessionData();
+
+        private enum BodyKindFilter
+        {
+            All,
+            Stars,
+            Planets,
+            Signals
+        }
 
         public ExplorationTab(ExplorationDatabaseService? database = null)
         {
@@ -93,7 +106,7 @@ namespace EliteDataRelay.UI
                 BackColor = Color.Transparent
             };
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100)); // System header
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // Bodies grid
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // Bodies grid + control bar
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));  // Session stats
 
             // Add spacing between rows
@@ -135,9 +148,85 @@ namespace EliteDataRelay.UI
             // === BODIES GRID CARD ===
             var gridCard = CreateCard();
             gridCard.Padding = new Padding(0);
+            
+            // Build grid + control bar inside the same card to avoid overlap
+            var gridLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2
+            };
+            gridLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48)); // Control bar height
+            gridLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // Grid
+
+            // Control bar (moved inside grid card)
+            var controlBar = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                Padding = new Padding(20, 6, 20, 6)
+            };
+            controlBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60));
+            controlBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
+
+            var searchPanel = new Panel { Dock = DockStyle.Fill };
+            var searchLabel = new Label
+            {
+                Text = "Search:",
+                Dock = DockStyle.Left,
+                Width = 60,
+                TextAlign = ContentAlignment.MiddleLeft,
+                ForeColor = Color.FromArgb(100, 116, 139)
+            };
+            _searchBox = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.FixedSingle,
+                Font = new Font("Segoe UI", 9F)
+            };
+            _searchBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            _searchBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            _searchBox.AutoCompleteCustomSource = _searchAutoComplete;
+            _searchBox.TextChanged += (s, e) => { _searchTerm = _searchBox.Text.Trim(); ApplyBodyFiltersAndRender(); };
+            searchPanel.Controls.Add(_searchBox);
+            searchPanel.Controls.Add(searchLabel);
+            controlBar.Controls.Add(searchPanel, 0, 0);
+
+            _filtersPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                AutoSize = false,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
+            };
+            void AddFilterButton(string text, BodyKindFilter filter)
+            {
+                var btn = new Button
+                {
+                    Text = text,
+                    AutoSize = true,
+                    Margin = new Padding(6, 2, 0, 2)
+                };
+                btn.Click += (s, e) => { _activeFilter = filter; HighlightActiveFilter(); ApplyBodyFiltersAndRender(); };
+                _filtersPanel.Controls.Add(btn);
+            }
+            AddFilterButton("All", BodyKindFilter.All);
+            AddFilterButton("Stars", BodyKindFilter.Stars);
+            AddFilterButton("Planets", BodyKindFilter.Planets);
+            AddFilterButton("Signals", BodyKindFilter.Signals);
+            controlBar.Controls.Add(_filtersPanel, 1, 0);
+
+            // Initialize filter highlight
+            HighlightActiveFilter();
 
             _bodiesGrid = CreateBodiesGrid();
-            gridCard.Controls.Add(_bodiesGrid);
+
+            gridLayout.Controls.Add(controlBar, 0, 0);
+            gridLayout.Controls.Add(_bodiesGrid, 0, 1);
+            gridCard.Controls.Add(gridLayout);
 
             mainLayout.Controls.Add(gridCard, 0, 1);
             gridCard.Margin = new Padding(0, 0, 0, 12);
@@ -303,6 +392,17 @@ namespace EliteDataRelay.UI
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Landable",
+                HeaderText = "Landable",
+                FillWeight = 10,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Alignment = DataGridViewContentAlignment.MiddleCenter
+                }
+            });
+
+            grid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Landable",
                 HeaderText = "Land",
                 FillWeight = 7,
                 DefaultCellStyle = new DataGridViewCellStyle
@@ -389,84 +489,7 @@ namespace EliteDataRelay.UI
 
                 _systemStatsLabel.Text = string.Join(" • ", statsParts);
 
-                // Update bodies grid
-                _bodiesGrid.SuspendLayout();
-                _bodiesGrid.Rows.Clear();
-
-                var rows = new List<DataGridViewRow>();
-                foreach (var body in systemData.Bodies.OrderBy(b => b.DistanceFromArrival ?? double.MaxValue))
-                {
-                    var row = new DataGridViewRow();
-
-                    // Generate icon for body type
-                    var bodyIcon = BodyIconGenerator.GetIconForBodyType(body.BodyType);
-
-                    // Body type with terraform indicator
-                    string bodyType = body.BodyType;
-                    if (!string.IsNullOrEmpty(body.TerraformState) && body.TerraformState != "Not Terraformable")
-                    {
-                        bodyType += " ⚡"; // Lightning bolt for terraformable
-                    }
-
-                    // Distance formatting
-                    string distance = body.DistanceFromArrival.HasValue
-                        ? $"{body.DistanceFromArrival.Value:N0}"
-                        : "—";
-
-                    // Landable indicator
-                    string landable = body.Landable.HasValue
-                        ? (body.Landable.Value ? "✓" : "—")
-                        : "—";
-
-                    // Signals summary removed
-
-                    // Status with icon
-                    string status = "Scanned";
-                    if (body.FirstFootfall)
-                    {
-                        status = "👣 First Footfall!";
-                    }
-                    else if (!body.WasDiscovered)
-                    {
-                        status = "⭐ First!";
-                    }
-                    else if (body.IsMapped && !body.WasMapped)
-                    {
-                        status = "🗺️ Mapped";
-                    }
-                    else if (body.IsMapped)
-                    {
-                        status = "Mapped";
-                    }
-                    else if (body.WasMapped)
-                    {
-                        status = "Known";
-                    }
-
-                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, landable, status);
-
-                    // Subtle color coding
-                    if (body.FirstFootfall)
-                    {
-                        row.DefaultCellStyle.BackColor = Color.FromArgb(255, 237, 213); // Very light orange/gold
-                        row.DefaultCellStyle.ForeColor = Color.FromArgb(120, 53, 15); // Dark orange text
-                    }
-                    else if (!body.WasDiscovered)
-                    {
-                        row.DefaultCellStyle.BackColor = Color.FromArgb(240, 253, 244); // Very light green
-                        row.DefaultCellStyle.ForeColor = Color.FromArgb(22, 101, 52); // Dark green text
-                    }
-                    else if (body.IsMapped && !body.WasMapped)
-                    {
-                        row.DefaultCellStyle.BackColor = Color.FromArgb(240, 249, 255); // Very light blue
-                    }
-
-                    rows.Add(row);
-                }
-
-                _bodiesGrid.Rows.AddRange(rows.ToArray());
-                _bodiesGrid.ClearSelection();
-                _bodiesGrid.ResumeLayout();
+                                ApplyBodyFiltersAndRender();
             }));
         }
 
@@ -500,10 +523,7 @@ namespace EliteDataRelay.UI
                 {
                     parts.Add($"💰 {sessionData.SoldValue:N0} CR");
                 }
-                else if (sessionData.EstimatedValue > 0)
-                {
-                    parts.Add($"~{sessionData.EstimatedValue:N0} CR");
-                }
+                
 
                 _sessionStatsLabel.Text = string.Join(" • ", parts);
             }));
@@ -518,6 +538,11 @@ namespace EliteDataRelay.UI
                 _systemNameLabel.Text = "No System Selected";
                 _systemStatsLabel.Text = "Start monitoring to see exploration data";
                 _bodiesGrid.Rows.Clear();
+                _searchAutoComplete.Clear();
+                if (_searchBox != null)
+                {
+                    _searchBox.AutoCompleteCustomSource = _searchAutoComplete;
+                }
             }));
         }
 
@@ -525,6 +550,158 @@ namespace EliteDataRelay.UI
         {
             _logControl?.Refresh();
         }
+    
+
+        private void HighlightActiveFilter()
+        {
+            if (_filtersPanel == null) return;
+            foreach (Control c in _filtersPanel.Controls)
+            {
+                if (c is Button b)
+                {
+                    bool active = string.Equals(b.Text, _activeFilter.ToString(), StringComparison.OrdinalIgnoreCase);
+                    b.BackColor = active ? Color.FromArgb(227, 242, 253) : SystemColors.Control;
+                    b.ForeColor = active ? Color.FromArgb(30, 64, 175) : SystemColors.ControlText;
+                }
+            }
+        }
+
+        private void ApplyBodyFiltersAndRender()
+        {
+            if (_bodiesGrid == null) return;
+            if (_currentSystemData == null)
+            {
+                _bodiesGrid.Rows.Clear();
+                return;
+            }
+
+            // Keep auto-complete suggestions in sync with current data
+            if (_searchAutoComplete != null)
+            {
+                UpdateSearchAutoComplete(_currentSystemData);
+            }
+
+            IEnumerable<ScannedBody> bodies = _currentSystemData.Bodies;
+
+            switch (_activeFilter)
+            {
+                case BodyKindFilter.Stars:
+                    bodies = bodies.Where(b => (b.BodyType ?? string.Empty).IndexOf("star", StringComparison.OrdinalIgnoreCase) >= 0);
+                    break;
+                case BodyKindFilter.Planets:
+                    bodies = bodies.Where(b => (b.BodyType ?? string.Empty).IndexOf("star", StringComparison.OrdinalIgnoreCase) < 0);
+                    break;
+                case BodyKindFilter.Signals:
+                    bodies = bodies.Where(b => b.Signals != null && b.Signals.Count > 0);
+                    break;
+                case BodyKindFilter.All:
+                default:
+                    break;
+            }
+
+            var term = _searchTerm?.Trim();
+            if (!string.IsNullOrEmpty(term))
+            {
+                var t = term.ToLowerInvariant();
+                bodies = bodies.Where(b =>
+                    (!string.IsNullOrEmpty(b.BodyName) && b.BodyName.ToLowerInvariant().Contains(t)) ||
+                    (!string.IsNullOrEmpty(b.BodyType) && b.BodyType.ToLowerInvariant().Contains(t)) ||
+                    (b.Signals != null && b.Signals.Any(s => (s.TypeLocalised ?? s.Type).ToLowerInvariant().Contains(t)))
+                );
+            }
+
+            bodies = bodies.OrderBy(b => b.DistanceFromArrival ?? double.MaxValue);
+
+            _bodiesGrid.SuspendLayout();
+            _bodiesGrid.Rows.Clear();
+
+            var rows = new List<DataGridViewRow>();
+            foreach (var body in bodies)
+            {
+                var row = new DataGridViewRow();
+                var bodyIcon = BodyIconGenerator.GetIconForBodyType(body.BodyType);
+
+                string bodyType = body.BodyType;
+                if (!string.IsNullOrEmpty(body.TerraformState) && body.TerraformState != "Not Terraformable")
+                    bodyType += " ?";
+
+                string distance = body.DistanceFromArrival.HasValue ? $"{body.DistanceFromArrival.Value:N0}" : "-";
+                string landable = body.Landable.HasValue ? (body.Landable.Value ? "Yes" : "-") : "-";
+
+                string status = "Scanned";
+                if (body.FirstFootfall) status = "👣 First Footfall!";
+                else if (!body.WasDiscovered) status = "⭐ First!";
+                else if (body.IsMapped && !body.WasMapped) status = "🗺️ Mapped";
+                else if (body.IsMapped) status = "Mapped";
+                else if (body.WasMapped) status = "Known";
+
+                row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, landable, status);
+
+                if (body.FirstFootfall)
+                {
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(255, 237, 213);
+                    row.DefaultCellStyle.ForeColor = Color.FromArgb(120, 53, 15);
+                }
+                else if (!body.WasDiscovered)
+                {
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(240, 253, 244);
+                    row.DefaultCellStyle.ForeColor = Color.FromArgb(22, 101, 52);
+                }
+                else if (body.IsMapped && !body.WasMapped)
+                {
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(240, 249, 255);
+                }
+
+                rows.Add(row);
+            }
+
+            _bodiesGrid.Rows.AddRange(rows.ToArray());
+            _bodiesGrid.ClearSelection();
+            _bodiesGrid.ResumeLayout();
+        }
+
+        private void UpdateSearchAutoComplete(SystemExplorationData systemData)
+        {
+            try
+            {
+                var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var b in systemData.Bodies)
+                {
+                    if (!string.IsNullOrWhiteSpace(b.BodyName)) set.Add(b.BodyName);
+                    if (!string.IsNullOrWhiteSpace(b.BodyType)) set.Add(b.BodyType);
+
+                    if (b.Signals != null)
+                    {
+                        foreach (var s in b.Signals)
+                        {
+                            var name = s?.TypeLocalised ?? s?.Type;
+                            if (!string.IsNullOrWhiteSpace(name)) set.Add(name!);
+                        }
+                    }
+
+                    if (b.BiologicalSignals != null)
+                    {
+                        foreach (var n in b.BiologicalSignals)
+                        {
+                            if (!string.IsNullOrWhiteSpace(n)) set.Add(n);
+                        }
+                    }
+                }
+
+                var items = set.Take(1000).ToArray();
+
+                _searchAutoComplete.Clear();
+                if (items.Length > 0)
+                {
+                    _searchAutoComplete.AddRange(items);
+                }
+                if (_searchBox != null)
+                {
+                    _searchBox.AutoCompleteCustomSource = _searchAutoComplete;
+                }
+            }
+            catch { }
+        }
     }
 }
-
