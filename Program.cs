@@ -3,6 +3,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace EliteDataRelay
 {
@@ -14,6 +16,33 @@ namespace EliteDataRelay
         [STAThread]
         static void Main()
         {
+            // Single-instance guard: prevent multiple instances from running.
+            bool createdNew;
+            using var singleInstanceMutex = new Mutex(true, "Global/EliteDataRelay_SingleInstance", out createdNew);
+            if (!createdNew)
+            {
+                // Signal the existing instance to bring its window to the foreground, then exit.
+                try
+                {
+                    using var evt = EventWaitHandle.OpenExisting("Global/EliteDataRelay_Activate");
+                    evt.Set();
+                }
+                catch
+                {
+                    // If signaling fails (older instance without listener), fall back to a quick notice and exit
+                    try
+                    {
+                        MessageBox.Show(
+                            "Elite Data Relay is already running.",
+                            "Elite Data Relay",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                    catch { /* ignore if UI not available */ }
+                }
+                return;
+            }
+
             // Add global exception handlers to catch any unhandled errors.
             // This is crucial for preventing the application from silently crashing on startup.
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
@@ -43,10 +72,71 @@ namespace EliteDataRelay
             // Ensure messages are written to the file immediately.
             Trace.AutoFlush = true;
 
-            // Create and run the main form. The form itself is now responsible
-            // for creating and managing its own services.
-            Application.Run(new CargoForm());
+            // Create the activation event and listener so subsequent launches can bring this window to front.
+            using var activationEvent = new EventWaitHandle(false, EventResetMode.AutoReset, "Global/EliteDataRelay_Activate");
+
+            // Create the main form instance so we can activate it on signal.
+            var mainForm = new CargoForm();
+            StartActivationListener(mainForm, activationEvent);
+
+            // Run the application.
+            Application.Run(mainForm);
         }
+
+        private static void StartActivationListener(Form mainForm, EventWaitHandle activationEvent)
+        {
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    while (!mainForm.IsDisposed)
+                    {
+                        if (!activationEvent.WaitOne(Timeout.Infinite))
+                            continue;
+
+                        if (mainForm.IsDisposed)
+                            break;
+
+                        try
+                        {
+                            mainForm.BeginInvoke(new MethodInvoker(() =>
+                            {
+                                try
+                                {
+                                    if (mainForm.WindowState == FormWindowState.Minimized)
+                                    {
+                                        mainForm.WindowState = FormWindowState.Normal;
+                                    }
+                                    // Ensure visible, bring to front, and focus
+                                    mainForm.Show();
+                                    mainForm.Activate();
+                                    // Toggle TopMost to force Z-order raise without stealing focus aggressively
+                                    bool prevTopMost = mainForm.TopMost;
+                                    mainForm.TopMost = true;
+                                    mainForm.TopMost = prevTopMost;
+                                    // Try native focus/restore
+                                    ShowWindow(mainForm.Handle, SW_RESTORE);
+                                    SetForegroundWindow(mainForm.Handle);
+                                }
+                                catch { }
+                            }));
+                        }
+                        catch { }
+                    }
+                }
+                catch { }
+            })
+            { IsBackground = true, Name = "EDR-ActivationListener" };
+            thread.Start();
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        private const int SW_RESTORE = 9;
 
         private static void HandleUnhandledException(Exception? ex)
         {

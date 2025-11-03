@@ -474,9 +474,9 @@ namespace EliteDataRelay.Services
         }
 
         /// <summary>
-        /// Gets all systems visited, ordered by last visited date.
+        /// Gets visited systems ordered by last visited with pagination.
         /// </summary>
-        public List<SystemExplorationData> GetVisitedSystems(int limit = 100)
+        public List<SystemExplorationData> GetVisitedSystems(int limit = 100, int offset = 0)
         {
             var systems = new List<SystemExplorationData>();
 
@@ -493,9 +493,10 @@ namespace EliteDataRelay.Services
                     SELECT SystemAddress, SystemName, LastVisited, ScannedBodies, MappedBodies
                     FROM Systems
                     ORDER BY LastVisited DESC
-                    LIMIT @limit
+                    LIMIT @limit OFFSET @offset
                 ";
                 cmd.Parameters.AddWithValue("@limit", limit);
+                cmd.Parameters.AddWithValue("@offset", offset);
 
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -510,7 +511,7 @@ namespace EliteDataRelay.Services
                     });
                 }
 
-                Debug.WriteLine($"[ExplorationDatabaseService] GetVisitedSystems returned {systems.Count} systems");
+                Debug.WriteLine($"[ExplorationDatabaseService] GetVisitedSystems returned {systems.Count} systems (limit={limit}, offset={offset})");
             }
             catch (Exception ex)
             {
@@ -519,6 +520,12 @@ namespace EliteDataRelay.Services
 
             return systems;
         }
+
+        /// <summary>
+        /// Backwards-compatible overload: returns the first page only.
+        /// </summary>
+        public List<SystemExplorationData> GetVisitedSystems(int limit)
+            => GetVisitedSystems(limit, 0);
 
         /// <summary>
         /// Gets total statistics across all cached systems.

@@ -109,16 +109,41 @@ namespace EliteDataRelay.Services
 
         public void ShowNextJumpOverlay(NextJumpOverlayData data)
         {
-            _lastNextJumpData = data;
+            // Merge with last known data to avoid blanking out details
+            // during jump transitions where some fields may be missing.
+            var merged = data;
+            try
+            {
+                if (_lastNextJumpData != null)
+                {
+                    merged = new NextJumpOverlayData
+                    {
+                        // Prefer new values when present; otherwise keep last known
+                        TargetSystemName = !string.IsNullOrWhiteSpace(data.TargetSystemName) ? data.TargetSystemName : _lastNextJumpData.TargetSystemName,
+                        StarClass = !string.IsNullOrWhiteSpace(data.StarClass) ? data.StarClass : _lastNextJumpData.StarClass,
+                        JumpDistanceLy = data.JumpDistanceLy ?? _lastNextJumpData.JumpDistanceLy,
+                        RemainingJumps = data.RemainingJumps ?? _lastNextJumpData.RemainingJumps,
+                        SystemInfo = data.SystemInfo ?? _lastNextJumpData.SystemInfo,
+                        NextDistanceLy = data.NextDistanceLy ?? _lastNextJumpData.NextDistanceLy,
+                        TotalRemainingLy = data.TotalRemainingLy ?? _lastNextJumpData.TotalRemainingLy,
+                        CurrentJumpIndex = data.CurrentJumpIndex ?? _lastNextJumpData.CurrentJumpIndex,
+                        TotalJumps = data.TotalJumps ?? _lastNextJumpData.TotalJumps,
+                        Hops = (data.Hops != null && data.Hops.Count > 0) ? data.Hops : _lastNextJumpData.Hops
+                    };
+                }
+            }
+            catch { /* ignore merge issues; fall back to provided data */ }
+
+            _lastNextJumpData = merged;
             EnsureJumpOverlay();
             if (_jumpOverlayForm == null) return;
             // If already visible, just update content without replaying fade
             if (_jumpOverlayForm.Visible)
             {
-                _jumpOverlayForm.UpdateJumpInfo(data);
+                _jumpOverlayForm.UpdateJumpInfo(merged);
                 return;
             }
-            _jumpOverlayForm.UpdateJumpInfo(data);
+            _jumpOverlayForm.UpdateJumpInfo(merged);
             _jumpOverlayForm.FadeIn(200);
         }
 

@@ -19,6 +19,8 @@ namespace EliteDataRelay.UI
         private readonly Label _totalStatsLabel;
         private readonly Label _selectedSystemLabel;
         private readonly Panel _detailPanel;
+        private readonly Button _loadMoreButton;
+        private const int PageSize = 500;
         private bool _isDataLoaded = false;
 
         public ExplorationLogControl(ExplorationDatabaseService database)
@@ -49,11 +51,12 @@ namespace EliteDataRelay.UI
             var systemsLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                RowCount = 2,
+                RowCount = 3,
                 ColumnCount = 1
             };
             systemsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
             systemsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            systemsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
 
             var systemsHeader = new Panel
             {
@@ -74,8 +77,29 @@ namespace EliteDataRelay.UI
 
             _systemsGrid = CreateSystemsGrid();
 
+            // Load More button footer
+            var systemsFooter = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent,
+                Padding = new Padding(20, 6, 20, 6)
+            };
+
+            _loadMoreButton = new Button
+            {
+                Text = "Load More",
+                AutoSize = false,
+                Height = 30,
+                Dock = DockStyle.Right,
+                Width = 120,
+                Enabled = false
+            };
+            _loadMoreButton.Click += (s, e) => LoadMoreSystems();
+            systemsFooter.Controls.Add(_loadMoreButton);
+
             systemsLayout.Controls.Add(systemsHeader, 0, 0);
             systemsLayout.Controls.Add(_systemsGrid, 0, 1);
+            systemsLayout.Controls.Add(systemsFooter, 0, 2);
             systemsCard.Controls.Add(systemsLayout);
 
             mainLayout.Controls.Add(systemsCard, 0, 0);
@@ -352,7 +376,7 @@ namespace EliteDataRelay.UI
         {
             try
             {
-                var systems = _database.GetVisitedSystems(100);
+                var systems = _database.GetVisitedSystems(PageSize, 0);
 
                 System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Found {systems.Count} systems in database");
 
@@ -362,44 +386,89 @@ namespace EliteDataRelay.UI
                 if (systems.Count == 0)
                 {
                     System.Diagnostics.Debug.WriteLine("[ExplorationLogControl] No systems found - database may be empty");
+                    _loadMoreButton.Enabled = false;
+                    _loadMoreButton.Text = "Load More";
                     _systemsGrid.ResumeLayout();
                     return;
                 }
 
-                var rows = new List<DataGridViewRow>();
-                foreach (var system in systems)
-                {
-                    var row = new DataGridViewRow();
-
-                    var bodiesText = $"{system.ScannedBodies}";
-                    if (system.MappedBodies > 0)
-                    {
-                        bodiesText += $" ({system.MappedBodies} mapped)";
-                    }
-
-                    var timeAgo = GetTimeAgo(system.LastVisited);
-
-                    row.CreateCells(_systemsGrid, new object[]
-                    {
-                        system.SystemName ?? string.Empty,
-                        bodiesText ?? string.Empty,
-                        timeAgo ?? string.Empty,
-                        system.SystemAddress.ToString() ?? string.Empty
-                    });
-                    rows.Add(row);
-                }
+                var rows = CreateRowsForSystems(systems);
 
                 System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Created {rows.Count} rows for grid");
 
                 _systemsGrid.Rows.AddRange(rows.ToArray());
                 _systemsGrid.ClearSelection();
                 _systemsGrid.ResumeLayout();
+
+                // Enable/disable Load More based on whether we likely have more rows
+                _loadMoreButton.Enabled = systems.Count >= PageSize;
+                _loadMoreButton.Text = _loadMoreButton.Enabled ? "Load More" : "No More";
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Error loading systems: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Stack trace: {ex.StackTrace}");
             }
+        }
+
+        private void LoadMoreSystems()
+        {
+            try
+            {
+                var alreadyLoaded = _systemsGrid.Rows.Count;
+                var systems = _database.GetVisitedSystems(PageSize, alreadyLoaded);
+
+                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] LoadMore - offset={alreadyLoaded}, fetched={systems.Count}");
+
+                if (systems.Count == 0)
+                {
+                    _loadMoreButton.Enabled = false;
+                    _loadMoreButton.Text = "No More";
+                    return;
+                }
+
+                _systemsGrid.SuspendLayout();
+                var rows = CreateRowsForSystems(systems);
+                _systemsGrid.Rows.AddRange(rows.ToArray());
+                _systemsGrid.ResumeLayout();
+
+                if (systems.Count < PageSize)
+                {
+                    _loadMoreButton.Enabled = false;
+                    _loadMoreButton.Text = "No More";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Error in LoadMoreSystems: {ex.Message}");
+            }
+        }
+
+        private List<DataGridViewRow> CreateRowsForSystems(List<SystemExplorationData> systems)
+        {
+            var rows = new List<DataGridViewRow>();
+            foreach (var system in systems)
+            {
+                var row = new DataGridViewRow();
+
+                var bodiesText = $"{system.ScannedBodies}";
+                if (system.MappedBodies > 0)
+                {
+                    bodiesText += $" ({system.MappedBodies} mapped)";
+                }
+
+                var timeAgo = GetTimeAgo(system.LastVisited);
+
+                row.CreateCells(_systemsGrid, new object[]
+                {
+                    system.SystemName ?? string.Empty,
+                    bodiesText ?? string.Empty,
+                    timeAgo ?? string.Empty,
+                    system.SystemAddress.ToString() ?? string.Empty
+                });
+                rows.Add(row);
+            }
+            return rows;
         }
 
         private void OnSystemSelected(object? sender, EventArgs e)
