@@ -22,6 +22,25 @@ namespace EliteDataRelay.Models
     public class ShipyardSwapEvent : ShipyardNewEvent { }
 
     /// <summary>
+    /// Represents the "SetUserShipName" event from the journal.
+    /// Written when the player renames a ship or changes its ident.
+    /// </summary>
+    public class SetUserShipNameEvent
+    {
+        [JsonPropertyName("Ship")] // internal ship name (e.g., "python")
+        public string Ship { get; set; } = string.Empty;
+
+        [JsonPropertyName("ShipID")]
+        public int? ShipId { get; set; }
+
+        [JsonPropertyName("UserShipName")]
+        public string? UserShipName { get; set; }
+
+        [JsonPropertyName("UserShipIdent")]
+        public string? UserShipIdent { get; set; }
+    }
+
+    /// <summary>
     /// Represents the "Docked" event from the journal.
     /// Written when the player docks at a station or carrier.
     /// </summary>

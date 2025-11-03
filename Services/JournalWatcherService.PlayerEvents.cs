@@ -101,5 +101,123 @@ namespace EliteDataRelay.Services
                 Trace.WriteLine($"[JournalWatcherService] Detected ShipyardNew. New ship type: {newEvent.ShipType}");
             }
         }
+
+        private void ProcessSetUserShipNameEvent(string journalLine, JsonSerializerOptions options)
+        {
+            var renameEvent = JsonSerializer.Deserialize<SetUserShipNameEvent>(journalLine, options);
+            if (renameEvent == null) return;
+
+            // Use last known type/localised where available, just update name/ident immediately.
+            var shipType = _lastShipLocalised ?? _lastShipType ?? (string?)null;
+            var internalName = string.IsNullOrEmpty(renameEvent.Ship) ? _lastInternalShipName : renameEvent.Ship;
+
+            UpdateShipInformation(
+                renameEvent.UserShipName,
+                renameEvent.UserShipIdent,
+                shipType,
+                internalName,
+                _lastShipLocalised
+            );
+        }
+
+        private void ProcessVehicleSwitchEvent(JsonDocument jsonDoc)
+        {
+            // Horizons uses VehicleSwitch with a simple target descriptor
+            string? to = jsonDoc.RootElement.TryGetProperty("To", out var toEl) ? toEl.GetString() : null;
+            if (string.Equals(to, "SRV", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Entered SRV — reflect immediately in UI
+                UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+            }
+            else if (string.Equals(to, "Ship", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Returned to ship — restore last known ship details
+                UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+            }
+        }
+
+        private void ProcessEmbarkEvent(JsonDocument jsonDoc)
+        {
+            // Odyssey uses Embark when boarding a vehicle. It includes flags like SRV/Taxi/Multicrew.
+            bool isSrv = jsonDoc.RootElement.TryGetProperty("SRV", out var srvEl) && srvEl.ValueKind == System.Text.Json.JsonValueKind.True;
+            bool isTaxi = jsonDoc.RootElement.TryGetProperty("Taxi", out var taxiEl) && taxiEl.ValueKind == System.Text.Json.JsonValueKind.True;
+            bool isMulticrew = jsonDoc.RootElement.TryGetProperty("Multicrew", out var mcEl) && mcEl.ValueKind == System.Text.Json.JsonValueKind.True;
+            if (isSrv)
+            {
+                UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+            }
+            else if (isTaxi)
+            {
+                UpdateShipInformation("Taxi", "", "Taxi", "Taxi", "Taxi");
+            }
+            else if (isMulticrew)
+            {
+                UpdateShipInformation("Multicrew", "", "Multicrew", "Multicrew", "Multicrew");
+            }
+            else
+            {
+                // Embarked something that isn't SRV — most likely the ship. Restore ship info.
+                UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+            }
+        }
+
+        private void ProcessDisembarkEvent(JsonDocument jsonDoc)
+        {
+            // Odyssey uses Disembark when leaving a vehicle (to on-foot, SRV, taxi etc.).
+            bool isSrv = jsonDoc.RootElement.TryGetProperty("SRV", out var srvEl) && srvEl.ValueKind == System.Text.Json.JsonValueKind.True;
+            bool isTaxi = jsonDoc.RootElement.TryGetProperty("Taxi", out var taxiEl) && taxiEl.ValueKind == System.Text.Json.JsonValueKind.True;
+            bool isMulticrew = jsonDoc.RootElement.TryGetProperty("Multicrew", out var mcEl) && mcEl.ValueKind == System.Text.Json.JsonValueKind.True;
+            if (isSrv)
+            {
+                UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+            }
+            else if (isTaxi)
+            {
+                UpdateShipInformation("Taxi", "", "Taxi", "Taxi", "Taxi");
+            }
+            else if (isMulticrew)
+            {
+                UpdateShipInformation("Multicrew", "", "Multicrew", "Multicrew", "Multicrew");
+            }
+            else
+            {
+                // Most common case: disembark from ship to on-foot.
+                UpdateShipInformation("On Foot", "", "On Foot", "OnFoot", "On Foot");
+            }
+        }
+
+        private void ProcessLaunchSrvEvent()
+        {
+            UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+        }
+
+        private void ProcessDockSrvEvent()
+        {
+            // Return to ship from SRV
+            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+        }
+
+        private void ProcessSrvDestroyedEvent()
+        {
+            // SRV destroyed -> back to ship
+            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+        }
+
+        private void ProcessLaunchFighterEvent()
+        {
+            UpdateShipInformation("Fighter", "", "Fighter", "Fighter", "Fighter");
+        }
+
+        private void ProcessDockFighterEvent()
+        {
+            // Return to mothership
+            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+        }
+
+        private void ProcessFighterDestroyedEvent()
+        {
+            // Fighter destroyed -> back to ship
+            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+        }
     }
 }

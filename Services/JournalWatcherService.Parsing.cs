@@ -279,6 +279,46 @@ namespace EliteDataRelay.Services
                         {
                             ProcessShipyardNewEvent(journalLine, options);
                         }
+                        else if (eventType == "SetUserShipName")
+                        {
+                            ProcessSetUserShipNameEvent(journalLine, options);
+                        }
+                        else if (eventType == "VehicleSwitch")
+                        {
+                            ProcessVehicleSwitchEvent(jsonDoc);
+                        }
+                        else if (eventType == "Embark")
+                        {
+                            ProcessEmbarkEvent(jsonDoc);
+                        }
+                        else if (eventType == "Disembark")
+                        {
+                            ProcessDisembarkEvent(jsonDoc);
+                        }
+                        else if (eventType == "LaunchSRV")
+                        {
+                            ProcessLaunchSrvEvent();
+                        }
+                        else if (eventType == "DockSRV")
+                        {
+                            ProcessDockSrvEvent();
+                        }
+                        else if (eventType == "SRVDestroyed")
+                        {
+                            ProcessSrvDestroyedEvent();
+                        }
+                        else if (eventType == "LaunchFighter")
+                        {
+                            ProcessLaunchFighterEvent();
+                        }
+                        else if (eventType == "DockFighter")
+                        {
+                            ProcessDockFighterEvent();
+                        }
+                        else if (eventType == "FighterDestroyed")
+                        {
+                            ProcessFighterDestroyedEvent();
+                        }
                         else if (eventType == "ModuleSell" || eventType == "ModuleBuy" || eventType == "ModuleStore" || eventType == "ModuleRetrieve" || eventType == "ModuleSwap")
                         {
                             // These events indicate a loadout change. The subsequent 'Loadout' event is the source of truth.
