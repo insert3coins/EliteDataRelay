@@ -30,41 +30,59 @@ namespace EliteDataRelay.UI
             var gridView = _controlFactory.CargoGridView;
             if (gridView is null) return;
 
-            gridView.SuspendLayout();
-            gridView.Rows.Clear();
-
-            if (snapshot.Items.Any())
+            // Ensure we marshal to UI thread without blocking paint
+            if (gridView.InvokeRequired)
             {
-                var sortedInventory = snapshot.Items.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name);
-                foreach (var item in sortedInventory)
+                gridView.BeginInvoke(new Action(() => UpdateCargoList(snapshot)));
+                return;
+            }
+
+            // Avoid painting while mutating rows to prevent rare paint-time exceptions
+            gridView.SuspendLayout();
+            var wasVisible = gridView.Visible;
+            try
+            {
+                gridView.Visible = false;
+                gridView.ClearSelection();
+                gridView.Rows.Clear();
+
+                if (snapshot.Items.Any())
                 {
-                    string displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
-
-                    if (!string.IsNullOrEmpty(displayName))
+                    var sortedInventory = snapshot.Items.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name);
+                    foreach (var item in sortedInventory)
                     {
-                        displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
-                    }
+                        string displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
 
-                    string category = CommodityDataService.GetCategory(item.Name);
-                    gridView.Rows.Add(displayName, item.Count, category);
+                        if (!string.IsNullOrEmpty(displayName))
+                        {
+                            displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
+                        }
+
+                        string category = CommodityDataService.GetCategory(item.Name);
+                        gridView.Rows.Add(displayName, item.Count, category);
+                    }
+                }
+                else
+                {
+                    // If inventory is empty, check if it's because the hold is empty or because we're waiting for an update.
+                    string message = snapshot.Count > 0 ? "Cargo manifest updating..." : "Cargo hold is empty.";
+
+                    int rowIndex = gridView.Rows.Add(message, "", "");
+                    var row = gridView.Rows[rowIndex];
+                    
+                    // Apply special styling for the status message row
+                    row.DefaultCellStyle.ForeColor = Color.FromArgb(107, 114, 128); // A muted gray color
+                    row.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    row.DefaultCellStyle.SelectionBackColor = row.DefaultCellStyle.BackColor; // Prevent selection highlight
+                    row.DefaultCellStyle.SelectionForeColor = row.DefaultCellStyle.ForeColor;
+                    row.ReadOnly = true;
                 }
             }
-            else
+            finally
             {
-                // If inventory is empty, check if it's because the hold is empty or because we're waiting for an update.
-                string message = snapshot.Count > 0 ? "Cargo manifest updating..." : "Cargo hold is empty.";
-
-                int rowIndex = gridView.Rows.Add(message, "", "");
-                var row = gridView.Rows[rowIndex];
-                
-                // Apply special styling for the status message row
-                row.DefaultCellStyle.ForeColor = Color.FromArgb(107, 114, 128); // A muted gray color
-                row.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                row.DefaultCellStyle.SelectionBackColor = row.DefaultCellStyle.BackColor; // Prevent selection highlight
-                row.DefaultCellStyle.SelectionForeColor = row.DefaultCellStyle.ForeColor;
-                row.ReadOnly = true;
+                gridView.Visible = wasVisible;
+                gridView.ResumeLayout();
             }
-            gridView.ResumeLayout();
 
             _overlayService?.UpdateCargoList(snapshot);
         }

@@ -162,7 +162,7 @@ namespace EliteDataRelay.UI
 
         private void CargoGrid_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex < 0 || e.Graphics is null) return;
+            if (e.RowIndex < 0 || e.ColumnIndex < 0 || e.Graphics is null) return;
 
             // Draw selection indicator on the left
             if (e.State.HasFlag(DataGridViewElementStates.Selected))
