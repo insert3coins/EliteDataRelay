@@ -36,7 +36,10 @@ namespace EliteDataRelay
             }
             this.WindowState = AppConfiguration.WindowState;
 
-            RegisterHotkeys();
+            if (AppConfiguration.EnableHotkeys)
+            {
+                RegisterHotkeys();
+            }
 
             // Kick off one-time historical exploration import in the background.
             // No UI required; runs once and populates the exploration database.
