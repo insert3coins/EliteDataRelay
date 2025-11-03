@@ -319,6 +319,14 @@ namespace EliteDataRelay.Services
                         {
                             ProcessFighterDestroyedEvent();
                         }
+                        else if (eventType == "SuitLoadout")
+                        {
+                            ProcessSuitLoadoutEvent(jsonDoc);
+                        }
+                        else if (eventType == "SwitchSuit")
+                        {
+                            ProcessSwitchSuitEvent(jsonDoc);
+                        }
                         else if (eventType == "ModuleSell" || eventType == "ModuleBuy" || eventType == "ModuleStore" || eventType == "ModuleRetrieve" || eventType == "ModuleSwap")
                         {
                             // These events indicate a loadout change. The subsequent 'Loadout' event is the source of truth.

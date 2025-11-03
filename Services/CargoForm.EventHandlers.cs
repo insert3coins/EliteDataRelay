@@ -136,10 +136,34 @@ namespace EliteDataRelay
         }
 
 
+        private DateTime _lastReboardUtc;
+
+        private static bool IsSpecialModeInternal(string? internalName)
+            => !string.IsNullOrEmpty(internalName) && (
+                   internalName.Equals("SRV", StringComparison.OrdinalIgnoreCase)
+                || internalName.Equals("OnFoot", StringComparison.OrdinalIgnoreCase)
+                || internalName.Equals("Fighter", StringComparison.OrdinalIgnoreCase)
+                || internalName.Equals("Taxi", StringComparison.OrdinalIgnoreCase)
+                || internalName.Equals("Multicrew", StringComparison.OrdinalIgnoreCase));
+
         private void OnShipInfoChanged(object? sender, ShipInfoChangedEventArgs e)
         {
             SafeInvoke(() =>
             {
+                // Debounce transient mode updates for a short window after re-boarding to avoid late suit/SRV events
+                var now = DateTime.UtcNow;
+                bool isSpecial = IsSpecialModeInternal(e.InternalShipName);
+                if (isSpecial && (now - _lastReboardUtc).TotalSeconds < 8)
+                {
+                    return; // ignore stale SRV/suit/fighter in the reboard window
+                }
+
+                if (!isSpecial)
+                {
+                    // Treat any non-special update as a reboard/baseline update
+                    _lastReboardUtc = now;
+                }
+
                 _lastShipName = e.ShipName;
                 _lastShipIdent = e.ShipIdent;
                 _lastShipType = e.ShipType;

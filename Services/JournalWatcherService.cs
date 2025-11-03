@@ -15,6 +15,7 @@ namespace EliteDataRelay.Services
     /// </summary>
     public partial class JournalWatcherService : IJournalWatcherService, IDisposable
     {
+
         private readonly string _journalDir;
         private FileSystemWatcher? _journalDirectoryWatcher;
         private FileSystemWatcher? _navRouteWatcher;
@@ -31,9 +32,18 @@ namespace EliteDataRelay.Services
         private string? _lastShipType;
         private string? _lastInternalShipName;
         private string? _lastShipLocalised;
+
+        // Preserve the mothership details while temporarily in SRV/Fighter/On-Foot
+        private string? _homeShipName;
+        private string? _homeShipIdent;
+        private string? _homeShipType;
+        private string? _homeInternalShipName;
+        private string? _homeShipLocalised;
+
         private LocationChangedEventArgs? _lastLocationArgs;
         private DockedEventArgs? _lastDockedEventArgs;
         private bool _isMonitoring;
+
 
         /// <summary>
         /// Event raised when the cargo capacity is found in a Loadout event.

@@ -7,6 +7,45 @@ namespace EliteDataRelay.Services
 {
     public partial class JournalWatcherService
     {
+        private static string BuildSuitDisplay(string? suitInternalOrLocalised, string? loadoutName)
+        {
+            string suit = suitInternalOrLocalised ?? string.Empty;
+            // Map common internals to display names
+            if (suit.Equals("explorationsuit", StringComparison.OrdinalIgnoreCase) || suit.Equals("artemis", StringComparison.OrdinalIgnoreCase)) suit = "Artemis";
+            else if (suit.Equals("utilitysuit", StringComparison.OrdinalIgnoreCase) || suit.Equals("maverick", StringComparison.OrdinalIgnoreCase)) suit = "Maverick";
+            else if (suit.Equals("tacticalsuit", StringComparison.OrdinalIgnoreCase) || suit.Equals("dominator", StringComparison.OrdinalIgnoreCase)) suit = "Dominator";
+            else if (string.IsNullOrWhiteSpace(suit)) suit = "Suit";
+
+            if (!string.IsNullOrWhiteSpace(loadoutName))
+            {
+                return $"On Foot ({suit} – {loadoutName})";
+            }
+            return $"On Foot ({suit})";
+        }
+
+        private void ProcessSuitLoadoutEvent(JsonDocument jsonDoc)
+        {
+            var root = jsonDoc.RootElement;
+            string? suit = null;
+            string? suitLocalised = null;
+            string? loadout = null;
+            if (root.TryGetProperty("Suit", out var s)) suit = s.GetString();
+            if (root.TryGetProperty("Suit_Localised", out var sl)) suitLocalised = sl.GetString();
+            if (root.TryGetProperty("LoadoutName", out var ln)) loadout = ln.GetString();
+            var display = BuildSuitDisplay(suitLocalised ?? suit, loadout);
+            RaiseTransientShipInfo(display, string.Empty, display, "OnFoot", display);
+        }
+
+        private void ProcessSwitchSuitEvent(JsonDocument jsonDoc)
+        {
+            var root = jsonDoc.RootElement;
+            string? to = null;
+            string? toLocalised = null;
+            if (root.TryGetProperty("ToSuit", out var ts)) to = ts.GetString();
+            if (root.TryGetProperty("ToSuit_Localised", out var tsl)) toLocalised = tsl.GetString();
+            var display = BuildSuitDisplay(toLocalised ?? to, null);
+            RaiseTransientShipInfo(display, string.Empty, display, "OnFoot", display);
+        }
         private void ProcessLoadGameEvent(JsonDocument jsonDoc, string journalLine, JsonSerializerOptions options)
         {
             var loadGameEvent = JsonSerializer.Deserialize<LoadGameEvent>(journalLine, options);
@@ -42,6 +81,13 @@ namespace EliteDataRelay.Services
                     internalShipName,
                     loadGameEvent.ShipLocalised
                 );
+
+                // Seed mothership cache; Loadout will refine shortly
+                _homeShipName = _lastShipName;
+                _homeShipIdent = _lastShipIdent;
+                _homeShipType = _lastShipType;
+                _homeInternalShipName = _lastInternalShipName;
+                _homeShipLocalised = _lastShipLocalised;
             }
         }
 
@@ -65,6 +111,13 @@ namespace EliteDataRelay.Services
                 string shipType = loadoutEvent.ShipLocalised ?? _lastShipType ?? ShipIconService.GetShipDisplayName(loadoutEvent.Ship);
 
                 UpdateShipInformation(loadoutEvent.ShipName, loadoutEvent.ShipIdent, shipType, loadoutEvent.Ship, loadoutEvent.ShipLocalised ?? _lastShipLocalised);
+
+                // Persist mothership details from authoritative Loadout
+                _homeShipName = _lastShipName;
+                _homeShipIdent = _lastShipIdent;
+                _homeShipType = _lastShipType;
+                _homeInternalShipName = _lastInternalShipName;
+                _homeShipLocalised = _lastShipLocalised;
             }
         }
 
@@ -79,6 +132,10 @@ namespace EliteDataRelay.Services
                 _lastShipType = swapEvent.ShipTypeLocalised ?? ShipIconService.GetShipDisplayName(swapEvent.ShipType);
                 _lastShipLocalised = swapEvent.ShipTypeLocalised;
                 _lastInternalShipName = swapEvent.ShipType;
+                // Update mothership baseline (name/ident will be filled by next Loadout)
+                _homeShipType = _lastShipType;
+                _homeShipLocalised = _lastShipLocalised;
+                _homeInternalShipName = _lastInternalShipName;
                 // We only update the internal name for now to trigger an icon change, but wait for Loadout for the full UI update.
                 ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs("...", "...", _lastShipType, swapEvent.ShipType));
                 Trace.WriteLine($"[JournalWatcherService] Detected ShipyardSwap. New ship type: {swapEvent.ShipType}");
@@ -96,6 +153,10 @@ namespace EliteDataRelay.Services
                 _lastShipType = newEvent.ShipTypeLocalised ?? ShipIconService.GetShipDisplayName(newEvent.ShipType);
                 _lastShipLocalised = newEvent.ShipTypeLocalised;
                 _lastInternalShipName = newEvent.ShipType;
+                // Update mothership baseline (name/ident will be filled by next Loadout)
+                _homeShipType = _lastShipType;
+                _homeShipLocalised = _lastShipLocalised;
+                _homeInternalShipName = _lastInternalShipName;
                 // We only update the internal name for now to trigger an icon change, but wait for Loadout for the full UI update.
                 ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs("...", "...", _lastShipType, newEvent.ShipType));
                 Trace.WriteLine($"[JournalWatcherService] Detected ShipyardNew. New ship type: {newEvent.ShipType}");
@@ -126,13 +187,13 @@ namespace EliteDataRelay.Services
             string? to = jsonDoc.RootElement.TryGetProperty("To", out var toEl) ? toEl.GetString() : null;
             if (string.Equals(to, "SRV", System.StringComparison.OrdinalIgnoreCase))
             {
-                // Entered SRV — reflect immediately in UI
-                UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+                // Entered SRV — reflect immediately in UI without clobbering mothership cache
+                RaiseTransientShipInfo("SRV", string.Empty, "SRV", "SRV", "SRV");
             }
             else if (string.Equals(to, "Ship", System.StringComparison.OrdinalIgnoreCase))
             {
                 // Returned to ship — restore last known ship details
-                UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+                RaiseTransientShipInfo(_homeShipName, _homeShipIdent, _homeShipType, _homeInternalShipName, _homeShipLocalised);
             }
         }
 
@@ -144,20 +205,20 @@ namespace EliteDataRelay.Services
             bool isMulticrew = jsonDoc.RootElement.TryGetProperty("Multicrew", out var mcEl) && mcEl.ValueKind == System.Text.Json.JsonValueKind.True;
             if (isSrv)
             {
-                UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+                RaiseTransientShipInfo("SRV", string.Empty, "SRV", "SRV", "SRV");
             }
             else if (isTaxi)
             {
-                UpdateShipInformation("Taxi", "", "Taxi", "Taxi", "Taxi");
+                RaiseTransientShipInfo("Taxi", string.Empty, "Taxi", "Taxi", "Taxi");
             }
             else if (isMulticrew)
             {
-                UpdateShipInformation("Multicrew", "", "Multicrew", "Multicrew", "Multicrew");
+                RaiseTransientShipInfo("Multicrew", string.Empty, "Multicrew", "Multicrew", "Multicrew");
             }
             else
             {
                 // Embarked something that isn't SRV — most likely the ship. Restore ship info.
-                UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+                RaiseTransientShipInfo(_homeShipName, _homeShipIdent, _homeShipType, _homeInternalShipName, _homeShipLocalised);
             }
         }
 
@@ -169,55 +230,62 @@ namespace EliteDataRelay.Services
             bool isMulticrew = jsonDoc.RootElement.TryGetProperty("Multicrew", out var mcEl) && mcEl.ValueKind == System.Text.Json.JsonValueKind.True;
             if (isSrv)
             {
-                UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+                RaiseTransientShipInfo("SRV", string.Empty, "SRV", "SRV", "SRV");
             }
             else if (isTaxi)
             {
-                UpdateShipInformation("Taxi", "", "Taxi", "Taxi", "Taxi");
+                RaiseTransientShipInfo("Taxi", string.Empty, "Taxi", "Taxi", "Taxi");
             }
             else if (isMulticrew)
             {
-                UpdateShipInformation("Multicrew", "", "Multicrew", "Multicrew", "Multicrew");
+                RaiseTransientShipInfo("Multicrew", string.Empty, "Multicrew", "Multicrew", "Multicrew");
             }
             else
             {
                 // Most common case: disembark from ship to on-foot.
-                UpdateShipInformation("On Foot", "", "On Foot", "OnFoot", "On Foot");
+                RaiseTransientShipInfo("On Foot", string.Empty, "On Foot", "OnFoot", "On Foot");
             }
         }
 
         private void ProcessLaunchSrvEvent()
         {
-            UpdateShipInformation("SRV", "", "SRV", "SRV", "SRV");
+            RaiseTransientShipInfo("SRV", string.Empty, "SRV", "SRV", "SRV");
         }
 
         private void ProcessDockSrvEvent()
         {
             // Return to ship from SRV
-            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+            RaiseTransientShipInfo(_homeShipName, _homeShipIdent, _homeShipType, _homeInternalShipName, _homeShipLocalised);
         }
 
         private void ProcessSrvDestroyedEvent()
         {
             // SRV destroyed -> back to ship
-            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+            RaiseTransientShipInfo(_homeShipName, _homeShipIdent, _homeShipType, _homeInternalShipName, _homeShipLocalised);
         }
 
         private void ProcessLaunchFighterEvent()
         {
-            UpdateShipInformation("Fighter", "", "Fighter", "Fighter", "Fighter");
+            RaiseTransientShipInfo("Fighter", string.Empty, "Fighter", "Fighter", "Fighter");
         }
 
         private void ProcessDockFighterEvent()
         {
             // Return to mothership
-            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+            RaiseTransientShipInfo(_homeShipName, _homeShipIdent, _homeShipType, _homeInternalShipName, _homeShipLocalised);
         }
 
         private void ProcessFighterDestroyedEvent()
         {
             // Fighter destroyed -> back to ship
-            UpdateShipInformation(_lastShipName, _lastShipIdent, _lastShipType, _lastInternalShipName, _lastShipLocalised);
+            RaiseTransientShipInfo(_homeShipName, _homeShipIdent, _homeShipType, _homeInternalShipName, _homeShipLocalised);
+        }
+
+        // Raise a ShipInfoChanged event without mutating the cached mothership/last ship fields.
+        private void RaiseTransientShipInfo(string? shipName, string? shipIdent, string? shipType, string? internalShipName, string? shipLocalised)
+        {
+            ShipInfoChanged?.Invoke(this, new ShipInfoChangedEventArgs(shipName ?? "N/A", shipIdent ?? "N/A", shipLocalised ?? shipType ?? "Unknown", internalShipName ?? "unknown"));
         }
     }
 }
+

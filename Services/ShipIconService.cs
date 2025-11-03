@@ -229,6 +229,14 @@ namespace EliteDataRelay.Services
                 return cachedIcon;
             }
 
+            // Special modes without dedicated art: generate styled placeholders
+            if (IsSpecialMode(internalShipName, out var modeLabel))
+            {
+                var modeIcon = CreateModeIcon(modeLabel);
+                _iconCache[internalShipName] = modeIcon;
+                return modeIcon;
+            }
+
             // First, try treating the input as a display name/alias.
             // This enables callers to pass user-facing names directly.
             if (TryResolveAliasToFileBase(internalShipName, out var fileName))
@@ -258,6 +266,73 @@ namespace EliteDataRelay.Services
             }
 
             return GetDefaultIcon();
+        }
+
+        private static bool IsSpecialMode(string name, out string label)
+        {
+            // Normalize
+            var n = name.Trim();
+            if (n.Equals("SRV", StringComparison.OrdinalIgnoreCase)) { label = "SRV"; return true; }
+            if (n.Equals("Fighter", StringComparison.OrdinalIgnoreCase)) { label = "Fighter"; return true; }
+            if (n.Equals("OnFoot", StringComparison.OrdinalIgnoreCase) || n.Equals("On Foot", StringComparison.OrdinalIgnoreCase)) { label = "On Foot"; return true; }
+            if (n.Equals("Taxi", StringComparison.OrdinalIgnoreCase)) { label = "Taxi"; return true; }
+            if (n.Equals("Multicrew", StringComparison.OrdinalIgnoreCase)) { label = "Multicrew"; return true; }
+            label = string.Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// Creates a data URL PNG for special modes (SRV, Fighter, On Foot, Taxi, Multicrew).
+        /// Returns true if generated; false if not a special mode.
+        /// </summary>
+        public static bool TryGetSpecialModeDataUrl(string? internalShipName, out string dataUrl)
+        {
+            dataUrl = string.Empty;
+            if (string.IsNullOrWhiteSpace(internalShipName)) return false;
+            if (!IsSpecialMode(internalShipName, out var label)) return false;
+
+            using var bmp = CreateModeIcon(label);
+            using var ms = new MemoryStream();
+            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            dataUrl = "data:image/png;base64," + base64;
+            return true;
+        }
+
+        private static Image CreateModeIcon(string text)
+        {
+            // Slightly different styling than generic placeholder
+            int width = 160, height = 160;
+            var bmp = new Bitmap(width, height);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+                g.Clear(Color.Transparent);
+
+                var bg = Color.FromArgb(20, 20, 20);
+                var border = Color.FromArgb(255, 111, 0); // Elite orange
+                var accent = Color.FromArgb(255, 128, 0);
+
+                using var bgBrush = new SolidBrush(bg);
+                using var borderPen = new Pen(border, 2f);
+                using var accentPen = new Pen(accent, 3f);
+                using var textBrush = new SolidBrush(Color.Gainsboro);
+
+                g.FillRectangle(bgBrush, 0, 0, width, height);
+                g.DrawRectangle(borderPen, 0, 0, width - 1, height - 1);
+
+                // Accent chevrons
+                g.DrawLine(accentPen, 8, 20, width - 8, 20);
+                g.DrawLine(accentPen, 8, height - 20, width - 8, height - 20);
+
+                // Text
+                var rect = new RectangleF(10, 48, width - 20, height - 96);
+                using var font = new Font("Segoe UI", 18f, FontStyle.Bold, GraphicsUnit.Pixel);
+                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisWord };
+                g.DrawString(text, font, textBrush, rect, sf);
+            }
+            return bmp;
         }
 
         /// <summary>

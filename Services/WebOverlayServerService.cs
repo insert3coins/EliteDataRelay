@@ -428,14 +428,16 @@ namespace EliteDataRelay.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(internalShip)) { _state.ShipIconUrl = string.Empty; _ = BroadcastAsync(_state); return; }
-                var display = ShipIconService.GetShipDisplayName(internalShip);
-                if (!string.IsNullOrWhiteSpace(display))
+
+                // For special modes that don't have PNGs, embed a data URL so the overlay renders an icon.
+                if (ShipIconService.TryGetSpecialModeDataUrl(internalShip, out var dataUrl))
                 {
-                    _state.ShipIconUrl = "/images/ships/" + display + ".png";
+                    _state.ShipIconUrl = dataUrl;
                 }
                 else
                 {
-                    _state.ShipIconUrl = string.Empty;
+                    var display = ShipIconService.GetShipDisplayName(internalShip);
+                    _state.ShipIconUrl = !string.IsNullOrWhiteSpace(display) ? ("/images/ships/" + display + ".png") : string.Empty;
                 }
                 _ = BroadcastAsync(_state);
             }
