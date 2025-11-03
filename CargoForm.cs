@@ -28,7 +28,7 @@ namespace EliteDataRelay
         private readonly ExplorationDataService _explorationDataService;
         private readonly ExplorationDatabaseService _explorationDatabaseService;
         private readonly ScreenshotRenamerService _screenshotRenamerService;
-        private readonly WebOverlayServerService _webOverlayService;
+        
         public CargoForm()
         {
             // Create all service instances. This form now owns its dependencies,
@@ -50,7 +50,7 @@ namespace EliteDataRelay
 
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
-            _webOverlayService = new WebOverlayServerService();
+            
 
             InitializeComponent();
 
@@ -161,8 +161,7 @@ namespace EliteDataRelay
                         _overlayService.UpdateExplorationSessionData(session);
 
                         // Update web overlay
-                        _webOverlayService.UpdateExploration(currentSystem);
-                        _webOverlayService.UpdateExplorationSession(session);
+                        
                     }
                 }
             }
@@ -256,8 +255,7 @@ namespace EliteDataRelay
             };
 
             // Push exploration updates to web overlay
-            _explorationDataService.SystemDataChanged += (s, data) => _webOverlayService.UpdateExploration(data);
-            _explorationDataService.SessionDataChanged += (s, data) => _webOverlayService.UpdateExplorationSession(data);
+            
         }
 
         private void OnMiningNotificationRaised(object? sender, MiningNotificationEventArgs e)
@@ -295,7 +293,7 @@ namespace EliteDataRelay
                 _explorationDataService.Dispose();
                 _explorationDatabaseService.Dispose();
                 _screenshotRenamerService?.Dispose();
-                _webOverlayService?.Dispose();
+                
                 
             }
             base.Dispose(disposing);

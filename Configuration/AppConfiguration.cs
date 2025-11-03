@@ -12,7 +12,7 @@ namespace EliteDataRelay.Configuration
     {
         private static readonly string SettingsFilePath;
         // Opacity for browser-source overlays (0-100)
-        public static int WebOverlayOpacity { get; set; } = 85;
+        
 
         #region Properties
 
@@ -116,9 +116,7 @@ namespace EliteDataRelay.Configuration
                         // Webhook removed
 
                         // Web overlay
-                        EnableWebOverlayServer = config.EnableWebOverlayServer;
-                        WebOverlayPort = config.WebOverlayPort;
-                        WebOverlayOpacity = config.WebOverlayOpacity;
+                        
                     }
                 }
             }
@@ -191,9 +189,7 @@ namespace EliteDataRelay.Configuration
                     // Webhook removed
 
                     // Web overlay
-                    EnableWebOverlayServer = AppConfiguration.EnableWebOverlayServer,
-                    WebOverlayPort = AppConfiguration.WebOverlayPort,
-                    WebOverlayOpacity = AppConfiguration.WebOverlayOpacity,
+                    
                     OverlayOpacity = AppConfiguration.OverlayOpacity,
                 };
 
@@ -269,9 +265,7 @@ namespace EliteDataRelay.Configuration
             // Webhook removed
 
             // Web overlay
-            public bool EnableWebOverlayServer { get; set; } = false;
-            public int WebOverlayPort { get; set; } = 9005;
-            public int WebOverlayOpacity { get; set; } = 85;
+            
 
             // Exploration
             public bool ExplorationHistoryImported { get; set; } = false;

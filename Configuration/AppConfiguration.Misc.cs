@@ -39,8 +39,6 @@ namespace EliteDataRelay.Configuration
 
         // Webhook removed
 
-        // Web Overlay Server
-        public static bool EnableWebOverlayServer { get; set; } = false;
-        public static int WebOverlayPort { get; set; } = 9005;
+        
     }
 }

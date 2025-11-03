@@ -8,6 +8,8 @@ What's new
 - Special-mode icons: SRV/Fighter/On Foot show themed placeholders in the app; the web overlay uses data-URL icons when no PNG is present.
 - Overlay updates: ship text and icon stay in sync with actual state across transitions.
 
+- Removed: Web Overlay server and related settings/UI to reduce startup time and background overhead.
+
 Supported events (highlights)
 - LoadGame, Loadout, ShipyardSwap/New
 - VehicleSwitch, Embark, Disembark

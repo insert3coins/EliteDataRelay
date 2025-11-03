@@ -71,7 +71,7 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 5. **Customize**: Configure overlays, hotkeys, and file output in Settings
 
 ### OBS Browser Source (optional)
-- Enable Web Overlay server in Settings → Web Overlay
+ 
 - Add Browser Source to OBS using one of:
   - `http://localhost:9005/info`
   - `http://localhost:9005/cargo`
