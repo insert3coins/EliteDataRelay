@@ -13,11 +13,8 @@ namespace EliteDataRelay.UI
         private DataGridView _bodiesGrid = null!;
         private Label _systemNameLabel = null!;
         private Label _systemStatsLabel = null!;
-        private TextBox _searchBox = null!;
-        private AutoCompleteStringCollection _searchAutoComplete = new AutoCompleteStringCollection();
-        private string _searchTerm = string.Empty;
-        private FlowLayoutPanel _filtersPanel = null!;
-        private BodyKindFilter _activeFilter = BodyKindFilter.All;
+        
+        // Removed filter buttons (All/Stars/Planets/Signals)
         private Panel _sessionPanel = null!;
         private Label _sessionLabel = null!;
         private Label _sessionStatsLabel = null!;
@@ -26,13 +23,7 @@ namespace EliteDataRelay.UI
         private SystemExplorationData? _currentSystemData;
         private ExplorationSessionData _sessionData = new ExplorationSessionData();
 
-        private enum BodyKindFilter
-        {
-            All,
-            Stars,
-            Planets,
-            Signals
-        }
+        // BodyKindFilter enum removed
 
         public ExplorationTab(ExplorationDatabaseService? database = null)
         {
@@ -154,78 +145,13 @@ namespace EliteDataRelay.UI
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 2
+                RowCount = 1
             };
-            gridLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48)); // Control bar height
-            gridLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // Grid
-
-            // Control bar (moved inside grid card)
-            var controlBar = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 1,
-                Padding = new Padding(20, 6, 20, 6)
-            };
-            controlBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60));
-            controlBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
-
-            var searchPanel = new Panel { Dock = DockStyle.Fill };
-            var searchLabel = new Label
-            {
-                Text = "Search:",
-                Dock = DockStyle.Left,
-                Width = 60,
-                TextAlign = ContentAlignment.MiddleLeft,
-                ForeColor = Color.FromArgb(100, 116, 139)
-            };
-            _searchBox = new TextBox
-            {
-                Dock = DockStyle.Fill,
-                BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Segoe UI", 9F)
-            };
-            _searchBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-            _searchBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
-            _searchBox.AutoCompleteCustomSource = _searchAutoComplete;
-            _searchBox.TextChanged += (s, e) => { _searchTerm = _searchBox.Text.Trim(); ApplyBodyFiltersAndRender(); };
-            searchPanel.Controls.Add(_searchBox);
-            searchPanel.Controls.Add(searchLabel);
-            controlBar.Controls.Add(searchPanel, 0, 0);
-
-            _filtersPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                AutoSize = false,
-                Padding = new Padding(0),
-                Margin = new Padding(0)
-            };
-            void AddFilterButton(string text, BodyKindFilter filter)
-            {
-                var btn = new Button
-                {
-                    Text = text,
-                    AutoSize = true,
-                    Margin = new Padding(6, 2, 0, 2)
-                };
-                btn.Click += (s, e) => { _activeFilter = filter; HighlightActiveFilter(); ApplyBodyFiltersAndRender(); };
-                _filtersPanel.Controls.Add(btn);
-            }
-            AddFilterButton("All", BodyKindFilter.All);
-            AddFilterButton("Stars", BodyKindFilter.Stars);
-            AddFilterButton("Planets", BodyKindFilter.Planets);
-            AddFilterButton("Signals", BodyKindFilter.Signals);
-            controlBar.Controls.Add(_filtersPanel, 1, 0);
-
-            // Initialize filter highlight
-            HighlightActiveFilter();
+            gridLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // Grid only
 
             _bodiesGrid = CreateBodiesGrid();
 
-            gridLayout.Controls.Add(controlBar, 0, 0);
-            gridLayout.Controls.Add(_bodiesGrid, 0, 1);
+            gridLayout.Controls.Add(_bodiesGrid, 0, 0);
             gridCard.Controls.Add(gridLayout);
 
             mainLayout.Controls.Add(gridCard, 0, 1);
@@ -538,11 +464,6 @@ namespace EliteDataRelay.UI
                 _systemNameLabel.Text = "No System Selected";
                 _systemStatsLabel.Text = "Start monitoring to see exploration data";
                 _bodiesGrid.Rows.Clear();
-                _searchAutoComplete.Clear();
-                if (_searchBox != null)
-                {
-                    _searchBox.AutoCompleteCustomSource = _searchAutoComplete;
-                }
             }));
         }
 
@@ -552,19 +473,7 @@ namespace EliteDataRelay.UI
         }
     
 
-        private void HighlightActiveFilter()
-        {
-            if (_filtersPanel == null) return;
-            foreach (Control c in _filtersPanel.Controls)
-            {
-                if (c is Button b)
-                {
-                    bool active = string.Equals(b.Text, _activeFilter.ToString(), StringComparison.OrdinalIgnoreCase);
-                    b.BackColor = active ? Color.FromArgb(227, 242, 253) : SystemColors.Control;
-                    b.ForeColor = active ? Color.FromArgb(30, 64, 175) : SystemColors.ControlText;
-                }
-            }
-        }
+        // Filter highlight removed
 
         private void ApplyBodyFiltersAndRender()
         {
@@ -575,40 +484,11 @@ namespace EliteDataRelay.UI
                 return;
             }
 
-            // Keep auto-complete suggestions in sync with current data
-            if (_searchAutoComplete != null)
-            {
-                UpdateSearchAutoComplete(_currentSystemData);
-            }
-
             IEnumerable<ScannedBody> bodies = _currentSystemData.Bodies;
 
-            switch (_activeFilter)
-            {
-                case BodyKindFilter.Stars:
-                    bodies = bodies.Where(b => (b.BodyType ?? string.Empty).IndexOf("star", StringComparison.OrdinalIgnoreCase) >= 0);
-                    break;
-                case BodyKindFilter.Planets:
-                    bodies = bodies.Where(b => (b.BodyType ?? string.Empty).IndexOf("star", StringComparison.OrdinalIgnoreCase) < 0);
-                    break;
-                case BodyKindFilter.Signals:
-                    bodies = bodies.Where(b => b.Signals != null && b.Signals.Count > 0);
-                    break;
-                case BodyKindFilter.All:
-                default:
-                    break;
-            }
+            // Filter controls removed; always show all bodies
 
-            var term = _searchTerm?.Trim();
-            if (!string.IsNullOrEmpty(term))
-            {
-                var t = term.ToLowerInvariant();
-                bodies = bodies.Where(b =>
-                    (!string.IsNullOrEmpty(b.BodyName) && b.BodyName.ToLowerInvariant().Contains(t)) ||
-                    (!string.IsNullOrEmpty(b.BodyType) && b.BodyType.ToLowerInvariant().Contains(t)) ||
-                    (b.Signals != null && b.Signals.Any(s => (s.TypeLocalised ?? s.Type).ToLowerInvariant().Contains(t)))
-                );
-            }
+            
 
             bodies = bodies.OrderBy(b => b.DistanceFromArrival ?? double.MaxValue);
 
@@ -660,48 +540,6 @@ namespace EliteDataRelay.UI
             _bodiesGrid.ResumeLayout();
         }
 
-        private void UpdateSearchAutoComplete(SystemExplorationData systemData)
-        {
-            try
-            {
-                var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var b in systemData.Bodies)
-                {
-                    if (!string.IsNullOrWhiteSpace(b.BodyName)) set.Add(b.BodyName);
-                    if (!string.IsNullOrWhiteSpace(b.BodyType)) set.Add(b.BodyType);
-
-                    if (b.Signals != null)
-                    {
-                        foreach (var s in b.Signals)
-                        {
-                            var name = s?.TypeLocalised ?? s?.Type;
-                            if (!string.IsNullOrWhiteSpace(name)) set.Add(name!);
-                        }
-                    }
-
-                    if (b.BiologicalSignals != null)
-                    {
-                        foreach (var n in b.BiologicalSignals)
-                        {
-                            if (!string.IsNullOrWhiteSpace(n)) set.Add(n);
-                        }
-                    }
-                }
-
-                var items = set.Take(1000).ToArray();
-
-                _searchAutoComplete.Clear();
-                if (items.Length > 0)
-                {
-                    _searchAutoComplete.AddRange(items);
-                }
-                if (_searchBox != null)
-                {
-                    _searchBox.AutoCompleteCustomSource = _searchAutoComplete;
-                }
-            }
-            catch { }
-        }
+        
     }
 }

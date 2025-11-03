@@ -28,22 +28,15 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Configurable fonts, colors, transparency, and borders
 - Global hotkeys for show/hide control (Ctrl+Alt+F11/F12)
 
-**Browser-Source Overlays**
-- Built‑in local web server (default port 9005)
-- Matching styles and sizes for Info, Cargo, Ship Icon, and Exploration
-- Auto‑updates live via WebSocket (no scene refresh required)
-- Endpoints: `/info`, `/cargo`, `/ship-icon`, `/exploration`
-
 ---
 
-## Exploration Enhancements (latest)
+## Exploration Enhancements
 
 - Accurate FSS completion and body totals (FSSAllBodiesFound, NavBeaconScan, DiscoveryScan)
 - Completion badges: “All scanned” and “All mapped” based on planet-class mappability
 - Mappability parity with game intent using a planet-class whitelist
 - Non-body signals (USS/POI) shown as counts, with top categories in desktop overlay
 - Biological Codex entries tracked and surfaced as a count
-- Web overlay: corrected FSS percentage, added Completion/Signals/Codex rows
 - Persistence: signals and Codex bio entries saved to SQLite and restored on load
 - Importer: backfills new fields from historical journals safely and efficiently
 
@@ -64,19 +57,11 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 
 ## Getting Started
 
-1. **Prerequisites**: Windows 10/11 with .NET 8 Desktop Runtime
+1. **Prerequisites**: Windows 10/11 with .NET 9 Desktop Runtime
 2. **Download**: Get the latest release and run `EliteDataRelay.exe`
 3. **Launch**: Start Elite Dangerous
 4. **Monitor**: Click Start in the app to begin monitoring
 5. **Customize**: Configure overlays, hotkeys, and file output in Settings
-
-### OBS Browser Source (optional)
- 
-- Add Browser Source to OBS using one of:
-  - `http://localhost:9005/info`
-  - `http://localhost:9005/cargo`
-  - `http://localhost:9005/ship-icon`
-  - `http://localhost:9005/exploration`
 
 ---
 
