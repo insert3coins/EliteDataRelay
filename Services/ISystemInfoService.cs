@@ -9,5 +9,6 @@ namespace EliteDataRelay.Services
         void Start();
         void Stop();
         SystemInfoData? GetLastSystemInfo();
+        void RequestFetch(string systemName);
     }
 }

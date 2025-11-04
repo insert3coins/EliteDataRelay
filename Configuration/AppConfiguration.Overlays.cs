@@ -35,5 +35,9 @@ namespace EliteDataRelay.Configuration
 
         // Next Jump overlay options
         public static bool ShowNextJumpJumpsLeft { get; set; } = true;
+
+        // Traffic display options
+        public static bool ShowTrafficOnExplorationOverlay { get; set; } = true;
+        public static bool ShowTrafficOnJumpOverlay { get; set; } = true;
     }
 }

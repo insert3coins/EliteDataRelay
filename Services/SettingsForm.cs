@@ -23,6 +23,8 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableJumpOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkShowSessionOnOverlay = null!;
+        private CheckBox _chkTrafficExplorationOverlay = null!;
+        private CheckBox _chkTrafficJumpOverlay = null!;
         private CheckBox _chkShowBorderInfo = null!;
         private CheckBox _chkShowBorderCargo = null!;
         private CheckBox _chkShowBorderShipIcon = null!;
@@ -105,6 +107,9 @@ namespace EliteDataRelay.UI
             _chkEnableJumpOverlay.Checked = AppConfiguration.EnableJumpOverlay;
             _chkFastStart.Checked = AppConfiguration.FastStartSkipJournalHistory;
             _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
+            // Traffic toggles
+            if (_chkTrafficExplorationOverlay != null) _chkTrafficExplorationOverlay.Checked = AppConfiguration.ShowTrafficOnExplorationOverlay;
+            if (_chkTrafficJumpOverlay != null) _chkTrafficJumpOverlay.Checked = AppConfiguration.ShowTrafficOnJumpOverlay;
             _startHotkey = AppConfiguration.StartMonitoringHotkey;
             _stopHotkey = AppConfiguration.StopMonitoringHotkey;
             _showOverlayHotkey = AppConfiguration.ShowOverlayHotkey;
@@ -192,6 +197,8 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableJumpOverlay = _chkEnableJumpOverlay.Checked;
             AppConfiguration.FastStartSkipJournalHistory = _chkFastStart.Checked;
             AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
+            AppConfiguration.ShowTrafficOnExplorationOverlay = _chkTrafficExplorationOverlay.Checked;
+            AppConfiguration.ShowTrafficOnJumpOverlay = _chkTrafficJumpOverlay.Checked;
             AppConfiguration.StartMonitoringHotkey = _startHotkey;
             AppConfiguration.StopMonitoringHotkey = _stopHotkey;
             AppConfiguration.ShowOverlayHotkey = _showOverlayHotkey;

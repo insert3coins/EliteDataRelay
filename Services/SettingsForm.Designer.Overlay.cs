@@ -66,11 +66,28 @@ namespace EliteDataRelay.UI
             };
             _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
 
+            // Show Traffic: Exploration Overlay
+            _chkTrafficExplorationOverlay = new CheckBox
+            {
+                Text = "Show traffic on exploration overlay",
+                Location = new Point(15, 145 + 25 + 25),
+                AutoSize = true
+            };
+
+            // Show Traffic: Next Jump Overlay
+            _chkTrafficJumpOverlay = new CheckBox
+            {
+                Text = "Show traffic on next jump overlay",
+                Location = new Point(15, 145 + 25 + 25 + 25),
+                AutoSize = true
+            };
+
             // Reposition Overlays Button
             _btnRepositionOverlays = new Button
             {
                 Text = "Reposition Overlays",
-                Location = new Point(15, 165 + 25),
+                // Place after the traffic toggles to avoid overlap
+                Location = new Point(15, 145 + 25 + 25 + 25 + 25),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -82,6 +99,8 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableJumpOverlay);
             _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
+            _grpOverlaySettings.Controls.Add(_chkTrafficExplorationOverlay);
+            _grpOverlaySettings.Controls.Add(_chkTrafficJumpOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
             foreach (Control c in _grpOverlaySettings.Controls)
             {

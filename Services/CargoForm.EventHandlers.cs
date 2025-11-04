@@ -290,6 +290,20 @@ namespace EliteDataRelay
                                 data.TargetSystemName = route.Hops[0].Name;
                         }
 
+                        // Attach last-fetched system info immediately if it matches target
+                        try
+                        {
+                            var lastInfo = _systemInfoService.GetLastSystemInfo();
+                            if (lastInfo != null && !string.IsNullOrWhiteSpace(data.TargetSystemName) &&
+                                string.Equals(lastInfo.SystemName, data.TargetSystemName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                data.SystemInfo = lastInfo;
+                            }
+                        }
+                        catch { /* ignore info service issues */ }
+
+                        // Kick off an immediate system info fetch for the target to populate traffic ASAP
+                        try { if (!string.IsNullOrWhiteSpace(data.TargetSystemName)) _systemInfoService.RequestFetch(data.TargetSystemName); } catch { /* ignore */ }
                         _overlayService.ShowNextJumpOverlay(data);
                     }
                     catch { /* ignore overlay errors */ }
@@ -420,6 +434,20 @@ namespace EliteDataRelay
                     }
                 }
 
+                // Attach last-fetched system info immediately if it matches target
+                try
+                {
+                    var lastInfo = _systemInfoService.GetLastSystemInfo();
+                    if (lastInfo != null && !string.IsNullOrWhiteSpace(data.TargetSystemName) &&
+                        string.Equals(lastInfo.SystemName, data.TargetSystemName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        data.SystemInfo = lastInfo;
+                    }
+                }
+                catch { /* ignore info service issues */ }
+
+                // Kick off an immediate system info fetch for the target to populate traffic ASAP
+                try { if (!string.IsNullOrWhiteSpace(data.TargetSystemName)) _systemInfoService.RequestFetch(data.TargetSystemName); } catch { /* ignore */ }
                 _overlayService.ShowNextJumpOverlay(data);
             });
         }

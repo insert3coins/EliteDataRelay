@@ -31,7 +31,6 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 ---
 
 ## Exploration Enhancements
-
 - Accurate FSS completion and body totals (FSSAllBodiesFound, NavBeaconScan, DiscoveryScan)
 - Completion badges: “All scanned” and “All mapped” based on planet-class mappability
 - Mappability parity with game intent using a planet-class whitelist

@@ -251,6 +251,36 @@ namespace EliteDataRelay.UI
                 {
                     g.DrawString(num, GameColors.FontSmall, gold, rx, y);
                 }
+
+                // Center: Traffic (optional)
+                if (AppConfiguration.ShowTrafficOnJumpOverlay && data.SystemInfo != null)
+                {
+                    var si = data.SystemInfo;
+                    bool hasTraffic = (si.TrafficDay > 0) || (si.TrafficWeek > 0) || (si.TrafficTotal > 0);
+                    if (hasTraffic)
+                    {
+                        string trafficText = $"Traffic:  {si.TrafficDay:N0} today \u2022 {si.TrafficWeek:N0} week \u2022 {si.TrafficTotal:N0} total";
+
+                        // Compute available center span between left footer text and right remaining label
+                        float leftSpanStart = padding + 2;
+                        float leftSpanEnd = leftSpanStart;
+                        if (!string.IsNullOrEmpty(footerL))
+                        {
+                            var leftSize = g.MeasureString(footerL, GameColors.FontSmall);
+                            leftSpanEnd = leftSpanStart + leftSize.Width + 8; // small gap
+                        }
+                        float rightSpanStart = rx - labelSize.Width; // where "Remaining " label starts
+                        float centerX = (leftSpanEnd + rightSpanStart) / 2f;
+                        float maxWidth = Math.Max(10f, rightSpanStart - leftSpanEnd - 8f);
+
+                        string trafficDraw = TruncateText(g, trafficText, GameColors.FontSmall, (int)Math.Floor(maxWidth));
+                        var trafficSize = g.MeasureString(trafficDraw, GameColors.FontSmall);
+                        float tx = centerX - (trafficSize.Width / 2f);
+                        if (tx < leftSpanEnd) tx = leftSpanEnd;
+                        if (tx + trafficSize.Width > rightSpanStart) tx = rightSpanStart - trafficSize.Width;
+                        g.DrawString(trafficDraw, GameColors.FontSmall, GameColors.BrushGrayText, tx, y);
+                    }
+                }
             }
             y += 18;
         }

@@ -69,6 +69,13 @@ namespace EliteDataRelay.Services
         {
             _lastSystemInfoData = data;
             _explorationOverlayForm?.UpdateSystemInfo(data);
+
+            // Also attach latest system info to the jump overlay data so it can render traffic
+            if (_lastNextJumpData != null)
+            {
+                _lastNextJumpData.SystemInfo = data;
+                try { _jumpOverlayForm?.UpdateJumpInfo(_lastNextJumpData); } catch { /* ignore */ }
+            }
         }
         public void UpdateStationInfo(StationInfoData data) { }
 

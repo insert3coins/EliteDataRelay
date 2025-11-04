@@ -274,8 +274,9 @@ namespace EliteDataRelay.UI
                 }
                 else if (data.Bodies.Any(b => b.WasDiscovered))
                 {
-                    // Instead of "Known System", display EDSM traffic here if available
-                    if (_currentSystemInfo != null &&
+                    // Instead of "Known System", display EDSM traffic here if available (and enabled)
+                    if (AppConfiguration.ShowTrafficOnExplorationOverlay &&
+                        _currentSystemInfo != null &&
                         (_currentSystemInfo.TrafficDay > 0 || _currentSystemInfo.TrafficWeek > 0 || _currentSystemInfo.TrafficTotal > 0))
                     {
                         // Compact, readable formatting with bullet separators

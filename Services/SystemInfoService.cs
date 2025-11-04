@@ -62,6 +62,24 @@ namespace EliteDataRelay.Services
             _isStarted = false;
         }
 
+        public void RequestFetch(string systemName)
+        {
+            if (string.IsNullOrWhiteSpace(systemName)) return;
+            lock (_lock)
+            {
+                if (!_isStarted) return;
+                _fetchCancellationTokenSource?.Cancel();
+                _fetchCancellationTokenSource = new CancellationTokenSource();
+                var fetchToken = _fetchCancellationTokenSource.Token;
+                Task.Run(async () =>
+                {
+                    var systemInfo = await FetchSystemInfoAsync(systemName, fetchToken) ?? new SystemInfoData { SystemName = systemName };
+                    _lastSystemInfo = systemInfo;
+                    SystemInfoUpdated?.Invoke(this, systemInfo);
+                });
+            }
+        }
+
         private void OnNextJumpSystemChanged(object? sender, NextJumpSystemChangedEventArgs e)
         {
             lock (_lock)

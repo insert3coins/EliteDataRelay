@@ -78,6 +78,8 @@ namespace EliteDataRelay.Configuration
                         OverlayShowBorderShipIcon = config.OverlayShowBorderShipIcon;
                         OverlayShowBorderExploration = config.OverlayShowBorderExploration;
                         OverlayShowBorderJump = config.OverlayShowBorderJump;
+                        ShowTrafficOnExplorationOverlay = config.ShowTrafficOnExplorationOverlay;
+                        ShowTrafficOnJumpOverlay = config.ShowTrafficOnJumpOverlay;
 
                         // Migration: if legacy global border is explicitly false and all per-overlay toggles are still defaults,
                         // apply the global value to each overlay.
@@ -170,6 +172,8 @@ namespace EliteDataRelay.Configuration
                     OverlayShowBorderShipIcon = AppConfiguration.OverlayShowBorderShipIcon,
                     OverlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration,
                     OverlayShowBorderJump = AppConfiguration.OverlayShowBorderJump,
+                    ShowTrafficOnExplorationOverlay = AppConfiguration.ShowTrafficOnExplorationOverlay,
+                    ShowTrafficOnJumpOverlay = AppConfiguration.ShowTrafficOnJumpOverlay,
                     InfoOverlayLocation = AppConfiguration.InfoOverlayLocation,
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
@@ -246,6 +250,8 @@ namespace EliteDataRelay.Configuration
             public bool OverlayShowBorderShipIcon { get; set; } = true;
             public bool OverlayShowBorderExploration { get; set; } = true;
             public bool OverlayShowBorderJump { get; set; } = true;
+            public bool ShowTrafficOnExplorationOverlay { get; set; } = true;
+            public bool ShowTrafficOnJumpOverlay { get; set; } = true;
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
