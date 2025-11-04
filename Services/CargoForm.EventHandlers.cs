@@ -261,13 +261,20 @@ namespace EliteDataRelay
                 }
 
 
-                // If FSDCharging just started, show Next Jump overlay immediately (SrvSurvey-style fallback)
+                // If FSDCharging just started, only show the Next Jump overlay when
+                // we're initiating a hyperspace jump (witchspace). Supercruise/hypercruise
+                // FSD charges do not include an FSDTarget system name, so guard on that.
                 // Ignore the very first Status event after start to avoid false positives
                 if (_statusPrimed && !wasCharging && isCharging && AppConfiguration.EnableJumpOverlay)
                 {
                     try
                     {
                         string? targetName = e.Status.FSDTarget?.Name;
+                        // Suppress overlay for supercruise charges where there is no hyperspace target
+                        if (string.IsNullOrWhiteSpace(targetName))
+                        {
+                            return;
+                        }
                         var data = new NextJumpOverlayData
                         {
                             TargetSystemName = targetName,
