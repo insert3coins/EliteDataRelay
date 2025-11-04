@@ -404,6 +404,13 @@ namespace EliteDataRelay
                     return;
                 }
                 if (!AppConfiguration.EnableJumpOverlay) return;
+
+                // If the Next Jump overlay is already visible from FSDCharging, avoid duplicating the update here
+                var existing = _overlayService.GetOverlay(UI.OverlayForm.OverlayPosition.JumpInfo);
+                if (existing != null && existing.Visible)
+                {
+                    return;
+                }
                 var targetName = e.TargetSystemName;
                 var data = new NextJumpOverlayData
                 {
@@ -446,8 +453,6 @@ namespace EliteDataRelay
                 }
                 catch { /* ignore info service issues */ }
 
-                // Kick off an immediate system info fetch for the target to populate traffic ASAP
-                try { if (!string.IsNullOrWhiteSpace(data.TargetSystemName)) _systemInfoService.RequestFetch(data.TargetSystemName); } catch { /* ignore */ }
                 _overlayService.ShowNextJumpOverlay(data);
             });
         }

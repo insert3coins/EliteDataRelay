@@ -70,11 +70,25 @@ namespace EliteDataRelay.Services
             _lastSystemInfoData = data;
             _explorationOverlayForm?.UpdateSystemInfo(data);
 
-            // Also attach latest system info to the jump overlay data so it can render traffic
-            if (_lastNextJumpData != null)
+            // Also attach latest system info to the jump overlay data so it can render traffic,
+            // but only if the names match the current target to avoid double-updates during FSDJump
+            if (_lastNextJumpData != null &&
+                !string.IsNullOrWhiteSpace(_lastNextJumpData.TargetSystemName) &&
+                !string.IsNullOrWhiteSpace(data.SystemName) &&
+                string.Equals(_lastNextJumpData.TargetSystemName, data.SystemName, System.StringComparison.OrdinalIgnoreCase))
             {
-                _lastNextJumpData.SystemInfo = data;
-                try { _jumpOverlayForm?.UpdateJumpInfo(_lastNextJumpData); } catch { /* ignore */ }
+                bool hadTraffic = _lastNextJumpData.SystemInfo != null &&
+                                   ((_lastNextJumpData.SystemInfo.TrafficDay > 0) ||
+                                    (_lastNextJumpData.SystemInfo.TrafficWeek > 0) ||
+                                    (_lastNextJumpData.SystemInfo.TrafficTotal > 0));
+                bool newHasTraffic = (data.TrafficDay > 0) || (data.TrafficWeek > 0) || (data.TrafficTotal > 0);
+
+                // If we already had traffic populated, skip redundant updates for the same target
+                if (!hadTraffic || !newHasTraffic)
+                {
+                    _lastNextJumpData.SystemInfo = data;
+                    try { _jumpOverlayForm?.UpdateJumpInfo(_lastNextJumpData); } catch { /* ignore */ }
+                }
             }
         }
         public void UpdateStationInfo(StationInfoData data) { }

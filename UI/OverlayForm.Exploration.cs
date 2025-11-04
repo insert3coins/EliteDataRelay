@@ -279,9 +279,10 @@ namespace EliteDataRelay.UI
                         _currentSystemInfo != null &&
                         (_currentSystemInfo.TrafficDay > 0 || _currentSystemInfo.TrafficWeek > 0 || _currentSystemInfo.TrafficTotal > 0))
                     {
-                        // Compact, readable formatting with bullet separators
+                        // Compact, readable formatting with bullet separators, truncated to fit overlay width
                         string trafficText = $"Traffic:  {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
-                        g.DrawString(trafficText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                        string trafficDraw = TruncateText(g, trafficText, GameColors.FontSmall, width - padding * 2);
+                        g.DrawString(trafficDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                         // Source tag removed per request; show only values
                     }
                     else
@@ -306,7 +307,9 @@ namespace EliteDataRelay.UI
                                 ? string.Join("  \u2022  ", parts)
                                 : "Known System";
 
-                            g.DrawString(infoText, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                            // Prevent overflow on narrow overlays by truncating to available width
+                            string infoDraw = TruncateText(g, infoText, GameColors.FontSmall, width - padding * 2);
+                            g.DrawString(infoDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                         }
                         else
                         {
