@@ -7,8 +7,4 @@ What's new
   - "Show traffic on next jump overlay"
 - Exploration overlay traffic respects its toggle and falls back to compact system info when disabled.
 
-Fixes
 
-
-Notes
-- To re-run the historical import, set `ExplorationHistoryImported` to `false` in `%APPDATA%\EliteDataRelay\settings.json`.

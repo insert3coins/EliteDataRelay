@@ -229,8 +229,8 @@ namespace EliteDataRelay.Configuration
             public bool EnableHotkeys { get; set; } = true;
             public Keys StartMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F9;
             public Keys StopMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F10;
-            public Keys ShowOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F11;
-            public Keys HideOverlayHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F12;
+            public Keys ShowOverlayHotkey { get; set; } = Keys.Control | Keys.Shift | Keys.F11;
+            public Keys HideOverlayHotkey { get; set; } = Keys.Control | Keys.Shift | Keys.F12;
             public int FileReadMaxAttempts { get; set; } = 3; // fewer retries for lower latency
             public int FileReadRetryDelayMs { get; set; } = 20; // shorter delay between retries
             public Point WindowLocation { get; set; } = Point.Empty;

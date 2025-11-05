@@ -39,62 +39,53 @@ namespace EliteDataRelay.Services
 
         
 
-        public void Start()
+        private void EnsureOverlaysCreated()
         {
-            Stop(); // Ensure any existing overlays are closed
-
-            try
-            {
-                var gameProcesses = System.Diagnostics.Process.GetProcessesByName("EliteDangerous64");
-                // Only show overlays if the game process is actually running.
-                if (!gameProcesses.Any())
-                {
-                    System.Diagnostics.Debug.WriteLine("[OverlayService] Elite Dangerous not running. Overlays will not be shown.");
-                    return;
-                }
-            }
-            catch { /* Ignore potential access denied errors */ }
-
             var primaryScreen = Screen.PrimaryScreen;
             if (primaryScreen == null)
             {
-                System.Diagnostics.Debug.WriteLine("[OverlayService] No primary screen detected. Overlays will not be shown.");
+                System.Diagnostics.Debug.WriteLine("[OverlayService] No primary screen detected. Overlays will not be created.");
                 return;
             }
 
             var screen = primaryScreen.WorkingArea;
 
-            if (AppConfiguration.EnableInfoOverlay)
+            if (_leftOverlayForm == null && AppConfiguration.EnableInfoOverlay)
             {
                 _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag);
                 _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (AppConfiguration.EnableCargoOverlay)
+            if (_rightOverlayForm == null && AppConfiguration.EnableCargoOverlay)
             {
                 _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (AppConfiguration.EnableShipIconOverlay)
+            if (_shipIconOverlayForm == null && AppConfiguration.EnableShipIconOverlay)
             {
                 _shipIconOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.ShipIcon, AppConfiguration.AllowOverlayDrag);
                 _shipIconOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (AppConfiguration.EnableExplorationOverlay)
+            if (_explorationOverlayForm == null && AppConfiguration.EnableExplorationOverlay)
             {
                 _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag);
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
             }
-            if (AppConfiguration.EnableJumpOverlay)
+            if (_jumpOverlayForm == null && AppConfiguration.EnableJumpOverlay)
             {
                 _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag);
                 _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
-                // Ensure it starts hidden; it will only be shown on FSD charge
                 _jumpOverlayForm.Hide();
             }
-            
 
             PositionOverlays(screen);
+        }
+
+        public void Start()
+        {
+            Stop(); // Ensure any existing overlays are closed
+
+            EnsureOverlaysCreated();
 
             // Show and restore data for Info overlay
             if (_leftOverlayForm != null)
@@ -180,6 +171,7 @@ namespace EliteDataRelay.Services
 
         public void Show()
         {
+            EnsureOverlaysCreated();
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
@@ -189,6 +181,7 @@ namespace EliteDataRelay.Services
 
         public void Hide()
         {
+            EnsureOverlaysCreated();
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
             _shipIconOverlayForm?.Hide();

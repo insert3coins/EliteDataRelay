@@ -26,7 +26,7 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Customizable overlays: Info, Cargo, Ship Icon, and Exploration
 - Draggable positioning with automatic position memory
 - Configurable fonts, colors, transparency, and borders
-- Global hotkeys for show/hide control (Ctrl+Alt+F11/F12)
+- Global hotkeys for show/hide control (Ctrl+Shift+F11/F12)
 
 ---
 

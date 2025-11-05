@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 
@@ -58,9 +59,9 @@ namespace EliteDataRelay
             UnregisterHotKey(this.Handle, HOTKEY_ID_HIDE);
         }
 
-        private void RegisterHotkey(int id, Keys key)
+        private bool RegisterHotkey(int id, Keys key)
         {
-            if (key == Keys.None) return;
+            if (key == Keys.None) return true;
 
             uint modifiers = 0;
             if ((key & Keys.Alt) == Keys.Alt) modifiers |= MOD_ALT;
@@ -68,10 +69,18 @@ namespace EliteDataRelay
             if ((key & Keys.Shift) == Keys.Shift) modifiers |= MOD_SHIFT;
             if ((key & Keys.LWin) == Keys.LWin || (key & Keys.RWin) == Keys.RWin) modifiers |= MOD_WIN;
 
-            Keys keyCode = key & ~Keys.Modifiers;
+            // Extract the base key code (exclude modifiers entirely)
+            Keys keyCode = key & Keys.KeyCode;
 
             // Add MOD_NOREPEAT to avoid key-repeat firing when the key is held
-            RegisterHotKey(this.Handle, id, modifiers | MOD_NOREPEAT, (uint)keyCode);
+            bool ok = RegisterHotKey(this.Handle, id, modifiers | MOD_NOREPEAT, (uint)keyCode);
+            if (!ok)
+            {
+                var converter = new KeysConverter();
+                string keyText = converter.ConvertToString(key) ?? key.ToString();
+                Trace.WriteLine($"[Hotkeys] Failed to register '{keyText}' (id {id}). It may be in use by another application.");
+            }
+            return ok;
         }
 
         private static bool IsKeyDown(int vk) => (GetKeyState(vk) & 0x8000) != 0;
@@ -110,8 +119,12 @@ namespace EliteDataRelay
             var required = RequiredModifierState(configured);
             var current = CurrentModifierState();
 
-            // Enforce exact modifier match
-            if (current != required) return true;
+            // Require at least the configured modifiers, but allow extras (e.g., Win)
+            if ((current & required) != required)
+            {
+                Trace.WriteLine($"[Hotkeys] Ignored WM_HOTKEY due to modifiers. Required=0x{required:X}, Current=0x{current:X}");
+                return true;
+            }
 
             // If Ctrl+Alt combo is configured and Right-Alt (AltGr) is down, ignore for non-function keys
             var keyCode = configured & ~Keys.Modifiers;
@@ -126,32 +139,41 @@ namespace EliteDataRelay
 
         protected override void WndProc(ref Message m)
         {
-            base.WndProc(ref m);
-
             const int WM_HOTKEY = 0x0312;
             if (m.Msg == WM_HOTKEY)
             {
                 int id = m.WParam.ToInt32();
+                Trace.WriteLine($"[Hotkeys] WM_HOTKEY received. id={id}");
                 switch (id)
                 {
                     case HOTKEY_ID_START:
-                        if (ShouldIgnoreHotkey(AppConfiguration.StartMonitoringHotkey)) return;
-                        if (!_fileMonitoringService.IsMonitoring) StartMonitoring();
-                        break;
+                        if (!ShouldIgnoreHotkey(AppConfiguration.StartMonitoringHotkey))
+                        {
+                            if (!_fileMonitoringService.IsMonitoring) StartMonitoring();
+                        }
+                        return;
                     case HOTKEY_ID_STOP:
-                        if (ShouldIgnoreHotkey(AppConfiguration.StopMonitoringHotkey)) return;
-                        if (_fileMonitoringService.IsMonitoring) OnStopClicked(null, EventArgs.Empty);
-                        break;
+                        if (!ShouldIgnoreHotkey(AppConfiguration.StopMonitoringHotkey))
+                        {
+                            if (_fileMonitoringService.IsMonitoring) OnStopClicked(null, EventArgs.Empty);
+                        }
+                        return;
                     case HOTKEY_ID_SHOW:
-                        if (ShouldIgnoreHotkey(AppConfiguration.ShowOverlayHotkey)) return;
-                        _cargoFormUI.ShowOverlays();
-                        break;
+                        if (!ShouldIgnoreHotkey(AppConfiguration.ShowOverlayHotkey))
+                        {
+                            _cargoFormUI.ShowOverlays();
+                        }
+                        return;
                     case HOTKEY_ID_HIDE:
-                        if (ShouldIgnoreHotkey(AppConfiguration.HideOverlayHotkey)) return;
-                        _cargoFormUI.HideOverlays();
-                        break;
+                        if (!ShouldIgnoreHotkey(AppConfiguration.HideOverlayHotkey))
+                        {
+                            _cargoFormUI.HideOverlays();
+                        }
+                        return;
                 }
             }
+
+            base.WndProc(ref m);
         }
 
         #endregion
