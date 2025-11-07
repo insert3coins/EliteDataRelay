@@ -205,13 +205,13 @@ namespace EliteDataRelay.UI
 
                     // Session Credits
                     g.DrawString("Session CR:", GameColors.FontSmall, GameColors.BrushGrayText, padding, sessionY);
-                    string sessionCreditsText = $"{_sessionCredits:N0}";
+                    string sessionCreditsText = $"  {_sessionCredits:N0}"; // add spaces before value
                     g.DrawString(sessionCreditsText, GameColors.FontSmall, GameColors.BrushOrange, padding + 100f, sessionY);
                     sessionY += 20f;
 
                     // Session Cargo
                     g.DrawString("Session Cargo:", GameColors.FontSmall, GameColors.BrushGrayText, padding, sessionY);
-                    string sessionCargoText = $"{_sessionCargo}";
+                    string sessionCargoText = $"  {_sessionCargo}"; // add spaces before value
                     g.DrawString(sessionCargoText, GameColors.FontSmall, GameColors.BrushCyan, padding + 100f, sessionY);
                 }
             }
