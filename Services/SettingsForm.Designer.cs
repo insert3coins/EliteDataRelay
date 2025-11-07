@@ -9,13 +9,12 @@ namespace EliteDataRelay.UI
     {
         private Button _btnNavGeneral = null!;
         private Button _btnNavOverlay = null!;
-        private Button _btnNavHotkeys = null!;
         private Button _btnNavAdvanced = null!;
         private Panel _leftNavPanel = null!;
         private Panel _contentHost = null!;
         private Panel _panelGeneral = null!;
         private Panel _panelOverlay = null!;
-        private Panel _panelHotkeys = null!;
+        
         private Panel _panelAdvanced = null!;
 
         private void InitializeComponent()
@@ -118,26 +117,20 @@ namespace EliteDataRelay.UI
 
             _btnNavGeneral = CreateNavButton("📊  General");
             _btnNavOverlay = CreateNavButton("🖥️  Overlay");
-            _btnNavHotkeys = CreateNavButton("⌨️  Hotkeys");
             _btnNavAdvanced = CreateNavButton("🔧  Advanced");
 
             // position nav buttons
             _btnNavGeneral.Location = new Point(0, 12);
             _btnNavOverlay.Location = new Point(0, 12 + 44);
-            _btnNavHotkeys.Location = new Point(0, 12 + 88);
-            _btnNavAdvanced.Location = new Point(0, 12 + 132);
+            _btnNavAdvanced.Location = new Point(0, 12 + 88);
 
             _btnNavGeneral.Click += (s, e) => ActivateTab("general");
             _btnNavOverlay.Click += (s, e) => ActivateTab("overlay");
-            _btnNavHotkeys.Click += (s, e) => ActivateTab("hotkeys");
             _btnNavAdvanced.Click += (s, e) => ActivateTab("advanced");
 
-            // Hide Hotkeys nav and shift Advanced up under Overlay
-            _btnNavHotkeys.Visible = false;
-            _btnNavAdvanced.Location = new Point(0, 12 + 88);
+            // Hotkeys nav removed; Advanced sits under Overlay
 
             _leftNavPanel.Controls.Add(_btnNavAdvanced);
-            _leftNavPanel.Controls.Add(_btnNavHotkeys);
             _leftNavPanel.Controls.Add(_btnNavOverlay);
             _leftNavPanel.Controls.Add(_btnNavGeneral);
 
@@ -151,16 +144,15 @@ namespace EliteDataRelay.UI
             // Create panels for each section
             _panelGeneral = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
             _panelOverlay = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
-            _panelHotkeys = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
+            
             _panelAdvanced = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
 
             // Build temporary TabPages using existing initializers, then move their controls
             var tmpGeneral = new TabPage("General");
             var tmpOverlay = new TabPage("Overlay");
-            var tmpHotkeys = new TabPage("Hotkeys");
             var tmpAdvanced = new TabPage("Advanced + Web");
 
-            foreach (var page in new[] { tmpGeneral, tmpOverlay, tmpHotkeys, tmpAdvanced })
+            foreach (var page in new[] { tmpGeneral, tmpOverlay, tmpAdvanced })
             {
                 page.BackColor = Color.White;
                 page.ForeColor = Color.FromArgb(17, 24, 39);
@@ -169,15 +161,12 @@ namespace EliteDataRelay.UI
             // Initialize each section's content
             InitializeGeneralTab(tmpGeneral);
             InitializeOverlayTab(tmpOverlay);
-            InitializeHotkeysTab(tmpHotkeys);
             InitializeAdvancedWebTab(tmpAdvanced);
 
             // Move controls from temp pages into our panels
             MoveChildren(tmpGeneral, _panelGeneral);
             MoveChildren(tmpOverlay, _panelOverlay);
-            // Merge Hotkeys + Advanced into Advanced panel, stacking to avoid overlap
-            MoveChildren(tmpAdvanced, _panelAdvanced); // add Advanced first
-            MoveChildrenStacked(tmpHotkeys, _panelAdvanced); // then place Hotkeys below
+            MoveChildren(tmpAdvanced, _panelAdvanced);
 
             // Add content panels (bring active to front later)
             _contentHost.Controls.Add(_panelGeneral);
@@ -232,25 +221,7 @@ namespace EliteDataRelay.UI
                 }
             }
 
-            void MoveChildrenStacked(Control from, Control to)
-            {
-                // Compute current bottom of target container
-                int baseY = 0;
-                foreach (Control existing in to.Controls)
-                {
-                    if (existing.Bottom > baseY) baseY = existing.Bottom;
-                }
-                baseY += 12; // spacing
-
-                var list = new Control[from.Controls.Count];
-                from.Controls.CopyTo(list, 0);
-                foreach (var c in list)
-                {
-                    // offset vertically to avoid overlap
-                    c.Location = new Point(c.Left, c.Top + baseY);
-                    to.Controls.Add(c);
-                }
-            }
+            // Stacked move helper removed (no longer used)
 
             void SetActiveNav(Button active)
             {
@@ -290,17 +261,6 @@ namespace EliteDataRelay.UI
             }
         }
 
-        private TextBox CreateHotkeyInput(Point location)
-        {
-            var txt = new TextBox
-            {
-                Location = location,
-                Size = new Size(285, 20),
-                ReadOnly = true,
-                Text = "None"
-            };
-            txt.KeyDown += OnHotkeyKeyDown;
-            return txt;
-        }
+        // Hotkey input helper removed
     }
 }

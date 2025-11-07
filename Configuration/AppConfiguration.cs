@@ -57,11 +57,7 @@ namespace EliteDataRelay.Configuration
                         AllowOverlayDrag = config.AllowOverlayDrag;
                         EnableSessionTracking = config.EnableSessionTracking;
                         ShowSessionOnOverlay = config.ShowSessionOnOverlay;
-                        EnableHotkeys = config.EnableHotkeys;
-                        StartMonitoringHotkey = config.StartMonitoringHotkey;
-                        StopMonitoringHotkey = config.StopMonitoringHotkey;
-                        ShowOverlayHotkey = config.ShowOverlayHotkey;
-                        HideOverlayHotkey = config.HideOverlayHotkey;
+                        // Hotkeys removed
                         FileReadMaxAttempts = config.FileReadMaxAttempts;
                         FileReadRetryDelayMs = config.FileReadRetryDelayMs;
                         WindowLocation = config.WindowLocation;
@@ -152,11 +148,7 @@ namespace EliteDataRelay.Configuration
                     AllowOverlayDrag = AppConfiguration.AllowOverlayDrag,
                     EnableSessionTracking = AppConfiguration.EnableSessionTracking,
                     ShowSessionOnOverlay = AppConfiguration.ShowSessionOnOverlay,
-                    EnableHotkeys = AppConfiguration.EnableHotkeys,
-                    StartMonitoringHotkey = AppConfiguration.StartMonitoringHotkey,
-                    StopMonitoringHotkey = AppConfiguration.StopMonitoringHotkey,
-                    ShowOverlayHotkey = AppConfiguration.ShowOverlayHotkey,
-                    HideOverlayHotkey = AppConfiguration.HideOverlayHotkey,
+                    // Hotkeys removed
                     FileReadMaxAttempts = AppConfiguration.FileReadMaxAttempts,
                     FileReadRetryDelayMs = AppConfiguration.FileReadRetryDelayMs,
                     WindowLocation = AppConfiguration.WindowLocation,
@@ -226,11 +218,7 @@ namespace EliteDataRelay.Configuration
             public bool AllowOverlayDrag { get; set; } = true;
             public bool EnableSessionTracking { get; set; } = true;
             public bool ShowSessionOnOverlay { get; set; } = false;
-            public bool EnableHotkeys { get; set; } = true;
-            public Keys StartMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F9;
-            public Keys StopMonitoringHotkey { get; set; } = Keys.Control | Keys.Alt | Keys.F10;
-            public Keys ShowOverlayHotkey { get; set; } = Keys.Control | Keys.Shift | Keys.F11;
-            public Keys HideOverlayHotkey { get; set; } = Keys.Control | Keys.Shift | Keys.F12;
+            // Hotkeys removed
             public int FileReadMaxAttempts { get; set; } = 3; // fewer retries for lower latency
             public int FileReadRetryDelayMs { get; set; } = 20; // shorter delay between retries
             public Point WindowLocation { get; set; } = Point.Empty;

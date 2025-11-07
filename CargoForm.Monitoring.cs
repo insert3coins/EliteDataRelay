@@ -56,7 +56,7 @@ namespace EliteDataRelay
             // Immediately update UI state and show overlays for instant feedback.
             _cargoFormUI.SetButtonStates(startEnabled: false, stopEnabled: true);
             _cargoFormUI.UpdateMonitoringVisuals(isMonitoring: true);
-            _overlayService.Start();
+            _overlayService.Start(this);
             // Start optional services
             if (AppConfiguration.EnableScreenshotRenamer) _screenshotRenamerService.Start();
             

@@ -150,45 +150,5 @@ namespace EliteDataRelay.UI
                 _chkEnableRightOverlay.Checked = true;
             }
         }
-
-        
-
-        private void OnEnableHotkeysCheckedChanged(object? sender, EventArgs e)
-        {
-            bool enabled = _chkEnableHotkeys.Checked;
-            foreach (Control c in _grpHotkeys.Controls)
-            {
-                if (c != _chkEnableHotkeys)
-                {
-                    c.Enabled = enabled;
-                }
-            }
-        }
-
-        // Legacy: OnBrowseClicked removed with text file output feature
-
-        private void OnHotkeyKeyDown(object? sender, KeyEventArgs e)
-        {
-            e.SuppressKeyPress = true;
-            var txt = sender as TextBox;
-            if (txt == null) return;
-
-            // Clear hotkey on Delete or Backspace
-            if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back)
-            {
-                UpdateHotkey(txt.Tag as string, Keys.None);
-                UpdateHotkeyText();
-                return;
-            }
-
-            // Ignore modifier-only key presses
-            if (e.KeyCode == Keys.ControlKey || e.KeyCode == Keys.ShiftKey || e.KeyCode == Keys.Menu)
-            {
-                return;
-            }
-
-            UpdateHotkey(txt.Tag as string, e.KeyData);
-            UpdateHotkeyText();
-        }
     }
 }

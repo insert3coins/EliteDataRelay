@@ -33,12 +33,7 @@ namespace EliteDataRelay.UI
         private CheckBox _chkFastStart = null!;
         private GroupBox _grpSessionTracking = null!;
         private CheckBox _chkEnableSessionTracking = null!;
-        private CheckBox _chkEnableHotkeys = null!;
-        private GroupBox _grpHotkeys = null!;
-        private TextBox _txtStartHotkey = null!;
-        private TextBox _txtStopHotkey = null!;
-        private TextBox _txtShowOverlayHotkey = null!;
-        private TextBox _txtHideOverlayHotkey = null!;
+        // Hotkeys removed
         private Button _btnResetOverlaySettings = null!;
         private Button _btnRepositionOverlays = null!;
         private Label _lblCurrentFont = null!;
@@ -50,10 +45,7 @@ namespace EliteDataRelay.UI
         // Web overlay UI (local to Advanced tab; created inline), add fields if later reused
 
 
-        private Keys _startHotkey;
-        private Keys _stopHotkey;
-        private Keys _showOverlayHotkey;
-        private Keys _hideOverlayHotkey;
+        // Hotkeys removed
 
         // Temporary storage for appearance settings
         private Font _overlayFont = null!;
@@ -106,18 +98,14 @@ namespace EliteDataRelay.UI
             _chkEnableExplorationOverlay.Checked = AppConfiguration.EnableExplorationOverlay;
             _chkEnableJumpOverlay.Checked = AppConfiguration.EnableJumpOverlay;
             _chkFastStart.Checked = AppConfiguration.FastStartSkipJournalHistory;
-            _chkEnableHotkeys.Checked = AppConfiguration.EnableHotkeys;
+            // Hotkeys removed
             // Traffic toggles
             if (_chkTrafficExplorationOverlay != null) _chkTrafficExplorationOverlay.Checked = AppConfiguration.ShowTrafficOnExplorationOverlay;
             if (_chkTrafficJumpOverlay != null) _chkTrafficJumpOverlay.Checked = AppConfiguration.ShowTrafficOnJumpOverlay;
-            _startHotkey = AppConfiguration.StartMonitoringHotkey;
-            _stopHotkey = AppConfiguration.StopMonitoringHotkey;
-            _showOverlayHotkey = AppConfiguration.ShowOverlayHotkey;
-            _hideOverlayHotkey = AppConfiguration.HideOverlayHotkey;
-            UpdateHotkeyText();
+            // Hotkeys removed
             // Removed: file output initial state
             OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
-            OnEnableHotkeysCheckedChanged(null, EventArgs.Empty);
+            // Hotkeys removed
 
             // Load overlay appearance settings
             _overlayFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);
@@ -149,25 +137,7 @@ namespace EliteDataRelay.UI
             UpdateAppearanceControls();
         }
 
-        private void UpdateHotkey(string? tag, Keys key)
-        {
-            switch (tag)
-            {
-                case "Start": _startHotkey = key; break;
-                case "Stop": _stopHotkey = key; break;
-                case "Show": _showOverlayHotkey = key; break;
-                case "Hide": _hideOverlayHotkey = key; break;
-            }
-        }
-
-        private void UpdateHotkeyText()
-        {
-            var converter = new KeysConverter();
-            _txtStartHotkey.Text = _startHotkey == Keys.None ? "None" : converter.ConvertToString(_startHotkey);
-            _txtStopHotkey.Text = _stopHotkey == Keys.None ? "None" : converter.ConvertToString(_stopHotkey);
-            _txtShowOverlayHotkey.Text = _showOverlayHotkey == Keys.None ? "None" : converter.ConvertToString(_showOverlayHotkey);
-            _txtHideOverlayHotkey.Text = _hideOverlayHotkey == Keys.None ? "None" : converter.ConvertToString(_hideOverlayHotkey);
-        }
+        // Hotkeys removed
 
         private void UpdateAppearanceControls()
         {
@@ -196,13 +166,10 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableExplorationOverlay = _chkEnableExplorationOverlay.Checked;
             AppConfiguration.EnableJumpOverlay = _chkEnableJumpOverlay.Checked;
             AppConfiguration.FastStartSkipJournalHistory = _chkFastStart.Checked;
-            AppConfiguration.EnableHotkeys = _chkEnableHotkeys.Checked;
+            // Hotkeys removed
             AppConfiguration.ShowTrafficOnExplorationOverlay = _chkTrafficExplorationOverlay.Checked;
             AppConfiguration.ShowTrafficOnJumpOverlay = _chkTrafficJumpOverlay.Checked;
-            AppConfiguration.StartMonitoringHotkey = _startHotkey;
-            AppConfiguration.StopMonitoringHotkey = _stopHotkey;
-            AppConfiguration.ShowOverlayHotkey = _showOverlayHotkey;
-            AppConfiguration.HideOverlayHotkey = _hideOverlayHotkey;
+            // Hotkeys removed
             // Removed legacy output directory persistence
 
             // Save appearance settings

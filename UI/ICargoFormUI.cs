@@ -40,7 +40,7 @@ namespace EliteDataRelay.UI
         void UpdateTitle(string title);
         void ShowOverlays();
         void HideOverlays();
-        void RefreshOverlay();
+        void RefreshOverlay(Form owner);
         void UpdateCargoScrollBar();
         void RefreshExplorationLog();
         void UpdateExplorationCurrentSystem(SystemExplorationData data);

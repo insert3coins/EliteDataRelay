@@ -303,6 +303,11 @@ namespace EliteDataRelay.UI
             _overlayService?.UpdateSessionOverlay(cargoCollected, creditsEarned);
         }
 
+        public void RefreshOverlay(Form owner)
+        {
+            _overlayService.Start(owner);
+        }
+
         public void ShowOverlays()
         {
             _overlayService?.Show();

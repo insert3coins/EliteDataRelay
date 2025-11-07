@@ -373,5 +373,7 @@ namespace EliteDataRelay.UI
             }
             base.Dispose(disposing);
         }
+
+        // Hotkeys removed; no special message handling required.
     }
 }

@@ -26,7 +26,6 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Customizable overlays: Info, Cargo, Ship Icon, and Exploration
 - Draggable positioning with automatic position memory
 - Configurable fonts, colors, transparency, and borders
-- Global hotkeys for show/hide control (Ctrl+Shift+F11/F12)
 
 ---
 
@@ -47,7 +46,6 @@ A lightweight Windows companion app for Elite Dangerous that provides real-time 
 - Screenshot helper: auto‑rename with {System}/{Body}/{Timestamp} and BMP→PNG conversion
 
 **Advanced Features**
-- Global hotkeys for monitoring control (Ctrl+Alt+F9/F10)
 - Comprehensive event tracking from Elite Dangerous journals
 - Performance-optimized file monitoring with 25ms debounce
 - Fast start option to skip historic journal lines on initial scan

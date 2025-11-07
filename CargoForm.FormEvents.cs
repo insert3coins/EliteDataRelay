@@ -36,10 +36,7 @@ namespace EliteDataRelay
             }
             this.WindowState = AppConfiguration.WindowState;
 
-            if (AppConfiguration.EnableHotkeys)
-            {
-                RegisterHotkeys();
-            }
+            // Hotkeys have been removed from the application.
 
             // Kick off one-time historical exploration import in the background.
             // No UI required; runs once and populates the exploration database.
@@ -48,8 +45,7 @@ namespace EliteDataRelay
 
         private void CargoForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            // Unregister hotkeys to clean up system resources.
-            UnregisterHotkeys();
+            // Hotkeys removed; nothing to unregister.
 
             // Save settings on exit, unless the user is canceling out of a prompt.
             if (e.CloseReason != CloseReason.None && e.CloseReason != CloseReason.TaskManagerClosing)

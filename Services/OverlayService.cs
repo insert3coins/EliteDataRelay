@@ -39,7 +39,7 @@ namespace EliteDataRelay.Services
 
         
 
-        private void EnsureOverlaysCreated()
+        private void EnsureOverlaysCreated(Form? owner = null)
         {
             var primaryScreen = Screen.PrimaryScreen;
             if (primaryScreen == null)
@@ -52,28 +52,28 @@ namespace EliteDataRelay.Services
 
             if (_leftOverlayForm == null && AppConfiguration.EnableInfoOverlay)
             {
-                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag);
+                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag) { Owner = owner };
                 _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_rightOverlayForm == null && AppConfiguration.EnableCargoOverlay)
             {
-                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag);
+                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag) { Owner = owner };
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_shipIconOverlayForm == null && AppConfiguration.EnableShipIconOverlay)
             {
-                _shipIconOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.ShipIcon, AppConfiguration.AllowOverlayDrag);
+                _shipIconOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.ShipIcon, AppConfiguration.AllowOverlayDrag) { Owner = owner };
                 _shipIconOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_explorationOverlayForm == null && AppConfiguration.EnableExplorationOverlay)
             {
-                _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag);
+                _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag) { Owner = owner };
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
             }
             if (_jumpOverlayForm == null && AppConfiguration.EnableJumpOverlay)
             {
-                _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag);
+                _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag) { Owner = owner };
                 _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 _jumpOverlayForm.Hide();
             }
@@ -81,11 +81,11 @@ namespace EliteDataRelay.Services
             PositionOverlays(screen);
         }
 
-        public void Start()
+        public void Start(Form owner)
         {
             Stop(); // Ensure any existing overlays are closed
 
-            EnsureOverlaysCreated();
+            EnsureOverlaysCreated(owner);
 
             // Show and restore data for Info overlay
             if (_leftOverlayForm != null)
@@ -171,7 +171,7 @@ namespace EliteDataRelay.Services
 
         public void Show()
         {
-            EnsureOverlaysCreated();
+            EnsureOverlaysCreated(_leftOverlayForm?.Owner); // Pass existing owner if available
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
@@ -181,7 +181,7 @@ namespace EliteDataRelay.Services
 
         public void Hide()
         {
-            EnsureOverlaysCreated();
+            EnsureOverlaysCreated(_leftOverlayForm?.Owner); // Pass existing owner if available
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
             _shipIconOverlayForm?.Hide();
@@ -240,8 +240,9 @@ namespace EliteDataRelay.Services
             if (!AppConfiguration.EnableJumpOverlay) return;
             if (_jumpOverlayForm != null && !_jumpOverlayForm.IsDisposed) return;
 
-            // Create lazily if needed (e.g., game check missed earlier)
-            _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag);
+            // Create lazily if needed, preserving owner
+            var owner = _leftOverlayForm?.Owner ?? _rightOverlayForm?.Owner;
+            _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag) { Owner = owner };
             _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
 
             var primaryScreen = Screen.PrimaryScreen;
