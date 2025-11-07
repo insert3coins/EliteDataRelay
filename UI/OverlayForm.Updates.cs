@@ -73,6 +73,7 @@ namespace EliteDataRelay.UI
 
             _cargoCount = count;
             _cargoCapacity = capacity;
+            ResizeCargoToContent();
             _stale = true;
             _renderPanel?.Invalidate();
         }
@@ -89,6 +90,7 @@ namespace EliteDataRelay.UI
             }
 
             _cargoBarText = text;
+            ResizeCargoToContent();
             _stale = true;
             _renderPanel?.Invalidate();
         }
@@ -105,6 +107,7 @@ namespace EliteDataRelay.UI
             }
 
             _sessionCargo = cargo;
+            ResizeCargoToContent();
             _stale = true;
             _renderPanel?.Invalidate();
         }
@@ -121,6 +124,7 @@ namespace EliteDataRelay.UI
             }
 
             _sessionCredits = credits;
+            ResizeCargoToContent();
             _stale = true;
             _renderPanel?.Invalidate();
         }
@@ -137,6 +141,7 @@ namespace EliteDataRelay.UI
             }
 
             _cargoItems = inventory.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name).ToList();
+            ResizeCargoToContent();
             _stale = true;
             _renderPanel?.Invalidate();
         }

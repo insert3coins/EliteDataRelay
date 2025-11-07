@@ -9,6 +9,64 @@ namespace EliteDataRelay.UI
 {
     public partial class OverlayForm
     {
+        private void ResizeCargoToContent()
+        {
+            if (_position != OverlayPosition.Cargo || _renderPanel == null || _renderPanel.IsDisposed)
+                return;
+
+            try
+            {
+                // Layout constants must match renderer
+                const float listStartY = 38f; // where cargo list begins
+                const float bottomPadding = 12f;
+                bool hasSessionPanel = AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay;
+
+                using (var g = _renderPanel.CreateGraphics())
+                {
+                    GameColors.ConfigureHighQuality(g);
+                    float rowHeight = GameColors.FontSmall.GetHeight(g);
+
+                    int itemLines = _cargoItems?.Any() == true ? _cargoItems.Count() : 1; // show one line for empty message
+                    float contentHeight = listStartY + (itemLines * rowHeight);
+
+                    // Reserve space for the optional session panel (approximate used in renderer)
+                    if (hasSessionPanel)
+                    {
+                        contentHeight += 80f; // matches requiredSpace used during render
+                    }
+                    else
+                    {
+                        contentHeight += 10f; // small bottom breathing room
+                    }
+
+                    // Add padding and clamp to sensible min
+                    int desiredHeight = (int)System.Math.Ceiling(contentHeight + bottomPadding);
+                    int minHeight = 120; // avoid collapsing too small
+                    // Keep within screen working area
+                    var wa = Screen.FromControl(this).WorkingArea;
+                    int maxHeight = System.Math.Max(minHeight, wa.Height - 40);
+
+                    // Avoid negative or zero sizes
+                    if (desiredHeight < minHeight) desiredHeight = minHeight;
+                    if (desiredHeight > maxHeight) desiredHeight = maxHeight;
+
+                    // Only resize if meaningfully different to avoid churn
+                    if (System.Math.Abs(this.Height - desiredHeight) > 2)
+                    {
+                        this.Size = new Size(this.Width, desiredHeight);
+                        // Re-apply rounded region to match new size
+                        ApplyRoundedRegion();
+                        // Mark frame stale to redraw background with new bounds
+                        _stale = true;
+                    }
+                }
+            }
+            catch
+            {
+                // Best-effort autosize; ignore measurement errors
+            }
+        }
+
         /// <summary>
         /// Paint handler for Cargo panel - uses bitmap caching for smooth rendering.
         /// </summary>

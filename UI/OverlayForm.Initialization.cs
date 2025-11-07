@@ -45,7 +45,7 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.Cargo)
             {
-                this.Size = new Size(280, 600);
+                this.Size = new Size(280, 200);
 
                 // Custom render panel for bitmap-cached drawing
                 _renderPanel = new DoubleBufferedPanel
@@ -58,6 +58,8 @@ namespace EliteDataRelay.UI
                 _renderPanel.Paint += OnCargoPanelPaint;
 
                 Controls.Add(_renderPanel);
+                // Autosize to current content (empty state) so it isn't oversized on start
+                ResizeCargoToContent();
                 ApplyRoundedRegion();
             }
             else if (_position == OverlayPosition.ShipIcon)
