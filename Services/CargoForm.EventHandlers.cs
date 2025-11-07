@@ -261,20 +261,15 @@ namespace EliteDataRelay
                 }
 
 
-                // If FSDCharging just started, only show the Next Jump overlay when
-                // we're initiating a hyperspace jump (witchspace). Supercruise/hypercruise
-                // FSD charges do not include an FSDTarget system name, so guard on that.
+                // If FSDCharging just started, show the Next Jump overlay when
+                // initiating a hyperspace jump. Some setups don't include FSDTarget
+                // immediately; in that case use NavRoute as a fallback for the target.
                 // Ignore the very first Status event after start to avoid false positives
                 if (_statusPrimed && !wasCharging && isCharging && AppConfiguration.EnableJumpOverlay)
                 {
                     try
                     {
                         string? targetName = e.Status.FSDTarget?.Name;
-                        // Suppress overlay for supercruise charges where there is no hyperspace target
-                        if (string.IsNullOrWhiteSpace(targetName))
-                        {
-                            return;
-                        }
                         var data = new NextJumpOverlayData
                         {
                             TargetSystemName = targetName,
@@ -311,6 +306,7 @@ namespace EliteDataRelay
 
                         // Kick off an immediate system info fetch for the target to populate traffic ASAP
                         try { if (!string.IsNullOrWhiteSpace(data.TargetSystemName)) _systemInfoService.RequestFetch(data.TargetSystemName); } catch { /* ignore */ }
+                        // If still no target name, do not bail — show minimal overlay
                         _overlayService.ShowNextJumpOverlay(data);
                     }
                     catch { /* ignore overlay errors */ }
@@ -401,9 +397,6 @@ namespace EliteDataRelay
             // Show Next Jump overlay when FSD starts charging (SrvSurvey-style)
             SafeInvoke(() =>
             {
-                // Additional guard: ignore StartJump-triggered show until we have processed at least one Status.json update
-                if (!_statusPrimed) { return; }
-
                 // If we have a recent status and it's not charging, don't show yet
                 const long StatusFlagFsdCharging = 1L << 17;
                 if (_lastStatus != null && (_lastStatus.Flags & StatusFlagFsdCharging) == 0)
