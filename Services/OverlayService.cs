@@ -96,10 +96,13 @@ namespace EliteDataRelay.Services
                 if (_lastBalance.HasValue) _leftOverlayForm.UpdateBalance(_lastBalance.Value);
             }
 
-            // Show and restore data for Cargo overlay
+            // Show and restore data for Cargo overlay (auto-hide when empty)
             if (_rightOverlayForm != null)
             {
-                _rightOverlayForm.Show();
+                bool hasCargo = (_lastCargoCount.HasValue && _lastCargoCount.Value > 0)
+                                || (_lastCargoSnapshot?.Items?.Any() == true);
+                if (hasCargo) _rightOverlayForm.Show(); else _rightOverlayForm.Hide();
+
                 if (_lastCargoCount.HasValue) _rightOverlayForm.UpdateCargo(_lastCargoCount.Value, _lastCargoCapacity);
                 if (_lastCargoBarText != null) _rightOverlayForm.UpdateCargoSize(_lastCargoBarText);
                 if (_lastCargoSnapshot != null) _rightOverlayForm.UpdateCargoList(_lastCargoSnapshot.Items);
@@ -199,7 +202,12 @@ namespace EliteDataRelay.Services
             if (visible)
             {
                 if (AppConfiguration.EnableInfoOverlay) _leftOverlayForm?.Show();
-                if (AppConfiguration.EnableCargoOverlay) _rightOverlayForm?.Show();
+                if (AppConfiguration.EnableCargoOverlay)
+                {
+                    bool hasCargo = (_lastCargoCount.HasValue && _lastCargoCount.Value > 0)
+                                    || (_lastCargoSnapshot?.Items?.Any() == true);
+                    if (hasCargo) _rightOverlayForm?.Show(); else _rightOverlayForm?.Hide();
+                }
                 if (AppConfiguration.EnableShipIconOverlay) _shipIconOverlayForm?.Show();
                 if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
             }

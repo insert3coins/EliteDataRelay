@@ -2,6 +2,7 @@ using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 using EliteDataRelay.UI;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.Services
@@ -10,6 +11,20 @@ namespace EliteDataRelay.Services
     {
         // Auto-hide timer removed; overlay hides on JumpCompleted
         private System.Threading.Timer? _jumpOverlayHideDelayTimer;
+        
+        private void AutoShowHideCargoOverlay()
+        {
+            // Only manage visibility if overlay exists and is enabled
+            if (_rightOverlayForm == null || _rightOverlayForm.IsDisposed) return;
+
+            bool hasCargo = (_lastCargoCount.HasValue && _lastCargoCount.Value > 0)
+                            || (_lastCargoSnapshot?.Items?.Any() == true);
+
+            if (hasCargo)
+                _rightOverlayForm.Show();
+            else
+                _rightOverlayForm.Hide();
+        }
         #region Data Update Methods
         // These methods update the UI controls on the specific overlay forms.
         // The OverlayForm itself handles thread safety with InvokeRequired checks.
@@ -43,12 +58,14 @@ namespace EliteDataRelay.Services
             _lastCargoCount = count;
             _lastCargoCapacity = capacity;
             _rightOverlayForm?.UpdateCargo(count, capacity);
+            AutoShowHideCargoOverlay();
         }
 
         public void UpdateCargoList(CargoSnapshot snapshot)
         {
             _lastCargoSnapshot = snapshot;
             _rightOverlayForm?.UpdateCargoList(snapshot.Items);
+            AutoShowHideCargoOverlay();
         }
 
         public void UpdateCargoSize(string size)
