@@ -13,6 +13,8 @@ namespace EliteDataRelay
 {
     public partial class CargoForm
     {
+        private System.Windows.Forms.Timer? _jumpOverlayRefreshTimer;
+        private int _jumpOverlayRefreshAttempts;
         #region Service Event Handlers
 
         // A helper to check if the form can safely process an Invoke call.
@@ -269,14 +271,23 @@ namespace EliteDataRelay
                 {
                     try
                     {
+                        // Prefer FSDTarget; fall back to Status.Destination when it points to a system (Body == 0)
                         string? targetName = e.Status.FSDTarget?.Name;
+                        if (string.IsNullOrWhiteSpace(targetName))
+                        {
+                            var dest = e.Status.Destination;
+                            if (!string.IsNullOrWhiteSpace(dest?.Name) && dest.System.HasValue && dest.System.Value > 0 && (dest.Body ?? 0) == 0)
+                            {
+                                targetName = dest.Name;
+                            }
+                        }
                         var data = new NextJumpOverlayData
                         {
                             TargetSystemName = targetName,
                             StarClass = e.Status.FSDTarget?.StarClass,
                         };
 
-                        var route = NavRouteService.TryReadSummary(_journalWatcherService.JournalDirectoryPath!, _lastLocation, _lastSystemAddress);
+                        var route = NavRouteService.TryReadSummary(_journalWatcherService.JournalDirectoryPath!, _lastLocation, _lastSystemAddress, 7, targetName);
                         if (route != null)
                         {
                             data.Hops = route.Hops;
@@ -288,7 +299,8 @@ namespace EliteDataRelay
                                 data.JumpDistanceLy = route.NextDistanceLy;
                             if (!data.RemainingJumps.HasValue && route.CurrentIndex.HasValue)
                                 data.RemainingJumps = Math.Max(0, route.Total - (route.CurrentIndex.Value + 1));
-                            if (string.IsNullOrWhiteSpace(data.TargetSystemName) && route.Hops.Count > 0)
+                            // Prefer next hop from route for the target name to avoid showing current system
+                            if (route.Hops.Count > 0)
                                 data.TargetSystemName = route.Hops[0].Name;
                         }
 
@@ -308,6 +320,60 @@ namespace EliteDataRelay
                         try { if (!string.IsNullOrWhiteSpace(data.TargetSystemName)) _systemInfoService.RequestFetch(data.TargetSystemName); } catch { /* ignore */ }
                         // If still no target name, do not bail — show minimal overlay
                         _overlayService.ShowNextJumpOverlay(data);
+
+                        // Kick a short refresh loop to allow NavRoute/FSDTarget to settle
+                        try
+                        {
+                            _jumpOverlayRefreshTimer?.Stop();
+                            _jumpOverlayRefreshTimer?.Dispose();
+                        }
+                        catch { }
+                        _jumpOverlayRefreshAttempts = 0;
+                        _jumpOverlayRefreshTimer = new System.Windows.Forms.Timer { Interval = 400 };
+                        _jumpOverlayRefreshTimer.Tick += (s, ev) =>
+                        {
+                            const long Flag = 1L << 17; // FSDCharging
+                            bool stillCharging = (_lastStatus != null) && ((_lastStatus.Flags & Flag) != 0);
+                            if (!stillCharging || _jumpOverlayRefreshAttempts++ >= 8)
+                            {
+                                try { _jumpOverlayRefreshTimer?.Stop(); } catch { }
+                                return;
+                            }
+
+                            try
+                            {
+                                var refresh = new NextJumpOverlayData
+                                {
+                                    // Update from FSDTarget or Destination as they become available
+                                    TargetSystemName = _lastStatus?.FSDTarget?.Name,
+                                    StarClass = _lastStatus?.FSDTarget?.StarClass,
+                                };
+                                if (string.IsNullOrWhiteSpace(refresh.TargetSystemName))
+                                {
+                                    var dest = _lastStatus?.Destination;
+                                    if (!string.IsNullOrWhiteSpace(dest?.Name) && dest.System.HasValue && dest.System.Value > 0 && (dest.Body ?? 0) == 0)
+                                    {
+                                        refresh.TargetSystemName = dest.Name;
+                                    }
+                                }
+                                var r = NavRouteService.TryReadSummary(_journalWatcherService.JournalDirectoryPath!, _lastLocation, _lastSystemAddress, 7, refresh.TargetSystemName);
+                                if (r != null)
+                                {
+                                    refresh.Hops = r.Hops;
+                                    refresh.CurrentJumpIndex = r.CurrentIndex;
+                                    refresh.TotalJumps = r.Total;
+                                    refresh.NextDistanceLy = r.NextDistanceLy;
+                                    refresh.TotalRemainingLy = r.RemainingLy;
+                                    if (!refresh.RemainingJumps.HasValue && r.CurrentIndex.HasValue)
+                                        refresh.RemainingJumps = Math.Max(0, r.Total - (r.CurrentIndex.Value + 1));
+                                    if (r.Hops.Count > 0)
+                                        refresh.TargetSystemName = r.Hops[0].Name;
+                                }
+                                _overlayService.ShowNextJumpOverlay(refresh);
+                            }
+                            catch { }
+                        };
+                        _jumpOverlayRefreshTimer.Start();
                     }
                     catch { /* ignore overlay errors */ }
                 }
@@ -315,6 +381,7 @@ namespace EliteDataRelay
                 // If FSDCharging was active and is now off (without a jump), hide the overlay (canceled charge)
                 if (_statusPrimed && wasCharging && !isCharging)
                 {
+                    try { _jumpOverlayRefreshTimer?.Stop(); } catch { }
                     _overlayService.HideNextJumpOverlay();
                 }
 
@@ -433,12 +500,9 @@ namespace EliteDataRelay
                         data.JumpDistanceLy = route.NextDistanceLy;
                     if (!data.RemainingJumps.HasValue && route.CurrentIndex.HasValue)
                         data.RemainingJumps = Math.Max(0, route.Total - (route.CurrentIndex.Value + 1));
-
-                    // If StartJump didn't provide a system name, fall back to the next hop from NavRoute
-                    if (string.IsNullOrWhiteSpace(targetName) && route.Hops.Count > 0)
-                    {
+                    // Always prefer next hop from route as target to avoid current system name
+                    if (route.Hops.Count > 0)
                         data.TargetSystemName = route.Hops[0].Name;
-                    }
                 }
 
                 // Attach last-fetched system info immediately if it matches target
@@ -461,6 +525,49 @@ namespace EliteDataRelay
         {
             // Hide Next Jump overlay on arrival (SrvSurvey-style)
             SafeInvoke(() => { System.Diagnostics.Trace.WriteLine("[CargoForm] FSDJump detected. Hiding Next Jump overlay after delay."); _overlayService.HideNextJumpOverlayAfter(TimeSpan.FromSeconds(2)); });
+        }
+
+        private void OnNextJumpSystemChanged(object? sender, NextJumpSystemChangedEventArgs e)
+        {
+            // Keep Next Jump overlay in sync mid-charge when target/route info updates (FSDTarget/NavRoute)
+            SafeInvoke(() =>
+            {
+                if (!AppConfiguration.EnableJumpOverlay) return;
+                // Only show when charging or already visible (match InfraSurveyor behavior)
+                const long StatusFlagFsdCharging = 1L << 17; // 0x20000
+                bool isCharging = _lastStatus != null && ((_lastStatus.Flags & StatusFlagFsdCharging) != 0);
+                var existing = _overlayService.GetOverlay(UI.OverlayForm.OverlayPosition.JumpInfo);
+                bool isVisible = existing != null && existing.Visible;
+                if (!isCharging && !isVisible)
+                {
+                    // Not charging and overlay not showing: skip showing here; allow data services to update in background
+                    return;
+                }
+
+                var data = new NextJumpOverlayData
+                {
+                    TargetSystemName = e.NextSystemName,
+                    StarClass = e.StarClass,
+                    JumpDistanceLy = e.JumpDistanceLy,
+                    RemainingJumps = e.RemainingJumps
+                };
+
+                var route = NavRouteService.TryReadSummary(_journalWatcherService.JournalDirectoryPath!, _lastLocation, _lastSystemAddress, 7, e.NextSystemName);
+                if (route != null)
+                {
+                    data.Hops = route.Hops;
+                    data.CurrentJumpIndex = route.CurrentIndex;
+                    data.TotalJumps = route.Total;
+                    data.NextDistanceLy ??= route.NextDistanceLy;
+                    data.TotalRemainingLy = route.RemainingLy;
+                    if (!data.RemainingJumps.HasValue && route.CurrentIndex.HasValue)
+                        data.RemainingJumps = Math.Max(0, route.Total - (route.CurrentIndex.Value + 1));
+                    if (route.Hops.Count > 0)
+                        data.TargetSystemName = route.Hops[0].Name;
+                }
+
+                _overlayService.ShowNextJumpOverlay(data);
+            });
         }
 
         private void OnMultiSellExplorationData(object? sender, MultiSellExplorationDataEvent e)

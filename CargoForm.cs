@@ -227,9 +227,7 @@ namespace EliteDataRelay
             _stationInfoService.StationInfoUpdated += OnStationInfoUpdated; // This line was missing
             _systemInfoService.SystemInfoUpdated += OnSystemInfoUpdated;
 
-            // Next Jump overlay events
-            _journalWatcherService.JumpInitiated += OnJumpInitiated;
-            _journalWatcherService.JumpCompleted += OnJumpCompleted;
+            // Next Jump overlay removed
 
             // Mining companion removed
 

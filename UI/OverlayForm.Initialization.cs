@@ -98,23 +98,7 @@ namespace EliteDataRelay.UI
                 Controls.Add(_renderPanel);
                 ApplyRoundedRegion();
             }
-            else if (_position == OverlayPosition.JumpInfo)
-            {
-                // Expanded next-jump overlay to match redesigned layout
-                this.Size = new Size(680, 140);
-
-                _renderPanel = new DoubleBufferedPanel
-                {
-                    Location = new Point(0, 0),
-                    Size = this.ClientSize,
-                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                    BackColor = Color.Transparent
-                };
-                _renderPanel.Paint += OnJumpInfoPanelPaint;
-
-                Controls.Add(_renderPanel);
-                ApplyRoundedRegion();
-            }
+            // JumpInfo overlay removed
             
         }
 

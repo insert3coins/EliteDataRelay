@@ -272,7 +272,7 @@ namespace EliteDataRelay.UI
                         y += lineHeight;
                     }
                 }
-                else if (data.Bodies.Any(b => b.WasDiscovered))
+                else
                 {
                     // Instead of "Known System", display EDSM traffic here if available (and enabled)
                     if (AppConfiguration.ShowTrafficOnExplorationOverlay &&
@@ -284,6 +284,7 @@ namespace EliteDataRelay.UI
                         string trafficDraw = TruncateText(g, trafficText, GameColors.FontSmall, width - padding * 2);
                         g.DrawString(trafficDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                         // Source tag removed per request; show only values
+                        y += lineHeight;
                     }
                     else
                     {
@@ -303,20 +304,24 @@ namespace EliteDataRelay.UI
                             if (_currentSystemInfo.Population > 0)
                                 parts.Add($"Pop: {_currentSystemInfo.Population:N0}");
 
-                            string infoText = parts.Count > 0
-                                ? string.Join("  \u2022  ", parts)
-                                : "Known System";
-
-                            // Prevent overflow on narrow overlays by truncating to available width
-                            string infoDraw = TruncateText(g, infoText, GameColors.FontSmall, width - padding * 2);
-                            g.DrawString(infoDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                            if (parts.Count == 0)
+                            {
+                                g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                                y += lineHeight;
+                            }
+                            else
+                            {
+                                // Draw tokens with wrapping to avoid truncation (e.g., long allegiance values)
+                                int pixels = DrawWrappedTokens(g, padding, y, width - padding * 2, parts, GameColors.FontSmall, GameColors.BrushGrayText);
+                                y += pixels;
+                            }
                         }
                         else
                         {
                             g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                            y += lineHeight;
                         }
                     }
-                    y += lineHeight;
                 }
 
                 // === SESSION STATISTICS (if available) ===
@@ -382,6 +387,34 @@ namespace EliteDataRelay.UI
             float x = rect.X + (rect.Width - size.Width) / 2;
             float y = rect.Y + (rect.Height - size.Height) / 2;
             g.DrawString(text, font, brush, x, y);
+        }
+
+        private static int DrawWrappedTokens(Graphics g, int x, int y, int maxWidth, System.Collections.Generic.IEnumerable<string> tokens, Font font, Brush brush)
+        {
+            const string sep = "  \u2022  ";
+            int lines = 1;
+            float dx = 0f;
+            bool first = true;
+            foreach (var token in tokens)
+            {
+                string withSep = first ? token : sep + token;
+                var size = g.MeasureString(withSep, font);
+                if (dx + size.Width > maxWidth && !first)
+                {
+                    // new line
+                    y += (int)Math.Ceiling(font.GetHeight(g));
+                    lines++;
+                    dx = 0f;
+                    withSep = token; // no leading sep on new line
+                    size = g.MeasureString(withSep, font);
+                }
+                g.DrawString(withSep, font, brush, x + dx, y);
+                dx += size.Width;
+                first = false;
+            }
+            // total height used in pixels
+            int lineHeightPx = (int)Math.Ceiling(font.GetHeight(g));
+            return Math.Max(lineHeightPx, lines * lineHeightPx);
         }
     }
 }

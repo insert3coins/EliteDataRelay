@@ -20,7 +20,7 @@ namespace EliteDataRelay.Services
         private SystemExplorationData? _lastExplorationData;
         private ExplorationSessionData? _lastExplorationSessionData;
         private SystemInfoData? _lastSystemInfoData;
-        private NextJumpOverlayData? _lastNextJumpData;
+        
         private string? _lastCommanderName;
         private string? _lastShipType;
         private long? _lastBalance;
@@ -71,12 +71,7 @@ namespace EliteDataRelay.Services
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
             }
-            if (_jumpOverlayForm == null && AppConfiguration.EnableJumpOverlay)
-            {
-                _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag) { Owner = owner };
-                _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
-                _jumpOverlayForm.Hide();
-            }
+            // Next Jump overlay removed/disabled
 
             PositionOverlays(screen);
         }
@@ -139,13 +134,7 @@ namespace EliteDataRelay.Services
                 }
             }
 
-            // Do not auto-show Jump Info; it is shown on FSD charge
-            if (_jumpOverlayForm != null && _lastNextJumpData != null)
-            {
-                // Keep hidden; will show on StartJump
-                _jumpOverlayForm.UpdateJumpInfo(_lastNextJumpData);
-                _jumpOverlayForm.Hide();
-            }
+            // Jump overlay removed
 
             // Export overlay positions for OBS
             ExportObsPositions();
@@ -245,21 +234,7 @@ namespace EliteDataRelay.Services
 
         private void EnsureJumpOverlay()
         {
-            if (!AppConfiguration.EnableJumpOverlay) return;
-            if (_jumpOverlayForm != null && !_jumpOverlayForm.IsDisposed) return;
-
-            // Create lazily if needed, preserving owner
-            var owner = _leftOverlayForm?.Owner ?? _rightOverlayForm?.Owner;
-            _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag) { Owner = owner };
-            _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
-
-            var primaryScreen = Screen.PrimaryScreen;
-            if (primaryScreen != null)
-            {
-                var screen = primaryScreen.WorkingArea;
-                var def = new Point((screen.Width / 2) - (_jumpOverlayForm.Width / 2), 20);
-                _jumpOverlayForm.Location = AppConfiguration.JumpOverlayLocation != Point.Empty ? AppConfiguration.JumpOverlayLocation : def;
-            }
+            // Next Jump overlay removed; do nothing
         }
     }
 }

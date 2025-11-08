@@ -88,7 +88,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
             AppConfiguration.OverlayShowBorderShipIcon = _chkShowBorderShipIcon.Checked;
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
-            AppConfiguration.OverlayShowBorderJump = _chkShowBorderJump.Checked;
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -104,7 +103,6 @@ namespace EliteDataRelay.UI
             _chkShowBorderCargo.Checked = true;
             _chkShowBorderShipIcon.Checked = true;
             _chkShowBorderExploration.Checked = true;
-            _chkShowBorderJump.Checked = true;
             UpdateAppearanceControls();
 
             // Also update the static configuration directly to apply the changes live.
@@ -118,7 +116,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderCargo = true;
             AppConfiguration.OverlayShowBorderShipIcon = true;
             AppConfiguration.OverlayShowBorderExploration = true;
-            AppConfiguration.OverlayShowBorderJump = true;
 
             // Also reset overlay positions
             AppConfiguration.InfoOverlayLocation = Point.Empty;

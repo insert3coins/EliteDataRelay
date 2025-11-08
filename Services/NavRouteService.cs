@@ -19,7 +19,7 @@ namespace EliteDataRelay.Services
             public double? RemainingLy { get; set; }
         }
 
-        public static RouteSummary? TryReadSummary(string journalDir, string? currentSystemName, long? currentSystemAddress, int maxHops = 7)
+        public static RouteSummary? TryReadSummary(string journalDir, string? currentSystemName, long? currentSystemAddress, int maxHops = 7, string? nextSystemName = null)
         {
             try
             {
@@ -52,10 +52,37 @@ namespace EliteDataRelay.Services
                     }
                 }
 
+                // If we couldn't identify the current system, try to infer it from the next target
+                if (currentIdx < 0 && !string.IsNullOrWhiteSpace(nextSystemName))
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        var el = routeEl[i];
+                        string? name = el.TryGetProperty("StarSystem", out var ns) ? ns.GetString() : null;
+                        if (!string.IsNullOrEmpty(name) && string.Equals(name, nextSystemName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // If the next system is at index i, treat i-1 as current
+                            currentIdx = Math.Max(0, i - 1);
+                            break;
+                        }
+                    }
+                }
+
                 var summary = new RouteSummary { CurrentIndex = currentIdx, Total = count };
 
                 // Compute hops starting from next up to maxHops
-                int start = (currentIdx >= 0) ? currentIdx + 1 : 0;
+                // Determine where to start listing upcoming hops.
+                // If current index is known, start from the next hop.
+                // If not known, assume the first element is the current system and start from index 1 (when available).
+                int start;
+                if (currentIdx >= 0)
+                {
+                    start = currentIdx + 1;
+                }
+                else
+                {
+                    start = (count >= 2) ? 1 : 0;
+                }
                 int end = Math.Min(count, start + maxHops);
                 double accumulatedRemaining = 0;
                 for (int i = start; i < count; i++)
@@ -84,7 +111,30 @@ namespace EliteDataRelay.Services
                     var nxt = routeEl[currentIdx + 1];
                     summary.NextDistanceLy = TryDistance(cur, nxt);
                 }
+                else if (currentIdx < 0 && count >= 2)
+                {
+                    // Fallback: assume route[0] is current and route[1] is next
+                    summary.NextDistanceLy = TryDistance(routeEl[0], routeEl[1]);
+                }
                 summary.RemainingLy = accumulatedRemaining > 0 ? accumulatedRemaining : null;
+
+                // Fallback: if no hops were added (e.g., off-by-one or index detection failed),
+                // ensure the final hop is still presented so the last jump is shown.
+                if (summary.Hops.Count == 0 && count >= 2)
+                {
+                    int lastIdx = count - 1;
+                    var prev = routeEl[lastIdx - 1];
+                    var last = routeEl[lastIdx];
+                    string name = last.TryGetProperty("StarSystem", out var hn) ? (hn.GetString() ?? "") : "";
+                    string? starClass = last.TryGetProperty("StarClass", out var sc) ? sc.GetString() : null;
+                    bool scoop = IsScoopable(starClass);
+                    double? segDist = TryDistance(prev, last);
+
+                    summary.Hops.Add(new JumpHop { Name = name, StarClass = starClass, IsScoopable = scoop, DistanceLy = segDist });
+                    summary.CurrentIndex ??= Math.Max(0, lastIdx - 1);
+                    summary.NextDistanceLy ??= segDist;
+                    summary.RemainingLy ??= segDist;
+                }
 
                 return summary;
             }

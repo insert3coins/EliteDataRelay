@@ -363,13 +363,26 @@ namespace EliteDataRelay.Services
                 }
             }
 
-            int nextIdx = (currentIdx >= 0 && currentIdx + 1 < count) ? currentIdx + 1 : 0;
+            int nextIdx;
+            if (currentIdx >= 0 && currentIdx + 1 < count)
+            {
+                nextIdx = currentIdx + 1;
+            }
+            else if (currentIdx < 0 && count >= 2)
+            {
+                // If we cannot identify the current system, assume route[0] is current and route[1] is next
+                nextIdx = 1;
+            }
+            else
+            {
+                nextIdx = 0;
+            }
             var nextEl = routeEl[nextIdx];
             string? nextName = nextEl.TryGetProperty("StarSystem", out var nn) ? nn.GetString() : null;
             string? starClass = nextEl.TryGetProperty("StarClass", out var sc) ? sc.GetString() : null;
 
             // compute remaining jumps
-            int? remaining = (currentIdx >= 0) ? (count - (currentIdx + 1) - 0) : (int?)null; // remaining including next
+            int? remaining = (currentIdx >= 0) ? (count - (currentIdx + 1)) : (count >= 1 ? count - 1 : (int?)null); // remaining including next
             if (remaining.HasValue && remaining.Value < 0) remaining = 0;
 
             // compute distance from current to next using StarPos if available
@@ -379,6 +392,18 @@ namespace EliteDataRelay.Services
                 if (currentIdx >= 0)
                 {
                     var curEl = routeEl[currentIdx];
+                    if (curEl.TryGetProperty("StarPos", out var cp) && nextEl.TryGetProperty("StarPos", out var np) &&
+                        cp.ValueKind == JsonValueKind.Array && np.ValueKind == JsonValueKind.Array && cp.GetArrayLength() == 3 && np.GetArrayLength() == 3)
+                    {
+                        double cx = cp[0].GetDouble(); double cy = cp[1].GetDouble(); double cz = cp[2].GetDouble();
+                        double nx = np[0].GetDouble(); double ny = np[1].GetDouble(); double nz = np[2].GetDouble();
+                        jumpDist = Math.Sqrt(Math.Pow(nx - cx, 2) + Math.Pow(ny - cy, 2) + Math.Pow(nz - cz, 2));
+                    }
+                }
+                else if (count >= 2)
+                {
+                    // Fallback: assume distance from route[0] to route[1]
+                    var curEl = routeEl[0];
                     if (curEl.TryGetProperty("StarPos", out var cp) && nextEl.TryGetProperty("StarPos", out var np) &&
                         cp.ValueKind == JsonValueKind.Array && np.ValueKind == JsonValueKind.Array && cp.GetArrayLength() == 3 && np.GetArrayLength() == 3)
                     {
