@@ -118,12 +118,7 @@ namespace EliteDataRelay.Services
                     {
                         try
                         {
-                            // If it's the very first fetch, don't debounce.
-                            // Otherwise, debounce to avoid excessive API calls during rapid jumps.
-                            if (_lastSystemInfo != null)
-                            {
-                                await Task.Delay(500, currentDebounceToken); // Debounce for 500ms
-                            }
+                    // Fetch immediately on system change to update the exploration overlay without delay.
 
                             // If we reach here, either it's the first fetch or the debounce completed.
                             // Cancel any *previous* actual fetch operation.
