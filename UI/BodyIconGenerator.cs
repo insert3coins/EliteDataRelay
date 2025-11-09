@@ -10,6 +10,7 @@ namespace EliteDataRelay.UI
     public static class BodyIconGenerator
     {
         private const int IconSize = 20;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Image> _cache = new();
 
         private static void DrawShadedSphere(Graphics g, Rectangle rect, Color baseColor, float lightDx, float lightDy, Color? rimColor = null, bool addSpecular = true)
         {
@@ -74,10 +75,13 @@ namespace EliteDataRelay.UI
         public static Image GetIconForBodyType(string bodyType)
         {
             if (string.IsNullOrEmpty(bodyType))
-                return CreateDefaultIcon();
+                return GetOrCreateCached("__default__", CreateDefaultIcon);
 
             // Normalize the body type
             var normalizedType = bodyType.ToLowerInvariant().Trim();
+
+            if (_cache.TryGetValue(normalizedType, out var cached))
+                return cached;
 
             // Stars
             if (normalizedType.Contains("star") || normalizedType.StartsWith("o ") || normalizedType.StartsWith("b ") ||
@@ -85,61 +89,75 @@ namespace EliteDataRelay.UI
                 normalizedType.StartsWith("k ") || normalizedType.StartsWith("m ") || normalizedType.StartsWith("l ") ||
                 normalizedType.StartsWith("t ") || normalizedType.StartsWith("y "))
             {
-                return CreateStarIcon(normalizedType);
+                return GetOrCreateCached(normalizedType, () => CreateStarIcon(normalizedType));
             }
 
             // Gas Giants
             if (normalizedType.Contains("gas giant") || normalizedType.Contains("class i") || normalizedType.Contains("class ii") ||
                 normalizedType.Contains("class iii") || normalizedType.Contains("class iv") || normalizedType.Contains("class v"))
             {
-                return CreateGasGiantIcon();
+                return GetOrCreateCached(normalizedType, CreateGasGiantIcon);
             }
 
             // Earth-like worlds
             if (normalizedType.Contains("earth") || normalizedType.Contains("earthlike"))
             {
-                return CreateEarthLikeIcon();
+                return GetOrCreateCached(normalizedType, CreateEarthLikeIcon);
             }
 
             // Water worlds
             if (normalizedType.Contains("water"))
             {
-                return CreateWaterWorldIcon();
+                return GetOrCreateCached(normalizedType, CreateWaterWorldIcon);
             }
 
             // Ammonia worlds
             if (normalizedType.Contains("ammonia"))
             {
-                return CreateAmmoniaWorldIcon();
+                return GetOrCreateCached(normalizedType, CreateAmmoniaWorldIcon);
             }
 
             // High metal content
             if (normalizedType.Contains("high metal"))
             {
-                return CreateHighMetalIcon();
+                return GetOrCreateCached(normalizedType, CreateHighMetalIcon);
             }
 
             // Metal-rich
             if (normalizedType.Contains("metal") && normalizedType.Contains("rich"))
             {
-                return CreateMetalRichIcon();
+                return GetOrCreateCached(normalizedType, CreateMetalRichIcon);
             }
 
             // Rocky body / Rocky ice
             if (normalizedType.Contains("rocky"))
             {
                 if (normalizedType.Contains("ice"))
-                    return CreateRockyIceIcon();
-                return CreateRockyIcon();
+                    return GetOrCreateCached(normalizedType, CreateRockyIceIcon);
+                return GetOrCreateCached(normalizedType, CreateRockyIcon);
             }
 
             // Icy body
             if (normalizedType.Contains("icy"))
             {
-                return CreateIcyIcon();
+                return GetOrCreateCached(normalizedType, CreateIcyIcon);
             }
 
-            return CreateDefaultIcon();
+            return GetOrCreateCached(normalizedType, CreateDefaultIcon);
+        }
+
+        private static Image GetOrCreateCached(string key, Func<Image> factory)
+        {
+            return _cache.GetOrAdd(key, _ => factory());
+        }
+
+        public static void ClearCache()
+        {
+            foreach (var kvp in _cache)
+            {
+                try { kvp.Value.Dispose(); } catch { }
+            }
+            _cache.Clear();
         }
 
         private static Image CreateStarIcon(string starType)

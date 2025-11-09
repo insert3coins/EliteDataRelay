@@ -22,6 +22,8 @@ namespace EliteDataRelay.UI
         private readonly Button _loadMoreButton;
         private const int PageSize = 500;
         private bool _isDataLoaded = false;
+        private readonly System.Collections.Generic.List<SystemExplorationData> _systemsData = new();
+        private System.Collections.Generic.List<ScannedBody> _currentBodies = new();
 
         public ExplorationLogControl(ExplorationDatabaseService database)
         {
@@ -230,8 +232,22 @@ namespace EliteDataRelay.UI
                 EnableHeadersVisualStyles = false,
                 Font = new Font("Segoe UI", 9F),
                 RowTemplate = { Height = 50 },
-                Margin = new Padding(0)
+                Margin = new Padding(0),
+                VirtualMode = true
             };
+
+            // Enable double buffering via reflection to reduce flicker
+            try
+            {
+                typeof(Control).InvokeMember("DoubleBuffered",
+                    System.Reflection.BindingFlags.SetProperty |
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic,
+                    null,
+                    grid,
+                    new object[] { true });
+            }
+            catch { /* best-effort */ }
 
             grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
             grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(71, 85, 105);
@@ -278,10 +294,10 @@ namespace EliteDataRelay.UI
                 Visible = false
             });
 
-            
 
+
+            grid.CellValueNeeded += OnSystemsCellValueNeeded;
             grid.SelectionChanged += OnSystemSelected;
-
             return grid;
         }
 
@@ -307,8 +323,22 @@ namespace EliteDataRelay.UI
                 EnableHeadersVisualStyles = false,
                 Font = new Font("Segoe UI", 9F),
                 RowTemplate = { Height = 40 },
-                Margin = new Padding(0)
+                Margin = new Padding(0),
+                VirtualMode = true
             };
+
+            // Enable double buffering via reflection to reduce flicker
+            try
+            {
+                typeof(Control).InvokeMember("DoubleBuffered",
+                    System.Reflection.BindingFlags.SetProperty |
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic,
+                    null,
+                    grid,
+                    new object[] { true });
+            }
+            catch { /* best-effort */ }
 
             grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
             grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(71, 85, 105);
@@ -369,6 +399,9 @@ namespace EliteDataRelay.UI
                 FillWeight = 23
             });
 
+            // Hook virtual mode providers for bodies grid
+            grid.CellValueNeeded += OnBodiesCellValueNeeded;
+            grid.CellFormatting += OnBodiesCellFormatting;
             return grid;
         }
 
@@ -380,8 +413,10 @@ namespace EliteDataRelay.UI
 
                 System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Found {systems.Count} systems in database");
 
+                _systemsData.Clear();
+                _systemsData.AddRange(systems);
                 _systemsGrid.SuspendLayout();
-                _systemsGrid.Rows.Clear();
+                _systemsGrid.RowCount = _systemsData.Count;
 
                 if (systems.Count == 0)
                 {
@@ -392,11 +427,6 @@ namespace EliteDataRelay.UI
                     return;
                 }
 
-                var rows = CreateRowsForSystems(systems);
-
-                System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Created {rows.Count} rows for grid");
-
-                _systemsGrid.Rows.AddRange(rows.ToArray());
                 _systemsGrid.ClearSelection();
                 _systemsGrid.ResumeLayout();
 
@@ -415,7 +445,7 @@ namespace EliteDataRelay.UI
         {
             try
             {
-                var alreadyLoaded = _systemsGrid.Rows.Count;
+                var alreadyLoaded = _systemsData.Count;
                 var systems = _database.GetVisitedSystems(PageSize, alreadyLoaded);
 
                 System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] LoadMore - offset={alreadyLoaded}, fetched={systems.Count}");
@@ -428,8 +458,8 @@ namespace EliteDataRelay.UI
                 }
 
                 _systemsGrid.SuspendLayout();
-                var rows = CreateRowsForSystems(systems);
-                _systemsGrid.Rows.AddRange(rows.ToArray());
+                _systemsData.AddRange(systems);
+                _systemsGrid.RowCount = _systemsData.Count;
                 _systemsGrid.ResumeLayout();
 
                 if (systems.Count < PageSize)
@@ -444,49 +474,32 @@ namespace EliteDataRelay.UI
             }
         }
 
-        private List<DataGridViewRow> CreateRowsForSystems(List<SystemExplorationData> systems)
-        {
-            var rows = new List<DataGridViewRow>();
-            foreach (var system in systems)
-            {
-                var row = new DataGridViewRow();
 
-                var bodiesText = $"{system.ScannedBodies}";
-                if (system.MappedBodies > 0)
-                {
-                    bodiesText += $" ({system.MappedBodies} mapped)";
-                }
-
-                var timeAgo = GetTimeAgo(system.LastVisited);
-
-                row.CreateCells(_systemsGrid, new object[]
-                {
-                    system.SystemName ?? string.Empty,
-                    bodiesText ?? string.Empty,
-                    timeAgo ?? string.Empty,
-                    system.SystemAddress.ToString() ?? string.Empty
-                });
-                rows.Add(row);
-            }
-            return rows;
-        }
 
         private void OnSystemSelected(object? sender, EventArgs e)
         {
-            if (_systemsGrid.SelectedRows.Count == 0)
+            // Prefer SelectedRows, but fall back to CurrentCell for VirtualMode reliability
+            int selectedIndex = -1;
+            if (_systemsGrid.SelectedRows.Count > 0)
+            {
+                selectedIndex = _systemsGrid.SelectedRows[0].Index;
+            }
+            else if (_systemsGrid.CurrentCell != null)
+            {
+                selectedIndex = _systemsGrid.CurrentCell.RowIndex;
+            }
+
+            if (selectedIndex < 0 || selectedIndex >= _systemsData.Count)
             {
                 _selectedSystemLabel.Text = "Select a system to view details";
-                _bodiesGrid.Rows.Clear();
+                _currentBodies = new System.Collections.Generic.List<ScannedBody>();
+                _bodiesGrid.RowCount = 0;
                 return;
             }
 
-            var selectedRow = _systemsGrid.SelectedRows[0];
-            var systemAddressStr = selectedRow.Cells["SystemAddress"].Value?.ToString();
-
-            if (string.IsNullOrEmpty(systemAddressStr) || !long.TryParse(systemAddressStr, out var systemAddress))
-                return;
-
-            LoadSystemDetails(systemAddress);
+            var systemAddressNullable = _systemsData[selectedIndex].SystemAddress;
+            if (!systemAddressNullable.HasValue) return;
+            LoadSystemDetails(systemAddressNullable.Value);
         }
 
         private void LoadSystemDetails(long systemAddress)
@@ -521,64 +534,96 @@ namespace EliteDataRelay.UI
 
                 _selectedSystemLabel.Text = $"{system.SystemName} — {string.Join(" • ", detailsParts)}";
 
-                _bodiesGrid.SuspendLayout();
-                _bodiesGrid.Rows.Clear();
-
-                var rows = new List<DataGridViewRow>();
-                foreach (var body in system.Bodies.OrderBy(b => b.DistanceFromArrival ?? double.MaxValue))
-                {
-                    var row = new DataGridViewRow();
-
-                    // Generate icon for body type
-                    var bodyIcon = BodyIconGenerator.GetIconForBodyType(body.BodyType);
-
-                    string bodyType = body.BodyType;
-                    if (!string.IsNullOrEmpty(body.TerraformState) && body.TerraformState != "Not Terraformable")
-                    {
-                        bodyType += " ⚡";
-                    }
-
-                    string distance = body.DistanceFromArrival.HasValue
-                        ? $"{body.DistanceFromArrival.Value:N0}"
-                        : "—";
-
-                    string status = body.IsMapped ? "🗺️ Mapped" : "Scanned";
-                    if (body.FirstFootfall)
-                    {
-                        status = "👣 First Footfall!";
-                    }
-                    else if (!body.WasDiscovered)
-                    {
-                        status = "⭐ First Discovery";
-                    }
-
-                    row.CreateCells(_bodiesGrid, body.BodyName, bodyIcon, bodyType, distance, status);
-
-                    if (body.FirstFootfall)
-                    {
-                        row.DefaultCellStyle.BackColor = Color.FromArgb(255, 237, 213); // Very light orange/gold
-                        row.DefaultCellStyle.ForeColor = Color.FromArgb(120, 53, 15); // Dark orange text
-                    }
-                    else if (!body.WasDiscovered)
-                    {
-                        row.DefaultCellStyle.BackColor = Color.FromArgb(240, 253, 244);
-                        row.DefaultCellStyle.ForeColor = Color.FromArgb(22, 101, 52);
-                    }
-                    else if (body.IsMapped && !body.WasMapped)
-                    {
-                        row.DefaultCellStyle.BackColor = Color.FromArgb(240, 249, 255);
-                    }
-
-                    rows.Add(row);
-                }
-
-                _bodiesGrid.Rows.AddRange(rows.ToArray());
+                // Virtual mode population: update backing list + row count, then return
+                _currentBodies = system.Bodies
+                    .OrderBy(b => b.DistanceFromArrival ?? double.MaxValue)
+                    .ToList();
+                _bodiesGrid.RowCount = _currentBodies.Count;
                 _bodiesGrid.ClearSelection();
-                _bodiesGrid.ResumeLayout();
+                _bodiesGrid.Invalidate();
+                return;
+
+
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ExplorationLogControl] Error loading system details: {ex.Message}");
+            }
+        }
+
+        private void OnSystemsCellValueNeeded(object? sender, DataGridViewCellValueEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _systemsData.Count) return;
+            var system = _systemsData[e.RowIndex];
+            var columnName = _systemsGrid.Columns[e.ColumnIndex].Name;
+            switch (columnName)
+            {
+                case "SystemName":
+                    e.Value = system.SystemName ?? string.Empty;
+                    break;
+                case "Bodies":
+                    var bodiesText = $"{system.ScannedBodies}";
+                    if (system.MappedBodies > 0) bodiesText += $" ({system.MappedBodies} mapped)";
+                    e.Value = bodiesText;
+                    break;
+                case "LastVisited":
+                    e.Value = GetTimeAgo(system.LastVisited);
+                    break;
+                case "SystemAddress":
+                    e.Value = system.SystemAddress.ToString();
+                    break;
+            }
+        }
+
+        private void OnBodiesCellValueNeeded(object? sender, DataGridViewCellValueEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _currentBodies.Count) return;
+            if (e.ColumnIndex < 0) return;
+            var body = _currentBodies[e.RowIndex];
+            var col = _bodiesGrid.Columns[e.ColumnIndex].Name;
+            switch (col)
+            {
+                case "BodyName":
+                    e.Value = body.BodyName;
+                    break;
+                case "BodyIcon":
+                    e.Value = BodyIconGenerator.GetIconForBodyType(body.BodyType);
+                    break;
+                case "BodyType":
+                    var bodyType = body.BodyType;
+                    if (!string.IsNullOrEmpty(body.TerraformState) && body.TerraformState != "Not Terraformable")
+                        bodyType += " ?";
+                    e.Value = bodyType;
+                    break;
+                case "Distance":
+                    e.Value = body.DistanceFromArrival.HasValue ? $"{body.DistanceFromArrival.Value:N0}" : "-";
+                    break;
+                case "Status":
+                    string status = body.IsMapped ? "??? Mapped" : "Scanned";
+                    if (body.FirstFootfall) status = "?? First Footfall!";
+                    else if (!body.WasDiscovered) status = "? First Discovery";
+                    e.Value = status;
+                    break;
+            }
+        }
+
+        private void OnBodiesCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _currentBodies.Count) return;
+            var body = _currentBodies[e.RowIndex];
+            if (body.FirstFootfall)
+            {
+                e.CellStyle.BackColor = Color.FromArgb(255, 237, 213);
+                e.CellStyle.ForeColor = Color.FromArgb(120, 53, 15);
+            }
+            else if (!body.WasDiscovered)
+            {
+                e.CellStyle.BackColor = Color.FromArgb(240, 253, 244);
+                e.CellStyle.ForeColor = Color.FromArgb(22, 101, 52);
+            }
+            else if (body.IsMapped && !body.WasMapped)
+            {
+                e.CellStyle.BackColor = Color.FromArgb(240, 249, 255);
             }
         }
 

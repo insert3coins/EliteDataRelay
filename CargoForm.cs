@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
@@ -28,7 +28,7 @@ namespace EliteDataRelay
         private readonly ExplorationDataService _explorationDataService;
         private readonly ExplorationDatabaseService _explorationDatabaseService;
         private readonly ScreenshotRenamerService _screenshotRenamerService;
-        
+
         public CargoForm()
         {
             // Create all service instances. This form now owns its dependencies,
@@ -50,7 +50,7 @@ namespace EliteDataRelay
 
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
-            
+
 
             InitializeComponent();
 
@@ -161,7 +161,7 @@ namespace EliteDataRelay
                         _overlayService.UpdateExplorationSessionData(session);
 
                         // Update web overlay
-                        
+
                     }
                 }
             }
@@ -253,7 +253,7 @@ namespace EliteDataRelay
             };
 
             // Push exploration updates to web overlay
-            
+
         }
 
         private void OnMiningNotificationRaised(object? sender, MiningNotificationEventArgs e)
@@ -291,8 +291,10 @@ namespace EliteDataRelay
                 _explorationDataService.Dispose();
                 _explorationDatabaseService.Dispose();
                 _screenshotRenamerService?.Dispose();
-                
-                
+
+                // Free any cached UI images
+                UI.BodyIconGenerator.ClearCache();
+
             }
             base.Dispose(disposing);
         }

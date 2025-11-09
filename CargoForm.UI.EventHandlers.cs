@@ -19,39 +19,51 @@ namespace EliteDataRelay
 
         private async void OnStartClicked(object? sender, EventArgs e)
         {
-            // Reset Status priming and ensure Next Jump overlay is hidden before starting
-            _statusPrimed = false;
-            _overlayService.HideNextJumpOverlay();
-
-            // Check for required files/paths before starting.
-            if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
+            try
             {
+                // Reset Status priming and ensure Next Jump overlay is hidden before starting
+                _statusPrimed = false;
+                _overlayService.HideNextJumpOverlay();
+
+                // Check for required files/paths before starting.
+                if (string.IsNullOrEmpty(_journalWatcherService.JournalDirectoryPath) || !Directory.Exists(_journalWatcherService.JournalDirectoryPath))
+                {
+                    MessageBox.Show(
+                        $"Journal directory not found. Cannot start monitoring.\nPlease check the path in Settings.\n\nPath: {_journalWatcherService.JournalDirectoryPath}",
+                        "Directory Not Found",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+
+                // Attempt an initial read of the cargo file. This serves as a more robust check
+                // than just File.Exists, as it also handles an empty or locked file.
+                bool initialReadSuccess = await _cargoProcessorService.ProcessCargoFileAsync();
+
+                if (!initialReadSuccess)
+                {
+                    MessageBox.Show(
+                        "Could not read initial cargo data.\n\n" +
+                        "This can happen if the game is still starting up. Monitoring will begin, and the display will update automatically once you are in-game.",
+                        "Initial Cargo Read Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+
+                StartMonitoring();
+
+                // Asynchronously check for updates after starting.
+                _ = UpdateCheckService.CheckForUpdatesAsync(this);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CargoForm] Start monitoring failed: {ex}");
                 MessageBox.Show(
-                    $"Journal directory not found. Cannot start monitoring.\nPlease check the path in Settings.\n\nPath: {_journalWatcherService.JournalDirectoryPath}",
-                    "Directory Not Found",
+                    "An error occurred while starting monitoring. Please check settings and try again.",
+                    "Start Failed",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                return;
             }
-
-            // Attempt an initial read of the cargo file. This serves as a more robust check
-            // than just File.Exists, as it also handles an empty or locked file.
-            bool initialReadSuccess = await _cargoProcessorService.ProcessCargoFileAsync();
-
-            if (!initialReadSuccess)
-            {
-                MessageBox.Show(
-                    "Could not read initial cargo data.\n\n" +
-                    "This can happen if the game is still starting up. Monitoring will begin, and the display will update automatically once you are in-game.",
-                    "Initial Cargo Read Failed",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-            }
-
-            StartMonitoring();
-
-            // Asynchronously check for updates after starting.
-            _ = UpdateCheckService.CheckForUpdatesAsync(this);
         }
 
         private void OnStopClicked(object? sender, EventArgs e)

@@ -206,7 +206,7 @@ namespace EliteDataRelay.Services
             { "typex_2" , "Alliance Crusader" },
             { "typex", "Alliance Chieftain" }, // Alliance Chieftain
             { "type8", "Type-8 Transporter"}, // Type 8
-            { "mandalay", "Mandalay" }, 
+            { "mandalay", "Mandalay" },
 
             // --- Large Ships ---
             { "type7", "Type 7 Transporter" },
@@ -234,7 +234,10 @@ namespace EliteDataRelay.Services
 
             if (_iconCache.TryGetValue(internalShipName, out var cachedIcon))
             {
-                Trace.WriteLine($"[ShipIconService] Returning cached icon for '{internalShipName}'.");
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    Trace.WriteLine($"[ShipIconService] Returning cached icon for '{internalShipName}'.");
+                }
                 return cachedIcon;
             }
 

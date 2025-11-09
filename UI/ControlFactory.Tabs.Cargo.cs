@@ -55,7 +55,7 @@ namespace EliteDataRelay.UI
                 AllowUserToDeleteRows = false,
                 AllowUserToResizeRows = false,
                 AllowUserToResizeColumns = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,                
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 MultiSelect = false,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 EnableHeadersVisualStyles = false,
@@ -65,6 +65,19 @@ namespace EliteDataRelay.UI
                 ScrollBars = ScrollBars.None, // We will use a custom scrollbar
                 Visible = false // Initially hidden
             };
+
+            // Reduce flicker and improve scroll smoothness
+            try
+            {
+                typeof(Control).InvokeMember("DoubleBuffered",
+                    System.Reflection.BindingFlags.SetProperty |
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.NonPublic,
+                    null,
+                    CargoGridView,
+                    new object[] { true });
+            }
+            catch { /* best-effort */ }
 
             // Column Header Styling
             CargoGridView.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle

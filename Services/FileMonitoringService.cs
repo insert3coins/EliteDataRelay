@@ -36,13 +36,13 @@ namespace EliteDataRelay.Services
         {
             _filePath = journalWatcher.JournalDirectoryPath;
             // This service now only watches for Cargo.json
-            _fileName = "Cargo.json"; 
+            _fileName = "Cargo.json";
         }
 
         public void StartMonitoring()
         {
             if (_isMonitoring || string.IsNullOrEmpty(_filePath)) return;
-            
+
             _isMonitoring = true;
             Debug.WriteLine($"[FileMonitoringService] Starting monitoring for {_filePath}");
 
@@ -117,7 +117,7 @@ namespace EliteDataRelay.Services
                     // Dispose the old timer to ensure we can create a new one.
                     // This fixes the bug where subsequent updates would not fire.
                     _debounceTimer?.Dispose();
-                    const int debounceTimeMs = 10; // Tighter debounce for faster updates
+                    const int debounceTimeMs = 50; // Slightly higher to coalesce duplicate change events
                     _debounceTimer = new System.Threading.Timer(_ => FileChanged?.Invoke(fileName), null, debounceTimeMs, Timeout.Infinite);
                 }
             }
