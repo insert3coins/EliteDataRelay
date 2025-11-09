@@ -157,7 +157,7 @@ namespace EliteDataRelay.UI
             this.labelCopyright.Location = new System.Drawing.Point(17, 175);
             this.labelCopyright.Name = "labelCopyright";
             this.labelCopyright.Size = new System.Drawing.Size(166, 15);
-            this.labelCopyright.Text = "Copyright © 2024 insert3coins";
+            this.labelCopyright.Text = "Copyright © 2025 insert3coins";
             // 
             // closeButton
             // 

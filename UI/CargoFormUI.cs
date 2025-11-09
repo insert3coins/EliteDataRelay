@@ -187,7 +187,7 @@ namespace EliteDataRelay.UI
 
             // Make the window a fixed size and not resizable.
             _form.FormBorderStyle = FormBorderStyle.FixedSingle;
-            _form.Size = new Size(1000, 800);
+            _form.Size = new Size(800, 600);
 
             // Set application icon from pre-loaded resource
             if (_appIcon != null) _form.Icon = _appIcon;
