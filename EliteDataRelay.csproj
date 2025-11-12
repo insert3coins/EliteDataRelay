@@ -11,7 +11,7 @@
 	<ApplicationIcon>Resources\Appicon.ico</ApplicationIcon>
 
     <!-- Assembly Information for File Details -->
-    <Version>0.71.2</Version> <!-- This sets the product version and is used for file version. -->
+    <Version>0.72.1</Version> <!-- This sets the product version and is used for file version. -->
     <Company>insert3coins</Company>
     <Product>Elite Data Relay</Product>
     <Copyright>Copyright © 2024 insert3coins</Copyright>
@@ -41,6 +41,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Images\Ships\**\*.png" />
   </ItemGroup>
+
+  <Target Name="RefreshExecutableCreationTime" BeforeTargets="CoreCompile">
+    <Delete Files="$(TargetPath)" Condition="Exists('$(TargetPath)')" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />
