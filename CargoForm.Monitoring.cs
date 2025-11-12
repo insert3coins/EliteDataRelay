@@ -1,4 +1,5 @@
 using EliteDataRelay.Configuration;
+using EliteDataRelay.Models;
 using EliteDataRelay.UI;
 using System.Threading.Tasks;
 
@@ -34,11 +35,27 @@ namespace EliteDataRelay
                 (_cargoFormUI as CargoFormUI)?.UpdateMaterials(_lastMaterials);
             }
 
-            // Also repopulate session data if tracking is active and shown on the overlay.
-            if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
+            // Also repopulate session data if tracking is active.
+            if (AppConfiguration.EnableSessionTracking)
             {
-                _cargoFormUI.UpdateSessionOverlay((int)_sessionTrackingService.TotalCargoCollected, _sessionTrackingService.CreditsEarned);
+                _cargoFormUI.UpdateSessionOverlay(BuildSessionOverlayData());
             }
+        }
+
+        private SessionOverlayData BuildSessionOverlayData()
+        {
+            var duration = _sessionTrackingService.SessionDuration;
+            var credits = _sessionTrackingService.CreditsEarned;
+            var profitPerHour = duration.TotalHours > 0.01 ? credits / duration.TotalHours : 0;
+
+            return new SessionOverlayData
+            {
+                CreditsEarned = credits,
+                CargoCollected = _sessionTrackingService.TotalCargoCollected,
+                SessionDuration = duration,
+                MiningDuration = _sessionTrackingService.MiningDuration,
+                ProfitPerHour = profitPerHour
+            };
         }
 
         private void StartMonitoring()
@@ -67,6 +84,7 @@ namespace EliteDataRelay
             _stationInfoService.Start();
             _systemInfoService.Start();
             _gameProcessCheckTimer?.Start();
+            _sessionOverlayTimer?.Start();
 
             // The initial journal scan can be slow. Run it in the background without awaiting it.
             // This allows the UI to remain responsive and the overlays to be visible immediately.
@@ -108,6 +126,7 @@ namespace EliteDataRelay
 
             // Stop the game process checker
             _gameProcessCheckTimer?.Stop();
+            _sessionOverlayTimer?.Stop();
 
             // Stop the session tracker
             if (AppConfiguration.EnableSessionTracking)

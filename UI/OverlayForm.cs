@@ -16,6 +16,7 @@ namespace EliteDataRelay.UI
         {
             Info,
             Cargo,
+            Session,
             ShipIcon,
             Exploration,
             JumpInfo
@@ -56,6 +57,9 @@ namespace EliteDataRelay.UI
         private string _cargoBarText = "";
         private long _sessionCargo = 0;
         private long _sessionCredits = 0;
+        private TimeSpan _sessionDuration = TimeSpan.Zero;
+        private TimeSpan _miningDuration = TimeSpan.Zero;
+        private double _sessionProfitPerHour;
 
         // Ship icon overlay data
         private Image? _shipIcon;

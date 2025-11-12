@@ -1,9 +1,13 @@
+using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace EliteDataRelay.Services
 {
@@ -100,6 +104,8 @@ namespace EliteDataRelay.Services
                     {
                         _sessionHistory.Add(record);
                     }
+
+                    ExportSessionRecord(record);
 
                     // Raise the history updated event first to ensure the UI grid is populated
                     // before the live stats are reset by the StopMiningSession call.
@@ -228,6 +234,31 @@ namespace EliteDataRelay.Services
                 RefinedCommodities = new Dictionary<string, int>(_refinedCommodities, StringComparer.OrdinalIgnoreCase),
                 CollectedCommodities = new Dictionary<string, int>(_collectedCommodities, StringComparer.OrdinalIgnoreCase)
             };
+        }
+
+        private void ExportSessionRecord(MiningSessionRecord record)
+        {
+            try
+            {
+                var directory = Path.Combine(AppConfiguration.AppDataPath, "sessions");
+                Directory.CreateDirectory(directory);
+
+                string baseName = $"session_{record.SessionStart:yyyyMMdd_HHmmss}";
+                string filePath = Path.Combine(directory, $"{baseName}.json");
+                int counter = 1;
+                while (File.Exists(filePath))
+                {
+                    filePath = Path.Combine(directory, $"{baseName}_{counter++}.json");
+                }
+
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(record, options);
+                File.WriteAllText(filePath, json);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[SessionTrackingService] Failed to export session record: {ex.Message}");
+            }
         }
 
         public string GenerateHtmlReport(IEnumerable<MiningSessionRecord>? sessions = null, string? title = null)

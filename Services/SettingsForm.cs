@@ -18,15 +18,16 @@ namespace EliteDataRelay.UI
         // Legacy output group removed
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
+        private CheckBox _chkEnableSessionOverlay = null!;
         private CheckBox _chkEnableShipIconOverlay = null!;
         private CheckBox _chkEnableExplorationOverlay = null!;
         // Next Jump overlay removed
         private GroupBox _grpOverlaySettings = null!;
-        private CheckBox _chkShowSessionOnOverlay = null!;
         private CheckBox _chkTrafficExplorationOverlay = null!;
         // Next Jump traffic toggle removed
         private CheckBox _chkShowBorderInfo = null!;
         private CheckBox _chkShowBorderCargo = null!;
+        private CheckBox _chkShowBorderSession = null!;
         private CheckBox _chkShowBorderShipIcon = null!;
         private CheckBox _chkShowBorderExploration = null!;
         // Next Jump border toggle removed
@@ -55,6 +56,7 @@ namespace EliteDataRelay.UI
         private int _overlayOpacity;
         private bool _overlayShowBorderInfo;
         private bool _overlayShowBorderCargo;
+        private bool _overlayShowBorderSession;
         private bool _overlayShowBorderShipIcon;
         private bool _overlayShowBorderExploration;
         // removed: _overlayShowBorderJump
@@ -67,11 +69,13 @@ namespace EliteDataRelay.UI
         private int _originalOverlayOpacity;
         private bool _originalShowBorderInfo;
         private bool _originalShowBorderCargo;
+        private bool _originalShowBorderSession;
         private bool _originalShowBorderShipIcon;
         private bool _originalShowBorderExploration;
         // removed: _originalShowBorderJump
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
+        private Point _originalSessionOverlayLocation;
         private Point _originalShipIconOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
@@ -92,7 +96,7 @@ namespace EliteDataRelay.UI
             // Legacy text file output removed
             _chkEnableSessionTracking.Checked = AppConfiguration.EnableSessionTracking;
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableInfoOverlay;
-            _chkShowSessionOnOverlay.Checked = AppConfiguration.ShowSessionOnOverlay;
+            _chkEnableSessionOverlay.Checked = AppConfiguration.EnableSessionOverlay;
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
             _chkEnableShipIconOverlay.Checked = AppConfiguration.EnableShipIconOverlay;
             _chkEnableExplorationOverlay.Checked = AppConfiguration.EnableExplorationOverlay;
@@ -103,8 +107,6 @@ namespace EliteDataRelay.UI
             if (_chkTrafficExplorationOverlay != null) _chkTrafficExplorationOverlay.Checked = AppConfiguration.ShowTrafficOnExplorationOverlay;
             // Next Jump traffic removed
             // Hotkeys removed
-            // Removed: file output initial state
-            OnEnableRightOverlayCheckedChanged(null, EventArgs.Empty);
             // Hotkeys removed
 
             // Load overlay appearance settings
@@ -115,6 +117,7 @@ namespace EliteDataRelay.UI
             _overlayOpacity = AppConfiguration.OverlayOpacity;
             _overlayShowBorderInfo = AppConfiguration.OverlayShowBorderInfo;
             _overlayShowBorderCargo = AppConfiguration.OverlayShowBorderCargo;
+            _overlayShowBorderSession = AppConfiguration.OverlayShowBorderSession;
             _overlayShowBorderShipIcon = AppConfiguration.OverlayShowBorderShipIcon;
             _overlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration;
 
@@ -126,10 +129,12 @@ namespace EliteDataRelay.UI
             _originalOverlayOpacity = _overlayOpacity;
             _originalShowBorderInfo = _overlayShowBorderInfo;
             _originalShowBorderCargo = _overlayShowBorderCargo;
+            _originalShowBorderSession = _overlayShowBorderSession;
             _originalShowBorderShipIcon = _overlayShowBorderShipIcon;
             _originalShowBorderExploration = _overlayShowBorderExploration;
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
+            _originalSessionOverlayLocation = AppConfiguration.SessionOverlayLocation;
             _originalShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation;
 
             UpdateAppearanceControls();
@@ -147,6 +152,7 @@ namespace EliteDataRelay.UI
             _lblOpacityValue.Text = $"{_overlayOpacity}%";
             if (_chkShowBorderInfo != null) _chkShowBorderInfo.Checked = _overlayShowBorderInfo;
             if (_chkShowBorderCargo != null) _chkShowBorderCargo.Checked = _overlayShowBorderCargo;
+            if (_chkShowBorderSession != null) _chkShowBorderSession.Checked = _overlayShowBorderSession;
             if (_chkShowBorderShipIcon != null) _chkShowBorderShipIcon.Checked = _overlayShowBorderShipIcon;
             if (_chkShowBorderExploration != null) _chkShowBorderExploration.Checked = _overlayShowBorderExploration;
         }
@@ -157,7 +163,7 @@ namespace EliteDataRelay.UI
             // Removed legacy text file output persistence
             AppConfiguration.EnableSessionTracking = _chkEnableSessionTracking.Checked;
             AppConfiguration.EnableInfoOverlay = _chkEnableLeftOverlay.Checked;
-            AppConfiguration.ShowSessionOnOverlay = _chkShowSessionOnOverlay.Checked;
+            AppConfiguration.EnableSessionOverlay = _chkEnableSessionOverlay.Checked;
             AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
             AppConfiguration.EnableShipIconOverlay = _chkEnableShipIconOverlay.Checked;
             AppConfiguration.EnableExplorationOverlay = _chkEnableExplorationOverlay.Checked;
@@ -176,6 +182,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayOpacity = _overlayOpacity;
             AppConfiguration.OverlayShowBorderInfo = _chkShowBorderInfo.Checked;
             AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
+            AppConfiguration.OverlayShowBorderSession = _chkShowBorderSession.Checked;
             AppConfiguration.OverlayShowBorderShipIcon = _chkShowBorderShipIcon.Checked;
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
 

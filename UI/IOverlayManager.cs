@@ -1,3 +1,4 @@
+using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
@@ -23,6 +24,6 @@ namespace EliteDataRelay.UI
         void HideOverlays();
 
         /// <summary>Updates the session data on the overlay.</summary>
-        void UpdateSessionOverlay(long cargoCollected, long creditsEarned);
+        void UpdateSessionOverlay(SessionOverlayData data);
     }
 }

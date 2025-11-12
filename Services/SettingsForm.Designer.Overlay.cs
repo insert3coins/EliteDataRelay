@@ -32,13 +32,19 @@ namespace EliteDataRelay.UI
                 Location = new Point(15, 45),
                 AutoSize = true
             };
-            _chkEnableRightOverlay.CheckedChanged += OnEnableRightOverlayCheckedChanged;
+
+            _chkEnableSessionOverlay = new CheckBox
+            {
+                Text = "Enable session overlay",
+                Location = new Point(15, 70),
+                AutoSize = true
+            };
 
             // Enable Ship Icon Overlay CheckBox
             _chkEnableShipIconOverlay = new CheckBox
             {
                 Text = "Enable ship icon overlay",
-                Location = new Point(15, 70),
+                Location = new Point(15, 95),
                 AutoSize = true
             };
 
@@ -46,17 +52,9 @@ namespace EliteDataRelay.UI
             _chkEnableExplorationOverlay = new CheckBox
             {
                 Text = "Enable exploration overlay",
-                Location = new Point(15, 95),
-                AutoSize = true
-            };
-
-            _chkShowSessionOnOverlay = new CheckBox
-            {
-                Text = "Show session stats on cargo overlay",
                 Location = new Point(15, 120),
                 AutoSize = true
             };
-            _chkShowSessionOnOverlay.CheckedChanged += OnShowSessionCheckedChanged;
 
             // Show Traffic: Exploration Overlay
             _chkTrafficExplorationOverlay = new CheckBox
@@ -80,9 +78,9 @@ namespace EliteDataRelay.UI
             // Add functionality controls to the overlay settings group
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableSessionOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableShipIconOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
-            _grpOverlaySettings.Controls.Add(_chkShowSessionOnOverlay);
             _grpOverlaySettings.Controls.Add(_chkTrafficExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
             foreach (Control c in _grpOverlaySettings.Controls)
@@ -138,10 +136,12 @@ namespace EliteDataRelay.UI
             int bx = 200; int by = 95; int bdy = 18;
             _chkShowBorderInfo = new CheckBox { Text = "Info", Location = new Point(bx, by), AutoSize = true };
             _chkShowBorderCargo = new CheckBox { Text = "Cargo", Location = new Point(bx + 60, by), AutoSize = true };
-            _chkShowBorderShipIcon = new CheckBox { Text = "Ship Icon", Location = new Point(bx + 130, by), AutoSize = true };
-            _chkShowBorderExploration = new CheckBox { Text = "Exploration", Location = new Point(bx, by + bdy), AutoSize = true };
+            _chkShowBorderSession = new CheckBox { Text = "Session", Location = new Point(bx + 140, by), AutoSize = true };
+            _chkShowBorderShipIcon = new CheckBox { Text = "Ship Icon", Location = new Point(bx, by + bdy), AutoSize = true };
+            _chkShowBorderExploration = new CheckBox { Text = "Exploration", Location = new Point(bx + 120, by + bdy), AutoSize = true };
             _chkShowBorderInfo.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderCargo.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderSession.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderShipIcon.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderExploration.CheckedChanged += OnShowOverlayBordersChanged;
             // Place opacity row below the per-overlay checkboxes
@@ -161,6 +161,7 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(btnChangeBorderColor);
             grpColors.Controls.Add(_chkShowBorderInfo);
             grpColors.Controls.Add(_chkShowBorderCargo);
+            grpColors.Controls.Add(_chkShowBorderSession);
             grpColors.Controls.Add(_chkShowBorderShipIcon);
             grpColors.Controls.Add(_chkShowBorderExploration);
             grpColors.Controls.Add(lblOpacity);

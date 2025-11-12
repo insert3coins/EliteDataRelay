@@ -86,6 +86,7 @@ namespace EliteDataRelay.UI
         {
             AppConfiguration.OverlayShowBorderInfo = _chkShowBorderInfo.Checked;
             AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
+            AppConfiguration.OverlayShowBorderSession = _chkShowBorderSession.Checked;
             AppConfiguration.OverlayShowBorderShipIcon = _chkShowBorderShipIcon.Checked;
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -102,6 +103,7 @@ namespace EliteDataRelay.UI
             _chkShowBorderInfo.Checked = true;
             _chkShowBorderCargo.Checked = true;
             _chkShowBorderShipIcon.Checked = true;
+            _chkShowBorderSession.Checked = true;
             _chkShowBorderExploration.Checked = true;
             UpdateAppearanceControls();
 
@@ -115,11 +117,13 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderInfo = true;
             AppConfiguration.OverlayShowBorderCargo = true;
             AppConfiguration.OverlayShowBorderShipIcon = true;
+            AppConfiguration.OverlayShowBorderSession = true;
             AppConfiguration.OverlayShowBorderExploration = true;
 
             // Also reset overlay positions
             AppConfiguration.InfoOverlayLocation = Point.Empty;
             AppConfiguration.CargoOverlayLocation = Point.Empty;
+            AppConfiguration.SessionOverlayLocation = Point.Empty;
 
             // Raise the event to trigger a refresh of the live overlays.
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -129,23 +133,6 @@ namespace EliteDataRelay.UI
 
         // Legacy: OnEnableOutputCheckedChanged removed with text file output feature
 
-        private void OnEnableRightOverlayCheckedChanged(object? sender, EventArgs e)
-        {
-            _chkShowSessionOnOverlay.Enabled = _chkEnableRightOverlay.Checked;
-            if (!_chkEnableRightOverlay.Checked)
-            {
-                _chkShowSessionOnOverlay.Checked = false;
-            }
-        }
-
-        private void OnShowSessionCheckedChanged(object? sender, EventArgs e)
-        {
-            // This checkbox should only be enabled if the right overlay is also enabled.
-            // If the user checks this, we can assume they want the right overlay on.
-            if (_chkShowSessionOnOverlay.Checked && !_chkEnableRightOverlay.Checked)
-            {
-                _chkEnableRightOverlay.Checked = true;
-            }
-        }
+        // Session overlay toggle is independent from cargo overlay; no cross-wiring required.
     }
 }

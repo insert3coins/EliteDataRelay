@@ -32,9 +32,5 @@ namespace EliteDataRelay.UI
         /// </summary>
         event EventHandler? SettingsClicked;
 
-        /// <summary>
-        /// Event raised when the session button is clicked
-        /// </summary>
-        event EventHandler? SessionClicked;
     }
 }

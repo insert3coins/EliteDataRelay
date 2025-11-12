@@ -12,7 +12,6 @@ namespace EliteDataRelay.UI
         event EventHandler? ExitClicked;
         event EventHandler? AboutClicked;
         event EventHandler? SettingsClicked;
-        event EventHandler? SessionClicked;
         event EventHandler? MiningStartClicked;
         event EventHandler? MiningStopClicked;
 
@@ -30,7 +29,7 @@ namespace EliteDataRelay.UI
         void UpdateMaterials(MaterialsEvent materials);
         void UpdateSystemInfo(SystemInfoData data);
         void UpdateLocation(string location);
-        void UpdateSessionOverlay(int cargoCollected, long creditsEarned);
+        void UpdateSessionOverlay(SessionOverlayData data);
         void RefreshMiningStats();
         void UpdateMiningPreferences(MiningSessionPreferences preferences);
         void AppendMiningAnnouncement(MiningNotificationEventArgs notification);

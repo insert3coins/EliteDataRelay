@@ -149,17 +149,6 @@ namespace EliteDataRelay
             _cargoFormUI.UpdateMonitoringVisuals(_fileMonitoringService.IsMonitoring);
         }
 
-        private void OnSessionClicked(object? sender, EventArgs e)
-        {
-            // Lazily create the form if it doesn't exist or has been disposed.
-            if (_sessionSummaryForm == null || _sessionSummaryForm.IsDisposed)
-            {
-                _sessionSummaryForm = new SessionSummaryForm(_sessionTrackingService);
-            }
-            _sessionSummaryForm.Show();
-            _sessionSummaryForm.Activate();
-        }
-
         private void OnMiningStartClicked(object? sender, EventArgs e) => _sessionTrackingService.StartMiningSession();
 
         private void OnMiningStopClicked(object? sender, EventArgs e) => _sessionTrackingService.StopMiningSession();

@@ -1,11 +1,7 @@
-Release Notes - v0.71.1
+Release Notes - v0.71.2
 
 What's new
 
-- Performance: Virtualized exploration grids (systems + bodies) using DataGridView VirtualMode. Backing lists supply cells via CellValueNeeded; smoother scrolling and lower memory.
-- Rendering: Enabled double buffering for DataGridViews to reduce flicker (Cargo tab and Exploration log).
-- Icons: Added caching for body icons to avoid repetitive image allocations; cache disposed on exit.
-- Monitoring: Debounce for file change events increased from 10ms to 50ms to coalesce duplicate notifications.
-- Robustness: Wrapped Start monitoring flow in try/catch to guard against unhandled exceptions; clearer error message on failure.
-- Startup: Enabled ReadyToRun (Release) for faster app startup.
-- Cleanup: Removed unreachable legacy row-building code and an unused helper from ExplorationLogControl; light whitespace tidy across touched files.
+- Dedicated Session tab replaces the pop-out summary and now shows live stats (duration, profit/hour, mining metrics, history) updating every second.
+- Overlay session data moved to its own toggleable overlay, freeing the cargo overlay while keeping stats visible.
+- Mining/session histories are automatically exported as JSON files in `%AppData%\EliteDataRelay\sessions` for external tooling or backups.

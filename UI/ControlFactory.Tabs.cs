@@ -19,8 +19,9 @@ namespace EliteDataRelay.UI
             var cargoPage = CreateCargoTabPage(fontManager);
             var shipPage = CreateShipTabPage(fontManager);
             var miningPage = CreateMiningTabPage(fontManager, sessionTracker);
+            var sessionPage = CreateSessionTabPage(fontManager, sessionTracker);
             
-            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage });
+            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage, sessionPage });
         }
 
         private void DisposeTabControls()
@@ -28,6 +29,18 @@ namespace EliteDataRelay.UI
             TabControl.Dispose();
             DisposeCargoTabControls();
             DisposeShipTabControls();
+            if (SessionTab != null)
+            {
+                SessionTab.Dispose();
+                SessionTab = null;
+            }
+        }
+
+        private TabPage CreateSessionTabPage(FontManager fontManager, SessionTrackingService sessionTracker)
+        {
+            SessionTab?.Dispose();
+            SessionTab = new SessionTab(sessionTracker, fontManager);
+            return SessionTab;
         }
     }
 }

@@ -13,11 +13,10 @@ namespace EliteDataRelay.UI
             StopBtn = new Button { Text = "Stop", Enabled = false, Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             ExitBtn = new Button { Text = "Exit", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             SettingsBtn = new Button { Text = "Settings", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };            
-            SessionBtn = new Button { Text = "Session", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
             AboutBtn = new Button { Text = "About", Font = fontManager.ConsolasFont, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
 
             // Apply a modern, flat style to the buttons to make them "pop"
-            var buttonsToStyle = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn };
+            var buttonsToStyle = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, AboutBtn };
             foreach (var btn in buttonsToStyle)
             {
                 btn.FlatStyle = FlatStyle.Flat;
@@ -45,7 +44,7 @@ namespace EliteDataRelay.UI
 
         private void DisposeButtons()
         {
-            var buttonsToUnsubscribe = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, SessionBtn, AboutBtn};
+            var buttonsToUnsubscribe = new[] { StartBtn, StopBtn, ExitBtn, SettingsBtn, AboutBtn};
             foreach (var btn in buttonsToUnsubscribe)
             {
                 ToolTip.SetToolTip(btn, null);

@@ -62,6 +62,23 @@ namespace EliteDataRelay.UI
                 ResizeCargoToContent();
                 ApplyRoundedRegion();
             }
+            else if (_position == OverlayPosition.Session)
+            {
+                this.Size = new Size(260, 120);
+
+                _renderPanel = new DoubleBufferedPanel
+                {
+                    Location = new Point(0, 0),
+                    Size = this.ClientSize,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
+                _renderPanel.Paint += OnSessionPanelPaint;
+
+                Controls.Add(_renderPanel);
+                ResizeSessionOverlay();
+                ApplyRoundedRegion();
+            }
             else if (_position == OverlayPosition.ShipIcon)
             {
                 this.Size = new Size(320, 320);

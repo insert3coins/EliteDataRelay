@@ -13,6 +13,7 @@ namespace EliteDataRelay.Services
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
         private OverlayForm? _shipIconOverlayForm;
+        private OverlayForm? _sessionOverlayForm;
         private OverlayForm? _explorationOverlayForm;
         private OverlayForm? _jumpOverlayForm;
 
@@ -27,8 +28,7 @@ namespace EliteDataRelay.Services
         private int? _lastCargoCount;
         private int? _lastCargoCapacity;
         private string? _lastCargoBarText;
-        private long? _lastSessionCargo;
-        private long? _lastSessionCredits;
+        private SessionOverlayData? _lastSessionOverlayData;
         private Image? _lastShipIcon;
         private CargoSnapshot? _lastCargoSnapshot;
 
@@ -59,6 +59,11 @@ namespace EliteDataRelay.Services
             {
                 _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag) { Owner = owner };
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
+            }
+            if (_sessionOverlayForm == null && AppConfiguration.EnableSessionOverlay)
+            {
+                _sessionOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Session, AppConfiguration.AllowOverlayDrag) { Owner = owner };
+                _sessionOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_shipIconOverlayForm == null && AppConfiguration.EnableShipIconOverlay)
             {
@@ -101,8 +106,15 @@ namespace EliteDataRelay.Services
                 if (_lastCargoCount.HasValue) _rightOverlayForm.UpdateCargo(_lastCargoCount.Value, _lastCargoCapacity);
                 if (_lastCargoBarText != null) _rightOverlayForm.UpdateCargoSize(_lastCargoBarText);
                 if (_lastCargoSnapshot != null) _rightOverlayForm.UpdateCargoList(_lastCargoSnapshot.Items);
-                if (_lastSessionCredits.HasValue) _rightOverlayForm.UpdateSessionCreditsEarned(_lastSessionCredits.Value);
-                if (_lastSessionCargo.HasValue) _rightOverlayForm.UpdateSessionCargoCollected(_lastSessionCargo.Value);
+            }
+
+            if (_sessionOverlayForm != null)
+            {
+                _sessionOverlayForm.Show();
+                if (_lastSessionOverlayData != null)
+                {
+                    _sessionOverlayForm.UpdateSessionOverlay(_lastSessionOverlayData);
+                }
             }
 
             // Show and restore data for Ship Icon overlay
@@ -144,12 +156,14 @@ namespace EliteDataRelay.Services
         {
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
+            _sessionOverlayForm?.Close();
             _shipIconOverlayForm?.Close();
             _explorationOverlayForm?.Close();
             _jumpOverlayForm?.Close();
 
             _leftOverlayForm = null;
             _rightOverlayForm = null;
+            _sessionOverlayForm = null;
             _shipIconOverlayForm = null;
             _explorationOverlayForm = null;
             _jumpOverlayForm = null;
@@ -166,6 +180,7 @@ namespace EliteDataRelay.Services
             EnsureOverlaysCreated(_leftOverlayForm?.Owner); // Pass existing owner if available
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
+            _sessionOverlayForm?.Show();
             _shipIconOverlayForm?.Show();
             _explorationOverlayForm?.Show();
             // Jump overlay is transient; do not force show here
@@ -176,6 +191,7 @@ namespace EliteDataRelay.Services
             EnsureOverlaysCreated(_leftOverlayForm?.Owner); // Pass existing owner if available
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
+            _sessionOverlayForm?.Hide();
             _shipIconOverlayForm?.Hide();
             _explorationOverlayForm?.Hide();
             _jumpOverlayForm?.Hide();
@@ -197,6 +213,7 @@ namespace EliteDataRelay.Services
                                     || (_lastCargoSnapshot?.Items?.Any() == true);
                     if (hasCargo) _rightOverlayForm?.Show(); else _rightOverlayForm?.Hide();
                 }
+                if (AppConfiguration.EnableSessionOverlay) _sessionOverlayForm?.Show();
                 if (AppConfiguration.EnableShipIconOverlay) _shipIconOverlayForm?.Show();
                 if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
             }
@@ -204,6 +221,7 @@ namespace EliteDataRelay.Services
             {
                 _leftOverlayForm?.Hide();
                 _rightOverlayForm?.Hide();
+                _sessionOverlayForm?.Hide();
                 _shipIconOverlayForm?.Hide();
                 _explorationOverlayForm?.Hide();
             }
@@ -220,6 +238,7 @@ namespace EliteDataRelay.Services
             {
                 OverlayForm.OverlayPosition.Info => _leftOverlayForm,
                 OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
+                OverlayForm.OverlayPosition.Session => _sessionOverlayForm,
                 OverlayForm.OverlayPosition.ShipIcon => _shipIconOverlayForm,
                 OverlayForm.OverlayPosition.Exploration => _explorationOverlayForm,
                 OverlayForm.OverlayPosition.JumpInfo => _jumpOverlayForm,

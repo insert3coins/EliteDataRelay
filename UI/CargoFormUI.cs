@@ -40,8 +40,6 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SettingsClicked;
 
-        public event EventHandler? SessionClicked;
-
         public event EventHandler? MiningStartClicked;
 
         public event EventHandler? MiningStopClicked;
@@ -201,7 +199,6 @@ namespace EliteDataRelay.UI
             _controlFactory.StopBtn.Click += (s, e) => StopClicked?.Invoke(s, e);
             _controlFactory.ExitBtn.Click += (s, e) => ExitClicked?.Invoke(s, e);
             _controlFactory.SettingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
-            _controlFactory.SessionBtn.Click += (s, e) => SessionClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
             _controlFactory.MiningSessionPanel.StartMiningClicked += OnMiningStartClicked;
             _controlFactory.MiningSessionPanel.StopMiningClicked += OnMiningStopClicked;
@@ -296,11 +293,6 @@ namespace EliteDataRelay.UI
             {
                 MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-        }
-
-        public void UpdateSessionOverlay(int cargoCollected, long creditsEarned)
-        {
-            _overlayService?.UpdateSessionOverlay(cargoCollected, creditsEarned);
         }
 
         public void RefreshOverlay(Form owner)

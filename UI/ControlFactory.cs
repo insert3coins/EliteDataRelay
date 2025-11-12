@@ -14,11 +14,11 @@ namespace EliteDataRelay.UI
         public TreeView ShipModulesTreeView { get; private set; } = null!;
         public TabControl TabControl { get; private set; } = null!;
         public MiningSessionPanel MiningSessionPanel { get; private set; } = null!;
+        public SessionTab? SessionTab { get; private set; }
         public Button StartBtn { get; private set; } = null!;
         public Button StopBtn { get; private set; } = null!;
         public Button ExitBtn { get; private set; } = null!;        
         public Button AboutBtn { get; private set; } = null!;        
-        public Button SessionBtn { get; private set; } = null!;
         public Label WatchingLabel { get; private set; } = null!;
         public Button SettingsBtn { get; private set; } = null!;
         public Button CargoHeaderLabel { get; private set; } = null!;

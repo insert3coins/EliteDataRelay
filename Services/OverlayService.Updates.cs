@@ -73,12 +73,10 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.UpdateCargoSize(size);
         }
 
-        public void UpdateSessionOverlay(long cargo, long credits)
+        public void UpdateSessionOverlay(SessionOverlayData data)
         {
-            _lastSessionCargo = cargo;
-            _lastSessionCredits = credits;
-            _rightOverlayForm?.UpdateSessionCreditsEarned(credits);
-            _rightOverlayForm?.UpdateSessionCargoCollected(cargo);
+            _lastSessionOverlayData = data;
+            _sessionOverlayForm?.UpdateSessionOverlay(data);
         }
 
         public void UpdateSystemInfo(SystemInfoData data)

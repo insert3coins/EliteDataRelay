@@ -59,8 +59,6 @@ namespace EliteDataRelay
 
         private int? _cargoCapacity;
         private bool _isInitializing;
-        private SessionSummaryForm? _sessionSummaryForm;
-
         // Cache for last known values to re-populate the overlay when it's restarted.
         private string? _lastCommanderName;
         private string? _lastShipName;
@@ -81,6 +79,7 @@ namespace EliteDataRelay
         private bool _statusPrimed;
 
         private System.Windows.Forms.Timer? _gameProcessCheckTimer;
+        private System.Windows.Forms.Timer? _sessionOverlayTimer;
 
         private async void RunHistoricalExplorationImportIfNeeded()
         {
@@ -194,8 +193,6 @@ namespace EliteDataRelay
             // but we can still handle it here if needed for other purposes.
             // For now, we'll use the settings form to show it.
             // If you want a dedicated button, you can re-add this.
-            _cargoFormUI.SessionClicked += OnSessionClicked;
-
             _cargoFormUI.MiningStartClicked += OnMiningStartClicked;
             _cargoFormUI.MiningStopClicked += OnMiningStopClicked;
 
@@ -205,6 +202,17 @@ namespace EliteDataRelay
                 Interval = 5000 // Check every 5 seconds
             };
             _gameProcessCheckTimer.Tick += OnGameProcessCheck;
+
+            _sessionOverlayTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 1000
+            };
+            _sessionOverlayTimer.Tick += (s, e) =>
+            {
+                if (!AppConfiguration.EnableSessionTracking) return;
+                if (!_fileMonitoringService.IsMonitoring) return;
+                _cargoFormUI.UpdateSessionOverlay(BuildSessionOverlayData());
+            };
 
             // Wire up service events
             // Use a lambda to subscribe ProcessCargoFile (which returns bool) to the FileChanged event (which expects void).
@@ -283,7 +291,7 @@ namespace EliteDataRelay
                 (_soundService as IDisposable)?.Dispose();
                 _cargoFormUI?.Dispose();
                 _gameProcessCheckTimer?.Dispose();
-                _sessionSummaryForm?.Dispose();
+                _sessionOverlayTimer?.Dispose();
                 _sessionTrackingService.Dispose();
                 (_stationInfoService as IDisposable)?.Dispose();
                 (_systemInfoService as IDisposable)?.Dispose();

@@ -19,7 +19,6 @@ namespace EliteDataRelay.UI
                 // Layout constants must match renderer
                 const float listStartY = 38f; // where cargo list begins
                 const float bottomPadding = 12f;
-                bool hasSessionPanel = AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay;
 
                 using (var g = _renderPanel.CreateGraphics())
                 {
@@ -28,16 +27,6 @@ namespace EliteDataRelay.UI
 
                     int itemLines = _cargoItems?.Any() == true ? _cargoItems.Count() : 1; // show one line for empty message
                     float contentHeight = listStartY + (itemLines * rowHeight);
-
-                    // Reserve space for the optional session panel (approximate used in renderer)
-                    if (hasSessionPanel)
-                    {
-                        contentHeight += 80f; // matches requiredSpace used during render
-                    }
-                    else
-                    {
-                        contentHeight += 10f; // small bottom breathing room
-                    }
 
                     // Add padding and clamp to sensible min
                     int desiredHeight = (int)System.Math.Ceiling(contentHeight + bottomPadding);
@@ -173,10 +162,9 @@ namespace EliteDataRelay.UI
 
                     foreach (var item in _cargoItems)
                     {
-                        // Check if we're running out of space (leave room for session panel if enabled)
+                        // Check if we're running out of space
                         float remainingHeight = height - y;
-                        bool hasSessionPanel = AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay;
-                        float requiredSpace = hasSessionPanel ? 80f : 20f;
+                        float requiredSpace = 20f;
 
                         if (remainingHeight < requiredSpace)
                             break; // Stop drawing if we've run out of space
@@ -194,26 +182,6 @@ namespace EliteDataRelay.UI
                     }
                 }
 
-                // === SESSION STATISTICS (bottom panel) ===
-                if (AppConfiguration.EnableSessionTracking && AppConfiguration.ShowSessionOnOverlay)
-                {
-                    float sessionY = height - 65f;
-
-                    // Separator line
-                    g.DrawLine(GameColors.PenGrayDim1, padding, sessionY, width - padding, sessionY);
-                    sessionY += 8f;
-
-                    // Session Credits
-                    g.DrawString("Session CR:", GameColors.FontSmall, GameColors.BrushGrayText, padding, sessionY);
-                    string sessionCreditsText = $"  {_sessionCredits:N0}"; // add spaces before value
-                    g.DrawString(sessionCreditsText, GameColors.FontSmall, GameColors.BrushOrange, padding + 100f, sessionY);
-                    sessionY += 20f;
-
-                    // Session Cargo
-                    g.DrawString("Session Cargo:", GameColors.FontSmall, GameColors.BrushGrayText, padding, sessionY);
-                    string sessionCargoText = $"  {_sessionCargo}"; // add spaces before value
-                    g.DrawString(sessionCargoText, GameColors.FontSmall, GameColors.BrushCyan, padding + 100f, sessionY);
-                }
             }
 
             Debug.WriteLine($"[OverlayForm.Cargo] Rendered frame: {_cargoCount} items");

@@ -129,7 +129,6 @@ namespace EliteDataRelay.UI
             ToolTip.SetToolTip(StopBtn, "Stop monitoring for cargo changes");
             ToolTip.SetToolTip(ExitBtn, "Exit the application");
             ToolTip.SetToolTip(SettingsBtn, "Configure application settings");
-            ToolTip.SetToolTip(SessionBtn, "Show session summary statistics");
             ToolTip.SetToolTip(AboutBtn, "Show information about the application");
         }
     }

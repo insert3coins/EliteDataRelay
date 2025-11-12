@@ -400,8 +400,8 @@ namespace EliteDataRelay
                 // Update the mining tab on the main UI.
                 _cargoFormUI.RefreshMiningStats();
 
-                // Update the session stats on the cargo overlay if enabled.
-                _cargoFormUI.UpdateSessionOverlay((int)tracker.TotalCargoCollected, tracker.CreditsEarned);
+                // Update the dedicated session overlay with the latest stats.
+                _cargoFormUI.UpdateSessionOverlay(BuildSessionOverlayData());
 
                 // Web overlay session info
                 

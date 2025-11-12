@@ -96,35 +96,27 @@ namespace EliteDataRelay.UI
         }
 
         /// <summary>
-        /// Updates session cargo collected and marks frame as stale.
+        /// Updates session overlay metrics and marks frame as stale.
         /// </summary>
-        public void UpdateSessionCargoCollected(long cargo)
+        public void UpdateSessionOverlay(SessionOverlayData data)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => UpdateSessionCargoCollected(cargo)));
+                Invoke(new Action(() => UpdateSessionOverlay(data)));
                 return;
             }
 
-            _sessionCargo = cargo;
-            ResizeCargoToContent();
-            _stale = true;
-            _renderPanel?.Invalidate();
-        }
+            _sessionCargo = data.CargoCollected;
+            _sessionCredits = data.CreditsEarned;
+            _sessionDuration = data.SessionDuration;
+            _miningDuration = data.MiningDuration;
+            _sessionProfitPerHour = data.ProfitPerHour;
 
-        /// <summary>
-        /// Updates session credits earned and marks frame as stale.
-        /// </summary>
-        public void UpdateSessionCreditsEarned(long credits)
-        {
-            if (InvokeRequired)
+            if (_position == OverlayPosition.Session)
             {
-                Invoke(new Action(() => UpdateSessionCreditsEarned(credits)));
-                return;
+                ResizeSessionOverlay();
             }
 
-            _sessionCredits = credits;
-            ResizeCargoToContent();
             _stale = true;
             _renderPanel?.Invalidate();
         }
