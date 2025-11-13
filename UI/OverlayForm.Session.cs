@@ -16,7 +16,7 @@ namespace EliteDataRelay.UI
             try
             {
                 const int desiredWidth = 260;
-                const int desiredHeight = 180;
+                const int desiredHeight = 165;
                 bool widthChanged = Math.Abs(this.Width - desiredWidth) > 2;
                 bool heightChanged = Math.Abs(this.Height - desiredHeight) > 2;
 
@@ -101,19 +101,40 @@ namespace EliteDataRelay.UI
                     return;
                 }
 
-                DrawSessionRow(g, "Session duration", FormatDuration(_sessionDuration), GameColors.BrushWhite, width, padding, ref y);
-                DrawSessionRow(g, "Systems visited", _systemsVisited.ToString("N0"), GameColors.BrushWhite, width, padding, ref y);
+                DrawSessionRow(g, "Session duration", FormatDuration(_sessionDuration), GameColors.BrushWhite, width, padding, ref y, singleLineValue: true);
+                DrawSessionRow(g, "Systems visited", _systemsVisited.ToString("N0"), GameColors.BrushWhite, width, padding, ref y, singleLineValue: true);
                 DrawSessionRow(g, "Credits earned", _sessionCredits.ToString("N0"), GameColors.BrushOrange, width, padding, ref y);
-                DrawSessionRow(g, "Cargo collected", _sessionCargo.ToString("N0"), GameColors.BrushCyan, width, padding, ref y);
+                DrawSessionRow(g, "Cargo collected", _sessionCargo.ToString("N0"), GameColors.BrushCyan, width, padding, ref y, singleLineValue: true);
             }
         }
 
-        private static void DrawSessionRow(Graphics g, string label, string value, Brush valueBrush, int width, float padding, ref float y)
+        private static void DrawSessionRow(Graphics g, string label, string value, Brush valueBrush, int width, float padding, ref float y, bool singleLineValue = false)
         {
+            if (singleLineValue)
+            {
+                var labelSize = g.MeasureString(label, GameColors.FontSmall);
+                g.DrawString(label, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+
+                using var format = new StringFormat { Alignment = StringAlignment.Far };
+                var valueRect = new RectangleF(padding, y, width - (padding * 2), GameColors.FontSmall.GetHeight(g));
+                g.DrawString(value, GameColors.FontSmall, valueBrush, valueRect, format);
+
+                y += Math.Max(labelSize.Height, valueRect.Height) + 6f;
+                return;
+            }
+
+            // Label on its own line (left aligned)
+            var labelOnlySize = g.MeasureString(label, GameColors.FontSmall);
             g.DrawString(label, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-            var valueSize = g.MeasureString(value, GameColors.FontNormal);
-            g.DrawString(value, GameColors.FontNormal, valueBrush, width - padding - valueSize.Width, y - 2f);
-            y += Math.Max(GameColors.FontSmall.GetHeight(g), GameColors.FontNormal.GetHeight(g)) + 6f;
+            y += labelOnlySize.Height;
+
+            // Value on the next line (right aligned)
+            using (var format = new StringFormat { Alignment = StringAlignment.Far })
+            {
+                var valueRectFull = new RectangleF(padding, y, width - (padding * 2), GameColors.FontNormal.GetHeight(g));
+                g.DrawString(value, GameColors.FontNormal, valueBrush, valueRectFull, format);
+                y += valueRectFull.Height + 6f;
+            }
         }
 
         private static string FormatDuration(TimeSpan span)
