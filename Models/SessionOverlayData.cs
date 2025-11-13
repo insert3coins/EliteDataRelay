@@ -10,7 +10,6 @@ namespace EliteDataRelay.Models
         public long CargoCollected { get; set; }
         public long CreditsEarned { get; set; }
         public TimeSpan SessionDuration { get; set; }
-        public TimeSpan MiningDuration { get; set; }
-        public double ProfitPerHour { get; set; }
+        public int SystemsVisited { get; set; }
     }
 }

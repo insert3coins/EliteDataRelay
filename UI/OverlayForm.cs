@@ -59,7 +59,7 @@ namespace EliteDataRelay.UI
         private long _sessionCredits = 0;
         private TimeSpan _sessionDuration = TimeSpan.Zero;
         private TimeSpan _miningDuration = TimeSpan.Zero;
-        private double _sessionProfitPerHour;
+        private int _systemsVisited;
 
         // Ship icon overlay data
         private Image? _shipIcon;

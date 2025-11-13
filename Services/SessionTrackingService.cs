@@ -23,6 +23,7 @@ namespace EliteDataRelay.Services
         private DateTime? _miningStartTime;
         private readonly ConcurrentDictionary<string, int> _refinedCommodities = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, int> _collectedCommodities = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, byte> _systemsVisited = new(StringComparer.OrdinalIgnoreCase);
         private readonly List<MiningSessionRecord> _sessionHistory = new();
         private readonly object _historyLock = new();
 
@@ -42,6 +43,8 @@ namespace EliteDataRelay.Services
         public double CargoFillPercent => CargoCapacity <= 0 ? 0 : (double)CurrentCargoCount / CargoCapacity * 100d;
         public bool IsCargoHoldFull => CargoCapacity > 0 && CurrentCargoCount >= CargoCapacity;
         public MiningSessionPreferences Preferences { get; } = new();
+        public int SystemsVisitedCount => _systemsVisited.Count;
+        public int GetSystemsVisited() => _systemsVisited.Count;
         public IReadOnlyList<MiningSessionRecord> SessionHistory
         {
             get
@@ -71,6 +74,7 @@ namespace EliteDataRelay.Services
             _journalWatcherService.LaunchDrone += OnLaunchDrone;
             _journalWatcherService.MiningRefined += OnMiningRefined;
             _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
+            _journalWatcherService.LocationChanged += OnLocationChangedForSession;
         }
 
         public void StartSession(long initialBalance, CargoSnapshot? initialCargoSnapshot)
@@ -207,6 +211,13 @@ namespace EliteDataRelay.Services
         private void OnCargoCapacityChanged(object? sender, CargoCapacityEventArgs e)
         {
             CargoCapacity = e.CargoCapacity;
+            SessionUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void OnLocationChangedForSession(object? sender, LocationChangedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(e.StarSystem)) return;
+            _systemsVisited.TryAdd(e.StarSystem, 0);
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
@@ -397,6 +408,7 @@ namespace EliteDataRelay.Services
             _journalWatcherService.LaunchDrone -= OnLaunchDrone;
             _journalWatcherService.MiningRefined -= OnMiningRefined;
             _journalWatcherService.CargoCapacityChanged -= OnCargoCapacityChanged;
+            _journalWatcherService.LocationChanged -= OnLocationChangedForSession;
             GC.SuppressFinalize(this);
         }
     }

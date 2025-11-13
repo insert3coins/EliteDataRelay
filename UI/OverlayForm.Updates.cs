@@ -109,8 +109,7 @@ namespace EliteDataRelay.UI
             _sessionCargo = data.CargoCollected;
             _sessionCredits = data.CreditsEarned;
             _sessionDuration = data.SessionDuration;
-            _miningDuration = data.MiningDuration;
-            _sessionProfitPerHour = data.ProfitPerHour;
+            _systemsVisited = data.SystemsVisited;
 
             if (_position == OverlayPosition.Session)
             {

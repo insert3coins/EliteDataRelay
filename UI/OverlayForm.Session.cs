@@ -102,10 +102,8 @@ namespace EliteDataRelay.UI
                 }
 
                 DrawSessionRow(g, "Session duration", FormatDuration(_sessionDuration), GameColors.BrushWhite, width, padding, ref y);
-                DrawSessionRow(g, "Mining duration", FormatDuration(_miningDuration), GameColors.BrushWhite, width, padding, ref y);
+                DrawSessionRow(g, "Systems visited", _systemsVisited.ToString("N0"), GameColors.BrushWhite, width, padding, ref y);
                 DrawSessionRow(g, "Credits earned", _sessionCredits.ToString("N0"), GameColors.BrushOrange, width, padding, ref y);
-                var profitText = _sessionProfitPerHour > 0 ? $"{_sessionProfitPerHour:N0} CR/hr" : "--";
-                DrawSessionRow(g, "Profit / hr", profitText, GameColors.BrushOrange, width, padding, ref y);
                 DrawSessionRow(g, "Cargo collected", _sessionCargo.ToString("N0"), GameColors.BrushCyan, width, padding, ref y);
             }
         }

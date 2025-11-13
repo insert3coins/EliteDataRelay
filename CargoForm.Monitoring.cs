@@ -46,15 +46,13 @@ namespace EliteDataRelay
         {
             var duration = _sessionTrackingService.SessionDuration;
             var credits = _sessionTrackingService.CreditsEarned;
-            var profitPerHour = duration.TotalHours > 0.01 ? credits / duration.TotalHours : 0;
 
             return new SessionOverlayData
             {
                 CreditsEarned = credits,
                 CargoCollected = _sessionTrackingService.TotalCargoCollected,
                 SessionDuration = duration,
-                MiningDuration = _sessionTrackingService.MiningDuration,
-                ProfitPerHour = profitPerHour
+                SystemsVisited = _sessionTrackingService.GetSystemsVisited()
             };
         }
 
