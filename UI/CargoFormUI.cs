@@ -28,6 +28,7 @@ namespace EliteDataRelay.UI
         private string _currentLocation = "Unknown";
         private bool _isMonitoring;
         private bool _disposedValue;
+        private bool _formLoaded;
 
         private string _baseTitle = "";
 
@@ -92,6 +93,7 @@ namespace EliteDataRelay.UI
             }
             InitializeMaterialsTab();
             InitializeExplorationTab();
+            _formLoaded = true;
         }
 
         private void InitializeMaterialsTab()
@@ -138,13 +140,11 @@ namespace EliteDataRelay.UI
 
         private void OnFormResize(object? sender, EventArgs e)
         {
-            if (_form?.WindowState == FormWindowState.Minimized)
+            // Keep the main window visible at all times. Users can still access the tray icon manually,
+            // but we no longer hide automatically when Windows briefly minimizes the form during startup.
+            if (_formLoaded && _form != null && _form.WindowState == FormWindowState.Minimized)
             {
-                _form.Hide();
-                _trayIconManager?.ShowBalloonTip(1000, "Elite Data Relay", "Minimized to tray.", ToolTipIcon.Info);
-            }
-            else if (_form?.WindowState == FormWindowState.Normal || _form?.WindowState == FormWindowState.Maximized)
-            {
+                _trayIconManager?.ShowBalloonTip(1000, "Elite Data Relay", "Application minimized.", ToolTipIcon.Info);
             }
         }
 
