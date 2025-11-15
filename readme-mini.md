@@ -1,5 +1,3 @@
-Release Notes - v0.72.3
+Release Notes - v0.72.4
 
 What's new
-
-- mining overlay tweaks and spacing for credits

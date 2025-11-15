@@ -1,5 +1,6 @@
 using EliteDataRelay.Models;
 using EliteDataRelay.Configuration;
+using JournalEvents = EliteDataRelay.Models.Journal;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -377,6 +378,86 @@ namespace EliteDataRelay.Services
                             if (buyEvent != null)
                             {
                                 MarketBuy?.Invoke(this, new MarketBuyEventArgs(buyEvent.Type, buyEvent.Count, buyEvent.TotalCost));
+                            }
+                        }
+                        else if (eventType == "MarketSell")
+                        {
+                            var sellEvent = JsonSerializer.Deserialize<JournalEvents.MarketSellEvent.MarketSellEventArgs>(journalLine, options);
+                            if (sellEvent != null)
+                            {
+                                MarketSell?.Invoke(this, sellEvent);
+                            }
+                        }
+                        else if (eventType == "CargoTransfer")
+                        {
+                            var cargoTransferEvent = JsonSerializer.Deserialize<JournalEvents.CargoTransferEvent.CargoTransferEventArgs>(journalLine, options);
+                            if (cargoTransferEvent != null)
+                            {
+                                CargoTransfer?.Invoke(this, cargoTransferEvent);
+                            }
+                        }
+                        else if (eventType == "CarrierStats")
+                        {
+                            var statsEvent = JsonSerializer.Deserialize<JournalEvents.CarrierStatsEvent.CarrierStatsEventArgs>(journalLine, options);
+                            if (statsEvent != null)
+                            {
+                                CarrierStats?.Invoke(this, statsEvent);
+                            }
+                        }
+                        else if (eventType == "CarrierLocation")
+                        {
+                            var locationEvent = JsonSerializer.Deserialize<JournalEvents.CarrierLocationEvent.CarrierLocationEventArgs>(journalLine, options);
+                            if (locationEvent != null)
+                            {
+                                CarrierLocation?.Invoke(this, locationEvent);
+                            }
+                        }
+                        else if (eventType == "CarrierJumpRequest")
+                        {
+                            var jumpRequest = JsonSerializer.Deserialize<JournalEvents.CarrierJumpRequestEvent.CarrierJumpRequestEventArgs>(journalLine, options);
+                            if (jumpRequest != null)
+                            {
+                                CarrierJumpRequested?.Invoke(this, jumpRequest);
+                            }
+                        }
+                        else if (eventType == "CarrierJumpCancelled")
+                        {
+                            var jumpCancelled = JsonSerializer.Deserialize<JournalEvents.CarrierJumpCancelledEvent.CarrierJumpCancelledEventArgs>(journalLine, options);
+                            if (jumpCancelled != null)
+                            {
+                                CarrierJumpCancelled?.Invoke(this, jumpCancelled);
+                            }
+                        }
+                        else if (eventType == "CarrierTradeOrder")
+                        {
+                            var tradeOrder = JsonSerializer.Deserialize<JournalEvents.CarrierTradeOrderEvent.CarrierTradeOrderEventArgs>(journalLine, options);
+                            if (tradeOrder != null)
+                            {
+                                CarrierTradeOrder?.Invoke(this, tradeOrder);
+                            }
+                        }
+                        else if (eventType == "CarrierCrewServices")
+                        {
+                            var crewEvent = JsonSerializer.Deserialize<JournalEvents.CarrierCrewServicesEvent.CarrierCrewServicesEventArgs>(journalLine, options);
+                            if (crewEvent != null)
+                            {
+                                CarrierCrewServices?.Invoke(this, crewEvent);
+                            }
+                        }
+                        else if (eventType == "CarrierBankTransfer")
+                        {
+                            var bankEvent = JsonSerializer.Deserialize<JournalEvents.CarrierBankTransferEvent.CarrierBankTransferEventArgs>(journalLine, options);
+                            if (bankEvent != null)
+                            {
+                                CarrierBankTransfer?.Invoke(this, bankEvent);
+                            }
+                        }
+                        else if (eventType == "CarrierDepositFuel")
+                        {
+                            var fuelEvent = JsonSerializer.Deserialize<JournalEvents.CarrierDepositFuelEvent.CarrierDepositFuelEventArgs>(journalLine, options);
+                            if (fuelEvent != null)
+                            {
+                                CarrierFuelDeposited?.Invoke(this, fuelEvent);
                             }
                         }
                         else if (eventType == "Docked")

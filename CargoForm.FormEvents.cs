@@ -34,7 +34,12 @@ namespace EliteDataRelay
                     this.Location = AppConfiguration.WindowLocation;
                 }
             }
-            this.WindowState = AppConfiguration.WindowState;
+            var desiredState = AppConfiguration.WindowState;
+            if (desiredState == FormWindowState.Minimized)
+            {
+                desiredState = FormWindowState.Normal;
+            }
+            this.WindowState = desiredState;
 
             // Hotkeys have been removed from the application.
 
@@ -57,8 +62,18 @@ namespace EliteDataRelay
         private void SaveOnExit()
         {
             // Save the window's current state and location before closing.
-            AppConfiguration.WindowState = this.WindowState;
-            AppConfiguration.WindowLocation = this.Location;
+            var stateToPersist = this.WindowState;
+            var locationToPersist = this.Location;
+
+            if (stateToPersist != FormWindowState.Normal)
+            {
+                var bounds = this.RestoreBounds;
+                locationToPersist = bounds.Location;
+                stateToPersist = FormWindowState.Normal;
+            }
+
+            AppConfiguration.WindowState = stateToPersist;
+            AppConfiguration.WindowLocation = locationToPersist;
 
             // Persist all settings to the settings.json file.
             AppConfiguration.Save();

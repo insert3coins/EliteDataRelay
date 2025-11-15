@@ -52,6 +52,9 @@ namespace EliteDataRelay.Models
         [JsonPropertyName("StationName")]
         public string StationName { get; set; } = string.Empty;
 
+        [JsonPropertyName("MarketID")]
+        public ulong? MarketId { get; set; }
+
         [JsonPropertyName("Name")] // Used for Fleet Carrier custom name
         public string? Name { get; set; }
 

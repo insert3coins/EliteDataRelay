@@ -7,7 +7,7 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
-        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker)
+        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker, FleetCarrierTrackerService fleetCarrierTracker)
         {
             // Tab control to switch between Cargo and Materials
             TabControl = new TabControl
@@ -20,8 +20,9 @@ namespace EliteDataRelay.UI
             var shipPage = CreateShipTabPage(fontManager);
             var miningPage = CreateMiningTabPage(fontManager, sessionTracker);
             var sessionPage = CreateSessionTabPage(fontManager, sessionTracker);
+            var fleetCarrierPage = CreateFleetCarrierTabPage(fontManager, fleetCarrierTracker);
             
-            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage, sessionPage });
+            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage, sessionPage, fleetCarrierPage });
         }
 
         private void DisposeTabControls()
@@ -34,6 +35,11 @@ namespace EliteDataRelay.UI
                 SessionTab.Dispose();
                 SessionTab = null;
             }
+            if (FleetCarrierTab != null)
+            {
+                FleetCarrierTab.Dispose();
+                FleetCarrierTab = null;
+            }
         }
 
         private TabPage CreateSessionTabPage(FontManager fontManager, SessionTrackingService sessionTracker)
@@ -41,6 +47,13 @@ namespace EliteDataRelay.UI
             SessionTab?.Dispose();
             SessionTab = new SessionTab(sessionTracker, fontManager);
             return SessionTab;
+        }
+
+        private TabPage CreateFleetCarrierTabPage(FontManager fontManager, FleetCarrierTrackerService tracker)
+        {
+            FleetCarrierTab?.Dispose();
+            FleetCarrierTab = new FleetCarrierTab(tracker, fontManager);
+            return FleetCarrierTab;
         }
     }
 }
