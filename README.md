@@ -1,69 +1,69 @@
-﻿# Elite Dangerous Data Relay
+# Elite Data Relay
 
-A lightweight Windows companion app for Elite Dangerous that provides real-time data overlays, comprehensive session tracking, exploration logging, and stream-friendly output.
-
----
-
-## Features
-
-**Session Tracking**
-- Track credits earned, cargo collected, and session duration
-- Dedicated Mining Session mode with limpet usage, refined materials, and active mining time
-
-**Exploration Logging**
-- Automatically records every system visited with timestamps
-- Logs all scanned and mapped bodies, highlighting first discoveries, first mappings, and first footfalls
-- Tracks FSS progress and completion (via FSSDiscoveryScan, FSSAllBodiesFound, NavBeaconScan, legacy DiscoveryScan)
-- Records non-body signals discovered by FSS (system-level counts) and biological Codex entries
-- SQLite database for persistent exploration history; includes system signals and Codex bio entries
-
-**Real-Time Data Monitoring**
-- Ship status, cargo hold, and material inventory tracking
-- Ship loadout viewer with detailed tooltips for engineered modules
-- Live cargo monitoring with optimized response times
-
-**In-Game Overlays**
-- Customizable overlays: Info, Cargo, Ship Icon, and Exploration
-- Draggable positioning with automatic position memory
-- Configurable fonts, colors, transparency, and borders
+Elite Data Relay (EDR) is a Windows companion for Elite Dangerous. It watches the live journal feed, tracks everything that matters to a Commander, and surfaces it through a modern desktop UI plus lightweight overlays. No web services, no accounts—just local state you control.
 
 ---
 
-## Exploration Enhancements
-- Accurate FSS completion and body totals (FSSAllBodiesFound, NavBeaconScan, DiscoveryScan)
-- Completion badges: “All scanned” and “All mapped” based on planet-class mappability
-- Mappability parity with game intent using a planet-class whitelist
-- Non-body signals (USS/POI) shown as counts, with top categories in desktop overlay
-- Biological Codex entries tracked and surfaced as a count
-- Persistence: signals and Codex bio entries saved to SQLite and restored on load
-- Importer: backfills new fields from historical journals safely and efficiently
+## What It Does
 
-**Streaming & Content Creation**
-- Text file output with customizable format templates
-- Multiple overlay support for stream scenes
-- Position export for OBS integration
-- Real-time cargo and session data for stream displays
-- Screenshot helper: auto‑rename with {System}/{Body}/{Timestamp} and BMP→PNG conversion
+- **Live Session Tracking**
+  - Tracks credits earned, cargo collected, limpets used, and session duration.
+  - Dedicated mining tab powered by ODEliteTracker’s session model: live stats, latest prospectors, and session history (persisted between launches).
+  - Fleet Carrier tab combining personal + squadron data, inventory, crew state, and jump timing.
 
-**Advanced Features**
-- Comprehensive event tracking from Elite Dangerous journals
-- Performance-optimized file monitoring with 25ms debounce
-- Fast start option to skip historic journal lines on initial scan
+- **Exploration Logging**
+  - Automatically records systems visited, bodies scanned/mapped, FSS completion, non-body signals, and Codex bio finds into a local SQLite database.
+  - Detects FSSDiscoveryScan, FSSAllBodiesFound, NavBeaconScan, and legacy DiscoveryScan events.
+  - Safe importer to backfill new schema fields from historical journals.
+
+- **Ship & Cargo Insight**
+  - Ship tab shows loadout stats, jump range calculations, power usage, and engineered module tooltips.
+  - Session tab shows live metrics and history; cargo/material tracking stays synced with journal events.
+  - Mining tab mirrors ODEliteTracker’s UX inside EDR, so you don’t need a separate app.
+
+- **Overlays (Optional)**
+  - Info, Cargo, Session, and Exploration overlays with custom fonts/colors/opacity.
+  - Drag to position; coordinates persist. Designed for OBS/browser-source scenes.
+  - Can be turned off entirely if you prefer the desktop UI only.
+
+- **Quality-of-Life**
+  - Screenshot helper (rename + BMP→PNG), fast-start option to skip old journals.
+  - Exportable overlay positions for streaming layouts.
+  - All data lives under `%APPDATA%\EliteDataRelay` (SQLite DB + JSON session files).
+
+### Mining Insights
+- Mining tab mirrors ODEliteTracker’s UX with live prospectors, ore/material breakdowns, limpets, and asteroid counts.
+- Mining sessions persist to `%APPDATA%\EliteDataRelay\mining_sessions.json`, so runs survive restarts.
+- Pop-out overlays (table + prospector) remain available for secondary displays.
+
+### Fleet Carrier Tracking
+- Fleet carrier tab shows personal and squadron carriers side-by-side: status, fuel, balance, docking access, and jump timers.
+- Inventory grid surfaces stock levels, outstanding orders, prices, and callouts for stolen/black-market goods or sale listings.
+- Crew roster displays current assignments (Active/Unavailable) with color-coded states.
 
 ---
 
 ## Getting Started
 
-1. **Prerequisites**: Windows 10/11 with .NET 9 Desktop Runtime
-2. **Download**: Get the latest release and run `EliteDataRelay.exe`
-3. **Launch**: Start Elite Dangerous
-4. **Monitor**: Click Start in the app to begin monitoring
-5. **Customize**: Configure overlays, hotkeys, and file output in Settings
+1. **Install Requirements** – Windows 10/11 with .NET 9 Desktop Runtime.
+2. **Download** – Grab the latest release and run `EliteDataRelay.exe`.
+3. **Launch Elite** – Start Elite Dangerous to generate journals.
+4. **Click Start** – In EDR hit *Start* to begin monitoring. Tabs populate immediately.
+5. **Customize** – Use Settings to toggle overlays, adjust colors/fonts, enable screenshot renaming, etc.
+
+---
+
+## Why Local Storage Matters
+
+- `exploration.db` (SQLite) holds every system/body you’ve logged.
+- `mining_sessions.json` keeps your mining history between runs.
+- No telemetry or cloud services—everything stays on your machine.
 
 ---
 
 ## License & Disclaimer
 
-Licensed under GPL-3.0 - see `LICENSE.txt` for details.
+- Licensed under **GPL-3.0** (see `LICENSE.txt`).
+- Not affiliated with Frontier Developments. Use at your own risk.
 
-This is a third-party tool not affiliated with or endorsed by Frontier Developments plc.
+If EDR helps your adventures, consider starring the repo or opening an issue/PR. Fly safe, CMDR!
