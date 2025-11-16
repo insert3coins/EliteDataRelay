@@ -55,7 +55,6 @@ namespace EliteDataRelay.Services
 
             // Station Types from FSSSignalDiscovered
             { "Station", "station" },
-            { "FleetCarrier", "carrier" },
             { "Installation", "installation" },
 
             // Station Types from DockableBody/FSDJump

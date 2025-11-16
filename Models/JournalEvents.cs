@@ -55,7 +55,7 @@ namespace EliteDataRelay.Models
         [JsonPropertyName("MarketID")]
         public ulong? MarketId { get; set; }
 
-        [JsonPropertyName("Name")] // Used for Fleet Carrier custom name
+        [JsonPropertyName("Name")]
         public string? Name { get; set; }
 
         [JsonPropertyName("StationType")]

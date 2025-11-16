@@ -87,7 +87,7 @@ namespace EliteDataRelay.Services
         }
 
         /// <summary>
-        /// Handles a system change event (FSDJump, Location, CarrierJump).
+        /// Handles a system change event (FSDJump, Location).
         /// </summary>
         public void HandleSystemChange(string systemName, long? systemAddress, DateTime eventTimestamp)
         {

@@ -224,16 +224,6 @@ namespace EliteDataRelay.Services
         /// Event raised when the hyperspace jump completes (FSDJump event processed).
         /// </summary>
         public event EventHandler<JumpCompletedEventArgs>? JumpCompleted;
-        public event EventHandler<JournalEvents.CarrierStatsEvent.CarrierStatsEventArgs>? CarrierStats;
-        public event EventHandler<JournalEvents.CarrierLocationEvent.CarrierLocationEventArgs>? CarrierLocation;
-        public event EventHandler<JournalEvents.CarrierJumpRequestEvent.CarrierJumpRequestEventArgs>? CarrierJumpRequested;
-        public event EventHandler<JournalEvents.CarrierJumpCancelledEvent.CarrierJumpCancelledEventArgs>? CarrierJumpCancelled;
-        public event EventHandler<JournalEvents.CarrierTradeOrderEvent.CarrierTradeOrderEventArgs>? CarrierTradeOrder;
-        public event EventHandler<JournalEvents.CarrierCrewServicesEvent.CarrierCrewServicesEventArgs>? CarrierCrewServices;
-        public event EventHandler<JournalEvents.CarrierBankTransferEvent.CarrierBankTransferEventArgs>? CarrierBankTransfer;
-        public event EventHandler<JournalEvents.CarrierDepositFuelEvent.CarrierDepositFuelEventArgs>? CarrierFuelDeposited;
-        public event EventHandler<JournalEvents.CargoTransferEvent.CargoTransferEventArgs>? CargoTransfer;
-        public event EventHandler<JournalEvents.MarketSellEvent.MarketSellEventArgs>? MarketSell;
 
         /// <summary>
         /// Gets whether the monitoring service is currently active.
@@ -534,7 +524,7 @@ namespace EliteDataRelay.Services
             }
 
             var evtType = evtProp.GetString();
-            if (evtType != "Location" && evtType != "FSDJump" && evtType != "CarrierJump")
+            if (evtType != "Location" && evtType != "FSDJump")
             {
                 return false;
             }

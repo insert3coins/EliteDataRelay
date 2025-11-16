@@ -51,16 +51,6 @@ namespace EliteDataRelay.Services
         event EventHandler<NextJumpSystemChangedEventArgs>? NextJumpSystemChanged;
         event EventHandler<JumpInitiatedEventArgs>? JumpInitiated;
         event EventHandler<JumpCompletedEventArgs>? JumpCompleted;
-        event EventHandler<JournalEvents.CarrierStatsEvent.CarrierStatsEventArgs>? CarrierStats;
-        event EventHandler<JournalEvents.CarrierLocationEvent.CarrierLocationEventArgs>? CarrierLocation;
-        event EventHandler<JournalEvents.CarrierJumpRequestEvent.CarrierJumpRequestEventArgs>? CarrierJumpRequested;
-        event EventHandler<JournalEvents.CarrierJumpCancelledEvent.CarrierJumpCancelledEventArgs>? CarrierJumpCancelled;
-        event EventHandler<JournalEvents.CarrierTradeOrderEvent.CarrierTradeOrderEventArgs>? CarrierTradeOrder;
-        event EventHandler<JournalEvents.CarrierCrewServicesEvent.CarrierCrewServicesEventArgs>? CarrierCrewServices;
-        event EventHandler<JournalEvents.CarrierBankTransferEvent.CarrierBankTransferEventArgs>? CarrierBankTransfer;
-        event EventHandler<JournalEvents.CarrierDepositFuelEvent.CarrierDepositFuelEventArgs>? CarrierFuelDeposited;
-        event EventHandler<JournalEvents.CargoTransferEvent.CargoTransferEventArgs>? CargoTransfer;
-        event EventHandler<JournalEvents.MarketSellEvent.MarketSellEventArgs>? MarketSell;
 
         void StartMonitoring();
         void StopMonitoring();

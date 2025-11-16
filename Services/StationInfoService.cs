@@ -65,19 +65,9 @@ namespace EliteDataRelay.Services
         {
             var services = dockedEvent.StationServices.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            // When docked at a fleet carrier, the StationName is the ID (e.g., "K2K-12K")
-            // and the actual carrier name is in the StationFaction.Name property.
-            // The custom name is in the top-level 'Name' property for carriers.
-            string stationDisplayName = dockedEvent.StationName;
-            if (dockedEvent.StationType == "FleetCarrier" && !string.IsNullOrEmpty(dockedEvent.Name))
-            {
-                // Format as "Carrier Name (CARRIER-ID)"
-                stationDisplayName = $"{dockedEvent.Name} ({dockedEvent.StationName})";
-            }
-
             return new StationInfoData
             {
-                StationName = stationDisplayName,
+                StationName = dockedEvent.StationName,
                 StationType = dockedEvent.StationType,
                 Allegiance = dockedEvent.StationAllegiance ?? "N/A",
                 Economy = dockedEvent.StationEconomyLocalised ?? dockedEvent.StationEconomy ?? "N/A",

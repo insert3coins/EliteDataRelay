@@ -8,8 +8,7 @@ Elite Data Relay (EDR) is a Windows companion for Elite Dangerous. It watches th
 
 - **Live Session Tracking**
   - Tracks credits earned, cargo collected, limpets used, and session duration.
-  - Dedicated mining tab powered by ODEliteTracker’s session model: live stats, latest prospectors, and session history (persisted between launches).
-  - Fleet Carrier tab combining personal + squadron data, inventory, crew state, and jump timing.
+  - Dedicated mining tab powered by ODEliteTracker's session model: live stats, latest prospectors, and session history (persisted between launches).
 
 - **Exploration Logging**
   - Automatically records systems visited, bodies scanned/mapped, FSS completion, non-body signals, and Codex bio finds into a local SQLite database.
@@ -31,15 +30,10 @@ Elite Data Relay (EDR) is a Windows companion for Elite Dangerous. It watches th
   - Exportable overlay positions for streaming layouts.
   - All data lives under `%APPDATA%\EliteDataRelay` (SQLite DB + JSON session files).
 
-### Mining Insights
-- Mining tab with live prospectors, ore/material breakdowns, limpets, and asteroid counts.
-- Mining sessions persist as individual JSON files under `%APPDATA%\EliteDataRelay\mining_sessions\`, so runs survive restarts.
-- Pop-out overlays (table + prospector) remain available for secondary displays.
-
-### Fleet Carrier Tracking
-- Fleet carrier tab shows personal and squadron carriers side-by-side: status, fuel, balance, docking access, and jump timers.
-- Inventory grid surfaces stock levels, outstanding orders, prices, and callouts for stolen/black-market goods or sale listings.
-- Crew roster displays current assignments (Active/Unavailable) with color-coded states.
+- **Mining Insights**
+  - Mining tab with live prospectors, ore/material breakdowns, limpets, and asteroid counts.
+  - Mining sessions persist as individual JSON files under `%APPDATA%\EliteDataRelay\mining_sessions\`, so runs survive restarts.
+  - Pop-out overlays (table + prospector) remain available for secondary displays.
 
 ---
 

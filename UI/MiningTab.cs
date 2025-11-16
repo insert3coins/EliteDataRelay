@@ -4,6 +4,7 @@ using EliteDataRelay.UI.Controls;
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
@@ -30,6 +31,9 @@ namespace EliteDataRelay.UI
         private readonly Label _prospectorHeader;
         private readonly System.Windows.Forms.Timer _durationTimer;
         private bool _isLive;
+        private int _pendingCurrentSessionRefresh = 1;
+        private int _pendingHistoryRefresh = 1;
+        private int _pendingProspectorRefresh = 1;
 
         public MiningTab(MiningTrackerService tracker, FontManager fontManager)
         {
@@ -145,9 +149,9 @@ namespace EliteDataRelay.UI
             _durationTimer.Start();
 
             _isLive = _tracker.IsLive;
-            UpdateCurrentSession();
-            UpdateHistory();
-            UpdateProspector();
+            RequestCurrentSessionRefresh();
+            RequestHistoryRefresh();
+            RequestProspectorRefresh();
         }
 
         protected override void Dispose(bool disposing)
@@ -230,62 +234,41 @@ namespace EliteDataRelay.UI
         private void OnCurrentSessionUpdated(object? sender, EventArgs e)
         {
             if (IsDisposed) return;
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(UpdateCurrentSession));
-            }
-            else
-            {
-                UpdateCurrentSession();
-            }
+            RequestCurrentSessionRefresh();
         }
 
         private void OnSessionsUpdated(object? sender, EventArgs e)
         {
             if (IsDisposed) return;
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(UpdateHistory));
-            }
-            else
-            {
-                UpdateHistory();
-            }
+            RequestHistoryRefresh();
         }
 
         private void OnProspectorUpdated(object? sender, EventArgs e)
         {
             if (IsDisposed) return;
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(UpdateProspector));
-            }
-            else
-            {
-                UpdateProspector();
-            }
+            RequestProspectorRefresh();
         }
 
         private void OnLiveStateChanged(object? sender, bool isLive)
         {
             if (IsDisposed) return;
-            if (InvokeRequired)
+            if (InvokeRequired && IsHandleCreated)
             {
-                BeginInvoke(new Action(() =>
-                {
-                _isLive = isLive;
-                UpdateCurrentSession();
-                UpdateHistory();
-                UpdateProspector();
-            }));
+                BeginInvoke(new Action(() => ApplyLiveState(isLive)));
+            }
+            else
+            {
+                ApplyLiveState(isLive);
+            }
         }
-        else
+
+        private void ApplyLiveState(bool isLive)
         {
             _isLive = isLive;
-            UpdateCurrentSession();
-            UpdateHistory();
-            UpdateProspector();
-        }
+            RequestCurrentSessionRefresh(false);
+            RequestHistoryRefresh(false);
+            RequestProspectorRefresh(false);
+            TryProcessPendingUpdates();
         }
 
         private void UpdateCurrentSession()
@@ -306,7 +289,16 @@ namespace EliteDataRelay.UI
             }
 
             var session = _tracker.CurrentSession;
-            _locationValue.Text = string.IsNullOrWhiteSpace(session.Location) ? session.StarSystem : $"{session.Location} · {session.StarSystem}";
+            if (string.IsNullOrWhiteSpace(session.Location) ||
+                session.Location.Equals(session.StarSystem, StringComparison.OrdinalIgnoreCase) ||
+                session.Location.EndsWith(session.StarSystem, StringComparison.OrdinalIgnoreCase))
+            {
+                _locationValue.Text = string.IsNullOrWhiteSpace(session.Location) ? session.StarSystem : session.Location;
+            }
+            else
+            {
+                _locationValue.Text = $"{session.Location} · {session.StarSystem}";
+            }
             _prospectedValue.Text = session.AsteroidsProspected.ToString("N0");
             _crackedValue.Text = session.AsteroidsCracked.ToString("N0");
             _prospectorsValue.Text = session.ProspectorsFired.ToString("N0");
@@ -380,18 +372,27 @@ namespace EliteDataRelay.UI
 
         private void UpdateHistory()
         {
-            if (!_isLive)
-            {
-                _historyList.Items.Clear();
-                return;
-            }
-
             _historyList.BeginUpdate();
             try
             {
                 _historyList.Items.Clear();
 
-                var ordered = _tracker.Sessions.OrderByDescending(x => x.TimeStarted);
+                var ordered = _tracker.Sessions.OrderByDescending(x => x.TimeStarted).ToList();
+                if (ordered.Count == 0)
+                {
+                    _historyList.Items.Add(new ListViewItem(new[]
+                    {
+                        "No previous sessions found",
+                        string.Empty,
+                        string.Empty,
+                        string.Empty,
+                        string.Empty,
+                        string.Empty,
+                        string.Empty
+                    }));
+                    return;
+                }
+
                 foreach (var session in ordered)
                 {
                     var duration = session.TimeFinished < DateTime.MaxValue ? session.TimeFinished - session.TimeStarted : TimeSpan.Zero;
@@ -444,6 +445,67 @@ namespace EliteDataRelay.UI
             finally
             {
                 _prospectorList.EndUpdate();
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            TryProcessPendingUpdates();
+        }
+
+        private void RequestCurrentSessionRefresh(bool schedule = true) => RequestRefresh(ref _pendingCurrentSessionRefresh, schedule);
+
+        private void RequestHistoryRefresh(bool schedule = true) => RequestRefresh(ref _pendingHistoryRefresh, schedule);
+
+        private void RequestProspectorRefresh(bool schedule = true) => RequestRefresh(ref _pendingProspectorRefresh, schedule);
+
+        private void RequestRefresh(ref int flag, bool schedule)
+        {
+            Interlocked.Exchange(ref flag, 1);
+            if (schedule)
+            {
+                TryProcessPendingUpdates();
+            }
+        }
+
+        private void TryProcessPendingUpdates()
+        {
+            if (IsDisposed || !IsHandleCreated)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(ProcessPendingUpdates));
+            }
+            else
+            {
+                ProcessPendingUpdates();
+            }
+        }
+
+        private void ProcessPendingUpdates()
+        {
+            if (IsDisposed || !IsHandleCreated)
+            {
+                return;
+            }
+
+            if (Interlocked.Exchange(ref _pendingCurrentSessionRefresh, 0) == 1)
+            {
+                UpdateCurrentSession();
+            }
+
+            if (Interlocked.Exchange(ref _pendingHistoryRefresh, 0) == 1)
+            {
+                UpdateHistory();
+            }
+
+            if (Interlocked.Exchange(ref _pendingProspectorRefresh, 0) == 1)
+            {
+                UpdateProspector();
             }
         }
 

@@ -155,7 +155,6 @@ namespace EliteDataRelay.Services
                                 // System context events
                                 case "FSDJump":
                                 case "Location":
-                                case "CarrierJump":
                                     {
                                         string? systemName = root.TryGetProperty("StarSystem", out var s) ? s.GetString() : null;
                                         long? systemAddress = root.TryGetProperty("SystemAddress", out var a) && a.ValueKind == JsonValueKind.Number

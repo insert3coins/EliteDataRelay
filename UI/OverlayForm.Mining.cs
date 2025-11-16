@@ -9,7 +9,7 @@ namespace EliteDataRelay.UI
 {
     public partial class OverlayForm
     {
-        private const int MiningSummaryHeight = 230;
+        private const int MiningSummaryHeight = 250;
 
         private void ResizeMiningOverlay()
         {
@@ -93,6 +93,7 @@ namespace EliteDataRelay.UI
                 ("Location", _currentMiningData.Location),
                 ("Duration", $"{_currentMiningData.Duration:hh\\:mm\\:ss} · {_currentMiningData.RefinedPerHour:N1} t/hr"),
                 ("Limpets remaining", _currentMiningData.LimpetsRemaining.HasValue ? $"{_currentMiningData.LimpetsRemaining.Value:N0}" : "Unknown"),
+                ("Collectors deployed", _currentMiningData.CollectorsDeployed.ToString("N0")),
                 ("Prospectors fired", _currentMiningData.ProspectorsFired.ToString("N0")),
                 ("Asteroids prospected", _currentMiningData.AsteroidsProspected.ToString("N0")),
                 ("Asteroids cracked", _currentMiningData.AsteroidsCracked.ToString("N0")),
@@ -129,3 +130,6 @@ namespace EliteDataRelay.UI
 
     }
 }
+
+
+

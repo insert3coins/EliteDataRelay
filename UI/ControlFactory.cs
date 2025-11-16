@@ -16,7 +16,6 @@ namespace EliteDataRelay.UI
         public TabControl TabControl { get; private set; } = null!;
         public SessionTab? SessionTab { get; private set; }
         public MiningTab? MiningTab { get; private set; }
-        public FleetCarrierTab? FleetCarrierTab { get; private set; }
         public Button StartBtn { get; private set; } = null!;
         public Button StopBtn { get; private set; } = null!;
         public Button ExitBtn { get; private set; } = null!;        
@@ -30,9 +29,9 @@ namespace EliteDataRelay.UI
         public Button BalanceLabel { get; private set; } = null!;
         public ToolTip ToolTip { get; private set; } = null!;
 
-        public ControlFactory(FontManager fontManager, SessionTrackingService sessionTracker, FleetCarrierTrackerService fleetCarrierTracker, MiningTrackerService miningTracker)
+        public ControlFactory(FontManager fontManager, SessionTrackingService sessionTracker, MiningTrackerService miningTracker)
         {
-            CreateTabControls(fontManager, sessionTracker, fleetCarrierTracker, miningTracker);
+            CreateTabControls(fontManager, sessionTracker, miningTracker);
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);
             CreateToolTips(fontManager);

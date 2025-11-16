@@ -12,6 +12,8 @@ namespace EliteDataRelay.UI
 {
     public partial class CargoFormUI
     {
+        private const string CargoStatusRowTag = "CargoStatusRow";
+
         public void UpdateCargoHeader(int currentCount, int? capacity)
         {
             if (_controlFactory == null) return;
@@ -37,50 +39,99 @@ namespace EliteDataRelay.UI
                 return;
             }
 
-            // Avoid painting while mutating rows to prevent rare paint-time exceptions
             gridView.SuspendLayout();
-            var wasVisible = gridView.Visible;
             try
             {
-                gridView.Visible = false;
                 gridView.ClearSelection();
-                gridView.Rows.Clear();
-
-                if (snapshot.Items.Any())
-                {
-                    var sortedInventory = snapshot.Items.OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name);
-                    foreach (var item in sortedInventory)
+                var sortedInventory = snapshot.Items
+                    .OrderBy(i => !string.IsNullOrEmpty(i.Localised) ? i.Localised : i.Name)
+                    .Select(item =>
                     {
-                        string displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
-
+                        var displayName = !string.IsNullOrEmpty(item.Localised) ? item.Localised : item.Name;
                         if (!string.IsNullOrEmpty(displayName))
                         {
                             displayName = char.ToUpperInvariant(displayName[0]) + displayName.Substring(1);
                         }
+                        return new
+                        {
+                            Name = displayName,
+                            item.Count,
+                            Category = CommodityDataService.GetCategory(item.Name)
+                        };
+                    })
+                    .ToList();
 
-                        string category = CommodityDataService.GetCategory(item.Name);
-                        gridView.Rows.Add(displayName, item.Count, category);
-                    }
-                }
-                else
+                if (sortedInventory.Count == 0)
                 {
-                    // If inventory is empty, check if it's because the hold is empty or because we're waiting for an update.
+                    gridView.Rows.Clear();
+
                     string message = snapshot.Count > 0 ? "Cargo manifest updating..." : "Cargo hold is empty.";
 
                     int rowIndex = gridView.Rows.Add(message, "", "");
                     var row = gridView.Rows[rowIndex];
-                    
-                    // Apply special styling for the status message row
-                    row.DefaultCellStyle.ForeColor = Color.FromArgb(107, 114, 128); // A muted gray color
-                    row.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                    row.DefaultCellStyle.SelectionBackColor = row.DefaultCellStyle.BackColor; // Prevent selection highlight
-                    row.DefaultCellStyle.SelectionForeColor = row.DefaultCellStyle.ForeColor;
+                    row.Tag = CargoStatusRowTag;
+
+                    var style = new DataGridViewCellStyle(gridView.DefaultCellStyle)
+                    {
+                        ForeColor = Color.FromArgb(107, 114, 128),
+                        Alignment = DataGridViewContentAlignment.MiddleCenter,
+                        SelectionBackColor = gridView.DefaultCellStyle.BackColor,
+                        SelectionForeColor = Color.FromArgb(107, 114, 128)
+                    };
+                    row.DefaultCellStyle = style;
                     row.ReadOnly = true;
+                }
+                else
+                {
+                    if (gridView.Rows.Count == 1 && gridView.Rows[0].Tag as string == CargoStatusRowTag)
+                    {
+                        gridView.Rows.Clear();
+                    }
+
+                    int index = 0;
+                    foreach (var item in sortedInventory)
+                    {
+                        DataGridViewRow row;
+                        if (index < gridView.Rows.Count)
+                        {
+                            row = gridView.Rows[index];
+                        }
+                        else
+                        {
+                            gridView.Rows.Add(item.Name, item.Count, item.Category);
+                            row = gridView.Rows[index];
+                        }
+
+                        if (!Equals(row.Cells[0].Value, item.Name))
+                        {
+                            row.Cells[0].Value = item.Name;
+                        }
+                        if (!Equals(row.Cells[1].Value, item.Count))
+                        {
+                            row.Cells[1].Value = item.Count;
+                        }
+                        if (!Equals(row.Cells[2].Value, item.Category))
+                        {
+                            row.Cells[2].Value = item.Category;
+                        }
+
+                        if (row.Tag as string == CargoStatusRowTag)
+                        {
+                            row.DefaultCellStyle = new DataGridViewCellStyle(gridView.DefaultCellStyle);
+                            row.Tag = null;
+                        }
+                        row.ReadOnly = true;
+                        index++;
+                    }
+
+                    while (gridView.Rows.Count > sortedInventory.Count)
+                    {
+                        gridView.Rows.RemoveAt(gridView.Rows.Count - 1);
+                    }
                 }
             }
             finally
             {
-                gridView.Visible = wasVisible;
                 gridView.ResumeLayout();
             }
 

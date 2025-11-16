@@ -22,7 +22,6 @@ namespace EliteDataRelay.UI
         private readonly SessionTrackingService _sessionTrackingService;
         private readonly MiningTrackerService _miningTrackerService;
         private readonly ExplorationDataService _explorationDataService;
-        private readonly FleetCarrierTrackerService _fleetCarrierTrackerService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";
@@ -40,12 +39,11 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SettingsClicked;
 
-        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService, ExplorationDataService explorationDataService, FleetCarrierTrackerService fleetCarrierTrackerService, MiningTrackerService miningTrackerService)
+        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService, ExplorationDataService explorationDataService, MiningTrackerService miningTrackerService)
         {
             _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
             _explorationDataService = explorationDataService ?? throw new ArgumentNullException(nameof(explorationDataService));
-            _fleetCarrierTrackerService = fleetCarrierTrackerService ?? throw new ArgumentNullException(nameof(fleetCarrierTrackerService));
             _miningTrackerService = miningTrackerService ?? throw new ArgumentNullException(nameof(miningTrackerService));
         }
 
@@ -54,7 +52,7 @@ namespace EliteDataRelay.UI
             _form = form ?? throw new ArgumentNullException(nameof(form));
             InitializeIcon();
             _fontManager = new FontManager();
-            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService, _fleetCarrierTrackerService, _miningTrackerService);
+            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService, _miningTrackerService);
 
             if (_controlFactory.WatchingLabel != null)
             {

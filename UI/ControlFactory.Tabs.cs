@@ -7,7 +7,7 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
-        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker, FleetCarrierTrackerService fleetCarrierTracker, MiningTrackerService miningTracker)
+        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker, MiningTrackerService miningTracker)
         {
             // Tab control to switch between Cargo and Materials
             TabControl = new TabControl
@@ -20,9 +20,8 @@ namespace EliteDataRelay.UI
             var shipPage = CreateShipTabPage(fontManager);
             var sessionPage = CreateSessionTabPage(fontManager, sessionTracker);
             var miningPage = CreateMiningTabPage(fontManager, miningTracker);
-            var fleetCarrierPage = CreateFleetCarrierTabPage(fontManager, fleetCarrierTracker);
             
-            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, sessionPage, miningPage, fleetCarrierPage });
+            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, sessionPage, miningPage });
         }
 
         private void DisposeTabControls()
@@ -33,7 +32,6 @@ namespace EliteDataRelay.UI
             DisposeShipTabControls();
             SessionTab = null;
             MiningTab = null;
-            FleetCarrierTab = null;
         }
 
         private TabPage CreateSessionTabPage(FontManager fontManager, SessionTrackingService sessionTracker)
@@ -41,13 +39,6 @@ namespace EliteDataRelay.UI
             SessionTab?.Dispose();
             SessionTab = new SessionTab(sessionTracker, fontManager);
             return SessionTab;
-        }
-
-        private TabPage CreateFleetCarrierTabPage(FontManager fontManager, FleetCarrierTrackerService tracker)
-        {
-            FleetCarrierTab?.Dispose();
-            FleetCarrierTab = new FleetCarrierTab(tracker, fontManager);
-            return FleetCarrierTab;
         }
 
         private TabPage CreateMiningTabPage(FontManager fontManager, MiningTrackerService tracker)

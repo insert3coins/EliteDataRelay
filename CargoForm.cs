@@ -27,7 +27,6 @@ namespace EliteDataRelay
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
         private readonly OverlayService _overlayService;
-        private readonly FleetCarrierTrackerService _fleetCarrierTrackerService;
         private readonly ExplorationDataService _explorationDataService;
         private readonly ExplorationDatabaseService _explorationDatabaseService;
         private readonly ScreenshotRenamerService _screenshotRenamerService;
@@ -46,12 +45,11 @@ namespace EliteDataRelay
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
-            _fleetCarrierTrackerService = new FleetCarrierTrackerService(_journalWatcherService);
             // Initialize the database service BEFORE creating any UI that might use it.
             _explorationDatabaseService = new ExplorationDatabaseService();
             _explorationDatabaseService.Initialize();
             _explorationDataService = new ExplorationDataService(_explorationDatabaseService);
-            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService, _fleetCarrierTrackerService, _miningTrackerService);
+            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService, _miningTrackerService);
 
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
@@ -303,7 +301,6 @@ namespace EliteDataRelay
                 _explorationDataService.Dispose();
                 _explorationDatabaseService.Dispose();
                 _screenshotRenamerService?.Dispose();
-                _fleetCarrierTrackerService.Dispose();
 
                 // Free any cached UI images
                 UI.BodyIconGenerator.ClearCache();

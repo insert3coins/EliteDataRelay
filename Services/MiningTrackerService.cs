@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace EliteDataRelay.Services
 {
@@ -21,6 +22,7 @@ namespace EliteDataRelay.Services
         private readonly object _fileSync = new();
         private readonly JsonSerializerOptions _writerOptions = new() { WriteIndented = true };
         private readonly JsonSerializerOptions _readerOptions = new() { PropertyNameCaseInsensitive = true };
+        private readonly Task _initialLoadTask;
         private MiningSession? _currentSession;
         private MiningProspector? _latestProspector;
         private bool _disposed;
@@ -30,7 +32,7 @@ namespace EliteDataRelay.Services
             _journalWatcher = journalWatcher ?? throw new ArgumentNullException(nameof(journalWatcher));
             _legacyHistoryFilePath = Path.Combine(AppConfiguration.AppDataPath, "mining_sessions.json");
             _historyDirectory = Path.Combine(AppConfiguration.AppDataPath, "mining_sessions");
-            LoadPersistedSessions();
+            _initialLoadTask = Task.Run(LoadPersistedSessions);
 
             _journalWatcher.InitialScanComplete += OnInitialScanComplete;
             _journalWatcher.SupercruiseExit += OnSupercruiseExit;
@@ -81,11 +83,23 @@ namespace EliteDataRelay.Services
 
         private void OnInitialScanComplete(object? sender, EventArgs e)
         {
-            IsLive = true;
-            LiveStateChanged?.Invoke(this, true);
-            TriggerCurrentSessionEvent();
-            TriggerSessionsEvent();
-            TriggerProspectorEvent();
+            void Publish()
+            {
+                IsLive = true;
+                LiveStateChanged?.Invoke(this, true);
+                TriggerCurrentSessionEvent();
+                TriggerSessionsEvent();
+                TriggerProspectorEvent();
+            }
+
+            if (_initialLoadTask.IsCompleted)
+            {
+                Publish();
+            }
+            else
+            {
+                _initialLoadTask.ContinueWith(_ => Publish(), TaskScheduler.Default);
+            }
         }
 
         private void OnSupercruiseExit(object? sender, SupercruiseExitEventArgs e)
