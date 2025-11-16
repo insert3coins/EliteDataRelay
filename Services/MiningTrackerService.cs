@@ -15,7 +15,9 @@ namespace EliteDataRelay.Services
     {
         private readonly IJournalWatcherService _journalWatcher;
         private readonly List<MiningSession> _sessions = new();
-        private readonly string _historyFilePath;
+        private readonly HashSet<string> _sessionHashes = new(StringComparer.OrdinalIgnoreCase);
+        private readonly string _legacyHistoryFilePath;
+        private readonly string _historyDirectory;
         private readonly object _fileSync = new();
         private readonly JsonSerializerOptions _writerOptions = new() { WriteIndented = true };
         private readonly JsonSerializerOptions _readerOptions = new() { PropertyNameCaseInsensitive = true };
@@ -26,7 +28,8 @@ namespace EliteDataRelay.Services
         public MiningTrackerService(IJournalWatcherService journalWatcher)
         {
             _journalWatcher = journalWatcher ?? throw new ArgumentNullException(nameof(journalWatcher));
-            _historyFilePath = Path.Combine(AppConfiguration.AppDataPath, "mining_sessions.json");
+            _legacyHistoryFilePath = Path.Combine(AppConfiguration.AppDataPath, "mining_sessions.json");
+            _historyDirectory = Path.Combine(AppConfiguration.AppDataPath, "mining_sessions");
             LoadPersistedSessions();
 
             _journalWatcher.InitialScanComplete += OnInitialScanComplete;
@@ -257,7 +260,7 @@ namespace EliteDataRelay.Services
 
             var clone = _currentSession.Clone();
             _sessions.Add(clone);
-            PersistSessions();
+            PersistSession(clone);
 
             _currentSession = null;
             _latestProspector = null;
@@ -300,33 +303,72 @@ namespace EliteDataRelay.Services
         {
             try
             {
-                var directory = AppConfiguration.AppDataPath;
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
+                Directory.CreateDirectory(_historyDirectory);
 
-                if (!File.Exists(_historyFilePath))
-                {
-                    return;
-                }
-
-                var json = File.ReadAllText(_historyFilePath);
-                if (string.IsNullOrWhiteSpace(json))
-                {
-                    return;
-                }
-
-                var stored = JsonSerializer.Deserialize<List<MiningSession>>(json, _readerOptions);
-                if (stored == null)
-                {
-                    return;
-                }
+                var existingFiles = Directory.EnumerateFiles(_historyDirectory, "*.json")
+                                             .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                                             .ToList();
 
                 _sessions.Clear();
-                foreach (var session in stored)
+                _sessionHashes.Clear();
+                var knownHashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var file in existingFiles)
                 {
-                    _sessions.Add(session);
+                    try
+                    {
+                        var json = File.ReadAllText(file);
+                        if (string.IsNullOrWhiteSpace(json)) continue;
+                        var session = JsonSerializer.Deserialize<MiningSession>(json, _readerOptions);
+                        if (session == null) continue;
+                        var hash = BuildSessionHash(session);
+                        if (knownHashes.Add(hash))
+                        {
+                            _sessions.Add(session);
+                            _sessionHashes.Add(hash);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"[MiningTrackerService] Failed to load session file '{file}': {ex.Message}");
+                    }
+                }
+
+                _sessions.Sort((a, b) => DateTime.Compare(a.TimeStarted, b.TimeStarted));
+
+                // Migrate legacy aggregated history if it still exists
+                if (File.Exists(_legacyHistoryFilePath))
+                {
+                    try
+                    {
+                        var legacyJson = File.ReadAllText(_legacyHistoryFilePath);
+                        if (!string.IsNullOrWhiteSpace(legacyJson))
+                        {
+                            var legacySessions = JsonSerializer.Deserialize<List<MiningSession>>(legacyJson, _readerOptions);
+                            if (legacySessions != null)
+                            {
+                                foreach (var session in legacySessions)
+                                {
+                                    var hash = BuildSessionHash(session);
+                                    if (knownHashes.Add(hash))
+                                    {
+                                        _sessions.Add(session);
+                                        _sessionHashes.Add(hash);
+                                        PersistSession(session);
+                                    }
+                                }
+                                _sessions.Sort((a, b) => DateTime.Compare(a.TimeStarted, b.TimeStarted));
+                            }
+                        }
+
+                        var backupPath = _legacyHistoryFilePath + ".bak";
+                        File.Move(_legacyHistoryFilePath, backupPath, overwrite: true);
+                        Trace.WriteLine($"[MiningTrackerService] Migrated legacy mining history to individual files. Backup saved at {backupPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"[MiningTrackerService] Failed to migrate legacy mining history: {ex.Message}");
+                    }
                 }
             }
             catch (Exception ex)
@@ -335,27 +377,58 @@ namespace EliteDataRelay.Services
             }
         }
 
-        private void PersistSessions()
+        private void PersistSession(MiningSession session)
         {
             try
             {
                 lock (_fileSync)
                 {
-                    var directory = Path.GetDirectoryName(_historyFilePath);
-                    if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                    Directory.CreateDirectory(_historyDirectory);
+                    var fileName = BuildSessionFileName(session);
+                    var path = Path.Combine(_historyDirectory, fileName);
+                    int counter = 1;
+                    while (File.Exists(path))
                     {
-                        Directory.CreateDirectory(directory);
+                        var altName = $"{Path.GetFileNameWithoutExtension(fileName)}_{counter++}.json";
+                        path = Path.Combine(_historyDirectory, altName);
                     }
 
-                    var snapshot = _sessions.Select(s => s.Clone()).ToList();
-                    var json = JsonSerializer.Serialize(snapshot, _writerOptions);
-                    File.WriteAllText(_historyFilePath, json);
+                    var json = JsonSerializer.Serialize(session.Clone(), _writerOptions);
+                    File.WriteAllText(path, json);
                 }
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"[MiningTrackerService] Failed to persist mining history: {ex.Message}");
+                Trace.WriteLine($"[MiningTrackerService] Failed to persist session: {ex.Message}");
             }
+        }
+
+        private static string BuildSessionHash(MiningSession session)
+        {
+            string start = session.TimeStarted == DateTime.MaxValue ? DateTime.MinValue.ToString("O") : session.TimeStarted.ToUniversalTime().ToString("O");
+            string end = session.TimeFinished == DateTime.MaxValue ? DateTime.MaxValue.ToUniversalTime().ToString("O") : session.TimeFinished.ToUniversalTime().ToString("O");
+            string system = session.StarSystem ?? string.Empty;
+            string location = session.Location ?? string.Empty;
+            return $"{start}|{end}|{system}|{location}|{session.AsteroidsProspected}|{session.AsteroidsCracked}";
+        }
+
+        private static string BuildSessionFileName(MiningSession session)
+        {
+            var start = session.TimeStarted == DateTime.MaxValue ? DateTime.UtcNow : session.TimeStarted.ToUniversalTime();
+            var end = session.TimeFinished == DateTime.MaxValue ? DateTime.UtcNow : session.TimeFinished.ToUniversalTime();
+            string identifier = $"{start:yyyyMMdd_HHmmss}_{end:yyyyMMdd_HHmmss}";
+            string system = SanitizePathComponent(session.StarSystem ?? "Unknown");
+            string location = SanitizePathComponent(session.Location ?? "Unknown");
+            return $"session_{identifier}_{system}_{location}.json";
+        }
+
+        private static string SanitizePathComponent(string value)
+        {
+            foreach (var invalid in Path.GetInvalidFileNameChars())
+            {
+                value = value.Replace(invalid, '_');
+            }
+            return value.Replace(' ', '_');
         }
     }
 }

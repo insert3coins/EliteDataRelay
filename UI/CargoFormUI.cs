@@ -16,7 +16,6 @@ namespace EliteDataRelay.UI
         private FontManager? _fontManager;
         private ControlFactory? _controlFactory;
         private Form? _form;
-        private TrayIconManager? _trayIconManager;
         private Icon? _appIcon;
         private LayoutManager? _layoutManager;
         private readonly OverlayService _overlayService;
@@ -29,8 +28,6 @@ namespace EliteDataRelay.UI
         private string _currentLocation = "Unknown";
         private bool _isMonitoring;
         private bool _disposedValue;
-        private bool _formLoaded;
-
         private string _baseTitle = "";
 
         public event EventHandler? StartClicked;
@@ -66,10 +63,8 @@ namespace EliteDataRelay.UI
 
             _layoutManager = new LayoutManager(_form, _controlFactory);
 
-            _form.Resize += OnFormResize;
             _form.ResizeEnd += OnFormResizeEnd;
             _form.Load += OnFormLoad;
-            _trayIconManager = new TrayIconManager(_appIcon);
             SetupFormProperties();
             _layoutManager.ApplyLayout();
             SetupEventHandlers();
@@ -91,7 +86,6 @@ namespace EliteDataRelay.UI
             }
             InitializeMaterialsTab();
             InitializeExplorationTab();
-            _formLoaded = true;
         }
 
         private void InitializeMaterialsTab()
@@ -134,16 +128,6 @@ namespace EliteDataRelay.UI
                 // Update exploration overlay with session data
                 _overlayService.UpdateExplorationSessionData(data);
             };
-        }
-
-        private void OnFormResize(object? sender, EventArgs e)
-        {
-            // Keep the main window visible at all times. Users can still access the tray icon manually,
-            // but we no longer hide automatically when Windows briefly minimizes the form during startup.
-            if (_formLoaded && _form != null && _form.WindowState == FormWindowState.Minimized)
-            {
-                _trayIconManager?.ShowBalloonTip(1000, "Elite Data Relay", "Application minimized.", ToolTipIcon.Info);
-            }
         }
 
         private void OnFormResizeEnd(object? sender, EventArgs e)
@@ -202,18 +186,6 @@ namespace EliteDataRelay.UI
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
 
             // Tray icon event handlers
-            if (_trayIconManager != null)
-            {
-                _trayIconManager.ShowApplicationClicked += OnShowApplication;
-                _trayIconManager.StartClicked += (s, e) => StartClicked?.Invoke(s, e);
-                _trayIconManager.StopClicked += (s, e) => StopClicked?.Invoke(s, e);
-                _trayIconManager.ExitClicked += (s, e) => ExitClicked?.Invoke(s, e);
-            }
-        }
-
-        public void OnShowApplication(object? sender, EventArgs e)
-        {
-            ShowForm();
         }
 
         public void ShowForm()
@@ -242,8 +214,7 @@ namespace EliteDataRelay.UI
 
         public void ShowInfoNotification(string title, string message)
         {
-            if (_trayIconManager == null) return;
-            _trayIconManager.ShowBalloonTip(3000, title, message, ToolTipIcon.Info);
+            ShowInfoPopup(title, message);
         }
 
         public void ShowInfoPopup(string title, string message)
@@ -278,7 +249,6 @@ namespace EliteDataRelay.UI
             _isMonitoring = isMonitoring;
             UpdateFullTitleText();
 
-            _trayIconManager?.SetMonitoringState(startEnabled: !isMonitoring, stopEnabled: isMonitoring);
             _watchingAnimationManager?.SetMonitoringState(isMonitoring);
             _overlayService?.SetVisibility(isMonitoring);
 
@@ -303,7 +273,6 @@ namespace EliteDataRelay.UI
                     // Dispose managed state (managed objects)
                     _controlFactory?.Dispose();
                     _fontManager?.Dispose();
-                    _trayIconManager?.Dispose();
                     _iconStream?.Dispose();
                     _appIcon?.Dispose();
                     _layoutManager?.Dispose();

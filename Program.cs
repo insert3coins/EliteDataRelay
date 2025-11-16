@@ -10,6 +10,12 @@ namespace EliteDataRelay
 {
     static class Program
     {
+        private static readonly string[] ActivationEventNames = new[]
+        {
+            "Global/EliteDataRelay_Activate",
+            "EliteDataRelay_Activate_Local"
+        };
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
@@ -22,12 +28,7 @@ namespace EliteDataRelay
             if (!createdNew)
             {
                 // Signal the existing instance to bring its window to the foreground, then exit.
-                try
-                {
-                    using var evt = EventWaitHandle.OpenExisting("Global/EliteDataRelay_Activate");
-                    evt.Set();
-                }
-                catch
+                if (!TrySignalExistingInstance())
                 {
                     // If signaling fails (older instance without listener), fall back to a quick notice and exit
                     try
@@ -73,14 +74,36 @@ namespace EliteDataRelay
             Trace.AutoFlush = true;
 
             // Create the activation event and listener so subsequent launches can bring this window to front.
-            using var activationEvent = new EventWaitHandle(false, EventResetMode.AutoReset, "Global/EliteDataRelay_Activate");
+            EventWaitHandle? activationEvent = null;
+            try
+            {
+                activationEvent = CreateActivationEvent();
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[Program] Failed to create activation event: {ex}");
+            }
 
             // Create the main form instance so we can activate it on signal.
             var mainForm = new CargoForm();
-            StartActivationListener(mainForm, activationEvent);
+            if (activationEvent != null)
+            {
+                StartActivationListener(mainForm, activationEvent);
+            }
+            else
+            {
+                Trace.WriteLine("[Program] Activation event unavailable. Global activation requests will be ignored.");
+            }
 
-            // Run the application.
-            Application.Run(mainForm);
+            try
+            {
+                // Run the application.
+                Application.Run(mainForm);
+            }
+            finally
+            {
+                activationEvent?.Dispose();
+            }
         }
 
         private static void StartActivationListener(Form mainForm, EventWaitHandle activationEvent)
@@ -168,6 +191,52 @@ namespace EliteDataRelay
             MessageBox.Show(errorMessage, "Elite Data Relay - Critical Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             Environment.Exit(1); // Ensure the application terminates.
+        }
+
+        private static bool TrySignalExistingInstance()
+        {
+            foreach (var name in ActivationEventNames)
+            {
+                try
+                {
+                    using var evt = EventWaitHandle.OpenExisting(name);
+                    evt.Set();
+                    return true;
+                }
+                catch (WaitHandleCannotBeOpenedException)
+                {
+                    continue;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    continue;
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+            return false;
+        }
+
+        private static EventWaitHandle? CreateActivationEvent()
+        {
+            foreach (var name in ActivationEventNames)
+            {
+                try
+                {
+                    return new EventWaitHandle(false, EventResetMode.AutoReset, name);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    Trace.WriteLine($"[Program] Access denied creating activation event '{name}': {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"[Program] Failed to create activation event '{name}': {ex.Message}");
+                }
+            }
+            return null;
         }
     }
 }

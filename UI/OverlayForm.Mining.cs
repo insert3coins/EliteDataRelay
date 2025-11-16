@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 
 namespace EliteDataRelay.UI
@@ -9,7 +10,6 @@ namespace EliteDataRelay.UI
     public partial class OverlayForm
     {
         private const int MiningSummaryHeight = 230;
-        private const int MiningRowHeight = 24;
 
         private void ResizeMiningOverlay()
         {
@@ -76,7 +76,6 @@ namespace EliteDataRelay.UI
             }
 
             float padding = 14f;
-            float labelWidth = 200f;
             float y = padding;
 
             if (_currentMiningData == null)
@@ -89,28 +88,36 @@ namespace EliteDataRelay.UI
                 return;
             }
 
-            DrawLabelValue(g, "Location", _currentMiningData.Location, padding, labelWidth, ref y);
+            var rows = new (string Label, string Value)[]
+            {
+                ("Location", _currentMiningData.Location),
+                ("Duration", $"{_currentMiningData.Duration:hh\\:mm\\:ss} · {_currentMiningData.RefinedPerHour:N1} t/hr"),
+                ("Limpets remaining", _currentMiningData.LimpetsRemaining.HasValue ? $"{_currentMiningData.LimpetsRemaining.Value:N0}" : "Unknown"),
+                ("Prospectors fired", _currentMiningData.ProspectorsFired.ToString("N0")),
+                ("Asteroids prospected", _currentMiningData.AsteroidsProspected.ToString("N0")),
+                ("Asteroids cracked", _currentMiningData.AsteroidsCracked.ToString("N0")),
+                ("Refined (t)", $"{_currentMiningData.TotalRefined:N0}"),
+                ("Materials collected", _currentMiningData.MaterialsCollected.ToString("N0")),
+                ("Content hits", $"L {_currentMiningData.LowContent:N0} / M {_currentMiningData.MedContent:N0} / H {_currentMiningData.HighContent:N0}")
+            };
 
-            string durationText = $"{_currentMiningData.Duration:hh\\:mm\\:ss} - {_currentMiningData.RefinedPerHour:N1} t/hr";
-            DrawLabelValue(g, "Duration", durationText, padding, labelWidth, ref y);
+            int labelColumnWidth = rows.Max(r => TextRenderer.MeasureText(r.Label + ":", GameColors.FontSmall).Width);
+            int valueColumnWidth = rows.Max(r => TextRenderer.MeasureText(r.Value ?? string.Empty, GameColors.FontNormal).Width);
+            int desiredWidth = (int)Math.Ceiling(padding * 2 + labelColumnWidth + 16 + valueColumnWidth);
+            int autoWidth = Math.Max(320, desiredWidth);
+            if (Math.Abs(autoWidth - this.Width) > 2)
+            {
+                this.Width = autoWidth;
+                _renderPanel.Width = autoWidth;
+                ApplyRoundedRegion();
+            }
 
-            string limpets = _currentMiningData.LimpetsRemaining.HasValue
-                ? $"{_currentMiningData.LimpetsRemaining.Value:N0}"
-                : "Unknown";
-            DrawLabelValue(g, "Limpets remaining", limpets, padding, labelWidth, ref y);
+            float labelWidth = labelColumnWidth + 8f;
 
-            DrawLabelValue(g, "Prospectors fired", _currentMiningData.ProspectorsFired.ToString("N0"), padding, labelWidth, ref y);
-
-            DrawLabelValue(g, "Asteroids prospected", _currentMiningData.AsteroidsProspected.ToString("N0"), padding, labelWidth, ref y);
-
-            DrawLabelValue(g, "Asteroids cracked", _currentMiningData.AsteroidsCracked.ToString("N0"), padding, labelWidth, ref y);
-
-            DrawLabelValue(g, "Refined (t)", $"{_currentMiningData.TotalRefined:N0}", padding, labelWidth, ref y);
-
-            DrawLabelValue(g, "Materials collected", _currentMiningData.MaterialsCollected.ToString("N0"), padding, labelWidth, ref y);
-
-            string content = $"L {_currentMiningData.LowContent:N0} / M {_currentMiningData.MedContent:N0} / H {_currentMiningData.HighContent:N0}";
-            DrawLabelValue(g, "Content hits", content, padding, labelWidth, ref y);
+            foreach (var row in rows)
+            {
+                DrawLabelValue(g, row.Label, row.Value, padding, labelWidth, ref y);
+            }
         }
 
         private static void DrawLabelValue(Graphics g, string label, string value, float padding, float labelWidth, ref float y)

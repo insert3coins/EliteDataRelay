@@ -1,5 +1,6 @@
 using EliteDataRelay.Models.Mining;
 using EliteDataRelay.Services;
+using EliteDataRelay.UI.Controls;
 using System;
 using System.Drawing;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace EliteDataRelay.UI
     /// </summary>
     public sealed class MiningTab : TabPage
     {
+        private static readonly ImageList EmptyStateImageList = CreateEmptyStateImageList();
         private readonly MiningTrackerService _tracker;
         private readonly Label _locationValue;
         private readonly Label _durationValue;
@@ -211,8 +213,17 @@ namespace EliteDataRelay.UI
                 View = View.Details,
                 FullRowSelect = true,
                 HideSelection = false,
-                UseCompatibleStateImageBehavior = false
+                UseCompatibleStateImageBehavior = true,
+                CheckBoxes = false
             };
+            list.StateImageList = EmptyStateImageList;
+            return list;
+        }
+
+        private static ImageList CreateEmptyStateImageList()
+        {
+            var list = new ImageList();
+            list.Images.Add(new Bitmap(1, 1));
             return list;
         }
 
@@ -436,7 +447,7 @@ namespace EliteDataRelay.UI
             }
         }
 
-        private sealed class BufferedListView : ListView
+        private sealed class BufferedListView : SafeListView
         {
             public BufferedListView()
             {

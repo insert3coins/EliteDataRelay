@@ -3,7 +3,7 @@ namespace EliteDataRelay.UI
     public partial class CargoFormUI
     {
         /// <summary>
-        /// Sets the enabled state of the main start/stop buttons and the tray icon menu items.
+        /// Sets the enabled state of the main start/stop buttons.
         /// </summary>
         /// <param name="startEnabled">Whether the start button should be enabled.</param>
         /// <param name="stopEnabled">Whether the stop button should be enabled.</param>
@@ -13,8 +13,6 @@ namespace EliteDataRelay.UI
 
             _controlFactory.StartBtn.Enabled = startEnabled;
             _controlFactory.StopBtn.Enabled = stopEnabled;
-
-            _trayIconManager?.SetMonitoringState(startEnabled, stopEnabled);
         }
     }
 }

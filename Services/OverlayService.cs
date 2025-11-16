@@ -39,6 +39,8 @@ namespace EliteDataRelay.Services
         private readonly object _explorationDebounceLock = new object();
         private TimeSpan _explorationDebounceDelay = TimeSpan.FromMilliseconds(500);
         private Form? _overlayOwner;
+        private System.Threading.Timer? _miningOverlayHideTimer;
+        private System.Threading.Timer? _prospectorOverlayHideTimer;
 
         
 
@@ -198,6 +200,10 @@ namespace EliteDataRelay.Services
             _prospectorOverlayForm = null;
             _jumpOverlayForm = null;
             _overlayOwner = null;
+            _miningOverlayHideTimer?.Dispose();
+            _miningOverlayHideTimer = null;
+            _prospectorOverlayHideTimer?.Dispose();
+            _prospectorOverlayHideTimer = null;
 
             lock (_explorationDebounceLock)
             {

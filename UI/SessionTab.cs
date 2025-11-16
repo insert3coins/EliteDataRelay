@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using EliteDataRelay.Services;
+using EliteDataRelay.UI.Controls;
 
 namespace EliteDataRelay.UI
 {
@@ -28,6 +29,7 @@ namespace EliteDataRelay.UI
         private readonly Label _topCollectedValue;
         private readonly Label _topRefinedValue;
         private readonly ListView _historyList;
+        private static readonly ImageList EmptyStateImageList = CreateEmptyStateImageList();
         private readonly System.Windows.Forms.Timer _liveUpdateTimer;
 
         public SessionTab(SessionTrackingService sessionTracker, FontManager fontManager)
@@ -127,13 +129,15 @@ namespace EliteDataRelay.UI
 
         private static ListView CreateHistoryList()
         {
-            var list = new ListView
+            var list = new SafeListView
             {
                 Dock = DockStyle.Fill,
                 View = View.Details,
                 FullRowSelect = true,
                 HideSelection = false,
-                UseCompatibleStateImageBehavior = false
+                UseCompatibleStateImageBehavior = true,
+                CheckBoxes = false,
+                StateImageList = EmptyStateImageList
             };
 
             list.Columns.Add("Start (local)", 150);
@@ -146,6 +150,13 @@ namespace EliteDataRelay.UI
             typeof(ListView).GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic)
                 ?.SetValue(list, true);
 
+            return list;
+        }
+
+        private static ImageList CreateEmptyStateImageList()
+        {
+            var list = new ImageList();
+            list.Images.Add(new Bitmap(1, 1));
             return list;
         }
 

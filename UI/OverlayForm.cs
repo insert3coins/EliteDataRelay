@@ -180,9 +180,9 @@ namespace EliteDataRelay.UI
         }
 
         // Public helpers to fade the Next Jump overlay in and out
-        public void FadeIn(int durationMs = 200)
+        public void FadeIn(int durationMs = 200, bool allowAnyOverlay = false)
         {
-            if (_position != OverlayPosition.JumpInfo)
+            if (_position != OverlayPosition.JumpInfo && !allowAnyOverlay)
             {
                 // Non-jump overlays: just show
                 if (this.InvokeRequired) { this.BeginInvoke(new Action(() => this.Show())); } else { this.Show(); }
@@ -207,9 +207,9 @@ namespace EliteDataRelay.UI
             if (this.InvokeRequired) this.BeginInvoke(new Action(DoFadeIn)); else DoFadeIn();
         }
 
-        public void FadeOutAndHide(int durationMs = 200)
+        public void FadeOutAndHide(int durationMs = 200, bool allowAnyOverlay = false)
         {
-            if (_position != OverlayPosition.JumpInfo)
+            if (_position != OverlayPosition.JumpInfo && !allowAnyOverlay)
             {
                 if (this.InvokeRequired) { this.BeginInvoke(new Action(() => this.Hide())); } else { this.Hide(); }
                 return;

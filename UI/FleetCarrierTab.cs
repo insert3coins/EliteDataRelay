@@ -1,5 +1,6 @@
 using EliteDataRelay.Models.FleetCarrier;
 using EliteDataRelay.Services;
+using EliteDataRelay.UI.Controls;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -18,6 +19,7 @@ namespace EliteDataRelay.UI
         private readonly FontManager _fontManager;
         private readonly CarrierSection _personalSection;
         private readonly CarrierSection _squadSection;
+        private static readonly ImageList EmptyStateImageList = CreateEmptyStateImageList();
         private readonly ListView _personalStock;
         private readonly ListView _squadStock;
         private readonly System.Windows.Forms.Timer _countdownTimer;
@@ -91,14 +93,16 @@ namespace EliteDataRelay.UI
 
         private static ListView CreateStockListView()
         {
-            var list = new ListView
+            var list = new SafeListView
             {
                 View = View.Details,
                 HideSelection = false,
                 FullRowSelect = true,
                 GridLines = false,
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
-                UseCompatibleStateImageBehavior = false
+                UseCompatibleStateImageBehavior = true,
+                CheckBoxes = false,
+                StateImageList = EmptyStateImageList
             };
 
             list.Columns.Add("Commodity", 220, HorizontalAlignment.Left);
@@ -137,7 +141,7 @@ namespace EliteDataRelay.UI
                 CountdownValue = AddSummaryRow(summaryTable, "Cooldown")
             };
 
-            var crewList = new ListView
+            var crewList = new SafeListView
             {
                 View = View.Details,
                 Dock = DockStyle.Fill,
@@ -146,7 +150,9 @@ namespace EliteDataRelay.UI
                 FullRowSelect = true,
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
                 Font = _fontManager.SegoeUIFont,
-                UseCompatibleStateImageBehavior = false
+                UseCompatibleStateImageBehavior = true,
+                CheckBoxes = false,
+                StateImageList = EmptyStateImageList
             };
             crewList.Columns.Add("Crew Role", 160, HorizontalAlignment.Left);
             crewList.Columns.Add("Status", 120, HorizontalAlignment.Left);
@@ -391,6 +397,13 @@ namespace EliteDataRelay.UI
                 _countdownTimer.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private static ImageList CreateEmptyStateImageList()
+        {
+            var list = new ImageList();
+            list.Images.Add(new Bitmap(1, 1));
+            return list;
         }
 
         private sealed class CarrierSection

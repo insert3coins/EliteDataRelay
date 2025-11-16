@@ -212,9 +212,17 @@ namespace EliteDataRelay
             };
             _sessionOverlayTimer.Tick += (s, e) =>
             {
-                if (!AppConfiguration.EnableSessionTracking) return;
                 if (!_fileMonitoringService.IsMonitoring) return;
-                _cargoFormUI.UpdateSessionOverlay(BuildSessionOverlayData());
+
+                if (AppConfiguration.EnableSessionTracking)
+                {
+                    _cargoFormUI.UpdateSessionOverlay(BuildSessionOverlayData());
+                }
+
+                if (AppConfiguration.EnableMiningOverlay)
+                {
+                    RefreshMiningOverlay();
+                }
             };
 
             // Wire up service events

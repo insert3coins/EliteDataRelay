@@ -33,7 +33,7 @@ Elite Data Relay (EDR) is a Windows companion for Elite Dangerous. It watches th
 
 ### Mining Insights
 - Mining tab with live prospectors, ore/material breakdowns, limpets, and asteroid counts.
-- Mining sessions persist to `%APPDATA%\EliteDataRelay\mining_sessions.json`, so runs survive restarts.
+- Mining sessions persist as individual JSON files under `%APPDATA%\EliteDataRelay\mining_sessions\`, so runs survive restarts.
 - Pop-out overlays (table + prospector) remain available for secondary displays.
 
 ### Fleet Carrier Tracking
@@ -56,7 +56,7 @@ Elite Data Relay (EDR) is a Windows companion for Elite Dangerous. It watches th
 ## Why Local Storage Matters
 
 - `exploration.db` (SQLite) holds every system/body you’ve logged.
-- `mining_sessions.json` keeps your mining history between runs.
+- Mining sessions are stored as one JSON file per run inside `%APPDATA%\EliteDataRelay\mining_sessions\`.
 - No telemetry or cloud services—everything stays on your machine.
 
 ---

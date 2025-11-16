@@ -3,6 +3,7 @@ using EliteDataRelay.Models;
 using EliteDataRelay.UI;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.Services
@@ -117,20 +118,107 @@ namespace EliteDataRelay.Services
             _explorationOverlayForm?.UpdateExplorationSessionData(data);
         }
 
+        private static readonly TimeSpan MiningOverlayHoldDuration = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan ProspectorOverlayHoldDuration = TimeSpan.FromSeconds(5);
+
         public void UpdateMiningOverlay(MiningOverlayData? data)
         {
-            _lastMiningOverlayData = data;
-            if (!AppConfiguration.EnableMiningOverlay) return;
+            if (!AppConfiguration.EnableMiningOverlay)
+            {
+                _lastMiningOverlayData = data;
+                return;
+            }
+
             EnsureOverlaysCreated(_overlayOwner);
-            _miningOverlayForm?.UpdateMiningOverlay(data);
+            if (_miningOverlayForm == null) return;
+
+            if (data != null)
+            {
+                _miningOverlayHideTimer?.Dispose();
+                _miningOverlayHideTimer = null;
+
+                _lastMiningOverlayData = data;
+                _miningOverlayForm.UpdateMiningOverlay(data);
+                _miningOverlayForm.FadeIn(200, allowAnyOverlay: true);
+                return;
+            }
+
+            var snapshot = _lastMiningOverlayData;
+            if (snapshot == null)
+            {
+                if (_miningOverlayHideTimer != null)
+                {
+                    return;
+                }
+
+                _miningOverlayForm.Hide();
+                return;
+            }
+
+            _lastMiningOverlayData = null;
+            _miningOverlayForm.UpdateMiningOverlay(snapshot);
+
+            _miningOverlayHideTimer?.Dispose();
+            _miningOverlayHideTimer = new System.Threading.Timer(_ =>
+            {
+                try
+                {
+                    _miningOverlayForm?.FadeOutAndHide(250, allowAnyOverlay: true);
+                }
+                finally
+                {
+                    _miningOverlayHideTimer?.Dispose();
+                    _miningOverlayHideTimer = null;
+                }
+            }, null, MiningOverlayHoldDuration, Timeout.InfiniteTimeSpan);
         }
 
         public void UpdateProspectorOverlay(ProspectorOverlayData? data)
         {
-            _lastProspectorOverlayData = data;
-            if (!AppConfiguration.EnableProspectorOverlay) return;
+            if (!AppConfiguration.EnableProspectorOverlay)
+            {
+                _lastProspectorOverlayData = data;
+                return;
+            }
+
             EnsureOverlaysCreated(_overlayOwner);
-            _prospectorOverlayForm?.UpdateProspectorOverlay(data);
+            if (_prospectorOverlayForm == null) return;
+
+            if (data != null)
+            {
+                _prospectorOverlayHideTimer?.Dispose();
+                _prospectorOverlayHideTimer = null;
+
+                _lastProspectorOverlayData = data;
+                _prospectorOverlayForm.UpdateProspectorOverlay(data);
+                _prospectorOverlayForm.FadeIn(200, allowAnyOverlay: true);
+                return;
+            }
+
+            var snapshot = _lastProspectorOverlayData;
+            if (snapshot == null)
+            {
+                if (_prospectorOverlayHideTimer != null) return;
+                _prospectorOverlayForm.Hide();
+                return;
+            }
+
+            _lastProspectorOverlayData = null;
+            _prospectorOverlayForm.UpdateProspectorOverlay(snapshot);
+
+            _prospectorOverlayHideTimer?.Dispose();
+            _prospectorOverlayHideTimer = new System.Threading.Timer(_ =>
+            {
+                try
+                {
+                    _prospectorOverlayForm?.FadeOutAndHide(250, allowAnyOverlay: true);
+                }
+                finally
+                {
+                    _prospectorOverlayHideTimer?.Dispose();
+                    _prospectorOverlayHideTimer = null;
+                }
+            }, null, ProspectorOverlayHoldDuration, Timeout.InfiniteTimeSpan);
         }
 
         public void ShowNextJumpOverlay(NextJumpOverlayData data)
