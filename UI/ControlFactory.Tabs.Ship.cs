@@ -244,6 +244,12 @@ namespace EliteDataRelay.UI
         /// <summary>
         /// A custom-drawn panel to display a single ship statistic, avoiding complex control nesting.
         /// </summary>
+        public enum StatPanelTheme
+        {
+            Dark,
+            Light
+        }
+
         public class StatPanel : Panel
         {
             private readonly string _label;
@@ -255,19 +261,21 @@ namespace EliteDataRelay.UI
             private readonly SolidBrush _labelBrush;
             private readonly SolidBrush _valueBrush;
 
-            public StatPanel(string label, string initialValue, Font font)
+            public StatPanel(string label, string initialValue, Font font, StatPanelTheme theme = StatPanelTheme.Dark)
             {
                 _label = label;
                 _value = initialValue;
 
                 _labelFont = font;
                 _valueFont = new Font(font, FontStyle.Bold);
-                _labelBrush = new SolidBrush(Color.FromArgb(150, 150, 160));
-                _valueBrush = new SolidBrush(Color.FromArgb(220, 220, 230));
+                bool lightTheme = theme == StatPanelTheme.Light;
+                _labelBrush = new SolidBrush(lightTheme ? Color.FromArgb(96, 104, 118) : Color.FromArgb(150, 150, 160));
+                _valueBrush = new SolidBrush(lightTheme ? Color.FromArgb(33, 37, 50) : Color.FromArgb(220, 220, 230));
 
                 Dock = DockStyle.Fill;
                 Margin = new Padding(2);
-                BackColor = Color.FromArgb(40, 40, 45);
+                BackColor = lightTheme ? Color.FromArgb(248, 250, 255) : Color.FromArgb(40, 40, 45);
+                BorderStyle = lightTheme ? BorderStyle.FixedSingle : BorderStyle.None;
                 DoubleBuffered = true; // Prevents flicker
             }
 

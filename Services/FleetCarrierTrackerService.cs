@@ -101,20 +101,26 @@ namespace EliteDataRelay.Services
         {
             lock (_sync)
             {
-                if (_personalCarrier == null || _personalCarrier.CarrierId == 0 || e.CarrierID != _personalCarrier.CarrierId || e.BlackMarket)
+                if (e.BlackMarket)
+                {
+                    return;
+                }
+
+                var target = ResolveCarrierById(e.CarrierID);
+                if (target == null)
                 {
                     return;
                 }
 
                 var localized = string.IsNullOrWhiteSpace(e.Commodity_Localised) ? e.Commodity : e.Commodity_Localised;
-                var commodity = _personalCarrier.GetOrAddCommodity(e.Commodity, localized, stolen: false);
+                var commodity = target.GetOrAddCommodity(e.Commodity, localized, stolen: false);
 
                 if (e.CancelTrade)
                 {
                     commodity.OutstandingPurchaseOrders = 0;
                     commodity.SalePrice = 0;
                     commodity.StockCount = 0;
-                    _personalCarrier.RemoveIfEmpty(commodity);
+                    target.RemoveIfEmpty(commodity);
                 }
                 else
                 {
@@ -132,12 +138,12 @@ namespace EliteDataRelay.Services
 
                     if (commodity.StockCount <= 0 && commodity.OutstandingPurchaseOrders <= 0 && commodity.SalePrice <= 0)
                     {
-                        _personalCarrier.RemoveIfEmpty(commodity);
+                        target.RemoveIfEmpty(commodity);
                     }
                 }
 
-                _personalCarrier.LastUpdatedUtc = DateTime.UtcNow;
-                RaiseSnapshot(_personalCarrier);
+                target.LastUpdatedUtc = DateTime.UtcNow;
+                RaiseSnapshot(target);
             }
         }
 
@@ -145,13 +151,14 @@ namespace EliteDataRelay.Services
         {
             lock (_sync)
             {
-                if (!EventMatchesPersonalCarrier(e.CarrierID))
+                var target = ResolveCarrierById(e.CarrierID);
+                if (target == null)
                 {
                     return;
                 }
 
-                _personalCarrier!.UpdateCrewStatus(e.CrewRole, e.Operation);
-                RaiseSnapshot(_personalCarrier);
+                target.UpdateCrewStatus(e.CrewRole, e.Operation);
+                RaiseSnapshot(target);
             }
         }
 
@@ -159,14 +166,15 @@ namespace EliteDataRelay.Services
         {
             lock (_sync)
             {
-                if (!EventMatchesPersonalCarrier(e.CarrierID))
+                var target = ResolveCarrierById(e.CarrierID);
+                if (target == null)
                 {
                     return;
                 }
 
-                _personalCarrier!.Balance = e.CarrierBalance;
-                _personalCarrier.LastUpdatedUtc = DateTime.UtcNow;
-                RaiseSnapshot(_personalCarrier);
+                target.Balance = e.CarrierBalance;
+                target.LastUpdatedUtc = DateTime.UtcNow;
+                RaiseSnapshot(target);
             }
         }
 
@@ -174,14 +182,15 @@ namespace EliteDataRelay.Services
         {
             lock (_sync)
             {
-                if (!EventMatchesPersonalCarrier(e.CarrierID))
+                var target = ResolveCarrierById(e.CarrierID);
+                if (target == null)
                 {
                     return;
                 }
 
-                _personalCarrier!.FuelLevel = e.Total;
-                _personalCarrier.LastUpdatedUtc = DateTime.UtcNow;
-                RaiseSnapshot(_personalCarrier);
+                target.FuelLevel = e.Total;
+                target.LastUpdatedUtc = DateTime.UtcNow;
+                RaiseSnapshot(target);
             }
         }
 
@@ -189,7 +198,13 @@ namespace EliteDataRelay.Services
         {
             lock (_sync)
             {
-                if (_personalCarrier == null || _personalCarrier.CarrierId == 0 || _dockedCarrierMarketId != _personalCarrier.CarrierId || e.Transfers == null)
+                if (!_dockedCarrierMarketId.HasValue || e.Transfers == null)
+                {
+                    return;
+                }
+
+                var target = ResolveCarrierById(_dockedCarrierMarketId.Value);
+                if (target == null)
                 {
                     return;
                 }
@@ -209,16 +224,16 @@ namespace EliteDataRelay.Services
                     }
 
                     var localized = string.IsNullOrWhiteSpace(transfer.Type_Localised) ? transfer.Type : transfer.Type_Localised;
-                    var commodity = _personalCarrier.GetOrAddCommodity(transfer.Type, localized, transfer.Stolen ?? false);
+                    var commodity = target.GetOrAddCommodity(transfer.Type, localized, transfer.Stolen ?? false);
                     commodity.StockCount = Math.Max(0, commodity.StockCount + delta);
-                    _personalCarrier.RemoveIfEmpty(commodity);
+                    target.RemoveIfEmpty(commodity);
                     updated = true;
                 }
 
                 if (updated)
                 {
-                    _personalCarrier.LastUpdatedUtc = DateTime.UtcNow;
-                    RaiseSnapshot(_personalCarrier);
+                    target.LastUpdatedUtc = DateTime.UtcNow;
+                    RaiseSnapshot(target);
                 }
             }
         }
@@ -227,20 +242,26 @@ namespace EliteDataRelay.Services
         {
             lock (_sync)
             {
-                if (_personalCarrier == null || _personalCarrier.CarrierId == 0 || (ulong)e.MarketID != _personalCarrier.CarrierId || e.BlackMarket)
+                if (e.BlackMarket)
+                {
+                    return;
+                }
+
+                var target = ResolveCarrierById((ulong)e.MarketID);
+                if (target == null)
                 {
                     return;
                 }
 
                 var localized = string.IsNullOrWhiteSpace(e.Type_Localised) ? e.Type : e.Type_Localised;
-                var commodity = _personalCarrier.GetOrAddCommodity(e.Type, localized, stolen: e.StolenGoods);
+                var commodity = target.GetOrAddCommodity(e.Type, localized, stolen: e.StolenGoods);
                 commodity.StockCount = Math.Max(0, commodity.StockCount + e.Count);
                 if (commodity.OutstandingPurchaseOrders > 0)
                 {
                     commodity.OutstandingPurchaseOrders = Math.Max(0, commodity.OutstandingPurchaseOrders - e.Count);
                 }
-                _personalCarrier.LastUpdatedUtc = DateTime.UtcNow;
-                RaiseSnapshot(_personalCarrier);
+                target.LastUpdatedUtc = DateTime.UtcNow;
+                RaiseSnapshot(target);
             }
         }
 
@@ -320,9 +341,6 @@ namespace EliteDataRelay.Services
 
             return null;
         }
-
-        private bool EventMatchesPersonalCarrier(ulong carrierId) =>
-            _personalCarrier != null && _personalCarrier.CarrierId == carrierId && carrierId != 0;
 
         private static bool IsSquadron(string? carrierType) =>
             string.Equals(carrierType, "SquadronCarrier", StringComparison.OrdinalIgnoreCase);

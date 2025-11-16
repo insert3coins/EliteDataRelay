@@ -12,19 +12,31 @@ namespace EliteDataRelay.UI.Controls
     {
         protected override void OnHandleCreated(EventArgs e)
         {
-            EnsureStateImages();
-            base.OnHandleCreated(e);
-        }
-
-        private void EnsureStateImages()
-        {
-            foreach (ListViewItem? item in Items)
+            if (Items.Count == 0)
             {
-                if (item == null) continue;
-                if (item.StateImageIndex < 0)
+                base.OnHandleCreated(e);
+                return;
+            }
+
+            var buffer = new ListViewItem[Items.Count];
+            Items.CopyTo(buffer, 0);
+
+            BeginUpdate();
+            try
+            {
+                Items.Clear();
+                base.OnHandleCreated(e);
+                foreach (var item in buffer)
                 {
-                    item.StateImageIndex = 0;
+                    if (item != null)
+                    {
+                        Items.Add(item);
+                    }
                 }
+            }
+            finally
+            {
+                EndUpdate();
             }
         }
     }

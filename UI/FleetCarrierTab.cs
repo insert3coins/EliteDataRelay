@@ -39,10 +39,12 @@ namespace EliteDataRelay.UI
 
             var summaryLayout = new TableLayoutPanel
             {
-                Dock = DockStyle.Top,
-                AutoSize = true,
+                Dock = DockStyle.Fill,
+                AutoSize = false,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 2,
-                Margin = new Padding(0, 0, 0, 10)
+                Margin = new Padding(0, 0, 0, 10),
+                RowCount = 1
             };
             summaryLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             summaryLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
@@ -57,8 +59,28 @@ namespace EliteDataRelay.UI
             stockTabs.TabPages.Add(CreateStockTab("Personal Inventory", _personalStock));
             stockTabs.TabPages.Add(CreateStockTab("Squadron Inventory", _squadStock));
 
-            Controls.Add(stockTabs);
-            Controls.Add(summaryLayout);
+            var splitContainer = new SplitContainer
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Horizontal,
+                FixedPanel = FixedPanel.Panel1,
+                IsSplitterFixed = false,
+                SplitterWidth = 4,
+                Panel1MinSize = 280,
+                Panel2MinSize = 70
+            };
+
+            summaryLayout.Dock = DockStyle.Fill;
+            splitContainer.Panel1.Controls.Add(summaryLayout);
+
+            stockTabs.Dock = DockStyle.Fill;
+            splitContainer.Panel2.Controls.Add(stockTabs);
+
+            Controls.Add(splitContainer);
+
+            var preferredSummaryHeight = summaryLayout.GetPreferredSize(new Size(ClientSize.Width - Padding.Horizontal, 0)).Height + 12;
+            ApplySplitterDistance(splitContainer, preferredSummaryHeight);
+            splitContainer.SizeChanged += (_, _) => ApplySplitterDistance(splitContainer, preferredSummaryHeight);
 
             _tracker.PersonalCarrierUpdated += OnPersonalCarrierUpdated;
             _tracker.SquadronCarrierUpdated += OnSquadronCarrierUpdated;
@@ -102,7 +124,10 @@ namespace EliteDataRelay.UI
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
                 UseCompatibleStateImageBehavior = true,
                 CheckBoxes = false,
-                StateImageList = EmptyStateImageList
+                StateImageList = EmptyStateImageList,
+                BackColor = Color.FromArgb(245, 247, 252),
+                ForeColor = Color.FromArgb(35, 39, 48),
+                BorderStyle = BorderStyle.FixedSingle
             };
 
             list.Columns.Add("Commodity", 220, HorizontalAlignment.Left);
@@ -126,19 +151,41 @@ namespace EliteDataRelay.UI
             summaryTable.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             summaryTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
+            var statsGrid = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 2,
+                Margin = new Padding(0, 0, 0, 8)
+            };
+            statsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            statsGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            statsGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
+            statsGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
+
+            var fuelStat = new ControlFactory.StatPanel("Fuel", "0 t", _fontManager.ConsolasFont, ControlFactory.StatPanelTheme.Light);
+            var balanceStat = new ControlFactory.StatPanel("Balance", "0 CR", _fontManager.ConsolasFont, ControlFactory.StatPanelTheme.Light);
+            var dockingStat = new ControlFactory.StatPanel("Docking", "Unknown", _fontManager.ConsolasFont, ControlFactory.StatPanelTheme.Light);
+            var jumpStat = new ControlFactory.StatPanel("Jump Timer", "Waiting", _fontManager.ConsolasFont, ControlFactory.StatPanelTheme.Light);
+
+            statsGrid.Controls.Add(fuelStat, 0, 0);
+            statsGrid.Controls.Add(balanceStat, 1, 0);
+            statsGrid.Controls.Add(dockingStat, 0, 1);
+            statsGrid.Controls.Add(jumpStat, 1, 1);
+
             var section = new CarrierSection
             {
                 StatusValue = AddSummaryRow(summaryTable, "Status"),
                 NameValue = AddSummaryRow(summaryTable, "Name"),
                 CallsignValue = AddSummaryRow(summaryTable, "Callsign"),
                 LocationValue = AddSummaryRow(summaryTable, "Location"),
-                FuelValue = AddSummaryRow(summaryTable, "Fuel"),
-                BalanceValue = AddSummaryRow(summaryTable, "Balance"),
-                DockingValue = AddSummaryRow(summaryTable, "Docking Access"),
                 NotoriousValue = AddSummaryRow(summaryTable, "Allow Notorious"),
                 DestinationValue = AddSummaryRow(summaryTable, "Destination"),
                 DepartureValue = AddSummaryRow(summaryTable, "Departure"),
-                CountdownValue = AddSummaryRow(summaryTable, "Cooldown")
+                FuelStat = fuelStat,
+                BalanceStat = balanceStat,
+                DockingStat = dockingStat,
+                JumpStat = jumpStat
             };
 
             var crewList = new SafeListView
@@ -152,7 +199,10 @@ namespace EliteDataRelay.UI
                 Font = _fontManager.SegoeUIFont,
                 UseCompatibleStateImageBehavior = true,
                 CheckBoxes = false,
-                StateImageList = EmptyStateImageList
+                StateImageList = EmptyStateImageList,
+                BackColor = Color.FromArgb(245, 247, 252),
+                ForeColor = Color.FromArgb(35, 39, 48),
+                BorderStyle = BorderStyle.FixedSingle
             };
             crewList.Columns.Add("Crew Role", 160, HorizontalAlignment.Left);
             crewList.Columns.Add("Status", 120, HorizontalAlignment.Left);
@@ -160,12 +210,14 @@ namespace EliteDataRelay.UI
             var groupLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                RowCount = 2
+                RowCount = 3
             };
             groupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            groupLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             groupLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            groupLayout.Controls.Add(summaryTable, 0, 0);
-            groupLayout.Controls.Add(crewList, 0, 1);
+            groupLayout.Controls.Add(statsGrid, 0, 0);
+            groupLayout.Controls.Add(summaryTable, 0, 1);
+            groupLayout.Controls.Add(crewList, 0, 2);
 
             var group = new GroupBox
             {
@@ -181,7 +233,7 @@ namespace EliteDataRelay.UI
             section.StatusValue.Text = "Waiting for journal data…";
             section.DestinationValue.Text = "No jump queued";
             section.DepartureValue.Text = "–";
-            section.CountdownValue.Text = "–";
+            section.JumpStat.SetValue("Waiting");
             return section;
         }
 
@@ -242,9 +294,9 @@ namespace EliteDataRelay.UI
             section.NameValue.Text = state.DisplayName;
             section.CallsignValue.Text = string.IsNullOrWhiteSpace(state.Callsign) ? "—" : state.Callsign;
             section.LocationValue.Text = $"{state.StarSystem} (Body {state.BodyId})";
-            section.FuelValue.Text = $"{state.FuelLevel:N0} t";
-            section.BalanceValue.Text = $"{state.Balance:N0} CR";
-            section.DockingValue.Text = string.IsNullOrWhiteSpace(state.DockingAccess) ? "—" : state.DockingAccess;
+            section.FuelStat.SetValue($"{state.FuelLevel:N0} t");
+            section.BalanceStat.SetValue($"{state.Balance:N0} CR");
+            section.DockingStat.SetValue(string.IsNullOrWhiteSpace(state.DockingAccess) ? "-" : state.DockingAccess);
             section.NotoriousValue.Text = state.AllowNotorious ? "Allowed" : "Denied";
 
             if (state.Destination.HasDestination)
@@ -261,7 +313,7 @@ namespace EliteDataRelay.UI
                 section.DepartureValue.Text = "–";
             }
 
-            section.CountdownValue.Text = FormatCountdown(state);
+            section.JumpStat.SetValue(FormatCountdown(state));
             UpdateCrewList(section.CrewList, state.Crew);
         }
 
@@ -283,11 +335,21 @@ namespace EliteDataRelay.UI
             {
                 foreach (var entry in crew.OrderBy(c => c.Key, StringComparer.CurrentCultureIgnoreCase))
                 {
+                    var (statusText, textColor, backColor) = entry.Value switch
+                    {
+                        CarrierCrewStatus.Active => ("Active", Color.FromArgb(0, 115, 74), Color.FromArgb(223, 244, 231)),
+                        CarrierCrewStatus.Suspended => ("Unavailable", Color.FromArgb(166, 98, 0), Color.FromArgb(255, 245, 225)),
+                        _ => ("Inactive", Color.FromArgb(105, 111, 124), Color.FromArgb(238, 240, 245))
+                    };
+
                     var item = new ListViewItem(entry.Key)
                     {
-                        ForeColor = entry.Value == CarrierCrewStatus.Active ? Color.FromArgb(144, 238, 144) : Color.WhiteSmoke
+                        ForeColor = Color.FromArgb(35, 39, 48)
                     };
-                    item.SubItems.Add(entry.Value.ToString());
+                    item.UseItemStyleForSubItems = false;
+                    var statusSubItem = item.SubItems.Add(statusText);
+                    statusSubItem.ForeColor = textColor;
+                    statusSubItem.BackColor = backColor;
                     listView.Items.Add(item);
                 }
             }
@@ -315,25 +377,47 @@ namespace EliteDataRelay.UI
                     .OrderByDescending(c => c.StockCount)
                     .ThenBy(c => c.DisplayName, StringComparer.CurrentCultureIgnoreCase))
                 {
-                    var notes = commodity.Stolen ? "Stolen" : string.Empty;
-                    if (commodity.BlackMarket)
-                    {
-                        notes = string.IsNullOrEmpty(notes) ? "Black Market" : $"{notes}, Black Market";
-                    }
+                    var callouts = new List<string>();
+                    if (commodity.Stolen) callouts.Add("Stolen");
+                    if (commodity.BlackMarket) callouts.Add("Black Market");
+                    if (commodity.Rare) callouts.Add("Rare");
+                    if (commodity.SalePrice > 0) callouts.Add("For Sale");
+                    if (commodity.OutstandingPurchaseOrders > 0) callouts.Add("Buying");
 
-                    if (commodity.SalePrice > 0)
+                    var notes = string.Join(", ", callouts);
+                    var textColor = Color.FromArgb(35, 39, 48);
+                    var background = listView.BackColor;
+
+                    if (commodity.Stolen)
                     {
-                        notes = string.IsNullOrEmpty(notes) ? "For Sale" : $"{notes}, For Sale";
+                        textColor = Color.FromArgb(160, 32, 32);
+                        background = Color.FromArgb(255, 233, 235);
+                    }
+                    else if (commodity.BlackMarket)
+                    {
+                        textColor = Color.FromArgb(173, 98, 6);
+                        background = Color.FromArgb(255, 244, 221);
+                    }
+                    else if (commodity.SalePrice > 0)
+                    {
+                        textColor = Color.FromArgb(12, 102, 168);
+                        background = Color.FromArgb(232, 247, 255);
                     }
                     else if (commodity.OutstandingPurchaseOrders > 0)
                     {
-                        notes = string.IsNullOrEmpty(notes) ? "Buying" : $"{notes}, Buying";
+                        textColor = Color.FromArgb(21, 125, 81);
+                        background = Color.FromArgb(232, 248, 237);
                     }
 
-                    var item = new ListViewItem(commodity.DisplayName);
+                    var item = new ListViewItem(commodity.DisplayName)
+                    {
+                        ForeColor = textColor,
+                        BackColor = background
+                    };
+                    item.UseItemStyleForSubItems = false;
                     item.SubItems.Add($"{commodity.StockCount:N0}");
                     item.SubItems.Add($"{commodity.OutstandingPurchaseOrders:N0}");
-                    item.SubItems.Add(commodity.SalePrice > 0 ? $"{commodity.SalePrice:N0} CR" : "—");
+                    item.SubItems.Add(commodity.SalePrice > 0 ? $"{commodity.SalePrice:N0} CR" : "–");
                     item.SubItems.Add(notes);
                     listView.Items.Add(item);
                 }
@@ -353,11 +437,11 @@ namespace EliteDataRelay.UI
         {
             if (section.LatestSnapshot == null)
             {
-                section.CountdownValue.Text = "—";
+                section.JumpStat.SetValue("—");
                 return;
             }
 
-            section.CountdownValue.Text = FormatCountdown(section.LatestSnapshot);
+            section.JumpStat.SetValue(FormatCountdown(section.LatestSnapshot));
         }
 
         private static string FormatCountdown(FleetCarrierState state)
@@ -406,6 +490,27 @@ namespace EliteDataRelay.UI
             return list;
         }
 
+        private static void ApplySplitterDistance(SplitContainer splitContainer, int desiredHeight)
+        {
+            if (splitContainer.Height <= 0)
+            {
+                return;
+            }
+
+            var minimum = splitContainer.Panel1MinSize;
+            var maximum = splitContainer.Height - splitContainer.Panel2MinSize - splitContainer.SplitterWidth;
+            if (maximum <= minimum)
+            {
+                return;
+            }
+
+            var clamped = Math.Max(minimum, Math.Min(desiredHeight, maximum));
+            if (splitContainer.SplitterDistance != clamped)
+            {
+                splitContainer.SplitterDistance = clamped;
+            }
+        }
+
         private sealed class CarrierSection
         {
             public GroupBox Group { get; set; } = null!;
@@ -413,13 +518,13 @@ namespace EliteDataRelay.UI
             public Label NameValue { get; set; } = null!;
             public Label CallsignValue { get; set; } = null!;
             public Label LocationValue { get; set; } = null!;
-            public Label FuelValue { get; set; } = null!;
-            public Label BalanceValue { get; set; } = null!;
-            public Label DockingValue { get; set; } = null!;
             public Label NotoriousValue { get; set; } = null!;
             public Label DestinationValue { get; set; } = null!;
             public Label DepartureValue { get; set; } = null!;
-            public Label CountdownValue { get; set; } = null!;
+            public ControlFactory.StatPanel FuelStat { get; set; } = null!;
+            public ControlFactory.StatPanel BalanceStat { get; set; } = null!;
+            public ControlFactory.StatPanel DockingStat { get; set; } = null!;
+            public ControlFactory.StatPanel JumpStat { get; set; } = null!;
             public ListView CrewList { get; set; } = null!;
             public FleetCarrierState? LatestSnapshot { get; set; }
         }
