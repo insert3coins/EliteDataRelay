@@ -14,6 +14,8 @@ namespace EliteDataRelay.Services
         private OverlayForm? _rightOverlayForm;
         private OverlayForm? _sessionOverlayForm;
         private OverlayForm? _explorationOverlayForm;
+        private OverlayForm? _miningOverlayForm;
+        private OverlayForm? _prospectorOverlayForm;
         private OverlayForm? _jumpOverlayForm;
 
         // Cache last known data to restore on overlay refresh
@@ -29,11 +31,14 @@ namespace EliteDataRelay.Services
         private string? _lastCargoBarText;
         private SessionOverlayData? _lastSessionOverlayData;
         private CargoSnapshot? _lastCargoSnapshot;
+        private MiningOverlayData? _lastMiningOverlayData;
+        private ProspectorOverlayData? _lastProspectorOverlayData;
 
         // Debounce for exploration overlay updates to avoid rapid churn at startup
         private System.Threading.Timer? _explorationDebounceTimer;
         private readonly object _explorationDebounceLock = new object();
         private TimeSpan _explorationDebounceDelay = TimeSpan.FromMilliseconds(500);
+        private Form? _overlayOwner;
 
         
 
@@ -47,27 +52,53 @@ namespace EliteDataRelay.Services
             }
 
             var screen = primaryScreen.WorkingArea;
+            if (owner != null)
+            {
+                _overlayOwner = owner;
+            }
+            var overlayOwner = _overlayOwner;
 
             if (_leftOverlayForm == null && AppConfiguration.EnableInfoOverlay)
             {
-                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag) { Owner = owner };
+                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
                 _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_rightOverlayForm == null && AppConfiguration.EnableCargoOverlay)
             {
-                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag) { Owner = owner };
+                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_sessionOverlayForm == null && AppConfiguration.EnableSessionOverlay)
             {
-                _sessionOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Session, AppConfiguration.AllowOverlayDrag) { Owner = owner };
+                _sessionOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Session, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
                 _sessionOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_explorationOverlayForm == null && AppConfiguration.EnableExplorationOverlay)
             {
-                _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag) { Owner = owner };
+                _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
+            }
+            if (_miningOverlayForm == null && AppConfiguration.EnableMiningOverlay)
+            {
+                _miningOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Mining, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _miningOverlayForm.PositionChanged += OnOverlayPositionChanged;
+            }
+            else if (_miningOverlayForm != null && !AppConfiguration.EnableMiningOverlay)
+            {
+                _miningOverlayForm.Close();
+                _miningOverlayForm = null;
+            }
+
+            if (_prospectorOverlayForm == null && AppConfiguration.EnableProspectorOverlay)
+            {
+                _prospectorOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Prospector, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _prospectorOverlayForm.PositionChanged += OnOverlayPositionChanged;
+            }
+            else if (_prospectorOverlayForm != null && !AppConfiguration.EnableProspectorOverlay)
+            {
+                _prospectorOverlayForm.Close();
+                _prospectorOverlayForm = null;
             }
             // Next Jump overlay removed/disabled
 
@@ -131,6 +162,18 @@ namespace EliteDataRelay.Services
                 }
             }
 
+            if (_miningOverlayForm != null)
+            {
+                _miningOverlayForm.Show();
+                _miningOverlayForm.UpdateMiningOverlay(_lastMiningOverlayData);
+            }
+
+            if (_prospectorOverlayForm != null)
+            {
+                _prospectorOverlayForm.Show();
+                _prospectorOverlayForm.UpdateProspectorOverlay(_lastProspectorOverlayData);
+            }
+
             // Jump overlay removed
 
             // Export overlay positions for OBS
@@ -143,13 +186,18 @@ namespace EliteDataRelay.Services
             _rightOverlayForm?.Close();
             _sessionOverlayForm?.Close();
             _explorationOverlayForm?.Close();
+            _miningOverlayForm?.Close();
+            _prospectorOverlayForm?.Close();
             _jumpOverlayForm?.Close();
 
             _leftOverlayForm = null;
             _rightOverlayForm = null;
             _sessionOverlayForm = null;
             _explorationOverlayForm = null;
+            _miningOverlayForm = null;
+            _prospectorOverlayForm = null;
             _jumpOverlayForm = null;
+            _overlayOwner = null;
 
             lock (_explorationDebounceLock)
             {
@@ -160,21 +208,25 @@ namespace EliteDataRelay.Services
 
         public void Show()
         {
-            EnsureOverlaysCreated(_leftOverlayForm?.Owner); // Pass existing owner if available
+            EnsureOverlaysCreated(_overlayOwner);
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _sessionOverlayForm?.Show();
             _explorationOverlayForm?.Show();
+            _miningOverlayForm?.Show();
+            _prospectorOverlayForm?.Show();
             // Jump overlay is transient; do not force show here
         }
 
         public void Hide()
         {
-            EnsureOverlaysCreated(_leftOverlayForm?.Owner); // Pass existing owner if available
+            EnsureOverlaysCreated(_overlayOwner);
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
             _sessionOverlayForm?.Hide();
             _explorationOverlayForm?.Hide();
+            _miningOverlayForm?.Hide();
+            _prospectorOverlayForm?.Hide();
             _jumpOverlayForm?.Hide();
         }
 
@@ -196,6 +248,8 @@ namespace EliteDataRelay.Services
                 }
                 if (AppConfiguration.EnableSessionOverlay) _sessionOverlayForm?.Show();
                 if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
+                if (AppConfiguration.EnableMiningOverlay) _miningOverlayForm?.Show();
+                if (AppConfiguration.EnableProspectorOverlay) _prospectorOverlayForm?.Show();
             }
             else
             {
@@ -203,6 +257,8 @@ namespace EliteDataRelay.Services
                 _rightOverlayForm?.Hide();
                 _sessionOverlayForm?.Hide();
                 _explorationOverlayForm?.Hide();
+                _miningOverlayForm?.Hide();
+                _prospectorOverlayForm?.Hide();
             }
         }
 
@@ -219,6 +275,8 @@ namespace EliteDataRelay.Services
                 OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
                 OverlayForm.OverlayPosition.Session => _sessionOverlayForm,
                 OverlayForm.OverlayPosition.Exploration => _explorationOverlayForm,
+                OverlayForm.OverlayPosition.Mining => _miningOverlayForm,
+                OverlayForm.OverlayPosition.Prospector => _prospectorOverlayForm,
                 OverlayForm.OverlayPosition.JumpInfo => _jumpOverlayForm,
                 _ => null
             };

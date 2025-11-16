@@ -10,6 +10,7 @@ using EliteDataRelay.Configuration;
 using EliteDataRelay.Services;
 using EliteDataRelay.UI;
 using EliteDataRelay.Models;
+using EliteDataRelay.Models.Mining;
 
 namespace EliteDataRelay
 {
@@ -238,7 +239,9 @@ namespace EliteDataRelay
 
             // Next Jump overlay removed
 
-            // Mining companion removed
+            _miningTrackerService.CurrentSessionUpdated += OnMiningSessionUpdated;
+            _miningTrackerService.LatestProspectorUpdated += OnLatestProspectorUpdated;
+            _miningTrackerService.LiveStateChanged += OnMiningLiveStateChanged;
 
             // Wire up exploration events
             _journalWatcherService.FSSDiscoveryScan += (sender, e) => _explorationDataService.HandleFSSDiscoveryScan(e);
@@ -286,6 +289,9 @@ namespace EliteDataRelay
                 (_stationInfoService as IDisposable)?.Dispose();
                 (_systemInfoService as IDisposable)?.Dispose();
                 _overlayService.Dispose();
+                _miningTrackerService.CurrentSessionUpdated -= OnMiningSessionUpdated;
+                _miningTrackerService.LatestProspectorUpdated -= OnLatestProspectorUpdated;
+                _miningTrackerService.LiveStateChanged -= OnMiningLiveStateChanged;
                 _explorationDataService.Dispose();
                 _explorationDatabaseService.Dispose();
                 _screenshotRenamerService?.Dispose();

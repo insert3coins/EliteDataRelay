@@ -117,6 +117,22 @@ namespace EliteDataRelay.Services
             _explorationOverlayForm?.UpdateExplorationSessionData(data);
         }
 
+        public void UpdateMiningOverlay(MiningOverlayData? data)
+        {
+            _lastMiningOverlayData = data;
+            if (!AppConfiguration.EnableMiningOverlay) return;
+            EnsureOverlaysCreated(_overlayOwner);
+            _miningOverlayForm?.UpdateMiningOverlay(data);
+        }
+
+        public void UpdateProspectorOverlay(ProspectorOverlayData? data)
+        {
+            _lastProspectorOverlayData = data;
+            if (!AppConfiguration.EnableProspectorOverlay) return;
+            EnsureOverlaysCreated(_overlayOwner);
+            _prospectorOverlayForm?.UpdateProspectorOverlay(data);
+        }
+
         public void ShowNextJumpOverlay(NextJumpOverlayData data)
         {
             // Next Jump overlay removed; ignore calls

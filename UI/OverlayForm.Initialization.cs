@@ -98,6 +98,38 @@ namespace EliteDataRelay.UI
                 Controls.Add(_renderPanel);
                 ApplyRoundedRegion();
             }
+            else if (_position == OverlayPosition.Mining)
+            {
+                this.Size = new Size(520, 250);
+
+                _renderPanel = new DoubleBufferedPanel
+                {
+                    Location = new Point(0, 0),
+                    Size = this.ClientSize,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
+                _renderPanel.Paint += OnMiningPanelPaint;
+
+                Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
+            }
+            else if (_position == OverlayPosition.Prospector)
+            {
+                this.Size = new Size(320, 200);
+
+                _renderPanel = new DoubleBufferedPanel
+                {
+                    Location = new Point(0, 0),
+                    Size = this.ClientSize,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
+                _renderPanel.Paint += OnProspectorPanelPaint;
+
+                Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
+            }
             // JumpInfo overlay removed
             
         }

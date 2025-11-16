@@ -107,6 +107,12 @@ namespace EliteDataRelay.Services
 
         private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
+            // JournalWatcher raises LocationChanged for every event containing StarSystem;
+            // only end the session when we actually enter a new system.
+            if (!e.IsNewSystem)
+            {
+                return;
+            }
             CheckSession(e.Timestamp);
         }
 
@@ -149,7 +155,7 @@ namespace EliteDataRelay.Services
         private void OnLaunchDrone(object? sender, LaunchDroneEventArgs e)
         {
             if (_currentSession == null) return;
-            if (string.Equals(e.Type, "Collector", StringComparison.OrdinalIgnoreCase))
+            if (IsCollectorDrone(e.Type))
             {
                 _currentSession.CollectorsDeployed++;
             }
@@ -159,6 +165,13 @@ namespace EliteDataRelay.Services
             }
             _currentSession.CheckStartTime(DateTime.UtcNow);
             TriggerCurrentSessionEvent();
+        }
+
+        private static bool IsCollectorDrone(string? type)
+        {
+            if (string.IsNullOrWhiteSpace(type)) return false;
+            return string.Equals(type, "Collector", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(type, "Collection", StringComparison.OrdinalIgnoreCase);
         }
 
         private void OnMiningRefined(object? sender, MiningRefinedEventArgs e)

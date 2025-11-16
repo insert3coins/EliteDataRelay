@@ -18,6 +18,8 @@ namespace EliteDataRelay.UI
             Cargo,
             Session,
             Exploration,
+            Mining,
+            Prospector,
             JumpInfo
         }
 
@@ -59,6 +61,8 @@ namespace EliteDataRelay.UI
         private SystemExplorationData? _currentExplorationData;
         private ExplorationSessionData? _currentSessionData;
         private SystemInfoData? _currentSystemInfo;
+        private MiningOverlayData? _currentMiningData;
+        private ProspectorOverlayData? _currentProspectorData;
 
         private readonly bool _allowDrag;
 
@@ -134,6 +138,12 @@ namespace EliteDataRelay.UI
                     break;
                 case OverlayPosition.Exploration:
                     this.Text = "Elite Data Relay: Exploration";
+                    break;
+                case OverlayPosition.Mining:
+                    this.Text = "Elite Data Relay: Mining";
+                    break;
+                case OverlayPosition.Prospector:
+                    this.Text = "Elite Data Relay: Prospector";
                     break;
                 case OverlayPosition.JumpInfo:
                     this.Text = "Elite Data Relay: Next Jump";

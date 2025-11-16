@@ -137,5 +137,47 @@ namespace EliteDataRelay.UI
             _renderPanel?.Invalidate();
         }
 
+        /// <summary>
+        /// Updates mining overlay data.
+        /// </summary>
+        public void UpdateMiningOverlay(MiningOverlayData? data)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateMiningOverlay(data)));
+                return;
+            }
+
+            _currentMiningData = data;
+            if (_position == OverlayPosition.Mining)
+            {
+                ResizeMiningOverlay();
+            }
+
+            _stale = true;
+            _renderPanel?.Invalidate();
+        }
+
+        /// <summary>
+        /// Updates prospector overlay data.
+        /// </summary>
+        public void UpdateProspectorOverlay(ProspectorOverlayData? data)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateProspectorOverlay(data)));
+                return;
+            }
+
+            _currentProspectorData = data;
+            if (_position == OverlayPosition.Prospector)
+            {
+                ResizeProspectorOverlay();
+            }
+
+            _stale = true;
+            _renderPanel?.Invalidate();
+        }
+
     }
 }

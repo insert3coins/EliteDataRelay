@@ -30,9 +30,20 @@ namespace EliteDataRelay.Services
                     screen.Height - _sessionOverlayForm.Height - screenEdgePadding);
             }
 
-            // --- Calculate positions for the bottom-left overlay stack ---
+            // --- Calculate positions for the bottom-left overlay stack (Info + Mining) ---
             int totalStackHeight = 0;
-            if (_leftOverlayForm != null) totalStackHeight += _leftOverlayForm.Height;
+            int stackCount = 0;
+            if (_leftOverlayForm != null)
+            {
+                totalStackHeight += _leftOverlayForm.Height;
+                stackCount++;
+            }
+            if (_miningOverlayForm != null)
+            {
+                if (stackCount > 0) totalStackHeight += overlaySpacing;
+                totalStackHeight += _miningOverlayForm.Height;
+                stackCount++;
+            }
 
             int currentY = screen.Height - totalStackHeight - screenEdgePadding;
 
@@ -40,12 +51,20 @@ namespace EliteDataRelay.Services
             if (_leftOverlayForm != null)
             {
                 defaultLeftLocation = new Point(screenEdgePadding, currentY);
-                currentY += _leftOverlayForm.Height + overlaySpacing;
+                currentY += _leftOverlayForm.Height + (_miningOverlayForm != null ? overlaySpacing : 0);
+            }
+
+            Point defaultMiningLocation = Point.Empty;
+            if (_miningOverlayForm != null)
+            {
+                defaultMiningLocation = new Point(screenEdgePadding, currentY);
             }
 
             // --- Assign final positions ---
             if (_leftOverlayForm != null)
                 _leftOverlayForm.Location = AppConfiguration.InfoOverlayLocation != Point.Empty ? AppConfiguration.InfoOverlayLocation : defaultLeftLocation;
+            if (_miningOverlayForm != null)
+                _miningOverlayForm.Location = AppConfiguration.MiningOverlayLocation != Point.Empty ? AppConfiguration.MiningOverlayLocation : defaultMiningLocation;
 
             if (_rightOverlayForm != null)
                 _rightOverlayForm.Location = AppConfiguration.CargoOverlayLocation != Point.Empty ? AppConfiguration.CargoOverlayLocation : defaultRightLocation;
@@ -59,8 +78,29 @@ namespace EliteDataRelay.Services
             }
 
             // Exploration overlay defaults to top-left (already set in config default)
+            Point explorationDefault = new Point(screenEdgePadding, screenEdgePadding);
             if (_explorationOverlayForm != null)
-                _explorationOverlayForm.Location = AppConfiguration.ExplorationOverlayLocation != Point.Empty ? AppConfiguration.ExplorationOverlayLocation : new Point(screenEdgePadding, screenEdgePadding);
+                _explorationOverlayForm.Location = AppConfiguration.ExplorationOverlayLocation != Point.Empty ? AppConfiguration.ExplorationOverlayLocation : explorationDefault;
+
+            int topStackY = screenEdgePadding;
+            if (_explorationOverlayForm != null)
+            {
+                topStackY = (_explorationOverlayForm.Location.Y > 0 ? _explorationOverlayForm.Location.Y : screenEdgePadding) + _explorationOverlayForm.Height + overlaySpacing;
+            }
+
+            Point defaultProspectorLocation = Point.Empty;
+            if (_prospectorOverlayForm != null)
+            {
+                defaultProspectorLocation = new Point(screenEdgePadding, topStackY);
+                topStackY += _prospectorOverlayForm.Height + overlaySpacing;
+            }
+
+            if (_prospectorOverlayForm != null)
+            {
+                _prospectorOverlayForm.Location = AppConfiguration.ProspectorOverlayLocation != Point.Empty
+                    ? AppConfiguration.ProspectorOverlayLocation
+                    : defaultProspectorLocation;
+            }
 
             // Jump overlay defaults to top-center below top edge
             if (_jumpOverlayForm != null)
@@ -80,6 +120,10 @@ namespace EliteDataRelay.Services
                 AppConfiguration.SessionOverlayLocation = newLocation;
             else if (sender == _explorationOverlayForm)
                 AppConfiguration.ExplorationOverlayLocation = newLocation;
+            else if (sender == _miningOverlayForm)
+                AppConfiguration.MiningOverlayLocation = newLocation;
+            else if (sender == _prospectorOverlayForm)
+                AppConfiguration.ProspectorOverlayLocation = newLocation;
             else if (sender == _jumpOverlayForm)
                 AppConfiguration.JumpOverlayLocation = newLocation;
 

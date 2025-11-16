@@ -20,7 +20,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Overlay Functionality",
                 Location = new Point(12, 12),
-                Size = new Size(520, 270),
+                Size = new Size(520, 290),
                 BackColor = Color.Transparent,
                 ForeColor = Color.FromArgb(31, 41, 55)
             };
@@ -48,11 +48,25 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            _chkEnableMiningOverlay = new CheckBox
+            {
+                Text = "Enable mining overlay",
+                Location = new Point(15, 120),
+                AutoSize = true
+            };
+
+            _chkEnableProspectorOverlay = new CheckBox
+            {
+                Text = "Enable prospector overlay",
+                Location = new Point(15, 145),
+                AutoSize = true
+            };
+
             // Show Traffic: Exploration Overlay
             _chkTrafficExplorationOverlay = new CheckBox
             {
                 Text = "Show traffic on exploration overlay",
-                Location = new Point(15, 145 + 25 + 25),
+                Location = new Point(15, 170),
                 AutoSize = true
             };
 
@@ -62,7 +76,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Reposition Overlays",
                 // Place after the traffic toggles to avoid overlap
-                Location = new Point(15, 145 + 25 + 25 + 25 + 25),
+                Location = new Point(15, 204),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -72,6 +86,8 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableSessionOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableMiningOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableProspectorOverlay);
             _grpOverlaySettings.Controls.Add(_chkTrafficExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
             foreach (Control c in _grpOverlaySettings.Controls)
@@ -128,11 +144,15 @@ namespace EliteDataRelay.UI
             _chkShowBorderInfo = new CheckBox { Text = "Info", Location = new Point(bx, by), AutoSize = true };
             _chkShowBorderCargo = new CheckBox { Text = "Cargo", Location = new Point(bx + 60, by), AutoSize = true };
             _chkShowBorderSession = new CheckBox { Text = "Session", Location = new Point(bx + 140, by), AutoSize = true };
+            _chkShowBorderMining = new CheckBox { Text = "Mining", Location = new Point(bx + 240, by), AutoSize = true };
             _chkShowBorderExploration = new CheckBox { Text = "Exploration", Location = new Point(bx, by + bdy), AutoSize = true };
+            _chkShowBorderProspector = new CheckBox { Text = "Prospector", Location = new Point(bx + 120, by + bdy), AutoSize = true };
             _chkShowBorderInfo.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderCargo.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderSession.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderMining.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderExploration.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderProspector.CheckedChanged += OnShowOverlayBordersChanged;
             // Place opacity row below the per-overlay checkboxes
             int opacityY = by + bdy + 24; // add extra spacing after second row
             var lblOpacity = new Label { Text = "Background Opacity:", Location = new Point(15, opacityY), AutoSize = true };
@@ -151,7 +171,9 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(_chkShowBorderInfo);
             grpColors.Controls.Add(_chkShowBorderCargo);
             grpColors.Controls.Add(_chkShowBorderSession);
+            grpColors.Controls.Add(_chkShowBorderMining);
             grpColors.Controls.Add(_chkShowBorderExploration);
+            grpColors.Controls.Add(_chkShowBorderProspector);
             grpColors.Controls.Add(lblOpacity);
             grpColors.Controls.Add(_trackBarOpacity);
             grpColors.Controls.Add(_lblOpacityValue);

@@ -53,6 +53,8 @@ namespace EliteDataRelay.Configuration
                         EnableCargoOverlay = config.EnableCargoOverlay;
                         EnableExplorationOverlay = config.EnableExplorationOverlay;
                         EnableSessionOverlay = config.EnableSessionOverlay || config.ShowSessionOnOverlay;
+                        EnableMiningOverlay = config.EnableMiningOverlay;
+                        EnableProspectorOverlay = config.EnableProspectorOverlay;
                         EnableJumpOverlay = config.EnableJumpOverlay;
                         AllowOverlayDrag = config.AllowOverlayDrag;
                         EnableSessionTracking = config.EnableSessionTracking;
@@ -72,6 +74,8 @@ namespace EliteDataRelay.Configuration
                         OverlayShowBorderCargo = config.OverlayShowBorderCargo;
                         OverlayShowBorderSession = config.OverlayShowBorderSession;
                         OverlayShowBorderExploration = config.OverlayShowBorderExploration;
+                        OverlayShowBorderMining = config.OverlayShowBorderMining;
+                        OverlayShowBorderProspector = config.OverlayShowBorderProspector;
                         OverlayShowBorderJump = config.OverlayShowBorderJump;
                         ShowTrafficOnExplorationOverlay = config.ShowTrafficOnExplorationOverlay;
                         ShowTrafficOnJumpOverlay = config.ShowTrafficOnJumpOverlay;
@@ -82,17 +86,23 @@ namespace EliteDataRelay.Configuration
                             config.OverlayShowBorderInfo == true &&
                             config.OverlayShowBorderCargo == true &&
                             config.OverlayShowBorderExploration == true &&
+                            config.OverlayShowBorderMining == true &&
+                            config.OverlayShowBorderProspector == true &&
                             config.OverlayShowBorderJump == true)
                         {
                             OverlayShowBorderInfo = false;
                             OverlayShowBorderCargo = false;
                             OverlayShowBorderExploration = false;
+                            OverlayShowBorderMining = false;
+                            OverlayShowBorderProspector = false;
                             OverlayShowBorderJump = false;
                         }
                         InfoOverlayLocation = config.InfoOverlayLocation;
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         SessionOverlayLocation = config.SessionOverlayLocation;
                         ExplorationOverlayLocation = config.ExplorationOverlayLocation;
+                        MiningOverlayLocation = config.MiningOverlayLocation;
+                        ProspectorOverlayLocation = config.ProspectorOverlayLocation;
                         JumpOverlayLocation = config.JumpOverlayLocation;
                         ShowNextJumpJumpsLeft = config.ShowNextJumpJumpsLeft;
                         // Mining announcements removed
@@ -140,6 +150,8 @@ namespace EliteDataRelay.Configuration
                     EnableInfoOverlay = AppConfiguration.EnableInfoOverlay,
                     EnableCargoOverlay = AppConfiguration.EnableCargoOverlay,
                     EnableExplorationOverlay = AppConfiguration.EnableExplorationOverlay,
+                    EnableMiningOverlay = AppConfiguration.EnableMiningOverlay,
+                    EnableProspectorOverlay = AppConfiguration.EnableProspectorOverlay,
                     EnableJumpOverlay = AppConfiguration.EnableJumpOverlay,
                     AllowOverlayDrag = AppConfiguration.AllowOverlayDrag,
                     EnableSessionTracking = AppConfiguration.EnableSessionTracking,
@@ -160,6 +172,8 @@ namespace EliteDataRelay.Configuration
                     OverlayShowBorderCargo = AppConfiguration.OverlayShowBorderCargo,
                     OverlayShowBorderSession = AppConfiguration.OverlayShowBorderSession,
                     OverlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration,
+                    OverlayShowBorderMining = AppConfiguration.OverlayShowBorderMining,
+                    OverlayShowBorderProspector = AppConfiguration.OverlayShowBorderProspector,
                     OverlayShowBorderJump = AppConfiguration.OverlayShowBorderJump,
                     ShowTrafficOnExplorationOverlay = AppConfiguration.ShowTrafficOnExplorationOverlay,
                     ShowTrafficOnJumpOverlay = AppConfiguration.ShowTrafficOnJumpOverlay,
@@ -167,6 +181,8 @@ namespace EliteDataRelay.Configuration
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     SessionOverlayLocation = AppConfiguration.SessionOverlayLocation,
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
+                    MiningOverlayLocation = AppConfiguration.MiningOverlayLocation,
+                    ProspectorOverlayLocation = AppConfiguration.ProspectorOverlayLocation,
                     JumpOverlayLocation = AppConfiguration.JumpOverlayLocation,
                     ShowNextJumpJumpsLeft = AppConfiguration.ShowNextJumpJumpsLeft,
                     // Performance and extras
@@ -211,6 +227,8 @@ namespace EliteDataRelay.Configuration
             public bool EnableCargoOverlay { get; set; } = false;
             public bool EnableSessionOverlay { get; set; } = false;
             public bool EnableExplorationOverlay { get; set; } = false;
+            public bool EnableMiningOverlay { get; set; } = false;
+            public bool EnableProspectorOverlay { get; set; } = false;
             public bool EnableJumpOverlay { get; set; } = true;
             public bool AllowOverlayDrag { get; set; } = true;
             public bool EnableSessionTracking { get; set; } = true;
@@ -234,6 +252,8 @@ namespace EliteDataRelay.Configuration
             public bool OverlayShowBorderCargo { get; set; } = true;
             public bool OverlayShowBorderSession { get; set; } = true;
             public bool OverlayShowBorderExploration { get; set; } = true;
+            public bool OverlayShowBorderMining { get; set; } = true;
+            public bool OverlayShowBorderProspector { get; set; } = true;
             public bool OverlayShowBorderJump { get; set; } = true;
             public bool ShowTrafficOnExplorationOverlay { get; set; } = true;
             public bool ShowTrafficOnJumpOverlay { get; set; } = true;
@@ -241,6 +261,8 @@ namespace EliteDataRelay.Configuration
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point SessionOverlayLocation { get; set; } = Point.Empty;
             public Point ExplorationOverlayLocation { get; set; } = new Point(20, 20);
+            public Point MiningOverlayLocation { get; set; } = Point.Empty;
+            public Point ProspectorOverlayLocation { get; set; } = Point.Empty;
             public Point JumpOverlayLocation { get; set; } = Point.Empty;
             public bool ShowNextJumpJumpsLeft { get; set; } = true;
             // Mining announcements removed

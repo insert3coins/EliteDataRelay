@@ -88,6 +88,8 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
             AppConfiguration.OverlayShowBorderSession = _chkShowBorderSession.Checked;
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
+            AppConfiguration.OverlayShowBorderMining = _chkShowBorderMining.Checked;
+            AppConfiguration.OverlayShowBorderProspector = _chkShowBorderProspector.Checked;
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -103,6 +105,8 @@ namespace EliteDataRelay.UI
             _chkShowBorderCargo.Checked = true;
             _chkShowBorderSession.Checked = true;
             _chkShowBorderExploration.Checked = true;
+            _chkShowBorderMining.Checked = true;
+            _chkShowBorderProspector.Checked = true;
             UpdateAppearanceControls();
 
             // Also update the static configuration directly to apply the changes live.
@@ -116,11 +120,15 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderCargo = true;
             AppConfiguration.OverlayShowBorderSession = true;
             AppConfiguration.OverlayShowBorderExploration = true;
+            AppConfiguration.OverlayShowBorderMining = true;
+            AppConfiguration.OverlayShowBorderProspector = true;
 
             // Also reset overlay positions
             AppConfiguration.InfoOverlayLocation = Point.Empty;
             AppConfiguration.CargoOverlayLocation = Point.Empty;
             AppConfiguration.SessionOverlayLocation = Point.Empty;
+            AppConfiguration.MiningOverlayLocation = Point.Empty;
+            AppConfiguration.ProspectorOverlayLocation = Point.Empty;
 
             // Raise the event to trigger a refresh of the live overlays.
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);

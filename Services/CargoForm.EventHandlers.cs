@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows.Forms;
 using EliteDataRelay.Configuration;
 using EliteDataRelay.Models;
+using EliteDataRelay.Models.Mining;
 using EliteDataRelay.Services;
 using EliteDataRelay.UI;
 
@@ -62,6 +63,8 @@ namespace EliteDataRelay
                     // We must translate the internal names (e.g., "lowtemperaturediamonds") to friendly names ("Low Temperature Diamonds")
                     // that the EDSM API expects. We are no longer doing this.
                 }
+
+                RefreshMiningOverlay();
             });
         }
 
@@ -101,6 +104,8 @@ namespace EliteDataRelay
                     }
                     
                 });
+
+                SafeInvoke(RefreshMiningOverlay);
             }
         }
 
@@ -581,6 +586,176 @@ namespace EliteDataRelay
                     _cargoFormUI.UpdateMaterials(e);
                 }
             });
+        }
+
+        private void OnMiningSessionUpdated(object? sender, EventArgs e)
+        {
+            SafeInvoke(RefreshMiningOverlay);
+        }
+
+        private void OnLatestProspectorUpdated(object? sender, EventArgs e)
+        {
+            SafeInvoke(() =>
+            {
+                _overlayService.UpdateProspectorOverlay(BuildProspectorOverlayData());
+            });
+        }
+
+        private void OnMiningLiveStateChanged(object? sender, bool isLive)
+        {
+            SafeInvoke(() =>
+            {
+                if (!isLive)
+                {
+                    _overlayService.UpdateMiningOverlay(null);
+                    _overlayService.UpdateProspectorOverlay(null);
+                }
+                else
+                {
+                    RefreshMiningOverlay();
+                    _overlayService.UpdateProspectorOverlay(BuildProspectorOverlayData());
+                }
+            });
+        }
+
+        private void RefreshMiningOverlay()
+        {
+            _overlayService.UpdateMiningOverlay(BuildMiningOverlayData());
+        }
+
+        private MiningOverlayData? BuildMiningOverlayData()
+        {
+            var session = _miningTrackerService.CurrentSession;
+            if (session == null || !session.Started)
+            {
+                return null;
+            }
+
+            var end = session.TimeFinished < DateTime.MaxValue ? session.TimeFinished : DateTime.UtcNow;
+            if (end < session.TimeStarted) end = DateTime.UtcNow;
+            var duration = end - session.TimeStarted;
+            if (duration < TimeSpan.Zero) duration = TimeSpan.Zero;
+
+            var oreItems = session.Items.Where(x => x.Type == MiningItemType.Ore);
+            int totalRefined = oreItems.Sum(x => x.RefinedCount);
+            double refinedPerHour = duration.TotalHours > 0 ? totalRefined / duration.TotalHours : 0;
+            int materialsCollected = session.Items.Where(x => x.Type == MiningItemType.Material).Sum(x => x.CollectedCount);
+
+            var rows = session.Items
+                .OrderByDescending(x => x.Type == MiningItemType.Ore)
+                .ThenByDescending(x => x.RefinedCount)
+                .ThenByDescending(x => x.CollectedCount)
+                .Take(8)
+                .Select(item => new MiningOverlayCommodity
+                {
+                    Name = item.Name,
+                    Type = item.Type,
+                    RefinedCount = item.RefinedCount,
+                    CollectedCount = item.CollectedCount,
+                    Prospected = item.Prospected,
+                    HitRate = session.AsteroidsProspected > 0 && item.Type == MiningItemType.Ore
+                        ? (double)item.ContentHitCount / session.AsteroidsProspected * 100d
+                        : 0d,
+                    MinPercentage = item.MinPercentage,
+                    MaxPercentage = item.MaxPercentage,
+                    Motherlodes = item.MotherLoad,
+                    LowContent = item.LowContent,
+                    MedContent = item.MedContent,
+                    HighContent = item.HighContent
+                })
+                .ToList();
+
+            return new MiningOverlayData
+            {
+                Location = BuildMiningLocationLabel(session),
+                Duration = duration,
+                RefinedPerHour = refinedPerHour,
+                ProspectorsFired = session.ProspectorsFired,
+                CollectorsDeployed = session.CollectorsDeployed,
+                AsteroidsProspected = session.AsteroidsProspected,
+                AsteroidsCracked = session.AsteroidsCracked,
+                TotalRefined = totalRefined,
+                MaterialsCollected = materialsCollected,
+                LowContent = session.LowContent,
+                MedContent = session.MedContent,
+                HighContent = session.HighContent,
+                LimpetsRemaining = GetRemainingLimpets(),
+                CargoFree = GetCargoFree(),
+                CargoCapacity = _cargoCapacity,
+                Commodities = rows
+            };
+        }
+
+        private ProspectorOverlayData? BuildProspectorOverlayData()
+        {
+            var prospector = _miningTrackerService.LatestProspector;
+            if (prospector == null)
+            {
+                return null;
+            }
+
+            var materials = prospector.Materials
+                .OrderByDescending(m => m.Proportion)
+                .Take(6)
+                .Select(m => new ProspectorOverlayItem
+                {
+                    Name = m.Name,
+                    Percentage = m.Proportion
+                })
+                .ToList();
+
+            return new ProspectorOverlayData
+            {
+                Content = prospector.Content,
+                RemainingPercent = prospector.Remaining,
+                Motherlode = prospector.MotherlodeMaterial,
+                IsDepleted = prospector.Remaining <= 0,
+                Materials = materials
+            };
+        }
+
+        private static string BuildMiningLocationLabel(MiningSession session)
+        {
+            var system = (session.StarSystem ?? "Unknown").Trim();
+            var location = session.Location?.Trim();
+
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                return system;
+                }
+
+            if (!string.IsNullOrEmpty(system) &&
+                location.StartsWith(system, StringComparison.OrdinalIgnoreCase))
+            {
+                var suffix = location.Substring(system.Length).Trim();
+                suffix = suffix.TrimStart('-', '•').Trim();
+                if (string.IsNullOrEmpty(suffix))
+                {
+                    return system;
+                }
+
+                return $"{system} • {suffix}";
+            }
+
+            return string.IsNullOrEmpty(system) ? location : $"{system} • {location}";
+        }
+
+        private int? GetRemainingLimpets()
+        {
+            var snapshot = _lastCargoSnapshot;
+            if (snapshot?.Items == null) return null;
+            var limpet = snapshot.Items.FirstOrDefault(item =>
+                (!string.IsNullOrEmpty(item.Localised) && item.Localised.IndexOf("limpet", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                (!string.IsNullOrEmpty(item.Name) && item.Name.IndexOf("limpet", StringComparison.OrdinalIgnoreCase) >= 0));
+            return limpet?.Count;
+        }
+
+        private int? GetCargoFree()
+        {
+            if (!_cargoCapacity.HasValue) return null;
+            var used = _lastCargoSnapshot?.Count ?? 0;
+            int remaining = _cargoCapacity.Value - used;
+            return remaining >= 0 ? remaining : 0;
         }
 
         #endregion
