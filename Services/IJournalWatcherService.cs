@@ -23,6 +23,14 @@ namespace EliteDataRelay.Services
         event EventHandler<LaunchDroneEventArgs>? LaunchDrone;
         event EventHandler<BuyDronesEventArgs>? BuyDrones;
         event EventHandler<MarketBuyEventArgs>? MarketBuy;
+        event EventHandler<JournalEvents.MaterialCollectedEventArgs>? MaterialCollected;
+        event EventHandler<JournalEvents.AsteroidCrackedEventArgs>? AsteroidCracked;
+        event EventHandler<JournalEvents.ProspectedAsteroidEventArgs>? ProspectedAsteroid;
+        event EventHandler<JournalEvents.SupercruiseExitEventArgs>? SupercruiseExit;
+        event EventHandler<JournalEvents.SupercruiseEntryEventArgs>? SupercruiseEntry;
+        event EventHandler<JournalEvents.MusicTrackEventArgs>? MusicTrackChanged;
+        event EventHandler<JournalEvents.ShutdownEventArgs>? Shutdown;
+        event EventHandler<JournalEvents.FileheaderEventArgs>? FileheaderRead;
         event EventHandler<FSSDiscoveryScanEvent>? FSSDiscoveryScan;
         event EventHandler<ScanEvent>? BodyScanned;
         event EventHandler<SAAScanCompleteEvent>? SAAScanComplete;

@@ -398,10 +398,8 @@ namespace EliteDataRelay
             SafeInvoke(() =>
             {
                 // Update the mining tab on the main UI.
-                _cargoFormUI.RefreshMiningStats();
-
-                // Update the dedicated session overlay with the latest stats.
-                _cargoFormUI.UpdateSessionOverlay(BuildSessionOverlayData());
+            // Update the dedicated session overlay with the latest stats.
+            _cargoFormUI.UpdateSessionOverlay(BuildSessionOverlayData());
 
                 // Web overlay session info
                 
@@ -415,12 +413,8 @@ namespace EliteDataRelay
             _lastSystemAddress = e.SystemAddress;
             _lastLocationTimestamp = e.Timestamp;
 
-            // Update exploration service with system change
-            // Suppress during initial scan to avoid iterating historical systems.
-            if (!_isInitializing)
-            {
-                _explorationDataService.HandleSystemChange(e.StarSystem, e.SystemAddress, e.Timestamp);
-            }
+            // Always update the exploration data service with the latest system.
+            _explorationDataService.HandleSystemChange(e.StarSystem, e.SystemAddress, e.Timestamp);
             // Next jump overlay removed: no action here
 
             SafeInvoke(() =>

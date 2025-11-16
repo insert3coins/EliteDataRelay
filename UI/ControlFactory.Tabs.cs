@@ -7,7 +7,7 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
-        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker, FleetCarrierTrackerService fleetCarrierTracker)
+        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker, FleetCarrierTrackerService fleetCarrierTracker, MiningTrackerService miningTracker)
         {
             // Tab control to switch between Cargo and Materials
             TabControl = new TabControl
@@ -18,11 +18,11 @@ namespace EliteDataRelay.UI
 
             var cargoPage = CreateCargoTabPage(fontManager);
             var shipPage = CreateShipTabPage(fontManager);
-            var miningPage = CreateMiningTabPage(fontManager, sessionTracker);
             var sessionPage = CreateSessionTabPage(fontManager, sessionTracker);
+            var miningPage = CreateMiningTabPage(fontManager, miningTracker);
             var fleetCarrierPage = CreateFleetCarrierTabPage(fontManager, fleetCarrierTracker);
             
-            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, miningPage, sessionPage, fleetCarrierPage });
+            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, sessionPage, miningPage, fleetCarrierPage });
         }
 
         private void DisposeTabControls()
@@ -34,6 +34,11 @@ namespace EliteDataRelay.UI
             {
                 SessionTab.Dispose();
                 SessionTab = null;
+            }
+            if (MiningTab != null)
+            {
+                MiningTab.Dispose();
+                MiningTab = null;
             }
             if (FleetCarrierTab != null)
             {
@@ -54,6 +59,13 @@ namespace EliteDataRelay.UI
             FleetCarrierTab?.Dispose();
             FleetCarrierTab = new FleetCarrierTab(tracker, fontManager);
             return FleetCarrierTab;
+        }
+
+        private TabPage CreateMiningTabPage(FontManager fontManager, MiningTrackerService tracker)
+        {
+            MiningTab?.Dispose();
+            MiningTab = new MiningTab(tracker, fontManager);
+            return MiningTab;
         }
     }
 }

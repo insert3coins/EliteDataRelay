@@ -120,6 +120,14 @@ namespace EliteDataRelay.Services
         /// Event raised when commodities are purchased from the market.
         /// </summary>
         public event EventHandler<MarketBuyEventArgs>? MarketBuy;
+        public event EventHandler<JournalEvents.MaterialCollectedEventArgs>? MaterialCollected;
+        public event EventHandler<JournalEvents.AsteroidCrackedEventArgs>? AsteroidCracked;
+        public event EventHandler<JournalEvents.ProspectedAsteroidEventArgs>? ProspectedAsteroid;
+        public event EventHandler<JournalEvents.SupercruiseExitEventArgs>? SupercruiseExit;
+        public event EventHandler<JournalEvents.SupercruiseEntryEventArgs>? SupercruiseEntry;
+        public event EventHandler<JournalEvents.MusicTrackEventArgs>? MusicTrackChanged;
+        public event EventHandler<JournalEvents.ShutdownEventArgs>? Shutdown;
+        public event EventHandler<JournalEvents.FileheaderEventArgs>? FileheaderRead;
 
         /// <summary>
         /// Event raised when an FSS discovery scan is performed.
@@ -251,6 +259,7 @@ namespace EliteDataRelay.Services
             // Reset state and do an initial poll immediately to get the current state.
             // The timer will then continue at the configured interval.
             Reset();
+            TrySeedLastKnownLocation();
             PollTimer_Tick(null);
             InitialScanComplete?.Invoke(this, EventArgs.Empty);
 
@@ -478,5 +487,96 @@ namespace EliteDataRelay.Services
         {
             return _lastDockedEventArgs;
         }
+
+        private void TrySeedLastKnownLocation()
+        {
+            try
+            {
+                var latest = FindLatestJournalFile();
+                if (latest == null || !File.Exists(latest))
+                {
+                    return;
+                }
+
+                _currentJournalFile = latest;
+                foreach (var line in File.ReadLines(latest).Reverse())
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(line);
+                        if (ApplyLocationSeed(doc.RootElement))
+                        {
+                            break;
+                        }
+                    }
+                    catch
+                    {
+                        // ignore malformed lines
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[JournalWatcherService] Failed to seed last known location: {ex}");
+            }
+        }
+
+        private bool ApplyLocationSeed(JsonElement root)
+        {
+            if (!root.TryGetProperty("event", out var evtProp))
+            {
+                return false;
+            }
+
+            var evtType = evtProp.GetString();
+            if (evtType != "Location" && evtType != "FSDJump" && evtType != "CarrierJump")
+            {
+                return false;
+            }
+
+            if (!root.TryGetProperty("StarSystem", out var starSystemProp))
+            {
+                return false;
+            }
+
+            var starSystem = starSystemProp.GetString();
+            if (string.IsNullOrWhiteSpace(starSystem))
+            {
+                return false;
+            }
+
+            double[] starPos = Array.Empty<double>();
+            if (root.TryGetProperty("StarPos", out var starPosElement) && starPosElement.ValueKind == JsonValueKind.Array)
+            {
+                try
+                {
+                    starPos = starPosElement.EnumerateArray().Select(p => p.GetDouble()).ToArray();
+                }
+                catch { starPos = Array.Empty<double>(); }
+            }
+
+            long? systemAddress = null;
+            if (root.TryGetProperty("SystemAddress", out var addrElement) && addrElement.TryGetInt64(out var addr))
+            {
+                systemAddress = addr;
+            }
+
+            DateTime timestamp = DateTime.UtcNow;
+            if (root.TryGetProperty("timestamp", out var tsElement) && tsElement.TryGetDateTime(out var ts))
+            {
+                timestamp = ts;
+            }
+
+            _lastStarSystem = starSystem;
+            _lastLocationArgs = new LocationChangedEventArgs(starSystem!, starPos, true, systemAddress, timestamp);
+            LocationChanged?.Invoke(this, _lastLocationArgs);
+            return true;
+        }
     }
+
 }

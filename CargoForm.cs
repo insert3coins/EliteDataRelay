@@ -22,6 +22,7 @@ namespace EliteDataRelay
         private readonly ISoundService _soundService;
         private readonly ICargoFormUI _cargoFormUI;
         private readonly SessionTrackingService _sessionTrackingService;
+        private readonly MiningTrackerService _miningTrackerService;
         private readonly ISystemInfoService _systemInfoService;
         private readonly IStationInfoService _stationInfoService;
         private readonly OverlayService _overlayService;
@@ -40,6 +41,7 @@ namespace EliteDataRelay
             _cargoProcessorService = new CargoProcessorService();
             _soundService = new SoundService();
             _sessionTrackingService = new SessionTrackingService(_cargoProcessorService, _journalWatcherService);
+            _miningTrackerService = new MiningTrackerService(_journalWatcherService);
             _systemInfoService = new SystemInfoService(_journalWatcherService);
             _stationInfoService = new StationInfoService(_journalWatcherService);
             _overlayService = new OverlayService();
@@ -48,7 +50,7 @@ namespace EliteDataRelay
             _explorationDatabaseService = new ExplorationDatabaseService();
             _explorationDatabaseService.Initialize();
             _explorationDataService = new ExplorationDataService(_explorationDatabaseService);
-            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService, _fleetCarrierTrackerService);
+            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService, _fleetCarrierTrackerService, _miningTrackerService);
 
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
@@ -195,8 +197,6 @@ namespace EliteDataRelay
             // but we can still handle it here if needed for other purposes.
             // For now, we'll use the settings form to show it.
             // If you want a dedicated button, you can re-add this.
-            _cargoFormUI.MiningStartClicked += OnMiningStartClicked;
-            _cargoFormUI.MiningStopClicked += OnMiningStopClicked;
 
             // Timer to periodically check if the game process is still running
             _gameProcessCheckTimer = new System.Windows.Forms.Timer
@@ -227,7 +227,6 @@ namespace EliteDataRelay
             _journalWatcherService.LocationChanged += OnLocationChanged;
             _journalWatcherService.BalanceChanged += OnBalanceChanged;
 
-            _sessionTrackingService.MiningNotificationRaised += OnMiningNotificationRaised;
             _sessionTrackingService.SessionUpdated += OnSessionUpdated;
             _journalWatcherService.CommanderNameChanged += OnCommanderNameChanged;
             _journalWatcherService.ShipInfoChanged += OnShipInfoChanged;
@@ -264,17 +263,6 @@ namespace EliteDataRelay
 
             // Push exploration updates to web overlay
 
-        }
-
-        private void OnMiningNotificationRaised(object? sender, MiningNotificationEventArgs e)
-        {
-            SafeInvoke(() =>
-            {
-                _cargoFormUI.AppendMiningAnnouncement(e); // Add announcement to the UI list
-                _cargoFormUI.ShowMiningNotification(e);   // Show the tray notification
-
-                // Reminder sound removed with Mining companion
-            });
         }
 
         private async void OnGameFileChanged(string fileName)

@@ -12,8 +12,6 @@ namespace EliteDataRelay.UI
         event EventHandler? ExitClicked;
         event EventHandler? AboutClicked;
         event EventHandler? SettingsClicked;
-        event EventHandler? MiningStartClicked;
-        event EventHandler? MiningStopClicked;
 
         void InitializeUI(Form form);
         void SetButtonStates(bool startEnabled, bool stopEnabled);
@@ -30,10 +28,6 @@ namespace EliteDataRelay.UI
         void UpdateSystemInfo(SystemInfoData data);
         void UpdateLocation(string location);
         void UpdateSessionOverlay(SessionOverlayData data);
-        void RefreshMiningStats();
-        void UpdateMiningPreferences(MiningSessionPreferences preferences);
-        void AppendMiningAnnouncement(MiningNotificationEventArgs notification);
-        void ShowMiningNotification(MiningNotificationEventArgs notification);
         void ShowInfoNotification(string title, string message);
         void ShowInfoPopup(string title, string message);
         void UpdateTitle(string title);

@@ -21,6 +21,7 @@ namespace EliteDataRelay.UI
         private LayoutManager? _layoutManager;
         private readonly OverlayService _overlayService;
         private readonly SessionTrackingService _sessionTrackingService;
+        private readonly MiningTrackerService _miningTrackerService;
         private readonly ExplorationDataService _explorationDataService;
         private readonly FleetCarrierTrackerService _fleetCarrierTrackerService;
         private MemoryStream? _iconStream;
@@ -42,16 +43,13 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SettingsClicked;
 
-        public event EventHandler? MiningStartClicked;
-
-        public event EventHandler? MiningStopClicked;
-
-        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService, ExplorationDataService explorationDataService, FleetCarrierTrackerService fleetCarrierTrackerService)
+        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService, ExplorationDataService explorationDataService, FleetCarrierTrackerService fleetCarrierTrackerService, MiningTrackerService miningTrackerService)
         {
             _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
             _explorationDataService = explorationDataService ?? throw new ArgumentNullException(nameof(explorationDataService));
             _fleetCarrierTrackerService = fleetCarrierTrackerService ?? throw new ArgumentNullException(nameof(fleetCarrierTrackerService));
+            _miningTrackerService = miningTrackerService ?? throw new ArgumentNullException(nameof(miningTrackerService));
         }
 
         public void InitializeUI(Form form)
@@ -59,7 +57,7 @@ namespace EliteDataRelay.UI
             _form = form ?? throw new ArgumentNullException(nameof(form));
             InitializeIcon();
             _fontManager = new FontManager();
-            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService, _fleetCarrierTrackerService);
+            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService, _fleetCarrierTrackerService, _miningTrackerService);
 
             if (_controlFactory.WatchingLabel != null)
             {
@@ -187,7 +185,7 @@ namespace EliteDataRelay.UI
 
             // Make the window a fixed size and not resizable.
             _form.FormBorderStyle = FormBorderStyle.FixedSingle;
-            _form.Size = new Size(800, 600);
+            _form.Size = new Size(1000, 800);
 
             // Set application icon from pre-loaded resource
             if (_appIcon != null) _form.Icon = _appIcon;
@@ -199,11 +197,9 @@ namespace EliteDataRelay.UI
 
             _controlFactory.StartBtn.Click += (s, e) => StartClicked?.Invoke(s, e);
             _controlFactory.StopBtn.Click += (s, e) => StopClicked?.Invoke(s, e);
-            _controlFactory.ExitBtn.Click += (s, e) => ExitClicked?.Invoke(s, e);
+            _controlFactory.ExitBtn.Click += (s, e) => ExitClicked?.Invoke(s, e);        
             _controlFactory.SettingsBtn.Click += (s, e) => SettingsClicked?.Invoke(s, e);
             _controlFactory.AboutBtn.Click += (s, e) => AboutClicked?.Invoke(s, e);
-            _controlFactory.MiningSessionPanel.StartMiningClicked += OnMiningStartClicked;
-            _controlFactory.MiningSessionPanel.StopMiningClicked += OnMiningStopClicked;
 
             // Tray icon event handlers
             if (_trayIconManager != null)
@@ -229,10 +225,6 @@ namespace EliteDataRelay.UI
             _form.Activate();
         }
 
-        public void OnMiningStartClicked(object? sender, EventArgs e) => MiningStartClicked?.Invoke(sender, e);
-
-        public void OnMiningStopClicked(object? sender, EventArgs e) => MiningStopClicked?.Invoke(sender, e);
-
         public void UpdateSystemInfo(SystemInfoData data)
         {
             _overlayService?.UpdateSystemInfo(data);
@@ -246,37 +238,6 @@ namespace EliteDataRelay.UI
         public void UpdateMaterials(MaterialsEvent materials)
         {
             _controlFactory?.MaterialsTab?.UpdateAllMaterials(materials.Raw, materials.Manufactured, materials.Encoded);
-        }
-
-        public void AppendMiningAnnouncement(MiningNotificationEventArgs notification)
-        {
-            _controlFactory?.MiningSessionPanel?.AddAnnouncement(notification);
-        }
-
-        public void ShowMiningNotification(MiningNotificationEventArgs notification)
-        {
-            if (_trayIconManager == null) return;
-
-            // Only show tray notifications for specific, user-facing events.
-            // The 'Info' type is for UI announcements only.
-            if (notification.Type == MiningNotificationType.Info)
-            {
-                return;
-            }
-
-
-            var icon = notification.Type switch // This switch is now exhaustive
-            {
-                MiningNotificationType.CargoFull => ToolTipIcon.Warning,
-                MiningNotificationType.BackupCreated => ToolTipIcon.Info,
-                MiningNotificationType.BackupRestored => ToolTipIcon.Info,
-                MiningNotificationType.AutoStart => ToolTipIcon.Info,
-                MiningNotificationType.ReportGenerated => ToolTipIcon.Info,
-                MiningNotificationType.ValuableCommodityRefined => ToolTipIcon.Info,
-                _ => ToolTipIcon.None // Default case for Info and any future types
-            };
-
-            _trayIconManager.ShowBalloonTip(3000, "Elite Data Relay", notification.Message, icon);
         }
 
         public void ShowInfoNotification(string title, string message)
@@ -326,17 +287,6 @@ namespace EliteDataRelay.UI
                 _controlFactory.CargoWelcomePanel.Visible = !isMonitoring;
                 _controlFactory.CargoGridView.Visible = isMonitoring;
             }
-        }
-
-        public void RefreshMiningStats()
-        {
-            _controlFactory?.MiningSessionPanel?.UpdateStats();
-        }
-
-        public void UpdateMiningPreferences(MiningSessionPreferences preferences)
-        {
-            // This method is no longer used since settings were moved,
-            // but is required by the interface.
         }
 
         public void UpdateCargoScrollBar()

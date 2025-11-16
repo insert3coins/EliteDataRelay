@@ -63,7 +63,6 @@ namespace EliteDataRelay.Services
         public event EventHandler? SessionHistoryUpdated;
         public event EventHandler<MiningSessionRecord>? SessionCompleted;
         public event EventHandler? PreferencesChanged;
-        public event EventHandler<MiningNotificationEventArgs>? MiningNotificationRaised;
 
         public SessionTrackingService(ICargoProcessorService cargoProcessorService, IJournalWatcherService journalWatcherService)
         {
@@ -180,7 +179,6 @@ namespace EliteDataRelay.Services
             if (IsMiningSessionActive) return;
             IsMiningSessionActive = true;
             _miningStartTime = DateTime.UtcNow;
-            PublishNotification("Mining session started.", MiningNotificationType.Info, false);
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
@@ -189,7 +187,6 @@ namespace EliteDataRelay.Services
             if (!IsMiningSessionActive) return;
             IsMiningSessionActive = false;
             _miningStartTime = null;
-            PublishNotification("Mining session stopped.", MiningNotificationType.Info, false);
             SessionUpdated?.Invoke(this, EventArgs.Empty);
         }
 
@@ -349,16 +346,6 @@ namespace EliteDataRelay.Services
 
             sb.AppendLine("</body></html>");
             return sb.ToString();
-        }
-
-        public void PublishCustomNotification(string message, MiningNotificationType type = MiningNotificationType.Info, bool persistent = false)
-            => PublishNotification(message, type, persistent);
-
-        private void PublishNotification(string message, MiningNotificationType type, bool persistent)
-        {
-            if (!Preferences.AnnouncementsEnabled && type != MiningNotificationType.CargoFull) return;
-
-            MiningNotificationRaised?.Invoke(this, new MiningNotificationEventArgs(type, message, DateTime.UtcNow, persistent));
         }
 
         public BackupSnapshot CreateSnapshot(IEnumerable<string>? reportPaths = null)

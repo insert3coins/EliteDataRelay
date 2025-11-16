@@ -508,7 +508,7 @@ namespace EliteDataRelay.Services
                 {
                     var commodity = target.GetOrAddCommodity(item.Name, item.NameLocalised, stolen: false);
                     commodity.StockCount = item.Stock;
-                    commodity.SalePrice = item.BuyPrice;
+                    commodity.SalePrice = item.SellPrice;
                     commodity.OutstandingPurchaseOrders = item.Demand;
                     commodity.Rare = item.Rare;
                     commodity.BlackMarket = false;

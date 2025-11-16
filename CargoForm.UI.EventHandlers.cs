@@ -149,10 +149,6 @@ namespace EliteDataRelay
             _cargoFormUI.UpdateMonitoringVisuals(_fileMonitoringService.IsMonitoring);
         }
 
-        private void OnMiningStartClicked(object? sender, EventArgs e) => _sessionTrackingService.StartMiningSession();
-
-        private void OnMiningStopClicked(object? sender, EventArgs e) => _sessionTrackingService.StopMiningSession();
-
         // Periodically checks if the game process is still running and stops monitoring if it's not.
         private void OnGameProcessCheck(object? sender, EventArgs e)
         {

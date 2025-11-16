@@ -9,6 +9,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Globalization;
 
 namespace EliteDataRelay.Services
 {
@@ -245,10 +246,83 @@ namespace EliteDataRelay.Services
                             // Some setups do not emit StartJump reliably; use Music:Jump as a fallback signal
                             var root = jsonDoc.RootElement;
                             string? track = root.TryGetProperty("MusicTrack", out var mt) ? mt.GetString() : null;
+                            if (!string.IsNullOrEmpty(track))
+                            {
+                                var timestamp = ReadTimestamp(root);
+                                MusicTrackChanged?.Invoke(this, new JournalEvents.MusicTrackEventArgs(timestamp, track));
+                            }
                             if (string.Equals(track, "Jump", StringComparison.OrdinalIgnoreCase))
                             {
                                 JumpInitiated?.Invoke(this, new JumpInitiatedEventArgs(string.Empty, null, null, null));
                             }
+                        }
+                        else if (eventType == "Fileheader")
+                        {
+                            var timestamp = ReadTimestamp(jsonDoc.RootElement);
+                            FileheaderRead?.Invoke(this, new JournalEvents.FileheaderEventArgs(timestamp));
+                        }
+                        else if (eventType == "Shutdown")
+                        {
+                            var timestamp = ReadTimestamp(jsonDoc.RootElement);
+                            Shutdown?.Invoke(this, new JournalEvents.ShutdownEventArgs(timestamp));
+                        }
+                        else if (eventType == "SupercruiseExit")
+                        {
+                            var root = jsonDoc.RootElement;
+                            var timestamp = ReadTimestamp(root);
+                            string starSystem = root.TryGetProperty("StarSystem", out var ss) ? ss.GetString() ?? _lastStarSystem ?? string.Empty : _lastStarSystem ?? string.Empty;
+                            string body = root.TryGetProperty("Body", out var b) ? b.GetString() ?? string.Empty : string.Empty;
+                            string bodyType = root.TryGetProperty("BodyType", out var bt) ? bt.GetString() ?? string.Empty : string.Empty;
+                            long? bodyId = root.TryGetProperty("BodyID", out var bidEl) && bidEl.TryGetInt64(out var bid) ? bid : null;
+                            long? systemAddress = root.TryGetProperty("SystemAddress", out var saEl) && saEl.TryGetInt64(out var sa) ? sa :
+                                (_lastLocationArgs?.SystemAddress ?? null);
+                            SupercruiseExit?.Invoke(this, new JournalEvents.SupercruiseExitEventArgs(timestamp, starSystem, systemAddress, body, bodyId, bodyType));
+                        }
+                        else if (eventType == "SupercruiseEntry")
+                        {
+                            var root = jsonDoc.RootElement;
+                            var timestamp = ReadTimestamp(root);
+                            string starSystem = root.TryGetProperty("StarSystem", out var ss) ? ss.GetString() ?? _lastStarSystem ?? string.Empty : _lastStarSystem ?? string.Empty;
+                            SupercruiseEntry?.Invoke(this, new JournalEvents.SupercruiseEntryEventArgs(timestamp, starSystem));
+                        }
+                        else if (eventType == "AsteroidCracked")
+                        {
+                            var root = jsonDoc.RootElement;
+                            var timestamp = ReadTimestamp(root);
+                            string starSystem = root.TryGetProperty("StarSystem", out var ss) ? ss.GetString() ?? _lastStarSystem ?? string.Empty : _lastStarSystem ?? string.Empty;
+                            string body = root.TryGetProperty("Body", out var b) ? b.GetString() ?? string.Empty : string.Empty;
+                            long? bodyId = root.TryGetProperty("BodyID", out var bidEl) && bidEl.TryGetInt64(out var bid) ? bid : null;
+                            AsteroidCracked?.Invoke(this, new JournalEvents.AsteroidCrackedEventArgs(timestamp, starSystem, body, bodyId));
+                        }
+                        else if (eventType == "ProspectedAsteroid")
+                        {
+                            var root = jsonDoc.RootElement;
+                            var timestamp = ReadTimestamp(root);
+                            string starSystem = root.TryGetProperty("StarSystem", out var ss) ? ss.GetString() ?? _lastStarSystem ?? string.Empty : _lastStarSystem ?? string.Empty;
+                            string body = root.TryGetProperty("Body", out var b) ? b.GetString() ?? string.Empty : string.Empty;
+                            long? bodyId = root.TryGetProperty("BodyID", out var bidEl) && bidEl.TryGetInt64(out var bid) ? bid : null;
+                            long? systemAddress = root.TryGetProperty("SystemAddress", out var saEl) && saEl.TryGetInt64(out var sa) ? sa :
+                                (_lastLocationArgs?.SystemAddress ?? null);
+                            string content = root.TryGetProperty("Content", out var contentEl) ? contentEl.GetString() ?? string.Empty : string.Empty;
+                            string? motherlode = root.TryGetProperty("MotherlodeMaterial", out var motherEl) ? motherEl.GetString() : null;
+                            double remaining = root.TryGetProperty("Remaining", out var remEl) ? remEl.GetDouble() : 0d;
+                            var materials = new List<JournalEvents.ProspectedMaterial>();
+                            if (root.TryGetProperty("Materials", out var matsEl) && matsEl.ValueKind == JsonValueKind.Array)
+                            {
+                                foreach (var mat in matsEl.EnumerateArray())
+                                {
+                                    string name = mat.TryGetProperty("Name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
+                                    string? loc = mat.TryGetProperty("Name_Localised", out var locEl) ? locEl.GetString() : null;
+                                    double proportion = mat.TryGetProperty("Proportion", out var propEl) ? propEl.GetDouble() : 0d;
+                                    materials.Add(new JournalEvents.ProspectedMaterial
+                                    {
+                                        Name = name,
+                                        LocalisedName = loc,
+                                        Proportion = proportion
+                                    });
+                                }
+                            }
+                            ProspectedAsteroid?.Invoke(this, new JournalEvents.ProspectedAsteroidEventArgs(timestamp, starSystem, body, bodyId, systemAddress, content, motherlode, remaining, materials));
                         }
                         else if (eventType == "Loadout")
                         {
@@ -333,6 +407,16 @@ namespace EliteDataRelay.Services
                             // These events indicate a loadout change. The subsequent 'Loadout' event is the source of truth.
                             // We don't need to take action here, but acknowledging the event is useful for debugging.
                             Trace.WriteLine($"[JournalWatcherService] Detected module change event: {eventType}. Awaiting next Loadout.");
+                        }
+                        else if (eventType == "MaterialCollected")
+                        {
+                            var root = jsonDoc.RootElement;
+                            var timestamp = ReadTimestamp(root);
+                            string category = root.TryGetProperty("Category", out var catEl) ? catEl.GetString() ?? string.Empty : string.Empty;
+                            string name = root.TryGetProperty("Name", out var nameEl) ? nameEl.GetString() ?? string.Empty : string.Empty;
+                            string? localised = root.TryGetProperty("Name_Localised", out var locEl) ? locEl.GetString() : null;
+                            int count = root.TryGetProperty("Count", out var countEl) && countEl.TryGetInt32(out var c) ? c : 0;
+                            MaterialCollected?.Invoke(this, new JournalEvents.MaterialCollectedEventArgs(timestamp, category, name, localised, count));
                         }
                         else if (eventType == "CollectCargo")
                         {
@@ -655,6 +739,21 @@ namespace EliteDataRelay.Services
                 return s;
             }
             return char.ToUpperInvariant(s[0]) + s.Substring(1);
+        }
+
+        private static DateTime ReadTimestamp(JsonElement root)
+        {
+            if (root.TryGetProperty("timestamp", out var timestampElement) && timestampElement.ValueKind == JsonValueKind.String)
+            {
+                var value = timestampElement.GetString();
+                if (!string.IsNullOrEmpty(value) &&
+                    DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
+                {
+                    return parsed;
+                }
+            }
+
+            return DateTime.UtcNow;
         }
     }
 }
