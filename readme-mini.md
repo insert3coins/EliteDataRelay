@@ -1,4 +1,4 @@
-Release Notes - v0.73.1
+Release Notes - v0.73.6
 
 What's new
 

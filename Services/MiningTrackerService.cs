@@ -259,8 +259,16 @@ namespace EliteDataRelay.Services
             }
 
             var clone = _currentSession.Clone();
-            _sessions.Add(clone);
-            PersistSession(clone);
+            var hash = BuildSessionHash(clone);
+            if (_sessionHashes.Add(hash))
+            {
+                _sessions.Add(clone);
+                PersistSession(clone);
+            }
+            else
+            {
+                Trace.WriteLine("[MiningTrackerService] Duplicate session detected; skipping persistence.");
+            }
 
             _currentSession = null;
             _latestProspector = null;

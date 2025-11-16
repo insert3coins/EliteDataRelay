@@ -12,55 +12,20 @@ namespace EliteDataRelay.UI.Controls
     {
         protected override void OnHandleCreated(EventArgs e)
         {
-            if (Items.Count == 0)
-            {
-                base.OnHandleCreated(e);
-                return;
-            }
-
-            var snapshot = new List<ListViewItem>(Items.Count);
-            foreach (ListViewItem item in Items)
-            {
-                if (item == null) continue;
-                snapshot.Add(CloneItem(item));
-            }
-
-            BeginUpdate();
-            try
-            {
-                Items.Clear();
-                base.OnHandleCreated(e);
-                Items.AddRange(snapshot.ToArray());
-            }
-            finally
-            {
-                EndUpdate();
-            }
+            EnsureStateImages();
+            base.OnHandleCreated(e);
         }
 
-        private static ListViewItem CloneItem(ListViewItem source)
+        private void EnsureStateImages()
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            var clone = new ListViewItem(source.Text)
+            foreach (ListViewItem? item in Items)
             {
-                ImageIndex = source.ImageIndex,
-                ImageKey = source.ImageKey,
-                StateImageIndex = source.StateImageIndex,
-                Tag = source.Tag,
-                BackColor = source.BackColor,
-                ForeColor = source.ForeColor,
-                Font = source.Font,
-                Name = source.Name,
-                ToolTipText = source.ToolTipText
-            };
-
-            for (var i = 1; i < source.SubItems.Count; i++)
-            {
-                clone.SubItems.Add(source.SubItems[i].Text);
+                if (item == null) continue;
+                if (item.StateImageIndex < 0)
+                {
+                    item.StateImageIndex = 0;
+                }
             }
-
-            return clone;
         }
     }
 }
