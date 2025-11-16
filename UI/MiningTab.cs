@@ -210,7 +210,8 @@ namespace EliteDataRelay.UI
                 Dock = DockStyle.Fill,
                 View = View.Details,
                 FullRowSelect = true,
-                HideSelection = false
+                HideSelection = false,
+                UseCompatibleStateImageBehavior = false
             };
             return list;
         }

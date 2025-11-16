@@ -97,7 +97,8 @@ namespace EliteDataRelay.UI
                 HideSelection = false,
                 FullRowSelect = true,
                 GridLines = false,
-                HeaderStyle = ColumnHeaderStyle.Nonclickable
+                HeaderStyle = ColumnHeaderStyle.Nonclickable,
+                UseCompatibleStateImageBehavior = false
             };
 
             list.Columns.Add("Commodity", 220, HorizontalAlignment.Left);
@@ -144,7 +145,8 @@ namespace EliteDataRelay.UI
                 HideSelection = false,
                 FullRowSelect = true,
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
-                Font = _fontManager.SegoeUIFont
+                Font = _fontManager.SegoeUIFont,
+                UseCompatibleStateImageBehavior = false
             };
             crewList.Columns.Add("Crew Role", 160, HorizontalAlignment.Left);
             crewList.Columns.Add("Status", 120, HorizontalAlignment.Left);

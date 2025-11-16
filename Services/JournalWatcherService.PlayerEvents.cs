@@ -71,7 +71,7 @@ namespace EliteDataRelay.Services
             // so the UI shows a friendly ship name on startup before Loadout arrives.
             if (!string.IsNullOrEmpty(internalShipName))
             {
-                string shipType = loadGameEvent.ShipLocalised ?? ShipIconService.GetShipDisplayName(internalShipName);
+                string shipType = loadGameEvent.ShipLocalised ?? ShipNameHelper.GetDisplayName(internalShipName);
 
                 // Use any available ShipName/ShipIdent from LoadGame too
                 UpdateShipInformation(
@@ -108,7 +108,7 @@ namespace EliteDataRelay.Services
                 // The Loadout event is the primary source of truth for ship identity.
                 // It provides the internal name, custom name, and ID. We can now derive the display name.
                 // Prioritize the localized name from the event, then the cached name from a swap, then fallback to the service.
-                string shipType = loadoutEvent.ShipLocalised ?? _lastShipType ?? ShipIconService.GetShipDisplayName(loadoutEvent.Ship);
+                string shipType = loadoutEvent.ShipLocalised ?? _lastShipType ?? ShipNameHelper.GetDisplayName(loadoutEvent.Ship);
 
                 UpdateShipInformation(loadoutEvent.ShipName, loadoutEvent.ShipIdent, shipType, loadoutEvent.Ship, loadoutEvent.ShipLocalised ?? _lastShipLocalised);
 
@@ -129,7 +129,7 @@ namespace EliteDataRelay.Services
                 // A ShipyardSwap tells us the new ship's type, but not its name or ID.
                 // We update what we know now, which is enough to get the correct ship icon.
                 // We cache the localized name here, so the subsequent 'Loadout' event can use it.
-                _lastShipType = swapEvent.ShipTypeLocalised ?? ShipIconService.GetShipDisplayName(swapEvent.ShipType);
+                _lastShipType = swapEvent.ShipTypeLocalised ?? ShipNameHelper.GetDisplayName(swapEvent.ShipType);
                 _lastShipLocalised = swapEvent.ShipTypeLocalised;
                 _lastInternalShipName = swapEvent.ShipType;
                 // Update mothership baseline (name/ident will be filled by next Loadout)
@@ -150,7 +150,7 @@ namespace EliteDataRelay.Services
                 // A ShipyardNew event tells us the new ship's type, but not its name or ID.
                 // We update what we know now, which is enough to get the correct ship icon.
                 // We cache the localized name here, so the subsequent 'Loadout' event can use it.
-                _lastShipType = newEvent.ShipTypeLocalised ?? ShipIconService.GetShipDisplayName(newEvent.ShipType);
+                _lastShipType = newEvent.ShipTypeLocalised ?? ShipNameHelper.GetDisplayName(newEvent.ShipType);
                 _lastShipLocalised = newEvent.ShipTypeLocalised;
                 _lastInternalShipName = newEvent.ShipType;
                 // Update mothership baseline (name/ident will be filled by next Loadout)

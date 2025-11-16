@@ -87,7 +87,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderInfo = _chkShowBorderInfo.Checked;
             AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
             AppConfiguration.OverlayShowBorderSession = _chkShowBorderSession.Checked;
-            AppConfiguration.OverlayShowBorderShipIcon = _chkShowBorderShipIcon.Checked;
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -102,7 +101,6 @@ namespace EliteDataRelay.UI
             _overlayOpacity = 85;
             _chkShowBorderInfo.Checked = true;
             _chkShowBorderCargo.Checked = true;
-            _chkShowBorderShipIcon.Checked = true;
             _chkShowBorderSession.Checked = true;
             _chkShowBorderExploration.Checked = true;
             UpdateAppearanceControls();
@@ -116,7 +114,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayOpacity = _overlayOpacity;
             AppConfiguration.OverlayShowBorderInfo = true;
             AppConfiguration.OverlayShowBorderCargo = true;
-            AppConfiguration.OverlayShowBorderShipIcon = true;
             AppConfiguration.OverlayShowBorderSession = true;
             AppConfiguration.OverlayShowBorderExploration = true;
 

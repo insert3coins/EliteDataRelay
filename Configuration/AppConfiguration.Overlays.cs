@@ -8,14 +8,12 @@ namespace EliteDataRelay.Configuration
         public static bool EnableInfoOverlay { get; set; } = false;
         public static bool EnableCargoOverlay { get; set; } = false;
         public static bool EnableSessionOverlay { get; set; } = false;
-        public static bool EnableShipIconOverlay { get; set; } = false;
         public static bool EnableExplorationOverlay { get; set; } = false;
         public static bool EnableJumpOverlay { get; set; } = false; // removed
         public static bool AllowOverlayDrag { get; set; } = true;
         public static Point InfoOverlayLocation { get; set; } = Point.Empty;
         public static Point CargoOverlayLocation { get; set; } = Point.Empty;
         public static Point SessionOverlayLocation { get; set; } = Point.Empty;
-        public static Point ShipIconOverlayLocation { get; set; } = Point.Empty;
         public static Point ExplorationOverlayLocation { get; set; } = new Point(20, 20); // Default top-left
         public static Point JumpOverlayLocation { get; set; } = Point.Empty;
         public static string OverlayFontName { get; set; } = "Consolas";
@@ -31,7 +29,6 @@ namespace EliteDataRelay.Configuration
         public static bool OverlayShowBorderInfo { get; set; } = true;
         public static bool OverlayShowBorderCargo { get; set; } = true;
         public static bool OverlayShowBorderSession { get; set; } = true;
-        public static bool OverlayShowBorderShipIcon { get; set; } = true;
         public static bool OverlayShowBorderExploration { get; set; } = true;
         public static bool OverlayShowBorderJump { get; set; } = false; // removed
 

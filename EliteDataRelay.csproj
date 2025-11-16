@@ -37,11 +37,6 @@
     <EmbeddedResource Include="Resources\microresources.csv" />
   </ItemGroup>
 
-  <!-- Embed ship images into the assembly so icons load without filesystem dependency -->
-  <ItemGroup>
-    <EmbeddedResource Include="Images\Ships\**\*.png" />
-  </ItemGroup>
-
   <Target Name="RefreshExecutableCreationTime" BeforeTargets="CoreCompile">
     <Delete Files="$(TargetPath)" Condition="Exists('$(TargetPath)')" />
   </Target>

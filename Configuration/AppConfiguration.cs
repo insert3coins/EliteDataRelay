@@ -51,7 +51,6 @@ namespace EliteDataRelay.Configuration
                         // Legacy text file output removed
                         EnableInfoOverlay = config.EnableInfoOverlay;
                         EnableCargoOverlay = config.EnableCargoOverlay;
-                        EnableShipIconOverlay = config.EnableShipIconOverlay;
                         EnableExplorationOverlay = config.EnableExplorationOverlay;
                         EnableSessionOverlay = config.EnableSessionOverlay || config.ShowSessionOnOverlay;
                         EnableJumpOverlay = config.EnableJumpOverlay;
@@ -72,7 +71,6 @@ namespace EliteDataRelay.Configuration
                         OverlayShowBorderInfo = config.OverlayShowBorderInfo;
                         OverlayShowBorderCargo = config.OverlayShowBorderCargo;
                         OverlayShowBorderSession = config.OverlayShowBorderSession;
-                        OverlayShowBorderShipIcon = config.OverlayShowBorderShipIcon;
                         OverlayShowBorderExploration = config.OverlayShowBorderExploration;
                         OverlayShowBorderJump = config.OverlayShowBorderJump;
                         ShowTrafficOnExplorationOverlay = config.ShowTrafficOnExplorationOverlay;
@@ -83,20 +81,17 @@ namespace EliteDataRelay.Configuration
                         if (config.OverlayShowBorder == false &&
                             config.OverlayShowBorderInfo == true &&
                             config.OverlayShowBorderCargo == true &&
-                            config.OverlayShowBorderShipIcon == true &&
                             config.OverlayShowBorderExploration == true &&
                             config.OverlayShowBorderJump == true)
                         {
                             OverlayShowBorderInfo = false;
                             OverlayShowBorderCargo = false;
-                            OverlayShowBorderShipIcon = false;
                             OverlayShowBorderExploration = false;
                             OverlayShowBorderJump = false;
                         }
                         InfoOverlayLocation = config.InfoOverlayLocation;
                         CargoOverlayLocation = config.CargoOverlayLocation;
                         SessionOverlayLocation = config.SessionOverlayLocation;
-                        ShipIconOverlayLocation = config.ShipIconOverlayLocation;
                         ExplorationOverlayLocation = config.ExplorationOverlayLocation;
                         JumpOverlayLocation = config.JumpOverlayLocation;
                         ShowNextJumpJumpsLeft = config.ShowNextJumpJumpsLeft;
@@ -144,7 +139,6 @@ namespace EliteDataRelay.Configuration
                     // Legacy text file output removed
                     EnableInfoOverlay = AppConfiguration.EnableInfoOverlay,
                     EnableCargoOverlay = AppConfiguration.EnableCargoOverlay,
-                    EnableShipIconOverlay = AppConfiguration.EnableShipIconOverlay,
                     EnableExplorationOverlay = AppConfiguration.EnableExplorationOverlay,
                     EnableJumpOverlay = AppConfiguration.EnableJumpOverlay,
                     AllowOverlayDrag = AppConfiguration.AllowOverlayDrag,
@@ -165,7 +159,6 @@ namespace EliteDataRelay.Configuration
                     OverlayShowBorderInfo = AppConfiguration.OverlayShowBorderInfo,
                     OverlayShowBorderCargo = AppConfiguration.OverlayShowBorderCargo,
                     OverlayShowBorderSession = AppConfiguration.OverlayShowBorderSession,
-                    OverlayShowBorderShipIcon = AppConfiguration.OverlayShowBorderShipIcon,
                     OverlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration,
                     OverlayShowBorderJump = AppConfiguration.OverlayShowBorderJump,
                     ShowTrafficOnExplorationOverlay = AppConfiguration.ShowTrafficOnExplorationOverlay,
@@ -173,7 +166,6 @@ namespace EliteDataRelay.Configuration
                     InfoOverlayLocation = AppConfiguration.InfoOverlayLocation,
                     CargoOverlayLocation = AppConfiguration.CargoOverlayLocation,
                     SessionOverlayLocation = AppConfiguration.SessionOverlayLocation,
-                    ShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation,
                     ExplorationOverlayLocation = AppConfiguration.ExplorationOverlayLocation,
                     JumpOverlayLocation = AppConfiguration.JumpOverlayLocation,
                     ShowNextJumpJumpsLeft = AppConfiguration.ShowNextJumpJumpsLeft,
@@ -218,7 +210,6 @@ namespace EliteDataRelay.Configuration
             public bool EnableInfoOverlay { get; set; } = false;
             public bool EnableCargoOverlay { get; set; } = false;
             public bool EnableSessionOverlay { get; set; } = false;
-            public bool EnableShipIconOverlay { get; set; } = false;
             public bool EnableExplorationOverlay { get; set; } = false;
             public bool EnableJumpOverlay { get; set; } = true;
             public bool AllowOverlayDrag { get; set; } = true;
@@ -242,7 +233,6 @@ namespace EliteDataRelay.Configuration
             public bool OverlayShowBorderInfo { get; set; } = true;
             public bool OverlayShowBorderCargo { get; set; } = true;
             public bool OverlayShowBorderSession { get; set; } = true;
-            public bool OverlayShowBorderShipIcon { get; set; } = true;
             public bool OverlayShowBorderExploration { get; set; } = true;
             public bool OverlayShowBorderJump { get; set; } = true;
             public bool ShowTrafficOnExplorationOverlay { get; set; } = true;
@@ -250,7 +240,6 @@ namespace EliteDataRelay.Configuration
             public Point InfoOverlayLocation { get; set; } = Point.Empty;
             public Point CargoOverlayLocation { get; set; } = Point.Empty;
             public Point SessionOverlayLocation { get; set; } = Point.Empty;
-            public Point ShipIconOverlayLocation { get; set; } = Point.Empty;
             public Point ExplorationOverlayLocation { get; set; } = new Point(20, 20);
             public Point JumpOverlayLocation { get; set; } = Point.Empty;
             public bool ShowNextJumpJumpsLeft { get; set; } = true;

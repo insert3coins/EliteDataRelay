@@ -16,8 +16,6 @@ namespace EliteDataRelay.UI
 
         public void InitializeShipTab()
         {
-            // The ShipWireframeDrawer is no longer used.
-            // The PictureBox is now updated directly with an image.
             CreateModuleTabs();
         }
 

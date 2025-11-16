@@ -137,23 +137,5 @@ namespace EliteDataRelay.UI
             _renderPanel?.Invalidate();
         }
 
-        /// <summary>
-        /// Updates ship icon image and marks frame as stale.
-        /// Note: ShipIcon overlay always re-renders for animation.
-        /// </summary>
-        public void UpdateShipIcon(Image? shipIcon)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(() => UpdateShipIcon(shipIcon)));
-                return;
-            }
-
-            // Don't dispose - the image might be shared/managed elsewhere
-            // The old reference will be garbage collected
-            _shipIcon = shipIcon;
-            _stale = true;
-            _renderPanel?.Invalidate();
-        }
     }
 }

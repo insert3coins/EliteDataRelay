@@ -152,16 +152,6 @@ namespace EliteDataRelay.UI
                 nameLabel = $"{shipType} \"{shipName}\"";
             }
 
-            // Update the ship image using the new service
-            var shipImage = ShipIconService.GetShipIcon(internalShipName);
-
-            // Always update the overlay service, as the overlay might have been recreated
-            // and needs to be populated with the current image.
-            _overlayService?.UpdateShipIcon(shipImage);
-
-            // Update the picture box on the Ship tab with the new image.
-            _controlFactory.ShipPictureBox.Image = shipImage;
-
             // Update the new name and ID labels on the ship tab
             if (_controlFactory.ShipTabNameLabel != null)
             {

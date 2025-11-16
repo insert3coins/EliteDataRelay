@@ -132,7 +132,8 @@ namespace EliteDataRelay.UI
                 Dock = DockStyle.Fill,
                 View = View.Details,
                 FullRowSelect = true,
-                HideSelection = false
+                HideSelection = false,
+                UseCompatibleStateImageBehavior = false
             };
 
             list.Columns.Add("Start (local)", 150);

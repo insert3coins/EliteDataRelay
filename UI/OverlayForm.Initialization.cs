@@ -79,23 +79,6 @@ namespace EliteDataRelay.UI
                 ResizeSessionOverlay();
                 ApplyRoundedRegion();
             }
-            else if (_position == OverlayPosition.ShipIcon)
-            {
-                this.Size = new Size(320, 320);
-
-                // Custom render panel for bitmap-cached drawing with double buffering
-                _renderPanel = new DoubleBufferedPanel
-                {
-                    Location = new Point(0, 0),
-                    Size = this.ClientSize,
-                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                    BackColor = Color.Transparent
-                };
-                _renderPanel.Paint += OnShipIconPanelPaint;
-
-                Controls.Add(_renderPanel);
-                ApplyRoundedRegion();
-            }
             else if (_position == OverlayPosition.Exploration)
             {
                 // Exploration overlay with FSS tracking: increased to fit completion/signals/codex rows

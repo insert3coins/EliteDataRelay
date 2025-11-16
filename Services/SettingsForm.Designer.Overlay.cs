@@ -40,19 +40,11 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
-            // Enable Ship Icon Overlay CheckBox
-            _chkEnableShipIconOverlay = new CheckBox
-            {
-                Text = "Enable ship icon overlay",
-                Location = new Point(15, 95),
-                AutoSize = true
-            };
-
             // Enable Exploration Overlay CheckBox
             _chkEnableExplorationOverlay = new CheckBox
             {
                 Text = "Enable exploration overlay",
-                Location = new Point(15, 120),
+                Location = new Point(15, 95),
                 AutoSize = true
             };
 
@@ -79,7 +71,6 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableLeftOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableRightOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableSessionOverlay);
-            _grpOverlaySettings.Controls.Add(_chkEnableShipIconOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_chkTrafficExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
@@ -137,12 +128,10 @@ namespace EliteDataRelay.UI
             _chkShowBorderInfo = new CheckBox { Text = "Info", Location = new Point(bx, by), AutoSize = true };
             _chkShowBorderCargo = new CheckBox { Text = "Cargo", Location = new Point(bx + 60, by), AutoSize = true };
             _chkShowBorderSession = new CheckBox { Text = "Session", Location = new Point(bx + 140, by), AutoSize = true };
-            _chkShowBorderShipIcon = new CheckBox { Text = "Ship Icon", Location = new Point(bx, by + bdy), AutoSize = true };
-            _chkShowBorderExploration = new CheckBox { Text = "Exploration", Location = new Point(bx + 120, by + bdy), AutoSize = true };
+            _chkShowBorderExploration = new CheckBox { Text = "Exploration", Location = new Point(bx, by + bdy), AutoSize = true };
             _chkShowBorderInfo.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderCargo.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderSession.CheckedChanged += OnShowOverlayBordersChanged;
-            _chkShowBorderShipIcon.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderExploration.CheckedChanged += OnShowOverlayBordersChanged;
             // Place opacity row below the per-overlay checkboxes
             int opacityY = by + bdy + 24; // add extra spacing after second row
@@ -162,7 +151,6 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(_chkShowBorderInfo);
             grpColors.Controls.Add(_chkShowBorderCargo);
             grpColors.Controls.Add(_chkShowBorderSession);
-            grpColors.Controls.Add(_chkShowBorderShipIcon);
             grpColors.Controls.Add(_chkShowBorderExploration);
             grpColors.Controls.Add(lblOpacity);
             grpColors.Controls.Add(_trackBarOpacity);

@@ -35,89 +35,97 @@ namespace EliteDataRelay.Services
         /// </summary>
         public void Initialize()
         {
-            _connection = new SqliteConnection($"Data Source={_databasePath}");
-            _connection.Open();
-
-            // Set PRAGMA for better performance
-            // WAL mode is faster for concurrent reads/writes, and NORMAL synchronous is safe with background writes
-            using (var pragmaCmd = _connection.CreateCommand())
-            {
-                pragmaCmd.CommandText = @"
-                    PRAGMA journal_mode = WAL;
-                    PRAGMA synchronous = NORMAL;
-                    PRAGMA cache_size = -32000;
-                    PRAGMA temp_store = MEMORY;
-                ";
-                pragmaCmd.ExecuteNonQuery();
-                Debug.WriteLine("[ExplorationDatabaseService] Set SQLite PRAGMA settings for optimized performance");
-            }
-
-            using var cmd = _connection.CreateCommand();
-            cmd.CommandText = @"
-                CREATE TABLE IF NOT EXISTS Systems (
-                    SystemAddress INTEGER PRIMARY KEY,
-                    SystemName TEXT NOT NULL,
-                    TotalBodies INTEGER NOT NULL DEFAULT 0,
-                    ScannedBodies INTEGER NOT NULL DEFAULT 0,
-                    MappedBodies INTEGER NOT NULL DEFAULT 0,
-                    FSSProgress REAL NOT NULL DEFAULT 0,
-                    NonBodySignals INTEGER NOT NULL DEFAULT 0,
-                    LastVisited TEXT NOT NULL,
-                    FirstVisited TEXT NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS Bodies (
-                    BodyID INTEGER NOT NULL,
-                    SystemAddress INTEGER NOT NULL,
-                    BodyName TEXT NOT NULL,
-                    BodyType TEXT NOT NULL,
-                    DistanceFromArrival REAL,
-                    Landable INTEGER,
-                    WasDiscovered INTEGER NOT NULL,
-                    WasMapped INTEGER NOT NULL,
-                    IsMapped INTEGER NOT NULL DEFAULT 0,
-                    TerraformState TEXT,
-                    ProbesUsed INTEGER,
-                    EfficiencyTarget INTEGER,
-                    Signals TEXT,
-                    BiologicalSignals TEXT,
-                    PRIMARY KEY (BodyID, SystemAddress),
-                    FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
-                );
-
-                CREATE INDEX IF NOT EXISTS idx_bodies_system ON Bodies(SystemAddress);
-                CREATE INDEX IF NOT EXISTS idx_systems_last_visited ON Systems(LastVisited);
-
-                CREATE TABLE IF NOT EXISTS SystemSignals (
-                    SystemAddress INTEGER NOT NULL,
-                    Name TEXT NOT NULL,
-                    Count INTEGER NOT NULL DEFAULT 0,
-                    PRIMARY KEY (SystemAddress, Name),
-                    FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
-                );
-
-                CREATE TABLE IF NOT EXISTS CodexBiologicalEntries (
-                    SystemAddress INTEGER NOT NULL,
-                    Entry TEXT NOT NULL,
-                    PRIMARY KEY (SystemAddress, Entry),
-                    FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
-                );
-            ";
-
-            cmd.ExecuteNonQuery();
-            Debug.WriteLine($"[ExplorationDatabaseService] Database initialized at: {_databasePath}");
-
-            // Attempt to add NonBodySignals column for existing databases
             try
             {
-                using var alter = _connection.CreateCommand();
-                alter.CommandText = "ALTER TABLE Systems ADD COLUMN NonBodySignals INTEGER NOT NULL DEFAULT 0;";
-                alter.ExecuteNonQuery();
-            }
-            catch { /* ignore if column already exists */ }
+                _connection = new SqliteConnection($"Data Source={_databasePath}");
+                _connection.Open();
 
-            // Start background writer for async/non-blocking database operations
-            StartBackgroundWriter();
+                // Set PRAGMA for better performance
+                using (var pragmaCmd = _connection.CreateCommand())
+                {
+                    pragmaCmd.CommandText = @"
+                        PRAGMA journal_mode = WAL;
+                        PRAGMA synchronous = NORMAL;
+                        PRAGMA cache_size = -32000;
+                        PRAGMA temp_store = MEMORY;
+                    ";
+                    pragmaCmd.ExecuteNonQuery();
+                    Debug.WriteLine("[ExplorationDatabaseService] Set SQLite PRAGMA settings for optimized performance");
+                }
+
+                using var cmd = _connection.CreateCommand();
+                cmd.CommandText = @"
+                    CREATE TABLE IF NOT EXISTS Systems (
+                        SystemAddress INTEGER PRIMARY KEY,
+                        SystemName TEXT NOT NULL,
+                        TotalBodies INTEGER NOT NULL DEFAULT 0,
+                        ScannedBodies INTEGER NOT NULL DEFAULT 0,
+                        MappedBodies INTEGER NOT NULL DEFAULT 0,
+                        FSSProgress REAL NOT NULL DEFAULT 0,
+                        NonBodySignals INTEGER NOT NULL DEFAULT 0,
+                        LastVisited TEXT NOT NULL,
+                        FirstVisited TEXT NOT NULL
+                    );
+
+                    CREATE TABLE IF NOT EXISTS Bodies (
+                        BodyID INTEGER NOT NULL,
+                        SystemAddress INTEGER NOT NULL,
+                        BodyName TEXT NOT NULL,
+                        BodyType TEXT NOT NULL,
+                        DistanceFromArrival REAL,
+                        Landable INTEGER,
+                        WasDiscovered INTEGER NOT NULL,
+                        WasMapped INTEGER NOT NULL,
+                        IsMapped INTEGER NOT NULL DEFAULT 0,
+                        TerraformState TEXT,
+                        ProbesUsed INTEGER,
+                        EfficiencyTarget INTEGER,
+                        Signals TEXT,
+                        BiologicalSignals TEXT,
+                        PRIMARY KEY (BodyID, SystemAddress),
+                        FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
+                    );
+
+                    CREATE INDEX IF NOT EXISTS idx_bodies_system ON Bodies(SystemAddress);
+                    CREATE INDEX IF NOT EXISTS idx_systems_last_visited ON Systems(LastVisited);
+
+                    CREATE TABLE IF NOT EXISTS SystemSignals (
+                        SystemAddress INTEGER NOT NULL,
+                        Name TEXT NOT NULL,
+                        Count INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (SystemAddress, Name),
+                        FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
+                    );
+
+                    CREATE TABLE IF NOT EXISTS CodexBiologicalEntries (
+                        SystemAddress INTEGER NOT NULL,
+                        Entry TEXT NOT NULL,
+                        PRIMARY KEY (SystemAddress, Entry),
+                        FOREIGN KEY (SystemAddress) REFERENCES Systems(SystemAddress) ON DELETE CASCADE
+                    );
+                ";
+
+                cmd.ExecuteNonQuery();
+                Debug.WriteLine($"[ExplorationDatabaseService] Database initialized at: {_databasePath}");
+
+                // Attempt to add NonBodySignals column for existing databases
+                try
+                {
+                    using var alter = _connection.CreateCommand();
+                    alter.CommandText = "ALTER TABLE Systems ADD COLUMN NonBodySignals INTEGER NOT NULL DEFAULT 0;";
+                    alter.ExecuteNonQuery();
+                }
+                catch { /* ignore if column already exists */ }
+
+                // Start background writer for async/non-blocking database operations
+                StartBackgroundWriter();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ExplorationDatabaseService] Initialization failed: {ex.Message}");
+                _connection?.Dispose();
+                _connection = null;
+            }
         }
 
         /// <summary>

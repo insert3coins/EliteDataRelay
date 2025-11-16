@@ -484,25 +484,13 @@ namespace EliteDataRelay.Services
 
             lock (_sync)
             {
-                FleetCarrierState? target = null;
-
-                if (_personalCarrier != null && _personalCarrier.CarrierId == market.MarketID)
-                {
-                    target = _personalCarrier;
-                }
-                else if (_squadronCarrier != null && _squadronCarrier.CarrierId == market.MarketID)
-                {
-                    target = _squadronCarrier;
-                }
-
+                var target = ResolveCarrierForMarket(market);
                 if (target == null)
                 {
                     return;
                 }
 
                 var stock = target.Stock;
-
-                var commodityMap = stock.ToDictionary(c => c.CommodityName, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var item in market.Items)
                 {
@@ -517,6 +505,47 @@ namespace EliteDataRelay.Services
                 target.LastUpdatedUtc = market.Timestamp;
                 RaiseSnapshot(target);
             }
+        }
+
+        private FleetCarrierState? ResolveCarrierForMarket(MarketSnapshot.Market market)
+        {
+            FleetCarrierState? MatchByIdAndName(FleetCarrierState? candidate)
+            {
+                if (candidate == null)
+                {
+                    return null;
+                }
+
+                if (candidate.CarrierId != 0 && candidate.CarrierId == market.MarketID)
+                {
+                    return candidate;
+                }
+
+                if (!string.IsNullOrWhiteSpace(market.StationName))
+                {
+                    if (candidate.CarrierId == 0 && market.MarketID != 0)
+                    {
+                        candidate.CarrierId = market.MarketID;
+                    }
+
+                    var stationName = market.StationName!;
+                    if (stationName.Equals(candidate.Callsign, StringComparison.OrdinalIgnoreCase) ||
+                        stationName.Equals(candidate.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return candidate;
+                    }
+                }
+
+                return null;
+            }
+
+            var personal = MatchByIdAndName(_personalCarrier);
+            if (personal != null)
+            {
+                return personal;
+            }
+
+            return MatchByIdAndName(_squadronCarrier);
         }
 
         private void TriggerMarketRefresh()

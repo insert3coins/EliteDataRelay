@@ -12,7 +12,6 @@ namespace EliteDataRelay.Services
     {
         private OverlayForm? _leftOverlayForm;
         private OverlayForm? _rightOverlayForm;
-        private OverlayForm? _shipIconOverlayForm;
         private OverlayForm? _sessionOverlayForm;
         private OverlayForm? _explorationOverlayForm;
         private OverlayForm? _jumpOverlayForm;
@@ -29,7 +28,6 @@ namespace EliteDataRelay.Services
         private int? _lastCargoCapacity;
         private string? _lastCargoBarText;
         private SessionOverlayData? _lastSessionOverlayData;
-        private Image? _lastShipIcon;
         private CargoSnapshot? _lastCargoSnapshot;
 
         // Debounce for exploration overlay updates to avoid rapid churn at startup
@@ -64,11 +62,6 @@ namespace EliteDataRelay.Services
             {
                 _sessionOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Session, AppConfiguration.AllowOverlayDrag) { Owner = owner };
                 _sessionOverlayForm.PositionChanged += OnOverlayPositionChanged;
-            }
-            if (_shipIconOverlayForm == null && AppConfiguration.EnableShipIconOverlay)
-            {
-                _shipIconOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.ShipIcon, AppConfiguration.AllowOverlayDrag) { Owner = owner };
-                _shipIconOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_explorationOverlayForm == null && AppConfiguration.EnableExplorationOverlay)
             {
@@ -116,14 +109,6 @@ namespace EliteDataRelay.Services
                     _sessionOverlayForm.UpdateSessionOverlay(_lastSessionOverlayData);
                 }
             }
-
-            // Show and restore data for Ship Icon overlay
-            if (_shipIconOverlayForm != null)
-            {
-                _shipIconOverlayForm.Show();
-                if (_lastShipIcon != null) _shipIconOverlayForm.UpdateShipIcon(_lastShipIcon);
-            }
-
             // Show and restore data for Exploration overlay
             if (_explorationOverlayForm != null)
             {
@@ -157,14 +142,12 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Close();
             _rightOverlayForm?.Close();
             _sessionOverlayForm?.Close();
-            _shipIconOverlayForm?.Close();
             _explorationOverlayForm?.Close();
             _jumpOverlayForm?.Close();
 
             _leftOverlayForm = null;
             _rightOverlayForm = null;
             _sessionOverlayForm = null;
-            _shipIconOverlayForm = null;
             _explorationOverlayForm = null;
             _jumpOverlayForm = null;
 
@@ -181,7 +164,6 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _sessionOverlayForm?.Show();
-            _shipIconOverlayForm?.Show();
             _explorationOverlayForm?.Show();
             // Jump overlay is transient; do not force show here
         }
@@ -192,7 +174,6 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.Hide();
             _rightOverlayForm?.Hide();
             _sessionOverlayForm?.Hide();
-            _shipIconOverlayForm?.Hide();
             _explorationOverlayForm?.Hide();
             _jumpOverlayForm?.Hide();
         }
@@ -214,7 +195,6 @@ namespace EliteDataRelay.Services
                     if (hasCargo) _rightOverlayForm?.Show(); else _rightOverlayForm?.Hide();
                 }
                 if (AppConfiguration.EnableSessionOverlay) _sessionOverlayForm?.Show();
-                if (AppConfiguration.EnableShipIconOverlay) _shipIconOverlayForm?.Show();
                 if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
             }
             else
@@ -222,7 +202,6 @@ namespace EliteDataRelay.Services
                 _leftOverlayForm?.Hide();
                 _rightOverlayForm?.Hide();
                 _sessionOverlayForm?.Hide();
-                _shipIconOverlayForm?.Hide();
                 _explorationOverlayForm?.Hide();
             }
         }
@@ -239,7 +218,6 @@ namespace EliteDataRelay.Services
                 OverlayForm.OverlayPosition.Info => _leftOverlayForm,
                 OverlayForm.OverlayPosition.Cargo => _rightOverlayForm,
                 OverlayForm.OverlayPosition.Session => _sessionOverlayForm,
-                OverlayForm.OverlayPosition.ShipIcon => _shipIconOverlayForm,
                 OverlayForm.OverlayPosition.Exploration => _explorationOverlayForm,
                 OverlayForm.OverlayPosition.JumpInfo => _jumpOverlayForm,
                 _ => null

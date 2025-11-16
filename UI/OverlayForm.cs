@@ -17,7 +17,6 @@ namespace EliteDataRelay.UI
             Info,
             Cargo,
             Session,
-            ShipIcon,
             Exploration,
             JumpInfo
         }
@@ -27,10 +26,6 @@ namespace EliteDataRelay.UI
         private Point _dragCursorStartPoint;
         private Point _dragFormStartPoint;
 
-        private System.Windows.Forms.Timer? _animationTimer;
-        private double _animationPhase;
-        private const int ANIMATION_AMPLITUDE = 5; // How many pixels up/down it will move
-        private const double ANIMATION_SPEED = 0.05; // How fast it will move
         // Fade animation for Jump overlay
         private System.Windows.Forms.Timer? _fadeTimer;
         private double _fadeDelta;
@@ -43,7 +38,6 @@ namespace EliteDataRelay.UI
         // Bitmap caching for all overlays
         private Panel? _renderPanel;
         private Bitmap? _frameCache;
-        private Bitmap? _shipIconBackgroundCache; // Separate background cache for ship icon animation
         private bool _stale = true;
 
         // Info overlay data
@@ -60,9 +54,6 @@ namespace EliteDataRelay.UI
         private TimeSpan _sessionDuration = TimeSpan.Zero;
         private TimeSpan _miningDuration = TimeSpan.Zero;
         private int _systemsVisited;
-
-        // Ship icon overlay data
-        private Image? _shipIcon;
 
         // Exploration overlay data
         private SystemExplorationData? _currentExplorationData;
@@ -141,9 +132,6 @@ namespace EliteDataRelay.UI
                 case OverlayPosition.Cargo:
                     this.Text = "Elite Data Relay: Cargo";
                     break;
-                case OverlayPosition.ShipIcon:
-                    this.Text = "Elite Data Relay: Ship Icon";
-                    break;
                 case OverlayPosition.Exploration:
                     this.Text = "Elite Data Relay: Exploration";
                     break;
@@ -167,11 +155,6 @@ namespace EliteDataRelay.UI
             // Wire up dragging for the form and all its children, recursively.
             AttachDragHandlers(this);
 
-            if (_position == OverlayPosition.ShipIcon)
-            {
-                _animationTimer = new System.Windows.Forms.Timer { Interval = 30 }; // Approx 33 FPS
-                _animationTimer.Tick += AnimationTimer_Tick;
-            }
         }
 
         protected override void OnLoad(EventArgs e)
@@ -184,7 +167,6 @@ namespace EliteDataRelay.UI
                 this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
             }
 
-            _animationTimer?.Start();
         }
 
         // Public helpers to fade the Next Jump overlay in and out
@@ -340,25 +322,6 @@ namespace EliteDataRelay.UI
             base.OnPaint(e);
         }
 
-        private void AnimationTimer_Tick(object? sender, EventArgs e)
-        {
-            if (_renderPanel == null || _renderPanel.IsDisposed || _position != OverlayPosition.ShipIcon)
-            {
-                _animationTimer?.Stop();
-                return;
-            }
-
-            // Only animate if we have a ship icon to display
-            if (_shipIcon == null)
-                return;
-
-            // Calculate the vertical offset using a sine wave for smooth oscillation
-            _animationPhase += ANIMATION_SPEED;
-
-            // Trigger repaint for animation (ShipIcon overlay)
-            _renderPanel?.Invalidate();
-        }
-
          // Clean up any resources being used.
          // <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
@@ -369,11 +332,8 @@ namespace EliteDataRelay.UI
                 _listFont?.Dispose();
                 _textBrush?.Dispose();
                 _grayBrush?.Dispose();
-                _animationTimer?.Dispose();
                 _fadeTimer?.Dispose();
                 _frameCache?.Dispose();
-                _shipIconBackgroundCache?.Dispose();
-                // Don't dispose _shipIcon - it's managed by the service layer
             }
             base.Dispose(disposing);
         }

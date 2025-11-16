@@ -150,7 +150,7 @@ namespace EliteDataRelay.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"[ExplorationDatabaseService] Batch write failed: {ex.Message}");
-                throw;
+                Debug.WriteLine(ex.StackTrace);
             }
         }
 

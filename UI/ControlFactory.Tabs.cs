@@ -27,24 +27,13 @@ namespace EliteDataRelay.UI
 
         private void DisposeTabControls()
         {
-            TabControl.Dispose();
+            TabControl?.Dispose();
+            TabControl = null!;
             DisposeCargoTabControls();
             DisposeShipTabControls();
-            if (SessionTab != null)
-            {
-                SessionTab.Dispose();
-                SessionTab = null;
-            }
-            if (MiningTab != null)
-            {
-                MiningTab.Dispose();
-                MiningTab = null;
-            }
-            if (FleetCarrierTab != null)
-            {
-                FleetCarrierTab.Dispose();
-                FleetCarrierTab = null;
-            }
+            SessionTab = null;
+            MiningTab = null;
+            FleetCarrierTab = null;
         }
 
         private TabPage CreateSessionTabPage(FontManager fontManager, SessionTrackingService sessionTracker)

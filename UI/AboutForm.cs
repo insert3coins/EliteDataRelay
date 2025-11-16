@@ -139,7 +139,7 @@ namespace EliteDataRelay.UI
             this.labelDescription.Location = new System.Drawing.Point(17, 70);
             this.labelDescription.Name = "labelDescription";
             this.labelDescription.Size = new System.Drawing.Size(380, 75);
-            this.labelDescription.Text = "Windows companion for Elite Dangerous. Watches game journals to track cargo, materials, ship and location; logs and visualizes exploration (FSS/Scan/SAA) in a local database with a one-time history import; provides lightweight overlays and a web overlay for streaming.";
+            this.labelDescription.Text = "Elite Data Relay is a modern Elite Dangerous companion. It monitors journals for cargo, mining sessions, fleet carrier state, ship info, and exploration events; persists exploration history locally; and exposes everything through tabs and lightweight overlays.";
             // 
             // linkLabelGitHub
             // 

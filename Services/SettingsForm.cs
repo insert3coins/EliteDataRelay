@@ -19,7 +19,6 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableLeftOverlay = null!;
         private CheckBox _chkEnableRightOverlay = null!;
         private CheckBox _chkEnableSessionOverlay = null!;
-        private CheckBox _chkEnableShipIconOverlay = null!;
         private CheckBox _chkEnableExplorationOverlay = null!;
         // Next Jump overlay removed
         private GroupBox _grpOverlaySettings = null!;
@@ -28,7 +27,6 @@ namespace EliteDataRelay.UI
         private CheckBox _chkShowBorderInfo = null!;
         private CheckBox _chkShowBorderCargo = null!;
         private CheckBox _chkShowBorderSession = null!;
-        private CheckBox _chkShowBorderShipIcon = null!;
         private CheckBox _chkShowBorderExploration = null!;
         // Next Jump border toggle removed
         private CheckBox _chkFastStart = null!;
@@ -57,7 +55,6 @@ namespace EliteDataRelay.UI
         private bool _overlayShowBorderInfo;
         private bool _overlayShowBorderCargo;
         private bool _overlayShowBorderSession;
-        private bool _overlayShowBorderShipIcon;
         private bool _overlayShowBorderExploration;
         // removed: _overlayShowBorderJump
 
@@ -70,13 +67,11 @@ namespace EliteDataRelay.UI
         private bool _originalShowBorderInfo;
         private bool _originalShowBorderCargo;
         private bool _originalShowBorderSession;
-        private bool _originalShowBorderShipIcon;
         private bool _originalShowBorderExploration;
         // removed: _originalShowBorderJump
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
         private Point _originalSessionOverlayLocation;
-        private Point _originalShipIconOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
 
@@ -98,7 +93,6 @@ namespace EliteDataRelay.UI
             _chkEnableLeftOverlay.Checked = AppConfiguration.EnableInfoOverlay;
             _chkEnableSessionOverlay.Checked = AppConfiguration.EnableSessionOverlay;
             _chkEnableRightOverlay.Checked = AppConfiguration.EnableCargoOverlay;
-            _chkEnableShipIconOverlay.Checked = AppConfiguration.EnableShipIconOverlay;
             _chkEnableExplorationOverlay.Checked = AppConfiguration.EnableExplorationOverlay;
             // Next Jump overlay removed
             _chkFastStart.Checked = AppConfiguration.FastStartSkipJournalHistory;
@@ -118,7 +112,6 @@ namespace EliteDataRelay.UI
             _overlayShowBorderInfo = AppConfiguration.OverlayShowBorderInfo;
             _overlayShowBorderCargo = AppConfiguration.OverlayShowBorderCargo;
             _overlayShowBorderSession = AppConfiguration.OverlayShowBorderSession;
-            _overlayShowBorderShipIcon = AppConfiguration.OverlayShowBorderShipIcon;
             _overlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration;
 
             // Store original values for cancellation
@@ -130,12 +123,10 @@ namespace EliteDataRelay.UI
             _originalShowBorderInfo = _overlayShowBorderInfo;
             _originalShowBorderCargo = _overlayShowBorderCargo;
             _originalShowBorderSession = _overlayShowBorderSession;
-            _originalShowBorderShipIcon = _overlayShowBorderShipIcon;
             _originalShowBorderExploration = _overlayShowBorderExploration;
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
             _originalSessionOverlayLocation = AppConfiguration.SessionOverlayLocation;
-            _originalShipIconOverlayLocation = AppConfiguration.ShipIconOverlayLocation;
 
             UpdateAppearanceControls();
         }
@@ -153,7 +144,6 @@ namespace EliteDataRelay.UI
             if (_chkShowBorderInfo != null) _chkShowBorderInfo.Checked = _overlayShowBorderInfo;
             if (_chkShowBorderCargo != null) _chkShowBorderCargo.Checked = _overlayShowBorderCargo;
             if (_chkShowBorderSession != null) _chkShowBorderSession.Checked = _overlayShowBorderSession;
-            if (_chkShowBorderShipIcon != null) _chkShowBorderShipIcon.Checked = _overlayShowBorderShipIcon;
             if (_chkShowBorderExploration != null) _chkShowBorderExploration.Checked = _overlayShowBorderExploration;
         }
 
@@ -165,7 +155,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableInfoOverlay = _chkEnableLeftOverlay.Checked;
             AppConfiguration.EnableSessionOverlay = _chkEnableSessionOverlay.Checked;
             AppConfiguration.EnableCargoOverlay = _chkEnableRightOverlay.Checked;
-            AppConfiguration.EnableShipIconOverlay = _chkEnableShipIconOverlay.Checked;
             AppConfiguration.EnableExplorationOverlay = _chkEnableExplorationOverlay.Checked;
             AppConfiguration.FastStartSkipJournalHistory = _chkFastStart.Checked;
             // Hotkeys removed
@@ -183,7 +172,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderInfo = _chkShowBorderInfo.Checked;
             AppConfiguration.OverlayShowBorderCargo = _chkShowBorderCargo.Checked;
             AppConfiguration.OverlayShowBorderSession = _chkShowBorderSession.Checked;
-            AppConfiguration.OverlayShowBorderShipIcon = _chkShowBorderShipIcon.Checked;
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
 
             AppConfiguration.Save();
@@ -239,7 +227,6 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayOpacity = _originalOverlayOpacity;
             AppConfiguration.OverlayShowBorderInfo = _originalShowBorderInfo;
             AppConfiguration.OverlayShowBorderCargo = _originalShowBorderCargo;
-            AppConfiguration.OverlayShowBorderShipIcon = _originalShowBorderShipIcon;
             AppConfiguration.OverlayShowBorderExploration = _originalShowBorderExploration;
             // Next Jump border removed
 

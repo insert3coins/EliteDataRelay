@@ -40,12 +40,6 @@ namespace EliteDataRelay.Services
             _leftOverlayForm?.UpdateShip(shipType);
         }
 
-        public void UpdateShipIcon(Image? shipIcon)
-        {
-            _lastShipIcon = shipIcon;
-            _shipIconOverlayForm?.UpdateShipIcon(shipIcon);
-        }
-
         public void UpdateBalance(long balance)
         {
             _lastBalance = balance;

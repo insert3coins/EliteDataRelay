@@ -9,7 +9,6 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
-        public PictureBox ShipPictureBox { get; private set; } = null!;
         public TableLayoutPanel ShipStatsPanel { get; private set; } = null!;
         public Label ShipTabNameLabel { get; private set; } = null!;
         public Label ShipTabIdentLabel { get; private set; } = null!;
@@ -50,22 +49,11 @@ namespace EliteDataRelay.UI
                 BackColor = Color.FromArgb(30, 30, 35)
             };
 
-            // Ship Wireframe
-            ShipPictureBox = new PictureBox
-            {
-                Location = new Point(0, 0),
-                Size = new Size(160, 160),
-                BackColor = Color.FromArgb(40, 40, 45),
-                BorderStyle = BorderStyle.FixedSingle,
-                SizeMode = PictureBoxSizeMode.Zoom
-            };
-            leftPanel.Controls.Add(ShipPictureBox);
-
             // Ship Stats
             ShipStatsPanel = new TableLayoutPanel
             {
-                Location = new Point(170, 0),
-                Size = new Size(170, 160),
+                Location = new Point(0, 0),
+                Size = new Size(340, 160),
                 BackColor = Color.FromArgb(35, 35, 40),
                 ColumnCount = 3,
                 RowCount = 2,
@@ -155,7 +143,6 @@ namespace EliteDataRelay.UI
 
         private void DisposeShipTabControls()
         {
-            ShipPictureBox?.Dispose();
             ShipStatsPanel?.Dispose();
             ShipTabNameLabel?.Dispose();
             ShipTabIdentLabel?.Dispose();

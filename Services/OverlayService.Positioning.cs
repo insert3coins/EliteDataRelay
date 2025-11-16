@@ -33,7 +33,6 @@ namespace EliteDataRelay.Services
             // --- Calculate positions for the bottom-left overlay stack ---
             int totalStackHeight = 0;
             if (_leftOverlayForm != null) totalStackHeight += _leftOverlayForm.Height;
-            if (_shipIconOverlayForm != null) totalStackHeight += (totalStackHeight > 0 ? overlaySpacing : 0) + _shipIconOverlayForm.Height;
 
             int currentY = screen.Height - totalStackHeight - screenEdgePadding;
 
@@ -42,13 +41,6 @@ namespace EliteDataRelay.Services
             {
                 defaultLeftLocation = new Point(screenEdgePadding, currentY);
                 currentY += _leftOverlayForm.Height + overlaySpacing;
-            }
-
-            Point defaultShipIconLocation = Point.Empty;
-            if (_shipIconOverlayForm != null)
-            {
-                defaultShipIconLocation = new Point(screenEdgePadding, currentY);
-                currentY += _shipIconOverlayForm.Height + overlaySpacing;
             }
 
             // --- Assign final positions ---
@@ -65,9 +57,6 @@ namespace EliteDataRelay.Services
                     : new Point(screen.Width - _sessionOverlayForm.Width - screenEdgePadding, screenEdgePadding);
                 _sessionOverlayForm.Location = AppConfiguration.SessionOverlayLocation != Point.Empty ? AppConfiguration.SessionOverlayLocation : fallbackSession;
             }
-
-            if (_shipIconOverlayForm != null)
-                _shipIconOverlayForm.Location = AppConfiguration.ShipIconOverlayLocation != Point.Empty ? AppConfiguration.ShipIconOverlayLocation : defaultShipIconLocation;
 
             // Exploration overlay defaults to top-left (already set in config default)
             if (_explorationOverlayForm != null)
@@ -89,8 +78,6 @@ namespace EliteDataRelay.Services
                 AppConfiguration.CargoOverlayLocation = newLocation;
             else if (sender == _sessionOverlayForm)
                 AppConfiguration.SessionOverlayLocation = newLocation;
-            else if (sender == _shipIconOverlayForm)
-                AppConfiguration.ShipIconOverlayLocation = newLocation;
             else if (sender == _explorationOverlayForm)
                 AppConfiguration.ExplorationOverlayLocation = newLocation;
             else if (sender == _jumpOverlayForm)
