@@ -62,29 +62,31 @@ namespace EliteDataRelay.Services
 
             if (_leftOverlayForm == null && AppConfiguration.EnableInfoOverlay)
             {
-                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_rightOverlayForm == null && AppConfiguration.EnableCargoOverlay)
             {
-                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_sessionOverlayForm == null && AppConfiguration.EnableSessionOverlay)
             {
-                _sessionOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Session, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _sessionOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Session, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _sessionOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
             if (_explorationOverlayForm == null && AppConfiguration.EnableExplorationOverlay)
             {
-                _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
             }
             if (_miningOverlayForm == null && AppConfiguration.EnableMiningOverlay)
             {
-                _miningOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Mining, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _miningOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Mining, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _miningOverlayForm.PositionChanged += OnOverlayPositionChanged;
+                _miningOverlayForm.Shown += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
+                _miningOverlayForm.FormClosed += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
             }
             else if (_miningOverlayForm != null && !AppConfiguration.EnableMiningOverlay)
             {
@@ -94,8 +96,10 @@ namespace EliteDataRelay.Services
 
             if (_prospectorOverlayForm == null && AppConfiguration.EnableProspectorOverlay)
             {
-                _prospectorOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Prospector, AppConfiguration.AllowOverlayDrag) { Owner = overlayOwner };
+                _prospectorOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Prospector, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _prospectorOverlayForm.PositionChanged += OnOverlayPositionChanged;
+                _prospectorOverlayForm.Shown += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
+                _prospectorOverlayForm.FormClosed += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
             }
             else if (_prospectorOverlayForm != null && !AppConfiguration.EnableProspectorOverlay)
             {

@@ -2,9 +2,11 @@ using EliteDataRelay.Models.Mining;
 using EliteDataRelay.Services;
 using EliteDataRelay.UI.Controls;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI
@@ -108,6 +110,14 @@ namespace EliteDataRelay.UI
             oreGroup.Controls.Add(_oreList);
 
             _historyList = CreateListView();
+            _historyList.BackColor = SystemColors.Window;
+            _historyList.ForeColor = SystemColors.ControlText;
+            _historyList.BorderStyle = BorderStyle.FixedSingle;
+            _historyList.OwnerDraw = true;
+            _historyList.DrawColumnHeader += HistoryList_DrawColumnHeader;
+            _historyList.DrawItem += HistoryList_DrawItem;
+            _historyList.DrawSubItem += HistoryList_DrawSubItem;
+
             _historyList.Columns.Add("Start", 150);
             _historyList.Columns.Add("Duration", 100);
             _historyList.Columns.Add("Location", 180);
@@ -115,6 +125,9 @@ namespace EliteDataRelay.UI
             _historyList.Columns.Add("Prospectors", 100, HorizontalAlignment.Right);
             _historyList.Columns.Add("Collectors", 90, HorizontalAlignment.Right);
             _historyList.Columns.Add("Asteroids (P/C)", 140, HorizontalAlignment.Right);
+            _historyList.HandleCreated += (_, _) => LogHistoryListBounds("handle created");
+            _historyList.SizeChanged += (_, _) => LogHistoryListBounds("size changed");
+            _historyList.VisibleChanged += (_, _) => LogHistoryListBounds("visibility changed");
             var historyGroup = new GroupBox { Text = "Previous Sessions", Dock = DockStyle.Fill };
             historyGroup.Controls.Add(_historyList);
 
@@ -143,6 +156,15 @@ namespace EliteDataRelay.UI
             _tracker.SessionsUpdated += OnSessionsUpdated;
             _tracker.LatestProspectorUpdated += OnProspectorUpdated;
             _tracker.LiveStateChanged += OnLiveStateChanged;
+
+            if (_tracker.HistoryLoadTask.IsCompleted)
+            {
+                RequestHistoryRefresh();
+            }
+            else
+            {
+                _ = _tracker.HistoryLoadTask.ContinueWith(_ => RequestHistoryRefresh(), TaskScheduler.Default);
+            }
 
             _durationTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _durationTimer.Tick += (s, _) => UpdateDuration();
@@ -377,7 +399,19 @@ namespace EliteDataRelay.UI
             {
                 _historyList.Items.Clear();
 
-                var ordered = _tracker.Sessions.OrderByDescending(x => x.TimeStarted).ToList();
+                IReadOnlyList<MiningSession> sessionsSnapshot;
+                try
+                {
+                    sessionsSnapshot = _tracker.Sessions;
+                    Trace.WriteLine($"[MiningTab] UpdateHistory requested. Service returned {sessionsSnapshot.Count} sessions. List bounds={_historyList.Bounds} visible={_historyList.Visible}");
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"[MiningTab] Failed to read mining sessions: {ex.Message}");
+                    sessionsSnapshot = Array.Empty<MiningSession>();
+                }
+
+                var ordered = sessionsSnapshot.OrderByDescending(x => x.TimeStarted).ToList();
                 if (ordered.Count == 0)
                 {
                     _historyList.Items.Add(new ListViewItem(new[]
@@ -397,7 +431,9 @@ namespace EliteDataRelay.UI
                 {
                     var duration = session.TimeFinished < DateTime.MaxValue ? session.TimeFinished - session.TimeStarted : TimeSpan.Zero;
                     var refined = session.Items.Where(x => x.Type == MiningItemType.Ore).Sum(x => x.RefinedCount);
-                    var item = new ListViewItem(session.TimeStarted.ToLocalTime().ToString("g"));
+                    var startText = session.TimeStarted.ToLocalTime().ToString("g");
+                    Trace.WriteLine($"[MiningTab] Rendering session: {startText}, refined={refined}, location={session.Location ?? session.StarSystem}");
+                    var item = new ListViewItem(startText);
                     item.SubItems.Add(duration == TimeSpan.Zero ? "-" : duration.ToString(@"hh\:mm\:ss"));
                     item.SubItems.Add(string.IsNullOrWhiteSpace(session.Location) ? session.StarSystem : session.Location);
                     item.SubItems.Add(refined.ToString("N0"));
@@ -405,6 +441,13 @@ namespace EliteDataRelay.UI
                     item.SubItems.Add(session.CollectorsDeployed.ToString("N0"));
                     item.SubItems.Add($"{session.AsteroidsProspected:N0} / {session.AsteroidsCracked:N0}");
                     _historyList.Items.Add(item);
+                }
+
+                Trace.WriteLine($"[MiningTab] History ListView now contains {_historyList.Items.Count} rows (bounds={_historyList.Bounds}, visible={_historyList.Visible}).");
+                for (int i = 0; i < _historyList.Items.Count; i++)
+                {
+                    var row = _historyList.Items[i];
+                    Trace.WriteLine($"[MiningTab] Row {i}: {string.Join(" | ", row.SubItems.Cast<ListViewItem.ListViewSubItem>().Select(s => s.Text))}");
                 }
             }
             finally
@@ -447,6 +490,41 @@ namespace EliteDataRelay.UI
                 _prospectorList.EndUpdate();
             }
         }
+
+        #pragma warning disable CS8602
+        private void HistoryList_DrawColumnHeader(object? sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            using var bg = new SolidBrush(Color.FromArgb(240, 240, 240));
+            using var border = new Pen(Color.FromArgb(200, 200, 200));
+            e.Graphics.FillRectangle(bg, e.Bounds);
+            e.Graphics.DrawRectangle(border, e.Bounds);
+            TextRenderer.DrawText(e.Graphics, e.Header.Text, e.Font, e.Bounds, Color.FromArgb(30, 30, 30),
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+        }
+
+        private void HistoryList_DrawItem(object? sender, DrawListViewItemEventArgs e)
+        {
+            // handled in DrawSubItem
+        }
+
+        private void HistoryList_DrawSubItem(object? sender, DrawListViewSubItemEventArgs e)
+        {
+            var isSelected = e.Item.Selected;
+            var backColor = isSelected ? SystemColors.Highlight : SystemColors.Window;
+            var foreColor = isSelected ? SystemColors.HighlightText : SystemColors.ControlText;
+
+            using var bg = new SolidBrush(backColor);
+            e.Graphics.FillRectangle(bg, e.Bounds);
+
+            TextRenderer.DrawText(e.Graphics, e.SubItem.Text, _historyList!.Font, e.Bounds, foreColor,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
+
+            if (isSelected)
+            {
+                e.DrawFocusRectangle(e.Bounds);
+            }
+        }
+        #pragma warning restore CS8602
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -507,6 +585,11 @@ namespace EliteDataRelay.UI
             {
                 UpdateProspector();
             }
+        }
+
+        private void LogHistoryListBounds(string reason)
+        {
+            Trace.WriteLine($"[MiningTab] History ListView {reason}: bounds={_historyList.Bounds}, visible={_historyList.Visible}, handleCreated={_historyList.IsHandleCreated}");
         }
 
         private sealed class BufferedListView : SafeListView
