@@ -97,6 +97,7 @@ namespace EliteDataRelay.Services
             if (loadoutEvent != null)
             {
                 Trace.WriteLine($"[JournalWatcher] Processed Loadout event. Ship: {loadoutEvent.Ship}, Mass: {loadoutEvent.UnladenMass}, Rebuy: {loadoutEvent.Rebuy}");
+                loadoutEvent.RawJson = journalLine;
                 if (loadoutEvent.CargoCapacity > 0)
                 {
                     Trace.WriteLine($"[JournalWatcherService] Found Loadout event. CargoCapacity: {loadoutEvent.CargoCapacity}");

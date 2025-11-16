@@ -43,80 +43,129 @@ namespace EliteDataRelay.UI
 
         private Panel CreateShipLeftPanel(FontManager fontManager)
         {
-            Panel leftPanel = new Panel
+            var leftPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(30, 30, 35)
+                BackColor = Color.FromArgb(25, 25, 30)
             };
 
-            // Ship Stats
-            ShipStatsPanel = new TableLayoutPanel
+            var layout = new TableLayoutPanel
             {
-                Location = new Point(0, 0),
-                Size = new Size(340, 160),
-                BackColor = Color.FromArgb(35, 35, 40),
-                ColumnCount = 3,
-                RowCount = 2,
-                CellBorderStyle = TableLayoutPanelCellBorderStyle.None,
-                Padding = new Padding(2)
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 3,
+                BackColor = Color.FromArgb(30, 30, 35),
+                Padding = new Padding(0)
             };
-            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            for (int i = 0; i < 6; i++) ShipStatsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 16.66F));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            leftPanel.Controls.Add(ShipStatsPanel);
+            var summaryPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                BackColor = Color.FromArgb(35, 35, 40),
+                Padding = new Padding(12),
+                Margin = new Padding(0, 0, 0, 8)
+            };
+            summaryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            summaryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            summaryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            // Ship Name Label
             ShipTabNameLabel = new Label
             {
                 Text = "Ship Name",
-                Font = new Font(fontManager.ConsolasFont.FontFamily, 12f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(220, 220, 230),
-                Location = new Point(0, 170),
-                Size = new Size(340, 30),
-                TextAlign = ContentAlignment.MiddleCenter,
-                BackColor = Color.FromArgb(35, 35, 40)
+                Dock = DockStyle.Fill,
+                Font = new Font(fontManager.ConsolasFont.FontFamily, 13f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(224, 224, 235),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 0, 4)
             };
-            leftPanel.Controls.Add(ShipTabNameLabel);
+            summaryPanel.Controls.Add(ShipTabNameLabel, 0, 0);
 
-            // Ship ID Label
             ShipTabIdentLabel = new Label
             {
                 Text = "ID: N/A",
+                Dock = DockStyle.Fill,
                 Font = fontManager.ConsolasFont,
                 ForeColor = Color.FromArgb(156, 163, 175),
-                Location = new Point(0, 200),
-                Size = new Size(340, 20),
-                TextAlign = ContentAlignment.MiddleCenter
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 0, 8)
             };
-            leftPanel.Controls.Add(ShipTabIdentLabel);
+            summaryPanel.Controls.Add(ShipTabIdentLabel, 0, 1);
 
-            // Ship Fuel Label
-            ShipFuelLabel = new Label
+            var summaryGrid = new TableLayoutPanel
             {
-                Text = "Fuel: 0 / 0 T",
-                Font = fontManager.ConsolasFont,
-                ForeColor = Color.FromArgb(156, 163, 175),
-                Location = new Point(0, 230),
-                Size = new Size(340, 20),
-                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 2,
+                Margin = new Padding(0)
+            };
+            summaryGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            summaryGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            summaryGrid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            summaryGrid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            summaryGrid.Controls.Add(CreateSummaryHeaderLabel("Fuel"), 0, 0);
+            summaryGrid.Controls.Add(CreateSummaryHeaderLabel("Value"), 1, 0);
+
+            ShipFuelLabel = CreateSummaryValueLabel("Main: 0.0 T  |  Res: 0.0 T", fontManager);
+            ShipValueLabel = CreateSummaryValueLabel("0 CR", fontManager);
+            summaryGrid.Controls.Add(ShipFuelLabel, 0, 1);
+            summaryGrid.Controls.Add(ShipValueLabel, 1, 1);
+
+            summaryPanel.Controls.Add(summaryGrid, 0, 2);
+            layout.Controls.Add(summaryPanel, 0, 0);
+
+            ShipStatsPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                BackColor = Color.FromArgb(30, 30, 35),
+                Padding = new Padding(6),
+                AutoSize = false
+            };
+            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            layout.Controls.Add(ShipStatsPanel, 0, 1);
+
+            var spacerPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Height = 6,
                 BackColor = Color.FromArgb(35, 35, 40)
             };
-            leftPanel.Controls.Add(ShipFuelLabel);
+            layout.Controls.Add(spacerPanel, 0, 2);
 
-            // Ship Value Label
-            ShipValueLabel = new Label
-            {
-                Text = "Value: 0 CR",
-                Font = fontManager.ConsolasFont,
-                ForeColor = Color.FromArgb(156, 163, 175),
-                Location = new Point(0, 260),
-                Size = new Size(340, 20),
-                TextAlign = ContentAlignment.MiddleCenter,
-                BackColor = Color.FromArgb(35, 35, 40)
-            };
-            leftPanel.Controls.Add(ShipValueLabel);
-
+            leftPanel.Controls.Add(layout);
             return leftPanel;
+        }
+
+        private static Label CreateSummaryHeaderLabel(string text)
+        {
+            return new Label
+            {
+                Text = text,
+                Dock = DockStyle.Fill,
+                ForeColor = Color.FromArgb(120, 126, 140),
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 0, 2)
+            };
+        }
+
+        private static Label CreateSummaryValueLabel(string text, FontManager fontManager)
+        {
+            return new Label
+            {
+                Text = text,
+                Dock = DockStyle.Fill,
+                ForeColor = Color.FromArgb(224, 224, 235),
+                Font = fontManager.ConsolasFont,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 0, 4)
+            };
         }
 
         private Panel CreateShipRightPanel(FontManager fontManager)

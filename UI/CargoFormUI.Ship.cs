@@ -1,6 +1,9 @@
 using EliteDataRelay.Models;
 using EliteDataRelay.Services;
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,6 +20,7 @@ namespace EliteDataRelay.UI
         public void InitializeShipTab()
         {
             CreateModuleTabs();
+            AttachShipNameLink();
         }
 
         public ShipLoadout? GetCurrentLoadout() => _currentLoadout;
@@ -26,8 +30,7 @@ namespace EliteDataRelay.UI
             if (_controlFactory == null) return;
             _currentStatus = status;
 
-            // This method is now only responsible for caching the status.
-            // All stats that depend on the loadout are updated in UpdateShipLoadout.
+            UpdateShipFuelSummary();
         }
 
         public void UpdateShipLoadout(ShipLoadout loadout)
@@ -38,6 +41,7 @@ namespace EliteDataRelay.UI
 
             UpdateShipStatsPanel(loadout);
             UpdateModuleList();
+            UpdateShipFuelSummary();
             // No longer need to invalidate, as the image is set directly.
         }
 
@@ -97,19 +101,29 @@ namespace EliteDataRelay.UI
             // If first time, create panels. Otherwise, update them.
             if (statsPanel.Controls.Count == 0 && _fontManager != null)
             {
+                statsPanel.RowStyles.Clear();
+                int columns = Math.Max(1, statsPanel.ColumnCount);
                 for (int i = 0; i < stats.Length; i++)
                 {
-                    var statPanel = new ControlFactory.StatPanel(stats[i].Item1, stats[i].Item2, _fontManager.ConsolasFont);
+                    int row = i / columns;
+                    while (statsPanel.RowStyles.Count <= row)
+                    {
+                        statsPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                    }
+
+                    var statPanel = new ControlFactory.StatPanel(stats[i].Item1, stats[i].Item2, _fontManager.ConsolasFont)
+                    {
+                        Margin = new Padding(4)
+                    };
                     _controlFactory?.ToolTip.SetToolTip(statPanel, toolTipTexts[i]);
-                    statsPanel.Controls.Add(statPanel, 0, i);
+                    statsPanel.Controls.Add(statPanel, i % columns, row);
                 }
             }
             else
             {
                 for (int i = 0; i < Math.Min(stats.Length, statsPanel.Controls.Count); i++)
                 {
-                    var statPanel = statsPanel.Controls[i] as ControlFactory.StatPanel;
-                    if (statPanel != null)
+                    if (statsPanel.Controls[i] is ControlFactory.StatPanel statPanel)
                     {
                         statPanel.SetValue(stats[i].Item2);
                         _controlFactory?.ToolTip.SetToolTip(statPanel, toolTipTexts[i]);
@@ -117,14 +131,6 @@ namespace EliteDataRelay.UI
                 }
             }
             statsPanel.ResumeLayout();
-
-            // Update the fuel label separately
-            if (_controlFactory?.ShipFuelLabel != null && loadout.FuelCapacity != null)
-            {
-                string fuelText = $"Fuel: {loadout.FuelCapacity.Main:F1} / {loadout.FuelCapacity.Reserve:F1} T";
-                _controlFactory.ShipFuelLabel.Text = fuelText;
-                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipFuelLabel, $"Main Tank: {loadout.FuelCapacity.Main:F1} T\nReserve Tank: {loadout.FuelCapacity.Reserve:F1} T");
-            }
 
             // Update the value label
             if (_controlFactory?.ShipValueLabel != null)
@@ -134,6 +140,112 @@ namespace EliteDataRelay.UI
                 _controlFactory.ShipValueLabel.Text = valueText;
                 _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipValueLabel, $"Hull: {loadout.HullValue:N0} CR\nModules: {loadout.ModulesValue:N0} CR");
             }
+        }
+
+        private void UpdateShipFuelSummary()
+        {
+            if (_controlFactory?.ShipFuelLabel == null)
+            {
+                return;
+            }
+
+            double currentMain = _currentStatus?.Fuel?.FuelMain ?? 0d;
+            double currentReserve = _currentStatus?.Fuel?.FuelReservoir ?? 0d;
+
+            double? capacityMain = _currentLoadout?.FuelCapacity?.Main;
+            double? capacityReserve = _currentLoadout?.FuelCapacity?.Reserve;
+
+            string mainDisplay = capacityMain.HasValue
+                ? $"{currentMain:F1} / {capacityMain.Value:F1} T"
+                : $"{currentMain:F1} T";
+
+            string reserveDisplay = capacityReserve.HasValue
+                ? $"{currentReserve:F1} / {capacityReserve.Value:F1} T"
+                : $"{currentReserve:F1} T";
+
+            _controlFactory.ShipFuelLabel.Text = $"Main: {mainDisplay}  |  Res: {reserveDisplay}";
+            _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipFuelLabel, $"Main Tank: {mainDisplay}\nReserve Tank: {reserveDisplay}");
+        }
+
+        private void AttachShipNameLink()
+        {
+            if (_controlFactory?.ShipTabNameLabel == null)
+            {
+                return;
+            }
+
+            _controlFactory.ShipTabNameLabel.Cursor = Cursors.Hand;
+            _controlFactory.ShipTabNameLabel.Click -= OnShipNameClicked;
+            _controlFactory.ShipTabNameLabel.Click += OnShipNameClicked;
+        }
+
+        private void OnShipNameClicked(object? sender, EventArgs e)
+        {
+            OpenShipyardLink();
+        }
+
+        private void OnShipLabelClicked(object? sender, EventArgs e)
+        {
+            OpenShipyardLink();
+        }
+
+        private void OpenShipyardLink()
+        {
+            var url = BuildEdsyUrl(_currentLoadout);
+
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[CargoFormUI] Failed to open EDSY link: {ex.Message}");
+            }
+        }
+
+        private static string? BuildEdsyUrl(ShipLoadout? loadout)
+        {
+            if (loadout == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(loadout.RawJson))
+            {
+                try
+                {
+                    var payload = Encoding.UTF8.GetBytes(loadout.RawJson);
+                    using var memory = new MemoryStream();
+                    using (var gzip = new GZipStream(memory, CompressionLevel.Optimal, leaveOpen: true))
+                    {
+                        gzip.Write(payload, 0, payload.Length);
+                    }
+                    var gzipped = memory.ToArray();
+                    var base64 = Convert.ToBase64String(gzipped)
+                        .TrimEnd('=')
+                        .Replace('+', '-')
+                        .Replace('/', '_');
+
+                    return $"https://edsy.org/#/I={base64}";
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"[CargoFormUI] Failed to build EDSY payload: {ex.Message}");
+                }
+            }
+
+            string slug = loadout.Ship;
+            if (string.IsNullOrWhiteSpace(slug))
+            {
+                slug = loadout.ShipName ?? "ship";
+            }
+            slug = new string(slug.Where(char.IsLetterOrDigit).ToArray());
+            return $"https://edsy.org/#/l/{slug}";
         }
 
         private void CreateModuleTabs()

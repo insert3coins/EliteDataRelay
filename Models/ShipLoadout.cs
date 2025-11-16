@@ -21,6 +21,7 @@ namespace EliteDataRelay.Models
         public double MaxJumpRange { get; set; }
         public FuelCapacityInfo? FuelCapacity { get; set; }
         public List<ShipModule> Modules { get; set; } = new List<ShipModule>();
+        public string? RawJson { get; set; }
     }
 
     public class ShipModule

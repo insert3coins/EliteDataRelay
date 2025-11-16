@@ -141,7 +141,10 @@ namespace EliteDataRelay.UI
             if (_controlFactory.ShipLabel != null)
             {
                 _controlFactory.ShipLabel.Text = $"Ship: {shipType}";
-                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Name: {shipName} ({shipIdent})");
+                _controlFactory.ShipLabel.Cursor = Cursors.Hand;
+                _controlFactory.ShipLabel.Click -= OnShipLabelClicked;
+                _controlFactory.ShipLabel.Click += OnShipLabelClicked;
+                _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipLabel, $"Name: {shipName} ({shipIdent})\nClick to open EDSY");
             }
 
             // Update the dedicated controls on the "Ship" tab
@@ -190,8 +193,7 @@ namespace EliteDataRelay.UI
         {
             if (_form == null) return;
 
-            _form.Text = $"{_baseTitle} – Location: {_currentLocation}";
+            _form.Text = $"{_baseTitle} - Location: {_currentLocation}";
         }
-
     }
 }

@@ -32,7 +32,7 @@ Elite Data Relay (EDR) is a Windows companion for Elite Dangerous. It watches th
   - All data lives under `%APPDATA%\EliteDataRelay` (SQLite DB + JSON session files).
 
 ### Mining Insights
-- Mining tab mirrors ODEliteTracker’s UX with live prospectors, ore/material breakdowns, limpets, and asteroid counts.
+- Mining tab with live prospectors, ore/material breakdowns, limpets, and asteroid counts.
 - Mining sessions persist to `%APPDATA%\EliteDataRelay\mining_sessions.json`, so runs survive restarts.
 - Pop-out overlays (table + prospector) remain available for secondary displays.
 
