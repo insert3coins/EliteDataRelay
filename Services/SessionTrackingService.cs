@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -74,6 +75,8 @@ namespace EliteDataRelay.Services
             _journalWatcherService.MiningRefined += OnMiningRefined;
             _journalWatcherService.CargoCapacityChanged += OnCargoCapacityChanged;
             _journalWatcherService.LocationChanged += OnLocationChangedForSession;
+
+            LoadExistingHistoryFromDisk();
         }
 
         public void StartSession(long initialBalance, CargoSnapshot? initialCargoSnapshot)
@@ -237,6 +240,8 @@ namespace EliteDataRelay.Services
                 LimpetsUsed = LimpetsUsed,
                 CreditsEarned = CreditsEarned,
                 TotalCargoCollected = TotalCargoCollected,
+                MiningProfit = MiningProfit,
+                SystemsVisited = SystemsVisitedCount,
                 FinalCargoFillPercent = CargoFillPercent,
                 CargoHoldFullAtEnd = IsCargoHoldFull,
                 RefinedCommodities = new Dictionary<string, int>(_refinedCommodities, StringComparer.OrdinalIgnoreCase),
@@ -385,6 +390,153 @@ namespace EliteDataRelay.Services
             PreferencesChanged?.Invoke(this, EventArgs.Empty);
             SessionHistoryUpdated?.Invoke(this, EventArgs.Empty);
             SessionUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void LoadExistingHistoryFromDisk()
+        {
+            try
+            {
+                var loaded = LoadSessionFiles().ToList();
+                if (loaded.Count == 0)
+                {
+                    loaded.AddRange(LoadLegacyHistoryFile());
+                }
+
+                if (loaded.Count == 0)
+                {
+                    return;
+                }
+
+                lock (_historyLock)
+                {
+                    _sessionHistory.Clear();
+                    foreach (var record in loaded.OrderBy(r => r.SessionStart))
+                    {
+                        _sessionHistory.Add(record);
+                    }
+                }
+
+                SessionHistoryUpdated?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[SessionTrackingService] Failed to read session history: {ex.Message}");
+            }
+        }
+
+        private IEnumerable<MiningSessionRecord> LoadSessionFiles()
+        {
+            var directory = Path.Combine(AppConfiguration.AppDataPath, "sessions");
+            if (!Directory.Exists(directory))
+            {
+                yield break;
+            }
+
+            var files = Directory.EnumerateFiles(directory, "session_*.json", SearchOption.TopDirectoryOnly)
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .Take(200)
+                .ToList();
+
+            foreach (var file in files)
+            {
+                MiningSessionRecord? record = null;
+                try
+                {
+                    var json = File.ReadAllText(file);
+                    record = JsonSerializer.Deserialize<MiningSessionRecord>(json);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"[SessionTrackingService] Failed to load session record '{Path.GetFileName(file)}': {ex.Message}");
+                }
+
+                if (record != null)
+                {
+                    yield return record;
+                }
+            }
+        }
+
+        private IEnumerable<MiningSessionRecord> LoadLegacyHistoryFile()
+        {
+            var legacyFile = Path.Combine(AppConfiguration.AppDataPath, "session_history.json");
+            if (!File.Exists(legacyFile))
+            {
+                return Array.Empty<MiningSessionRecord>();
+            }
+
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var legacyRecords = JsonSerializer.Deserialize<List<LegacySessionHistoryRecord>>(File.ReadAllText(legacyFile), options);
+                if (legacyRecords == null)
+                {
+                    return Array.Empty<MiningSessionRecord>();
+                }
+
+                return legacyRecords
+                    .Select(ConvertLegacyRecord)
+                    .Where(record => record != null)!
+                    .Select(record => record!);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[SessionTrackingService] Failed to load legacy session history: {ex.Message}");
+                return Array.Empty<MiningSessionRecord>();
+            }
+        }
+
+        private MiningSessionRecord? ConvertLegacyRecord(LegacySessionHistoryRecord legacy)
+        {
+            try
+            {
+                var sessionDuration = legacy.SessionEnd > legacy.SessionStart
+                    ? legacy.SessionEnd - legacy.SessionStart
+                    : ParseDuration(legacy.SessionDuration);
+
+                var miningDuration = ParseDuration(legacy.MiningDuration);
+
+                return new MiningSessionRecord
+                {
+                    SessionStart = legacy.SessionStart,
+                    SessionEnd = legacy.SessionEnd,
+                    SessionDurationSeconds = sessionDuration.TotalSeconds,
+                    MiningDurationSeconds = miningDuration.TotalSeconds,
+                    TotalCargoCollected = legacy.TotalCargoCollected,
+                    CreditsEarned = legacy.CreditsEarned,
+                    MiningProfit = legacy.MiningProfit,
+                    SystemsVisited = legacy.SystemsVisited,
+                    LimpetsUsed = legacy.LimpetsUsed,
+                    RefinedCommodities = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase),
+                    CollectedCommodities = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase),
+                    Notes = legacy.SystemsVisited > 0 ? $"Systems visited: {legacy.SystemsVisited}" : string.Empty
+                };
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[SessionTrackingService] Failed to convert legacy session record: {ex.Message}");
+                return null;
+            }
+        }
+
+        private static TimeSpan ParseDuration(string? value)
+        {
+            return TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out var duration)
+                ? duration
+                : TimeSpan.Zero;
+        }
+
+        private sealed class LegacySessionHistoryRecord
+        {
+            public DateTime SessionStart { get; set; }
+            public DateTime SessionEnd { get; set; }
+            public string? SessionDuration { get; set; }
+            public long TotalCargoCollected { get; set; }
+            public long CreditsEarned { get; set; }
+            public string? MiningDuration { get; set; }
+            public long MiningProfit { get; set; }
+            public int LimpetsUsed { get; set; }
+            public int SystemsVisited { get; set; }
         }
 
         public void NotifyPreferencesChanged() => PreferencesChanged?.Invoke(this, EventArgs.Empty);

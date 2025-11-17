@@ -41,6 +41,8 @@ namespace EliteDataRelay.Services
         private Form? _overlayOwner;
         private System.Threading.Timer? _miningOverlayHideTimer;
         private System.Threading.Timer? _prospectorOverlayHideTimer;
+        private bool _forceShowAllOverlays;
+        private bool _overlaysVisible;
 
         
 
@@ -131,7 +133,7 @@ namespace EliteDataRelay.Services
             {
                 bool hasCargo = (_lastCargoCount.HasValue && _lastCargoCount.Value > 0)
                                 || (_lastCargoSnapshot?.Items?.Any() == true);
-                if (hasCargo) _rightOverlayForm.Show(); else _rightOverlayForm.Hide();
+                if (_forceShowAllOverlays || hasCargo) _rightOverlayForm.Show(); else _rightOverlayForm.Hide();
 
                 if (_lastCargoCount.HasValue) _rightOverlayForm.UpdateCargo(_lastCargoCount.Value, _lastCargoCapacity);
                 if (_lastCargoBarText != null) _rightOverlayForm.UpdateCargoSize(_lastCargoBarText);
@@ -176,8 +178,15 @@ namespace EliteDataRelay.Services
 
             if (_prospectorOverlayForm != null)
             {
-                _prospectorOverlayForm.Show();
-                _prospectorOverlayForm.UpdateProspectorOverlay(_lastProspectorOverlayData);
+                if (_forceShowAllOverlays || _lastProspectorOverlayData != null)
+                {
+                    _prospectorOverlayForm.Show();
+                    _prospectorOverlayForm.UpdateProspectorOverlay(_lastProspectorOverlayData);
+                }
+                else
+                {
+                    _prospectorOverlayForm.Hide();
+                }
             }
 
             // Jump overlay removed
@@ -219,12 +228,24 @@ namespace EliteDataRelay.Services
         public void Show()
         {
             EnsureOverlaysCreated(_overlayOwner);
+            if (_forceShowAllOverlays)
+            {
+                ShowAllEnabledOverlays();
+                return;
+            }
             _leftOverlayForm?.Show();
             _rightOverlayForm?.Show();
             _sessionOverlayForm?.Show();
             _explorationOverlayForm?.Show();
             _miningOverlayForm?.Show();
-            _prospectorOverlayForm?.Show();
+            if (_lastProspectorOverlayData != null)
+            {
+                _prospectorOverlayForm?.Show();
+            }
+            else
+            {
+                _prospectorOverlayForm?.Hide();
+            }
             // Jump overlay is transient; do not force show here
         }
 
@@ -240,6 +261,26 @@ namespace EliteDataRelay.Services
             _jumpOverlayForm?.Hide();
         }
 
+        public void SetOverlayRepositionMode(bool enabled)
+        {
+            if (_forceShowAllOverlays == enabled) return;
+            _forceShowAllOverlays = enabled;
+
+            if (enabled)
+            {
+                _miningOverlayHideTimer?.Dispose();
+                _miningOverlayHideTimer = null;
+                _prospectorOverlayHideTimer?.Dispose();
+                _prospectorOverlayHideTimer = null;
+                ShowAllEnabledOverlays();
+            }
+            else
+            {
+                PersistOverlayLocations();
+                SetVisibility(_overlaysVisible);
+            }
+        }
+
         /// <summary>
         /// Sets the visibility of the overlays based on the provided boolean.
         /// Only shows overlays that are enabled in the application configuration.
@@ -247,6 +288,12 @@ namespace EliteDataRelay.Services
         /// <param name="visible">True to show enabled overlays, false to hide all overlays.</param>
         public void SetVisibility(bool visible)
         {
+            _overlaysVisible = visible;
+            if (_forceShowAllOverlays)
+            {
+                ShowAllEnabledOverlays();
+                return;
+            }
             if (visible)
             {
                 if (AppConfiguration.EnableInfoOverlay) _leftOverlayForm?.Show();
@@ -259,7 +306,17 @@ namespace EliteDataRelay.Services
                 if (AppConfiguration.EnableSessionOverlay) _sessionOverlayForm?.Show();
                 if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
                 if (AppConfiguration.EnableMiningOverlay) _miningOverlayForm?.Show();
-                if (AppConfiguration.EnableProspectorOverlay) _prospectorOverlayForm?.Show();
+                if (AppConfiguration.EnableProspectorOverlay)
+                {
+                    if (_lastProspectorOverlayData != null)
+                    {
+                        _prospectorOverlayForm?.Show();
+                    }
+                    else
+                    {
+                        _prospectorOverlayForm?.Hide();
+                    }
+                }
             }
             else
             {
@@ -270,6 +327,62 @@ namespace EliteDataRelay.Services
                 _miningOverlayForm?.Hide();
                 _prospectorOverlayForm?.Hide();
             }
+        }
+
+        private void ShowAllEnabledOverlays()
+        {
+            EnsureOverlaysCreated(_overlayOwner);
+
+            if (AppConfiguration.EnableInfoOverlay) _leftOverlayForm?.Show();
+            else _leftOverlayForm?.Hide();
+
+            if (AppConfiguration.EnableCargoOverlay) _rightOverlayForm?.Show();
+            else _rightOverlayForm?.Hide();
+
+            if (AppConfiguration.EnableSessionOverlay) _sessionOverlayForm?.Show();
+            else _sessionOverlayForm?.Hide();
+
+            if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
+            else _explorationOverlayForm?.Hide();
+
+            if (AppConfiguration.EnableMiningOverlay)
+            {
+                _miningOverlayForm?.Show();
+                _miningOverlayForm?.UpdateMiningOverlay(_lastMiningOverlayData);
+            }
+            else
+            {
+                _miningOverlayForm?.Hide();
+            }
+
+            if (AppConfiguration.EnableProspectorOverlay)
+            {
+                _prospectorOverlayForm?.Show();
+                _prospectorOverlayForm?.UpdateProspectorOverlay(_lastProspectorOverlayData);
+            }
+            else
+            {
+                _prospectorOverlayForm?.Hide();
+            }
+        }
+
+        private void PersistOverlayLocations()
+        {
+            if (_leftOverlayForm != null)
+                AppConfiguration.InfoOverlayLocation = _leftOverlayForm.Location;
+            if (_rightOverlayForm != null)
+                AppConfiguration.CargoOverlayLocation = _rightOverlayForm.Location;
+            if (_sessionOverlayForm != null)
+                AppConfiguration.SessionOverlayLocation = _sessionOverlayForm.Location;
+            if (_explorationOverlayForm != null)
+                AppConfiguration.ExplorationOverlayLocation = _explorationOverlayForm.Location;
+            if (_miningOverlayForm != null)
+                AppConfiguration.MiningOverlayLocation = _miningOverlayForm.Location;
+            if (_prospectorOverlayForm != null)
+                AppConfiguration.ProspectorOverlayLocation = _prospectorOverlayForm.Location;
+
+            AppConfiguration.Save();
+            ExportObsPositions();
         }
 
         /// <summary>

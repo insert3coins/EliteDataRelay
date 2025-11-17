@@ -52,6 +52,23 @@ namespace EliteDataRelay
         {
             // Hotkeys removed; nothing to unregister.
 
+            // Ensure active monitoring/session is cleanly stopped so data (like history) is persisted.
+            try
+            {
+                if (_fileMonitoringService.IsMonitoring)
+                {
+                    StopMonitoringInternal();
+                }
+                else if (AppConfiguration.EnableSessionTracking && _sessionTrackingService.IsMainSessionActive)
+                {
+                    _sessionTrackingService.StopSession();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"[CargoForm] Failed to stop services on exit: {ex}");
+            }
+
             // Save settings on exit, unless the user is canceling out of a prompt.
             if (e.CloseReason != CloseReason.None && e.CloseReason != CloseReason.TaskManagerClosing)
             {

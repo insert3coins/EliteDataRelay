@@ -79,6 +79,7 @@ namespace EliteDataRelay.UI
         private Point _originalProspectorOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
+        public event EventHandler<bool>? RepositionModeChanged;
 
         public SettingsForm()
         {
@@ -199,7 +200,8 @@ namespace EliteDataRelay.UI
         {
             // Temporarily enable dragging so the user can move the overlays.
             AppConfiguration.AllowOverlayDrag = true;
-            
+            RepositionModeChanged?.Invoke(this, true);
+
             // Raise the event now to apply the temporary draggable state to the overlays.
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
 
@@ -211,6 +213,7 @@ namespace EliteDataRelay.UI
             {
                 // Disable dragging when the repositioning dialog is closed.
                 AppConfiguration.AllowOverlayDrag = false;
+                RepositionModeChanged?.Invoke(this, false);
                 // Raise an event to tell the main form to apply this live change.
                 LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
 

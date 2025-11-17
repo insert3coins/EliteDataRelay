@@ -17,6 +17,15 @@ namespace EliteDataRelay.Services
             // Only manage visibility if overlay exists and is enabled
             if (_rightOverlayForm == null || _rightOverlayForm.IsDisposed) return;
 
+            if (_forceShowAllOverlays)
+            {
+                if (AppConfiguration.EnableCargoOverlay)
+                {
+                    _rightOverlayForm.Show();
+                }
+                return;
+            }
+
             bool hasCargo = (_lastCargoCount.HasValue && _lastCargoCount.Value > 0)
                             || (_lastCargoSnapshot?.Items?.Any() == true);
 
@@ -132,6 +141,16 @@ namespace EliteDataRelay.Services
             EnsureOverlaysCreated(_overlayOwner);
             if (_miningOverlayForm == null) return;
 
+            if (_forceShowAllOverlays)
+            {
+                _miningOverlayHideTimer?.Dispose();
+                _miningOverlayHideTimer = null;
+                _lastMiningOverlayData = data;
+                _miningOverlayForm.Show();
+                _miningOverlayForm.UpdateMiningOverlay(data);
+                return;
+            }
+
             if (data != null)
             {
                 _miningOverlayHideTimer?.Dispose();
@@ -183,6 +202,16 @@ namespace EliteDataRelay.Services
 
             EnsureOverlaysCreated(_overlayOwner);
             if (_prospectorOverlayForm == null) return;
+
+            if (_forceShowAllOverlays)
+            {
+                _prospectorOverlayHideTimer?.Dispose();
+                _prospectorOverlayHideTimer = null;
+                _lastProspectorOverlayData = data;
+                _prospectorOverlayForm.Show();
+                _prospectorOverlayForm.UpdateProspectorOverlay(data);
+                return;
+            }
 
             if (data != null)
             {

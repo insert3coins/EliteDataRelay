@@ -56,6 +56,15 @@ namespace EliteDataRelay.UI
             var summaryGroup = CreateSummaryGroup(fontManager, summaryTable);
 
             _historyList = CreateHistoryList();
+            _historyList.HandleCreated += (_, _) =>
+            {
+                if (IsDisposed) return;
+
+                if (_historyList.IsHandleCreated)
+                {
+                    _historyList.BeginInvoke(new System.Windows.Forms.MethodInvoker(RefreshHistory));
+                }
+            };
             var historyGroup = CreateHistoryGroup(_historyList, fontManager);
 
             var layout = new TableLayoutPanel
@@ -144,8 +153,10 @@ namespace EliteDataRelay.UI
             list.Columns.Add("Duration", 90);
             list.Columns.Add("Cargo", 70);
             list.Columns.Add("Credits", 90, HorizontalAlignment.Right);
+            list.Columns.Add("Profit", 90, HorizontalAlignment.Right);
             list.Columns.Add("Mining", 90);
             list.Columns.Add("Limpets", 70, HorizontalAlignment.Right);
+            list.Columns.Add("Systems", 70, HorizontalAlignment.Right);
 
             typeof(ListView).GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic)
                 ?.SetValue(list, true);
@@ -268,8 +279,10 @@ namespace EliteDataRelay.UI
                 item.SubItems.Add(FormatTimeSpan(record.SessionDuration));
                 item.SubItems.Add($"{record.TotalCargoCollected:N0}");
                 item.SubItems.Add($"{record.CreditsEarned:N0}");
+                item.SubItems.Add($"{record.MiningProfit:N0}");
                 item.SubItems.Add(FormatTimeSpan(record.MiningDuration));
                 item.SubItems.Add(record.LimpetsUsed.ToString(CultureInfo.InvariantCulture));
+                item.SubItems.Add(record.SystemsVisited.ToString(CultureInfo.InvariantCulture));
 
                 _historyList.Items.Add(item);
             }

@@ -13,6 +13,8 @@ namespace EliteDataRelay.Models
         public int LimpetsUsed { get; set; }
         public long CreditsEarned { get; set; }
         public long TotalCargoCollected { get; set; }
+        public long MiningProfit { get; set; }
+        public int SystemsVisited { get; set; }
         public Dictionary<string, int> RefinedCommodities { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, int> CollectedCommodities { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public double FinalCargoFillPercent { get; set; }
@@ -34,6 +36,8 @@ namespace EliteDataRelay.Models
             LimpetsUsed = LimpetsUsed,
             CreditsEarned = CreditsEarned,
             TotalCargoCollected = TotalCargoCollected,
+            MiningProfit = MiningProfit,
+            SystemsVisited = SystemsVisited,
             RefinedCommodities = new Dictionary<string, int>(RefinedCommodities, StringComparer.OrdinalIgnoreCase),
             CollectedCommodities = new Dictionary<string, int>(CollectedCommodities, StringComparer.OrdinalIgnoreCase),
             FinalCargoFillPercent = FinalCargoFillPercent,

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace EliteDataRelay.UI.Controls
@@ -12,12 +13,13 @@ namespace EliteDataRelay.UI.Controls
         protected override void OnHandleCreated(EventArgs e)
         {
             var hadItems = Items.Count > 0;
-            ListViewItem[]? buffer = null;
-            if (hadItems)
-            {
-                buffer = new ListViewItem[Items.Count];
-                Items.CopyTo(buffer, 0);
-            }
+            ListViewItem[]? buffer = hadItems
+                ? Items
+                    .Cast<ListViewItem?>()
+                    .Where(item => item != null)
+                    .Select(item => (ListViewItem)item!.Clone())
+                    .ToArray()
+                : null;
 
             BeginUpdate();
             try

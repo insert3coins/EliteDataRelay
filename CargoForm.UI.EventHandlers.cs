@@ -101,6 +101,10 @@ namespace EliteDataRelay
             {
                 // Subscribe to the event that fires when a live setting (like repositioning) is changed.
                 settingsForm.LiveSettingsChanged += (s, a) => ApplyLiveSettingsChanges();
+                settingsForm.RepositionModeChanged += (s, active) =>
+                {
+                    _overlayService.SetOverlayRepositionMode(active);
+                };
 
                 if (settingsForm.ShowDialog(this) == DialogResult.OK)
                 {
