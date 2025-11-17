@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -48,7 +49,7 @@ namespace EliteDataRelay.UI
         private void UpdateShipStatsPanel(ShipLoadout loadout)
         {
             var statsPanel = _controlFactory?.ShipStatsPanel;
-            if (statsPanel is null) return;
+            if (statsPanel is null || _fontManager == null) return;
 
             System.Diagnostics.Debug.WriteLine("[CargoFormUI] Updating ship stats panel...");
             statsPanel.SuspendLayout();
@@ -99,8 +100,9 @@ namespace EliteDataRelay.UI
             };
 
             // If first time, create panels. Otherwise, update them.
-            if (statsPanel.Controls.Count == 0 && _fontManager != null)
+            if (statsPanel.Controls.Count != stats.Length)
             {
+                statsPanel.Controls.Clear();
                 statsPanel.RowStyles.Clear();
                 int columns = Math.Max(1, statsPanel.ColumnCount);
                 for (int i = 0; i < stats.Length; i++)
@@ -113,7 +115,8 @@ namespace EliteDataRelay.UI
 
                     var statPanel = new ControlFactory.StatPanel(stats[i].Item1, stats[i].Item2, _fontManager.ConsolasFont)
                     {
-                        Margin = new Padding(4)
+                        Margin = new Padding(6),
+                        Dock = DockStyle.Fill
                     };
                     _controlFactory?.ToolTip.SetToolTip(statPanel, toolTipTexts[i]);
                     statsPanel.Controls.Add(statPanel, i % columns, row);
@@ -121,7 +124,7 @@ namespace EliteDataRelay.UI
             }
             else
             {
-                for (int i = 0; i < Math.Min(stats.Length, statsPanel.Controls.Count); i++)
+                for (int i = 0; i < stats.Length; i++)
                 {
                     if (statsPanel.Controls[i] is ControlFactory.StatPanel statPanel)
                     {
@@ -270,18 +273,16 @@ namespace EliteDataRelay.UI
 
             foreach (TabPage tabPage in _controlFactory.ModuleTabControl.TabPages)
             {
-                if (tabPage.Controls.Count > 0 && tabPage.Controls[0] is Panel modulePanel)
+                if (tabPage.Controls.Count > 0 && tabPage.Controls[0] is FlowLayoutPanel listPanel)
                 {
-                    modulePanel.SuspendLayout();
-                    modulePanel.Controls.Clear();
+                    listPanel.SuspendLayout();
+                    listPanel.Controls.Clear();
                     var modules = GetModulesForTab(tabPage.Text);
-                    int yPos = 0;
                     foreach (var module in modules)
                     {
                         var moduleControl = new ModulePanel(module, _currentLoadout?.Ship ?? string.Empty, _fontManager);
-                        moduleControl.Tag = module; // Tag the control with the module data for the tooltip drawer
-                        
-                        // Add tooltip for engineering details
+                        moduleControl.Tag = module;
+
                         if (module.Engineering != null && _controlFactory != null)
                         {
                             var sb = new StringBuilder();
@@ -297,7 +298,6 @@ namespace EliteDataRelay.UI
                                     isGood = !isGood;
                                 }
                                 string indicator = isGood ? "▲" : "▼";
-
                                 sb.AppendLine($"{modifier.Label}: {modifier.Value:N2} (was {modifier.OriginalValue:N2}) {indicator}");
                             }
 
@@ -311,111 +311,162 @@ namespace EliteDataRelay.UI
                         }
                         else if (_controlFactory != null)
                         {
-                            // Ensure no old tooltip persists if the module is not engineered
                             _controlFactory.ToolTip.SetToolTip(moduleControl, string.Empty);
                         }
 
-                        moduleControl.Location = new Point(0, yPos);
-                        modulePanel.Controls.Add(moduleControl);
-                        yPos += moduleControl.Height;
+                        listPanel.Controls.Add(moduleControl);
                     }
-                    modulePanel.ResumeLayout();
+
+                    ResizeModuleCards(listPanel);
+                    listPanel.ResumeLayout();
                 }
             }
         }
-
         private TabPage CreateModuleListPage(string title)
         {
             var tabPage = new TabPage(title)
             {
-                BackColor = Color.FromArgb(42, 50, 60), // Dark background for the tab page content area
+                BackColor = Color.FromArgb(42, 50, 60),
                 Padding = Padding.Empty
             };
 
-            var moduleListPanel = new Panel
+            var moduleListPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(42, 50, 60),
-                AutoScroll = true
+                AutoScroll = true,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                Padding = new Padding(8)
             };
-            
+            moduleListPanel.Resize += (s, _) =>
+            {
+                if (s is FlowLayoutPanel panelRef)
+                {
+                    ResizeModuleCards(panelRef);
+                }
+            };
+
             tabPage.Controls.Add(moduleListPanel);
 
             return tabPage;
         }
 
+        private static void ResizeModuleCards(FlowLayoutPanel panel)
+        {
+            if (panel == null) return;
+            int adjustment = panel.VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth : 0;
+            var width = Math.Max(220, panel.ClientSize.Width - panel.Padding.Horizontal - adjustment - 4);
+            foreach (Control child in panel.Controls)
+            {
+                child.Width = width;
+            }
+        }
+
         /// <summary>
-        /// A custom control to display a single ship module, replacing the owner-drawn ListBox item.
+        /// A custom control to display a single ship module, replacing the owner-drawn list item.
         /// </summary>
         public class ModulePanel : Panel
         {
             private readonly ShipModule _module;
             private readonly string _shipInternalName;
+            private readonly Font _titleFont;
+            private readonly Font _metaFont;
+            private readonly StringFormat _leftAlign = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near, Trimming = StringTrimming.EllipsisCharacter };
+            private readonly StringFormat _centerAlign = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
 
             public ModulePanel(ShipModule module, string shipInternalName, FontManager? fontManager)
             {
-                _module = module;
+                _module = module ?? throw new ArgumentNullException(nameof(module));
                 _shipInternalName = shipInternalName;
 
-                this.Dock = DockStyle.Top;
-                this.Height = 50;
-                this.BackColor = Color.FromArgb(51, 65, 85); // Slate-700
-                this.Font = fontManager?.ConsolasFont ?? new Font("Consolas", 9F);
-                this.DoubleBuffered = true;
+                DoubleBuffered = true;
+                BackColor = Color.FromArgb(34, 37, 48);
+                Font = fontManager?.SegoeUIFont ?? new Font("Segoe UI", 8.5f);
+                _titleFont = new Font(Font.FontFamily, Font.Size + 1f, FontStyle.Bold);
+                _metaFont = new Font("Segoe UI", 8f);
+                Height = 112;
+                Margin = new Padding(0, 0, 0, 10);
             }
 
             protected override void OnPaint(PaintEventArgs e)
             {
                 base.OnPaint(e);
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                // Define colors from the React example
-                var slotColor = Color.FromArgb(103, 232, 249); // Cyan-ish
-                var moduleInfoColor = Color.FromArgb(156, 163, 175); // Gray
-                var integrityColor = Color.FromArgb(52, 211, 153); // Emerald
-                var integrityLabelColor = Color.FromArgb(156, 163, 175); // Gray
-
-                // --- Prepare text for drawing ---
-                string slotText = _module.Slot;
+                string slotText = FormatSlot(_module.Slot);
                 string moduleText = ModuleDataService.GetModuleDisplayName(_module, _shipInternalName);
+                if (string.IsNullOrWhiteSpace(moduleText)) return;
 
-                if (string.IsNullOrEmpty(moduleText)) return;
+                string integrityText = $"Integrity {_module.Health * 100:0}%";
+                string valueText = _module.Value > 0 ? $"{_module.Value:N0} CR" : $"{_module.Mass:N1} T";
+                string engineeringText = BuildEngineeringText(_module);
 
-                string integrityLabel = "Integrity";
-                string integrityValue = $"{_module.Health * 100:F0}%";
+                var rect = ClientRectangle;
+                rect.Inflate(-2, -2);
 
-                if (_module.Engineering != null)
+                using (var path = DrawingUtils.CreateRoundedRectPath(rect, 10))
+                using (var bg = new System.Drawing.Drawing2D.LinearGradientBrush(rect, Color.FromArgb(38, 43, 58), Color.FromArgb(24, 26, 32), 90f))
+                using (var border = new Pen(Color.FromArgb(65, 134, 210), 1.2f))
                 {
-                    string blueprintName = BlueprintDataService.GetBlueprintName(_module.Engineering.BlueprintName);
-                    string experimentalEffect = !string.IsNullOrEmpty(_module.Engineering.ExperimentalEffect_Localised) ? 
-                                                BlueprintDataService.GetBlueprintName(_module.Engineering.ExperimentalEffect_Localised) : "Engineered";
-                    integrityLabel = $"G{_module.Engineering.Level} {blueprintName}";
-                    integrityValue = experimentalEffect;
+                    e.Graphics.FillPath(bg, path);
+                    e.Graphics.DrawPath(border, path);
                 }
 
-                // --- Define drawing rectangles ---
-                var textFormatLeft = TextFormatFlags.Left | TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis;
-                var textFormatRight = TextFormatFlags.Right | TextFormatFlags.NoPadding;
+                var content = Rectangle.Inflate(rect, -12, -10);
+                var slotRect = new RectangleF(content.X, content.Y, content.Width, 18);
+                var moduleRect = new RectangleF(content.X, slotRect.Bottom + 6, content.Width, 22);
+                var infoRect = new RectangleF(content.X, moduleRect.Bottom + 4, content.Width, 18);
+                var secondInfoRect = new RectangleF(content.X, infoRect.Bottom + 3, content.Width, 18);
 
-                var contentBounds = new Rectangle(10, 5, this.Width - 20, this.Height - 10);
+                using var slotBrush = new SolidBrush(Color.FromArgb(158, 167, 187));
+                e.Graphics.DrawString($"{slotText}  •  P{_module.Priority}", Font, slotBrush, slotRect, _leftAlign);
 
-                var slotRect = new Rectangle(contentBounds.Left, contentBounds.Top, contentBounds.Width / 2, contentBounds.Height / 2);
-                var moduleRect = new Rectangle(contentBounds.Left, contentBounds.Top + 20, contentBounds.Width - 160, contentBounds.Height / 2);
+                using var moduleBrush = new SolidBrush(Color.FromArgb(232, 236, 245));
+                e.Graphics.DrawString(moduleText, _titleFont, moduleBrush, moduleRect, _leftAlign);
 
-                var integrityLabelRect = new Rectangle(contentBounds.Right - 150, contentBounds.Top, 150, contentBounds.Height / 2);
-                var integrityValueRect = new Rectangle(contentBounds.Right - 150, contentBounds.Top + 20, 150, contentBounds.Height / 2);
+                using var infoBrush = new SolidBrush(Color.FromArgb(182, 191, 208));
+                e.Graphics.DrawString($"{integrityText}  •  {valueText}", _metaFont, infoBrush, infoRect, _leftAlign);
 
-                // --- Draw text ---
-                using (var smallFont = new Font("Segoe UI", 8f))
+                if (!string.IsNullOrEmpty(engineeringText))
                 {
-                    TextRenderer.DrawText(e.Graphics, slotText, this.Font, slotRect, slotColor, textFormatLeft);
-                    TextRenderer.DrawText(e.Graphics, moduleText, smallFont, moduleRect, moduleInfoColor, textFormatLeft);
-
-                    if (!string.IsNullOrEmpty(_module.Item))
-                    {
-                        TextRenderer.DrawText(e.Graphics, integrityLabel, smallFont, integrityLabelRect, integrityLabelColor, textFormatRight);
-                        TextRenderer.DrawText(e.Graphics, integrityValue, this.Font, integrityValueRect, integrityColor, textFormatRight);
-                    }
+                    using var engBrush = new SolidBrush(Color.FromArgb(94, 234, 212));
+                    e.Graphics.DrawString(engineeringText, _metaFont, engBrush, secondInfoRect, _leftAlign);
                 }
+                else
+                {
+                    e.Graphics.DrawString($"Mass {_module.Mass:N1} T", _metaFont, infoBrush, secondInfoRect, _leftAlign);
+                }
+            }
+            private static string BuildEngineeringText(ShipModule module)
+            {
+                if (module.Engineering == null) return string.Empty;
+                var blueprint = BlueprintDataService.GetBlueprintName(module.Engineering.BlueprintName);
+                var experimental = string.IsNullOrEmpty(module.Engineering.ExperimentalEffect_Localised)
+                    ? string.Empty
+                    : BlueprintDataService.GetBlueprintName(module.Engineering.ExperimentalEffect_Localised);
+
+                return string.IsNullOrEmpty(experimental)
+                    ? $"G{module.Engineering.Level} {blueprint}"
+                    : $"G{module.Engineering.Level} {blueprint}  •  {experimental}";
+            }
+
+            private static string FormatSlot(string slot)
+            {
+                if (string.IsNullOrWhiteSpace(slot)) return "Slot";
+                return slot.Replace("_", " ").Replace("Slot", "Slot ").Replace(" ", " ").Trim();
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    _titleFont.Dispose();
+                    _metaFont.Dispose();
+                    _leftAlign.Dispose();
+                    _centerAlign.Dispose();
+                }
+                base.Dispose(disposing);
             }
         }
 
@@ -455,3 +506,9 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
+
+
+
+
+

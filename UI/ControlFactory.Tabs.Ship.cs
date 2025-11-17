@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using System.Text;
 using System.Linq;
@@ -18,17 +20,22 @@ namespace EliteDataRelay.UI
 
         private TabPage CreateShipTabPage(FontManager fontManager)
         {
-            var shipPage = new TabPage("Ship");
-            shipPage.Padding = new Padding(10);
+            var shipPage = new TabPage("Ship")
+            {
+                Padding = new Padding(12),
+                BackColor = Color.FromArgb(14, 16, 22)
+            };
 
             var mainShipPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
                 RowCount = 1,
-                BackColor = Color.FromArgb(20, 20, 25)
+                BackColor = Color.Transparent,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
             };
-            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 340F));
+            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 360F));
             mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
             var leftPanel = CreateShipLeftPanel(fontManager);
@@ -46,126 +53,163 @@ namespace EliteDataRelay.UI
             var leftPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(25, 25, 30)
+                BackColor = Color.Transparent,
+                Padding = new Padding(0)
             };
 
             var layout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 3,
-                BackColor = Color.FromArgb(30, 30, 35),
-                Padding = new Padding(0)
+                RowCount = 2,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
             };
             layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            var summaryPanel = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                BackColor = Color.FromArgb(35, 35, 40),
-                Padding = new Padding(12),
-                Margin = new Padding(0, 0, 0, 8)
-            };
-            summaryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            summaryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            summaryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            ShipTabNameLabel = new Label
-            {
-                Text = "Ship Name",
-                Dock = DockStyle.Fill,
-                Font = new Font(fontManager.ConsolasFont.FontFamily, 13f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(224, 224, 235),
-                TextAlign = ContentAlignment.MiddleLeft,
-                Margin = new Padding(0, 0, 0, 4)
-            };
-            summaryPanel.Controls.Add(ShipTabNameLabel, 0, 0);
-
-            ShipTabIdentLabel = new Label
-            {
-                Text = "ID: N/A",
-                Dock = DockStyle.Fill,
-                Font = fontManager.ConsolasFont,
-                ForeColor = Color.FromArgb(156, 163, 175),
-                TextAlign = ContentAlignment.MiddleLeft,
-                Margin = new Padding(0, 0, 0, 8)
-            };
-            summaryPanel.Controls.Add(ShipTabIdentLabel, 0, 1);
-
-            var summaryGrid = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 2,
-                Margin = new Padding(0)
-            };
-            summaryGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            summaryGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            summaryGrid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            summaryGrid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            summaryGrid.Controls.Add(CreateSummaryHeaderLabel("Fuel"), 0, 0);
-            summaryGrid.Controls.Add(CreateSummaryHeaderLabel("Value"), 1, 0);
-
-            ShipFuelLabel = CreateSummaryValueLabel("Main: 0.0 T  |  Res: 0.0 T", fontManager);
-            ShipValueLabel = CreateSummaryValueLabel("0 CR", fontManager);
-            summaryGrid.Controls.Add(ShipFuelLabel, 0, 1);
-            summaryGrid.Controls.Add(ShipValueLabel, 1, 1);
-
-            summaryPanel.Controls.Add(summaryGrid, 0, 2);
-            layout.Controls.Add(summaryPanel, 0, 0);
-
-            ShipStatsPanel = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                BackColor = Color.FromArgb(30, 30, 35),
-                Padding = new Padding(6),
-                AutoSize = false
-            };
-            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            layout.Controls.Add(ShipStatsPanel, 0, 1);
-
-            var spacerPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                Height = 6,
-                BackColor = Color.FromArgb(35, 35, 40)
-            };
-            layout.Controls.Add(spacerPanel, 0, 2);
+            layout.Controls.Add(CreateHeroCard(fontManager), 0, 0);
+            layout.Controls.Add(CreateStatsCard(fontManager), 0, 1);
 
             leftPanel.Controls.Add(layout);
             return leftPanel;
         }
 
-        private static Label CreateSummaryHeaderLabel(string text)
+        private Control CreateHeroCard(FontManager fontManager)
+        {
+            var heroCard = new AccentPanel
+            {
+                Dock = DockStyle.Top,
+                Padding = new Padding(18),
+                Margin = new Padding(0, 0, 12, 14),
+                AccentStart = Color.FromArgb(58, 74, 112),
+                AccentEnd = Color.FromArgb(24, 28, 40)
+            };
+
+            var heroLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 4,
+                BackColor = Color.Transparent
+            };
+            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            ShipTabNameLabel = new Label
+            {
+                Text = "Ship Name",
+                Dock = DockStyle.Fill,
+                Font = fontManager.SegoeUIFontLarge,
+                ForeColor = Color.White,
+                Margin = new Padding(0, 0, 0, 4)
+            };
+            heroLayout.Controls.Add(ShipTabNameLabel, 0, 0);
+
+            ShipTabIdentLabel = new Label
+            {
+                Text = "ID: N/A",
+                Dock = DockStyle.Fill,
+                Font = fontManager.SegoeUIFont,
+                ForeColor = Color.FromArgb(206, 212, 224),
+                Margin = new Padding(0, 0, 0, 12)
+            };
+            heroLayout.Controls.Add(ShipTabIdentLabel, 0, 1);
+
+            var metaRow = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                ColumnCount = 2,
+                Margin = new Padding(0, 0, 0, 6)
+            };
+            metaRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            metaRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+
+            ShipFuelLabel = CreateHeroChipLabel(fontManager.SegoeUIFontBold, "Main: 0.0 T  |  Res: 0.0 T");
+            ShipValueLabel = CreateHeroChipLabel(fontManager.SegoeUIFontBold, "Value: 0 CR");
+            metaRow.Controls.Add(ShipFuelLabel, 0, 0);
+            metaRow.Controls.Add(ShipValueLabel, 1, 0);
+            heroLayout.Controls.Add(metaRow, 0, 2);
+
+            var infoLabel = new Label
+            {
+                Text = "Click the ship name to open the current loadout on EDSY.",
+                Dock = DockStyle.Fill,
+                Font = fontManager.SegoeUIFont,
+                ForeColor = Color.FromArgb(200, 210, 220),
+                Margin = new Padding(0)
+            };
+            heroLayout.Controls.Add(infoLabel, 0, 3);
+
+            heroCard.Controls.Add(heroLayout);
+            return heroCard;
+        }
+
+        private Label CreateHeroChipLabel(Font font, string text)
         {
             return new Label
             {
                 Text = text,
                 Dock = DockStyle.Fill,
-                ForeColor = Color.FromArgb(120, 126, 140),
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                AutoSize = false,
                 TextAlign = ContentAlignment.MiddleLeft,
-                Margin = new Padding(0, 0, 0, 2)
+                ForeColor = Color.FromArgb(224, 229, 242),
+                Font = font,
+                Margin = new Padding(0, 0, 8, 0),
+                Padding = new Padding(10, 6, 10, 6),
+                BackColor = Color.FromArgb(46, 56, 84),
+                BorderStyle = BorderStyle.None
             };
         }
 
-        private static Label CreateSummaryValueLabel(string text, FontManager fontManager)
+        private Control CreateStatsCard(FontManager fontManager)
         {
-            return new Label
+            var card = new Panel
             {
-                Text = text,
                 Dock = DockStyle.Fill,
-                ForeColor = Color.FromArgb(224, 224, 235),
-                Font = fontManager.ConsolasFont,
-                TextAlign = ContentAlignment.MiddleLeft,
+                BackColor = Color.FromArgb(24, 26, 33),
+                Padding = new Padding(16),
+                Margin = new Padding(0, 0, 12, 0)
+            };
+
+            var header = new Label
+            {
+                Text = "Performance Snapshot",
+                Dock = DockStyle.Top,
+                Font = fontManager.SegoeUIFontBold,
+                ForeColor = Color.White,
                 Margin = new Padding(0, 0, 0, 4)
             };
+            var subtitle = new Label
+            {
+                Text = "Live stats derived from current loadout and journal telemetry.",
+                Dock = DockStyle.Top,
+                Font = fontManager.SegoeUIFont,
+                ForeColor = Color.FromArgb(170, 179, 196),
+                Margin = new Padding(0, 0, 0, 12)
+            };
+
+            ShipStatsPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                AutoSize = false,
+                ColumnCount = 2,
+                BackColor = Color.Transparent,
+                Padding = new Padding(4),
+                Margin = new Padding(0),
+                GrowStyle = TableLayoutPanelGrowStyle.AddRows
+            };
+            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+
+            card.Controls.Add(ShipStatsPanel);
+            card.Controls.Add(subtitle);
+            card.Controls.Add(header);
+            return card;
         }
 
         private Panel CreateShipRightPanel(FontManager fontManager)
@@ -173,19 +217,52 @@ namespace EliteDataRelay.UI
             Panel rightPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(30, 30, 35),
-                Padding = new Padding(10)
+                BackColor = Color.Transparent,
+                Padding = new Padding(0)
+            };
+
+            var container = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = Color.Transparent
+            };
+            container.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            container.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+
+            var header = new Label
+            {
+                Text = "Module Breakdown",
+                Dock = DockStyle.Top,
+                Font = fontManager.SegoeUIFontBold,
+                ForeColor = Color.White,
+                Margin = new Padding(0, 0, 0, 6)
+            };
+            container.Controls.Add(header, 0, 0);
+
+            var moduleCard = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(24, 27, 36),
+                Padding = new Padding(12),
+                Margin = new Padding(0)
             };
 
             ModuleTabControl = new TabControl
             {
                 Dock = DockStyle.Fill,
-                Appearance = TabAppearance.FlatButtons,
+                Appearance = TabAppearance.Normal,
                 DrawMode = TabDrawMode.OwnerDrawFixed,
-                Font = fontManager.ConsolasFont
+                Font = fontManager.SegoeUIFont,
+                ItemSize = new Size(120, 28),
+                SizeMode = TabSizeMode.Fixed
             };
             ModuleTabControl.DrawItem += TabControl_DrawItem;
-            rightPanel.Controls.Add(ModuleTabControl);
+            moduleCard.Controls.Add(ModuleTabControl);
+
+            container.Controls.Add(moduleCard, 0, 1);
+            rightPanel.Controls.Add(container);
 
             return rightPanel;
         }
@@ -213,15 +290,15 @@ namespace EliteDataRelay.UI
 
             // Draw background
             bool isSelected = (e.Index == tabControl.SelectedIndex);
-            using (var bgBrush = new SolidBrush(Color.FromArgb(30, 30, 35)))
+            using (var bgBrush = new SolidBrush(isSelected ? Color.FromArgb(41, 46, 64) : Color.FromArgb(30, 32, 42)))
             {
                 e.Graphics.FillRectangle(bgBrush, e.Bounds);
             }
 
             // Draw text
             using (Brush textBrush = isSelected ?
-                new SolidBrush(Color.FromArgb(34, 211, 238)) : // Cyan
-                new SolidBrush(Color.FromArgb(156, 163, 175))) // Gray
+                new SolidBrush(Color.FromArgb(52, 199, 89)) :
+                new SolidBrush(Color.FromArgb(156, 163, 175)))
             {
                 StringFormat sf = new StringFormat
                 {
@@ -234,7 +311,7 @@ namespace EliteDataRelay.UI
             // Draw bottom border for selected tab
             if (isSelected)
             {
-                using (var borderPen = new Pen(Color.FromArgb(34, 211, 238), 2))
+                using (var borderPen = new Pen(Color.FromArgb(52, 199, 89), 2))
                 {
                     e.Graphics.DrawLine(borderPen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
                 }
@@ -254,60 +331,68 @@ namespace EliteDataRelay.UI
         {
             private readonly string _label;
             private string _value;
-
-            // Re-usable drawing resources
             private readonly Font _labelFont;
             private readonly Font _valueFont;
-            private readonly SolidBrush _labelBrush;
-            private readonly SolidBrush _valueBrush;
+            private readonly StringFormat _labelFormat = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
+            private readonly StringFormat _valueFormat = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
 
             public StatPanel(string label, string initialValue, Font font, StatPanelTheme theme = StatPanelTheme.Dark)
             {
                 _label = label;
                 _value = initialValue;
 
-                _labelFont = font;
-                _valueFont = new Font(font, FontStyle.Bold);
+                _labelFont = new Font(font.FontFamily, font.Size - 1f, FontStyle.Regular);
+                _valueFont = new Font(font.FontFamily, font.Size + 2f, FontStyle.Bold);
+
                 bool lightTheme = theme == StatPanelTheme.Light;
-                _labelBrush = new SolidBrush(lightTheme ? Color.FromArgb(96, 104, 118) : Color.FromArgb(150, 150, 160));
-                _valueBrush = new SolidBrush(lightTheme ? Color.FromArgb(33, 37, 50) : Color.FromArgb(220, 220, 230));
+                LabelColor = lightTheme ? Color.FromArgb(140, 144, 160) : Color.FromArgb(184, 189, 204);
+                ValueColor = lightTheme ? Color.FromArgb(26, 30, 38) : Color.FromArgb(250, 250, 255);
+                AccentColor = lightTheme ? Color.FromArgb(200, 208, 230) : Color.FromArgb(63, 132, 231);
 
                 Dock = DockStyle.Fill;
-                Margin = new Padding(2);
-                BackColor = lightTheme ? Color.FromArgb(248, 250, 255) : Color.FromArgb(40, 40, 45);
-                BorderStyle = lightTheme ? BorderStyle.FixedSingle : BorderStyle.None;
-                DoubleBuffered = true; // Prevents flicker
+                Margin = new Padding(6);
+                BackColor = lightTheme ? Color.FromArgb(245, 246, 252) : Color.FromArgb(34, 37, 47);
+                DoubleBuffered = true;
+                _labelFormat.Trimming = StringTrimming.EllipsisCharacter;
+                _valueFormat.Trimming = StringTrimming.EllipsisCharacter;
             }
+
+            public Color LabelColor { get; }
+            public Color ValueColor { get; }
+            public Color AccentColor { get; }
 
             public void SetValue(string newValue)
             {
                 _value = newValue;
-                Invalidate(); // Redraw the panel with the new value
+                Invalidate();
             }
 
             protected override void OnPaint(PaintEventArgs e)
             {
                 base.OnPaint(e);
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-                // Define two separate, non-overlapping rectangles for the label and the value.
-                // This prevents them from drawing over each other.
-                int labelWidth = (int)(ClientRectangle.Width * 0.45); // Give label 45% of the space
-                int valueWidth = ClientRectangle.Width - labelWidth;
+                var rect = ClientRectangle;
+                rect.Inflate(-4, -4);
 
-                Rectangle labelRect = new Rectangle(ClientRectangle.X, ClientRectangle.Y, labelWidth, ClientRectangle.Height);
-                Rectangle valueRect = new Rectangle(ClientRectangle.X + labelWidth, ClientRectangle.Y, valueWidth, ClientRectangle.Height);
+                using (var bgBrush = new SolidBrush(BackColor))
+                using (var accentPen = new Pen(AccentColor, 1.5f))
+                using (var labelBrush = new SolidBrush(LabelColor))
+                using (var valueBrush = new SolidBrush(ValueColor))
+                {
+                    using (var path = DrawingUtils.CreateRoundedRectPath(rect, 8))
+                    {
+                        e.Graphics.FillPath(bgBrush, path);
+                        e.Graphics.DrawPath(accentPen, path);
+                    }
 
-                // Define text formatting flags
-                var textFormatLeft = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine;
-                var textFormatRight = TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis;
+                var labelRect = new RectangleF(rect.X + 8, rect.Y + 6, rect.Width - 16, _labelFont.GetHeight(e.Graphics) + 2);
+                var valueRect = new RectangleF(rect.X + 8, labelRect.Bottom + 4, rect.Width - 16, rect.Height - labelRect.Height - 12);
 
-                // Add some padding to the rectangles for better spacing
-                labelRect.Inflate(-5, 0);
-                valueRect.Inflate(-5, 0);
-
-                TextRenderer.DrawText(e.Graphics, _label, _labelFont, labelRect, _labelBrush.Color, textFormatLeft);
-                TextRenderer.DrawText(e.Graphics, _value, _valueFont, valueRect, _valueBrush.Color, textFormatRight);
+                    e.Graphics.DrawString(_label, _labelFont, labelBrush, labelRect, _labelFormat);
+                    e.Graphics.DrawString(_value, _valueFont, valueBrush, valueRect, _valueFormat);
+                }
             }
 
             protected override void Dispose(bool disposing)
@@ -316,10 +401,35 @@ namespace EliteDataRelay.UI
                 {
                     _labelFont.Dispose();
                     _valueFont.Dispose();
-                    _labelBrush.Dispose();
-                    _valueBrush.Dispose();
+                    _labelFormat.Dispose();
+                    _valueFormat.Dispose();
                 }
                 base.Dispose(disposing);
+            }
+        }
+
+        private sealed class AccentPanel : Panel
+        {
+            [Browsable(false)]
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            public Color AccentStart { get; set; } = Color.FromArgb(46, 58, 87);
+
+            [Browsable(false)]
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            public Color AccentEnd { get; set; } = Color.FromArgb(20, 24, 35);
+
+            public AccentPanel()
+            {
+                DoubleBuffered = true;
+                ForeColor = Color.White;
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                using var brush = new LinearGradientBrush(ClientRectangle, AccentStart, AccentEnd, 45f);
+                e.Graphics.FillRectangle(brush, ClientRectangle);
+                using var borderPen = new Pen(Color.FromArgb(60, Color.White));
+                e.Graphics.DrawRectangle(borderPen, 0, 0, Width - 1, Height - 1);
             }
         }
     }
