@@ -1,7 +1,6 @@
-Release Notes - v0.73.8
+Release Notes - v0.73.9
 
 What's new
 ----------
 
-- Fleet Carrier tab removed entirely to stop the recurring ListView crashes introduced by its inventory and crew lists.
-- ListView stability: new SafeListView guard stops WinForms from throwing `StateImageIndex` exceptions when overlays or tabs refresh.
+- General 1 pass bug fixes and smoother loading just a tweak of all the things, should be no more crashes *fingers crossed*
