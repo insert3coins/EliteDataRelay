@@ -103,13 +103,15 @@ namespace EliteDataRelay.UI
 
                 DrawSessionRow(g, "Session duration", FormatDuration(_sessionDuration), GameColors.BrushWhite, width, padding, ref y, singleLineValue: true);
                 DrawSessionRow(g, "Systems visited", _systemsVisited.ToString("N0"), GameColors.BrushWhite, width, padding, ref y, singleLineValue: true);
-                DrawSessionRow(g, "Credits earned", _sessionCredits.ToString("N0"), GameColors.BrushOrange, width, padding, ref y);
+                DrawSessionRow(g, "Credits earned", _sessionCredits.ToString("N0"), GameColors.BrushOrange, width, padding, ref y, valueFont: GameColors.FontSmall);
                 DrawSessionRow(g, "Cargo collected", _sessionCargo.ToString("N0"), GameColors.BrushCyan, width, padding, ref y, singleLineValue: true);
             }
         }
 
-        private static void DrawSessionRow(Graphics g, string label, string value, Brush valueBrush, int width, float padding, ref float y, bool singleLineValue = false)
+        private static void DrawSessionRow(Graphics g, string label, string value, Brush valueBrush, int width, float padding, ref float y, bool singleLineValue = false, Font? valueFont = null)
         {
+            valueFont ??= GameColors.FontNormal;
+
             if (singleLineValue)
             {
                 var labelSize = g.MeasureString(label, GameColors.FontSmall);
@@ -131,8 +133,8 @@ namespace EliteDataRelay.UI
             // Value on the next line (right aligned)
             using (var format = new StringFormat { Alignment = StringAlignment.Far })
             {
-                var valueRectFull = new RectangleF(padding, y, width - (padding * 2), GameColors.FontNormal.GetHeight(g));
-                g.DrawString(value, GameColors.FontNormal, valueBrush, valueRectFull, format);
+                var valueRectFull = new RectangleF(padding, y, width - (padding * 2), valueFont.GetHeight(g));
+                g.DrawString(value, valueFont, valueBrush, valueRectFull, format);
                 y += valueRectFull.Height + 6f;
             }
         }
