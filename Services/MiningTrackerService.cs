@@ -2,6 +2,7 @@ using EliteDataRelay.Models;
 using EliteDataRelay.Models.Mining;
 using EliteDataRelay.Models.Journal;
 using System;
+using System.Linq;
 
 namespace EliteDataRelay.Services
 {
@@ -9,6 +10,7 @@ namespace EliteDataRelay.Services
     {
         private readonly IJournalWatcherService _journalWatcher;
         private MiningSession? _currentSession;
+        private MiningSession? _lastCompletedSession;
         private MiningProspector? _latestProspector;
         private bool _disposed;
 
@@ -28,6 +30,7 @@ namespace EliteDataRelay.Services
             _journalWatcher.AsteroidCracked += OnAsteroidCracked;
             _journalWatcher.LaunchDrone += OnLaunchDrone;
             _journalWatcher.MiningRefined += OnMiningRefined;
+            _journalWatcher.CargoCollected += OnCargoCollected;
             _journalWatcher.MaterialCollected += OnMaterialCollected;
             _journalWatcher.ProspectedAsteroid += OnProspectedAsteroid;
         }
@@ -38,6 +41,7 @@ namespace EliteDataRelay.Services
 
         public bool IsLive { get; private set; }
         public MiningSession? CurrentSession => _currentSession;
+        public MiningSession? LastKnownSession => _currentSession ?? _lastCompletedSession;
         public MiningProspector? LatestProspector => _latestProspector;
 
         public void Dispose()
@@ -57,6 +61,7 @@ namespace EliteDataRelay.Services
             _journalWatcher.AsteroidCracked -= OnAsteroidCracked;
             _journalWatcher.LaunchDrone -= OnLaunchDrone;
             _journalWatcher.MiningRefined -= OnMiningRefined;
+            _journalWatcher.CargoCollected -= OnCargoCollected;
             _journalWatcher.MaterialCollected -= OnMaterialCollected;
             _journalWatcher.ProspectedAsteroid -= OnProspectedAsteroid;
         }
@@ -173,6 +178,28 @@ namespace EliteDataRelay.Services
             TriggerCurrentSessionEvent();
         }
 
+        private void OnCargoCollected(object? sender, CargoCollectedEventArgs e)
+        {
+            if (_currentSession == null) return;
+
+            var friendly = MiningNameHelper.NormalizeName(e.Commodity);
+            if (string.IsNullOrWhiteSpace(friendly))
+            {
+                return;
+            }
+
+            var known = _currentSession.Items.FirstOrDefault(item =>
+                string.Equals(item.Name, friendly, StringComparison.OrdinalIgnoreCase));
+
+            if (known == null || known.Type != MiningItemType.Ore)
+            {
+                return;
+            }
+
+            known.CollectedCount++;
+            TriggerCurrentSessionEvent();
+        }
+
         private void OnProspectedAsteroid(object? sender, ProspectedAsteroidEventArgs e)
         {
             if (_currentSession == null) return;
@@ -239,6 +266,7 @@ namespace EliteDataRelay.Services
                 _currentSession.AddProspector(_latestProspector);
             }
 
+            _lastCompletedSession = _currentSession.Clone();
             _currentSession = null;
             _latestProspector = null;
             TriggerProspectorEvent();

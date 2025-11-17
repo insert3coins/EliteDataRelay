@@ -100,7 +100,6 @@ namespace EliteDataRelay.UI
             _oreList.Columns.Add("Hit Rate", 90, HorizontalAlignment.Right);
             _oreList.Columns.Add("Min %", 80, HorizontalAlignment.Right);
             _oreList.Columns.Add("Max %", 80, HorizontalAlignment.Right);
-            _oreList.Columns.Add("Motherlodes", 90, HorizontalAlignment.Right);
             _oreList.Columns.Add("Content (L/M/H)", 140, HorizontalAlignment.Right);
             var oreGroup = new GroupBox { Text = "Session Yield", Dock = DockStyle.Fill };
             oreGroup.Controls.Add(_oreList);
@@ -249,9 +248,10 @@ namespace EliteDataRelay.UI
 
         private void UpdateCurrentSession()
         {
-            if (!_isLive || _tracker.CurrentSession == null)
+            var session = _tracker.CurrentSession ?? _tracker.LastKnownSession;
+            if (session == null)
             {
-                _locationValue.Text = "No active session";
+                _locationValue.Text = "No session data";
                 _durationValue.Text = "-";
                 _prospectedValue.Text = "0";
                 _crackedValue.Text = "0";
@@ -263,8 +263,6 @@ namespace EliteDataRelay.UI
                 _oreList.Items.Clear();
                 return;
             }
-
-            var session = _tracker.CurrentSession;
             if (string.IsNullOrWhiteSpace(session.Location) ||
                 session.Location.Equals(session.StarSystem, StringComparison.OrdinalIgnoreCase) ||
                 session.Location.EndsWith(session.StarSystem, StringComparison.OrdinalIgnoreCase))
@@ -289,13 +287,12 @@ namespace EliteDataRelay.UI
 
         private void UpdateDuration()
         {
-            if (!_isLive || _tracker.CurrentSession == null)
+            var session = _tracker.CurrentSession ?? _tracker.LastKnownSession;
+            if (session == null)
             {
                 _durationValue.Text = "-";
                 return;
             }
-
-            var session = _tracker.CurrentSession;
             if (session.TimeStarted == DateTime.MaxValue)
             {
                 _durationValue.Text = "00:00:00 · 0.0 t/hr";
@@ -333,7 +330,6 @@ namespace EliteDataRelay.UI
                     listItem.SubItems.Add(item.Type == MiningItemType.Ore && hitRate > 0 ? $"{hitRate:N2}%" : string.Empty);
                     listItem.SubItems.Add(item.MinPercentage == 0 ? string.Empty : $"{item.MinPercentage:N2}%");
                     listItem.SubItems.Add(item.MaxPercentage == 0 ? string.Empty : $"{item.MaxPercentage:N2}%");
-                    listItem.SubItems.Add(item.MotherLoad == 0 ? string.Empty : item.MotherLoad.ToString());
                     listItem.SubItems.Add(item.Type == MiningItemType.Ore
                         ? $"{item.LowContent:N0} / {item.MedContent:N0} / {item.HighContent:N0}"
                         : string.Empty);

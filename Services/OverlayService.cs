@@ -365,6 +365,8 @@ namespace EliteDataRelay.Services
             {
                 _prospectorOverlayForm?.Hide();
             }
+
+            ApplyCachedOverlayData();
         }
 
         private void PersistOverlayLocations()
@@ -384,6 +386,45 @@ namespace EliteDataRelay.Services
 
             AppConfiguration.Save();
             ExportObsPositions();
+        }
+
+        private void ApplyCachedOverlayData()
+        {
+            if (_leftOverlayForm != null)
+            {
+                if (_lastCommanderName != null) _leftOverlayForm.UpdateCommander(_lastCommanderName);
+                if (_lastShipType != null) _leftOverlayForm.UpdateShip(_lastShipType);
+                if (_lastBalance.HasValue) _leftOverlayForm.UpdateBalance(_lastBalance.Value);
+            }
+
+            if (_rightOverlayForm != null)
+            {
+                if (_lastCargoCount.HasValue) _rightOverlayForm.UpdateCargo(_lastCargoCount.Value, _lastCargoCapacity);
+                if (_lastCargoBarText != null) _rightOverlayForm.UpdateCargoSize(_lastCargoBarText);
+                if (_lastCargoSnapshot != null) _rightOverlayForm.UpdateCargoList(_lastCargoSnapshot.Items);
+            }
+
+            if (_sessionOverlayForm != null && _lastSessionOverlayData != null)
+            {
+                _sessionOverlayForm.UpdateSessionOverlay(_lastSessionOverlayData);
+            }
+
+            if (_explorationOverlayForm != null)
+            {
+                if (_lastExplorationData != null) _explorationOverlayForm.UpdateExplorationData(_lastExplorationData);
+                if (_lastExplorationSessionData != null) _explorationOverlayForm.UpdateExplorationSessionData(_lastExplorationSessionData);
+                if (_lastSystemInfoData != null) _explorationOverlayForm.UpdateSystemInfo(_lastSystemInfoData);
+            }
+
+            if (_miningOverlayForm != null)
+            {
+                _miningOverlayForm.UpdateMiningOverlay(_lastMiningOverlayData);
+            }
+
+            if (_prospectorOverlayForm != null)
+            {
+                _prospectorOverlayForm.UpdateProspectorOverlay(_lastProspectorOverlayData);
+            }
         }
 
         /// <summary>
