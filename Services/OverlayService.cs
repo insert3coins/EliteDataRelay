@@ -46,7 +46,7 @@ namespace EliteDataRelay.Services
 
         
 
-        private void EnsureOverlaysCreated(Form? owner = null)
+        private void EnsureOverlaysCreated(Form? owner = null, bool force = false)
         {
             var primaryScreen = Screen.PrimaryScreen;
             if (primaryScreen == null)
@@ -62,48 +62,48 @@ namespace EliteDataRelay.Services
             }
             var overlayOwner = _overlayOwner;
 
-            if (_leftOverlayForm == null && AppConfiguration.EnableInfoOverlay)
+            if (_leftOverlayForm == null && (force || AppConfiguration.EnableInfoOverlay))
             {
                 _leftOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Info, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _leftOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (_rightOverlayForm == null && AppConfiguration.EnableCargoOverlay)
+            if (_rightOverlayForm == null && (force || AppConfiguration.EnableCargoOverlay))
             {
                 _rightOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Cargo, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _rightOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (_sessionOverlayForm == null && AppConfiguration.EnableSessionOverlay)
+            if (_sessionOverlayForm == null && (force || AppConfiguration.EnableSessionOverlay))
             {
                 _sessionOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Session, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _sessionOverlayForm.PositionChanged += OnOverlayPositionChanged;
             }
-            if (_explorationOverlayForm == null && AppConfiguration.EnableExplorationOverlay)
+            if (_explorationOverlayForm == null && (force || AppConfiguration.EnableExplorationOverlay))
             {
                 _explorationOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Exploration, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _explorationOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 System.Diagnostics.Debug.WriteLine("[OverlayService] Exploration overlay created");
             }
-            if (_miningOverlayForm == null && AppConfiguration.EnableMiningOverlay)
+            if (_miningOverlayForm == null && (force || AppConfiguration.EnableMiningOverlay))
             {
                 _miningOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Mining, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _miningOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 _miningOverlayForm.Shown += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
                 _miningOverlayForm.FormClosed += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
             }
-            else if (_miningOverlayForm != null && !AppConfiguration.EnableMiningOverlay)
+            else if (!force && _miningOverlayForm != null && !AppConfiguration.EnableMiningOverlay)
             {
                 _miningOverlayForm.Close();
                 _miningOverlayForm = null;
             }
 
-            if (_prospectorOverlayForm == null && AppConfiguration.EnableProspectorOverlay)
+            if (_prospectorOverlayForm == null && (force || AppConfiguration.EnableProspectorOverlay))
             {
                 _prospectorOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Prospector, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _prospectorOverlayForm.PositionChanged += OnOverlayPositionChanged;
                 _prospectorOverlayForm.Shown += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
                 _prospectorOverlayForm.FormClosed += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
             }
-            else if (_prospectorOverlayForm != null && !AppConfiguration.EnableProspectorOverlay)
+            else if (!force && _prospectorOverlayForm != null && !AppConfiguration.EnableProspectorOverlay)
             {
                 _prospectorOverlayForm.Close();
                 _prospectorOverlayForm = null;
@@ -261,7 +261,7 @@ namespace EliteDataRelay.Services
             _jumpOverlayForm?.Hide();
         }
 
-        public void SetOverlayRepositionMode(bool enabled)
+        public void SetOverlayRepositionMode(bool enabled, Form? owner = null)
         {
             if (_forceShowAllOverlays == enabled) return;
             _forceShowAllOverlays = enabled;
@@ -272,6 +272,7 @@ namespace EliteDataRelay.Services
                 _miningOverlayHideTimer = null;
                 _prospectorOverlayHideTimer?.Dispose();
                 _prospectorOverlayHideTimer = null;
+                EnsureOverlaysCreated(owner ?? _overlayOwner, force: true);
                 ShowAllEnabledOverlays();
             }
             else
@@ -331,21 +332,21 @@ namespace EliteDataRelay.Services
 
         private void ShowAllEnabledOverlays()
         {
-            EnsureOverlaysCreated(_overlayOwner);
+            EnsureOverlaysCreated(_overlayOwner, force: _forceShowAllOverlays);
 
-            if (AppConfiguration.EnableInfoOverlay) _leftOverlayForm?.Show();
+            if (_forceShowAllOverlays || AppConfiguration.EnableInfoOverlay) _leftOverlayForm?.Show();
             else _leftOverlayForm?.Hide();
 
-            if (AppConfiguration.EnableCargoOverlay) _rightOverlayForm?.Show();
+            if (_forceShowAllOverlays || AppConfiguration.EnableCargoOverlay) _rightOverlayForm?.Show();
             else _rightOverlayForm?.Hide();
 
-            if (AppConfiguration.EnableSessionOverlay) _sessionOverlayForm?.Show();
+            if (_forceShowAllOverlays || AppConfiguration.EnableSessionOverlay) _sessionOverlayForm?.Show();
             else _sessionOverlayForm?.Hide();
 
-            if (AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
+            if (_forceShowAllOverlays || AppConfiguration.EnableExplorationOverlay) _explorationOverlayForm?.Show();
             else _explorationOverlayForm?.Hide();
 
-            if (AppConfiguration.EnableMiningOverlay)
+            if (_forceShowAllOverlays || AppConfiguration.EnableMiningOverlay)
             {
                 _miningOverlayForm?.Show();
                 _miningOverlayForm?.UpdateMiningOverlay(_lastMiningOverlayData);
@@ -355,7 +356,7 @@ namespace EliteDataRelay.Services
                 _miningOverlayForm?.Hide();
             }
 
-            if (AppConfiguration.EnableProspectorOverlay)
+            if (_forceShowAllOverlays || AppConfiguration.EnableProspectorOverlay)
             {
                 _prospectorOverlayForm?.Show();
                 _prospectorOverlayForm?.UpdateProspectorOverlay(_lastProspectorOverlayData);

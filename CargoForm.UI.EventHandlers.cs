@@ -103,7 +103,7 @@ namespace EliteDataRelay
                 settingsForm.LiveSettingsChanged += (s, a) => ApplyLiveSettingsChanges();
                 settingsForm.RepositionModeChanged += (s, active) =>
                 {
-                    _overlayService.SetOverlayRepositionMode(active);
+                    _overlayService.SetOverlayRepositionMode(active, this);
                 };
 
                 if (settingsForm.ShowDialog(this) == DialogResult.OK)
