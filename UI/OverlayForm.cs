@@ -34,7 +34,6 @@ namespace EliteDataRelay.UI
         private bool _fadeHideOnComplete;
         private double _fadeTarget;
         private bool _suppressOpacityOnLoad;
-        private bool _restoreOwnerOnHide;
 
         private IEnumerable<CargoItem> _cargoItems = Enumerable.Empty<CargoItem>();
 
@@ -75,7 +74,6 @@ namespace EliteDataRelay.UI
         private readonly SolidBrush _grayBrush;
 
         private readonly OverlayPosition _position;
-        private readonly Form? _hostOwner;
 
         protected override CreateParams CreateParams
         {
@@ -96,9 +94,9 @@ namespace EliteDataRelay.UI
 
         public OverlayForm(OverlayPosition position, bool allowDrag, Form? hostOwner = null)
         {
+            _ = hostOwner; // Parameter retained for compatibility; overlays no longer manipulate the owner form.
             _position = position;
             _allowDrag = allowDrag;
-            _hostOwner = hostOwner;
 
             // Enable double buffering to reduce flicker and rendering artifacts. This is a standard
             // technique to prevent visual glitches like stray lines or bars on transparent forms.
@@ -214,11 +212,7 @@ namespace EliteDataRelay.UI
         {
             if (_position != OverlayPosition.JumpInfo && !allowAnyOverlay)
             {
-                void HideNow()
-                {
-                    this.Hide();
-                    RestoreOwnerZOrder();
-                }
+                void HideNow() => this.Hide();
                 if (this.InvokeRequired) { this.BeginInvoke(new Action(HideNow)); } else { HideNow(); }
                 return;
             }
@@ -230,11 +224,9 @@ namespace EliteDataRelay.UI
                     // Already hidden or fully transparent
                     this.Hide();
                     this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
-                    RestoreOwnerZOrder();
                     return;
                 }
                 _fadeHideOnComplete = true;
-                 _restoreOwnerOnHide = true;
                 StartFadeTo(0.0, durationMs);
             }
             if (this.InvokeRequired) this.BeginInvoke(new Action(DoFadeOut)); else DoFadeOut();
@@ -273,11 +265,6 @@ namespace EliteDataRelay.UI
                         this.Hide();
                         // Reset to configured opacity for next show
                         this.Opacity = AppConfiguration.OverlayOpacity / 100.0;
-                        if (_restoreOwnerOnHide)
-                        {
-                            RestoreOwnerZOrder();
-                            _restoreOwnerOnHide = false;
-                        }
                     }
                 }
             }
@@ -296,39 +283,6 @@ namespace EliteDataRelay.UI
                 _fadeTimer = null;
             }
         }
-
-        private void RestoreOwnerZOrder()
-        {
-            if (_hostOwner == null) return;
-            void BringOwner()
-            {
-                try
-                {
-                    if (_hostOwner.WindowState == FormWindowState.Minimized)
-                    {
-                        _hostOwner.WindowState = FormWindowState.Normal;
-                    }
-                    _hostOwner.Activate();
-                    bool prevTopMost = _hostOwner.TopMost;
-                    _hostOwner.TopMost = true;
-                    _hostOwner.TopMost = prevTopMost;
-                }
-                catch
-                {
-                    // ignore
-                }
-            }
-
-            if (_hostOwner.InvokeRequired)
-            {
-                _hostOwner.BeginInvoke(new Action(BringOwner));
-            }
-            else
-            {
-                BringOwner();
-            }
-        }
-
         private void AttachDragHandlers(Control control)
         {
             control.MouseDown += OnOverlayMouseDown;

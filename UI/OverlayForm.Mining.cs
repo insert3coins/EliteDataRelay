@@ -103,7 +103,7 @@ namespace EliteDataRelay.UI
             };
 
             int labelColumnWidth = rows.Max(r => TextRenderer.MeasureText(r.Label + ":", GameColors.FontSmall).Width);
-            int valueColumnWidth = rows.Max(r => TextRenderer.MeasureText(r.Value ?? string.Empty, GameColors.FontNormal).Width);
+            int valueColumnWidth = rows.Max(r => TextRenderer.MeasureText(r.Value ?? string.Empty, GameColors.FontSmall).Width);
             int desiredWidth = (int)Math.Ceiling(padding * 2 + labelColumnWidth + 16 + valueColumnWidth);
             int autoWidth = Math.Max(320, desiredWidth);
             if (Math.Abs(autoWidth - this.Width) > 2)
@@ -124,8 +124,8 @@ namespace EliteDataRelay.UI
         private static void DrawLabelValue(Graphics g, string label, string value, float padding, float labelWidth, ref float y)
         {
             g.DrawString(label + ":", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-            g.DrawString(value, GameColors.FontNormal, GameColors.BrushWhite, padding + labelWidth, y);
-            y += GameColors.FontNormal.GetHeight(g) + 4f;
+            g.DrawString(value, GameColors.FontSmall, GameColors.BrushWhite, padding + labelWidth, y);
+            y += GameColors.FontSmall.GetHeight(g) + 4f;
         }
 
     }

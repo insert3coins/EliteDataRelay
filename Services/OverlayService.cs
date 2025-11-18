@@ -87,8 +87,6 @@ namespace EliteDataRelay.Services
             {
                 _miningOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Mining, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _miningOverlayForm.PositionChanged += OnOverlayPositionChanged;
-                _miningOverlayForm.Shown += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
-                _miningOverlayForm.FormClosed += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
             }
             else if (!force && _miningOverlayForm != null && !AppConfiguration.EnableMiningOverlay)
             {
@@ -100,8 +98,6 @@ namespace EliteDataRelay.Services
             {
                 _prospectorOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.Prospector, AppConfiguration.AllowOverlayDrag, overlayOwner);
                 _prospectorOverlayForm.PositionChanged += OnOverlayPositionChanged;
-                _prospectorOverlayForm.Shown += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
-                _prospectorOverlayForm.FormClosed += (_, _) => overlayOwner?.BeginInvoke(new Action(() => overlayOwner.Activate()));
             }
             else if (!force && _prospectorOverlayForm != null && !AppConfiguration.EnableProspectorOverlay)
             {
