@@ -377,6 +377,7 @@ namespace EliteDataRelay.UI
                 AutoSizeMode = AutoSizeMode.GrowAndShrink
             };
 
+            // Keep slot name/meta on one line and push engineering summary to the next.
             var content = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,

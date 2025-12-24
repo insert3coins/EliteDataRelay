@@ -164,6 +164,7 @@ namespace EliteDataRelay.UI
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             stack.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
+            // Left side mirrors the mock: hardpoints and utilities sit side-by-side.
             var hardpoints = CreateLoadoutSection("Hardpoints", fontManager, out var hardpointList);
             HardpointListPanel = hardpointList;
             var utilities = CreateLoadoutSection("Utility Mounts", fontManager, out var utilityList);
@@ -211,7 +212,9 @@ namespace EliteDataRelay.UI
             };
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            stack.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
+            // Right side: core and optional internals align vertically and share width evenly.
             var core = CreateLoadoutSection("Core Internal", fontManager, out var coreList);
             CoreListPanel = coreList;
             var optional = CreateLoadoutSection("Optional Internal", fontManager, out var optionalList);
@@ -280,6 +283,7 @@ namespace EliteDataRelay.UI
                 Margin = new Padding(0),
                 MinimumSize = new Size(0, 160)
             };
+            // Section uses a custom panel to hide scrollbars while keeping wheel/drag scroll.
             section.Controls.Add(listPanel);
             section.Controls.Add(titleLabel);
             return section;
@@ -547,6 +551,7 @@ namespace EliteDataRelay.UI
                 DoubleBuffered = true;
             }
 
+            // Strip scrollbar styles so we keep scrolling without visible bars.
             protected override CreateParams CreateParams
             {
                 get
