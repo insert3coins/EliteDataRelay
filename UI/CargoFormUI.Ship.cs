@@ -532,11 +532,23 @@ namespace EliteDataRelay.UI
             return tabName.ToLowerInvariant() switch
             {
                 "core" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && IsCoreModule(m.Slot)).OrderBy(m => GetSlotSortOrder(m.Slot)),
-                "hardpoints" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && m.Slot.Contains("Hardpoint")).OrderBy(m => m.Slot),
-                "utility" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && m.Slot.Contains("Utility")).OrderBy(m => m.Slot),
+                // Separate weapon hardpoints from utility slots (tiny hardpoints are utilities).
+                "hardpoints" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && IsHardpointSlot(m.Slot)).OrderBy(m => m.Slot),
+                "utility" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && IsUtilitySlot(m.Slot)).OrderBy(m => m.Slot),
                 "optional" => _currentLoadout.Modules.Where(m => !string.IsNullOrEmpty(m.Item) && (m.Slot.Contains("Slot") || m.Slot.Contains("Military"))).OrderBy(m => GetSlotSortOrder(m.Slot)).ThenBy(m => m.Slot),
                 _ => Enumerable.Empty<ShipModule>()
             };
+        }
+
+        private static bool IsUtilitySlot(string slot)
+        {
+            return slot.IndexOf("utility", StringComparison.OrdinalIgnoreCase) >= 0
+                || slot.IndexOf("tinyhardpoint", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static bool IsHardpointSlot(string slot)
+        {
+            return slot.IndexOf("hardpoint", StringComparison.OrdinalIgnoreCase) >= 0 && !IsUtilitySlot(slot);
         }
 
         private bool IsCoreModule(string slot)
