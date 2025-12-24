@@ -1,11 +1,8 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Text;
-using System.Linq;
-using EliteDataRelay.Models;
-using EliteDataRelay.Services;
 
 namespace EliteDataRelay.UI
 {
@@ -16,15 +13,38 @@ namespace EliteDataRelay.UI
         public Label ShipTabIdentLabel { get; private set; } = null!;
         public Label ShipFuelLabel { get; private set; } = null!;
         public Label ShipValueLabel { get; private set; } = null!;
-        public TabControl ModuleTabControl { get; private set; } = null!;
+        public Label BottomMassLabel { get; private set; } = null!;
+        public Label BottomArmorLabel { get; private set; } = null!;
+        public Label BottomCargoLabel { get; private set; } = null!;
+        public Label BottomJumpLabel { get; private set; } = null!;
+        public Label BottomRebuyLabel { get; private set; } = null!;
+
+        public FlowLayoutPanel SidebarHardpointsPanel { get; private set; } = null!;
+        public FlowLayoutPanel SidebarUtilitiesPanel { get; private set; } = null!;
+        public FlowLayoutPanel HardpointListPanel { get; private set; } = null!;
+        public FlowLayoutPanel UtilityListPanel { get; private set; } = null!;
+        public FlowLayoutPanel CoreListPanel { get; private set; } = null!;
+        public FlowLayoutPanel OptionalListPanel { get; private set; } = null!;
 
         private TabPage CreateShipTabPage(FontManager fontManager)
         {
             var shipPage = new TabPage("Ship")
             {
-                Padding = new Padding(12),
-                BackColor = Color.FromArgb(14, 16, 22)
+                Padding = new Padding(8),
+                BackColor = Color.Black
             };
+
+            var outerLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
+            };
+            outerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45f)); // Bottom spacing for bottom bar boxes
 
             var mainShipPanel = new TableLayoutPanel
             {
@@ -35,26 +55,336 @@ namespace EliteDataRelay.UI
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
-            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 360F));
-            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            mainShipPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
 
-            var leftPanel = CreateShipLeftPanel(fontManager);
-            var rightPanel = CreateShipRightPanel(fontManager);
-            mainShipPanel.Controls.Add(leftPanel, 0, 0);
-            mainShipPanel.Controls.Add(rightPanel, 1, 0);
+            mainShipPanel.Controls.Add(CreateShipLeftColumn(fontManager), 0, 0);
+            mainShipPanel.Controls.Add(CreateShipRightColumn(fontManager), 1, 0);
 
-            shipPage.Controls.Add(mainShipPanel);
+            outerLayout.Controls.Add(mainShipPanel, 0, 0);
+            outerLayout.Controls.Add(CreateShipValueBar(fontManager), 0, 1);
+
+            shipPage.Controls.Add(outerLayout);
 
             return shipPage;
         }
 
-        private Panel CreateShipLeftPanel(FontManager fontManager)
+        private Control CreateShipSidebar(FontManager fontManager)
         {
-            var leftPanel = new Panel
+            var sidebar = new Panel
             {
                 Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(26, 10, 0),
+                Padding = new Padding(8, 8, 4, 8),
+                Margin = new Padding(0, 0, 6, 0)
+            };
+
+            var scroll = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                BackColor = Color.FromArgb(18, 8, 0),
+                Padding = new Padding(6)
+            };
+
+            var hardpointSection = CreateSidebarSection("Hardpoints", fontManager, out var hardpointContainer);
+            SidebarHardpointsPanel = hardpointContainer;
+            var utilitySection = CreateSidebarSection("Utility Mounts", fontManager, out var utilityContainer);
+            SidebarUtilitiesPanel = utilityContainer;
+
+            scroll.Controls.Add(hardpointSection);
+            scroll.Controls.Add(utilitySection);
+
+            sidebar.Controls.Add(scroll);
+            return sidebar;
+        }
+
+        private Control CreateSidebarSection(string title, FontManager fontManager, out FlowLayoutPanel container)
+        {
+            var wrapper = new Panel
+            {
+                Width = 290,
+                AutoSize = true,
                 BackColor = Color.Transparent,
+                Margin = new Padding(0, 0, 0, 10)
+            };
+
+            var header = new Label
+            {
+                Text = title,
+                Dock = DockStyle.Top,
+                Font = fontManager.SegoeUIFontBold,
+                ForeColor = Color.FromArgb(255, 136, 0),
+                BackColor = Color.FromArgb(36, 16, 4),
+                Padding = new Padding(10, 6, 10, 6),
+                Margin = new Padding(0, 0, 0, 4),
+                AutoSize = false,
+                Height = 28,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            container = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(12, 12, 12),
+                Padding = new Padding(4)
+            };
+
+            wrapper.Controls.Add(container);
+            wrapper.Controls.Add(header);
+            return wrapper;
+        }
+
+        private Control CreateShipLeftColumn(FontManager fontManager)
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(12, 12, 12),
+                Padding = new Padding(6, 8, 6, 8)
+            };
+
+            var stack = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                AutoSize = false,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
+            };
+            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            stack.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+
+            var hardpoints = CreateLoadoutSection("Hardpoints", fontManager, out var hardpointList);
+            HardpointListPanel = hardpointList;
+            var utilities = CreateLoadoutSection("Utility Mounts", fontManager, out var utilityList);
+            UtilityListPanel = utilityList;
+
+            stack.Controls.Add(hardpoints, 0, 0);
+            stack.Controls.Add(utilities, 1, 0);
+            panel.Controls.Add(stack);
+            return panel;
+        }
+
+        private Control CreateShipHeaderColumn(FontManager fontManager)
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(14, 14, 14),
+                Padding = new Padding(8, 10, 8, 10)
+            };
+
+            var header = CreateShipHeader(fontManager);
+            header.Dock = DockStyle.Top;
+            panel.Controls.Add(header);
+            return panel;
+        }
+
+        private Control CreateShipRightColumn(FontManager fontManager)
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(12, 12, 12),
+                Padding = new Padding(6, 8, 6, 8)
+            };
+
+            var stack = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
+            };
+            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+
+            var core = CreateLoadoutSection("Core Internal", fontManager, out var coreList);
+            CoreListPanel = coreList;
+            var optional = CreateLoadoutSection("Optional Internal", fontManager, out var optionalList);
+            OptionalListPanel = optionalList;
+
+            stack.Controls.Add(core, 0, 0);
+            stack.Controls.Add(optional, 1, 0);
+            panel.Controls.Add(stack);
+            return panel;
+        }
+
+        private Control CreateShipHeader(FontManager fontManager)
+        {
+            var header = new Panel
+            {
+                Width = 100,
+                Height = 12,
+                Dock = DockStyle.Top,
+                BackColor = Color.FromArgb(26, 26, 26),
+                Padding = new Padding(0),
+                Margin = new Padding(0, 0, 0, 6)
+            };
+
+            ShipFuelLabel = new Label { Visible = false, Height = 0 };
+            ShipTabNameLabel = new Label { Visible = false, Height = 0 };
+            ShipTabIdentLabel = new Label { Visible = false, Height = 0 };
+
+            return header;
+        }
+
+        private Control CreateLoadoutSection(string title, FontManager fontManager, out FlowLayoutPanel listPanel)
+        {
+            var section = new Panel
+            {
+                AutoSize = false,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(16, 16, 16),
+                Margin = new Padding(6, 0, 6, 12),
+                Padding = new Padding(0),
+                MinimumSize = new Size(0, 180)
+            };
+
+            var titleLabel = new Label
+            {
+                Text = title,
+                Dock = DockStyle.Top,
+                Font = fontManager.SegoeUIFontBold,
+                ForeColor = Color.FromArgb(255, 136, 0),
+                BackColor = Color.FromArgb(30, 30, 30),
+                Padding = new Padding(12, 6, 12, 6),
+                AutoSize = false,
+                Height = 26,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            listPanel = new NoBarFlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = false,
+                AutoScroll = true,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                BackColor = Color.FromArgb(14, 14, 14),
+                Padding = new Padding(4),
+                Margin = new Padding(0),
+                MinimumSize = new Size(0, 160)
+            };
+            section.Controls.Add(listPanel);
+            section.Controls.Add(titleLabel);
+            return section;
+        }
+
+        private Control CreateShipRightPanel(FontManager fontManager)
+        {
+            var rightPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(26, 10, 0),
+                Padding = new Padding(8, 10, 10, 10),
+                Margin = new Padding(10, 0, 0, 0)
+            };
+
+            var stack = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                BackColor = Color.Transparent
+            };
+
+            ShipStatsPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoScroll = false,
+                ColumnCount = 2,
+                BackColor = Color.FromArgb(20, 10, 0),
+                CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+                Margin = new Padding(0),
+                Visible = false
+            };
+            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55f));
+            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45f));
+
+            stack.Controls.Add(ShipStatsPanel);
+
+            rightPanel.Controls.Add(stack);
+            return rightPanel;
+        }
+
+        private Control CreateShipValueBar(FontManager fontManager)
+        {
+            var bar = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(20, 10, 0),
+                Padding = new Padding(10, 2, 10, 2),
+                Margin = new Padding(0)
+            };
+
+            var layout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 6,
+                RowCount = 1,
+                BackColor = Color.Transparent,
+                Margin = new Padding(0),
                 Padding = new Padding(0)
+            };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30f)); // Ship value
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14f));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14f));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14f));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14f));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14f));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+
+            var shipValueCell = CreateStackedCell(fontManager, "Ship Value", out var shipValueLabel, highlight: false);
+            ShipValueLabel = shipValueLabel;
+            var massCell = CreateStackedCell(fontManager, "MASS", out var massLabel);
+            BottomMassLabel = massLabel;
+            var armorCell = CreateStackedCell(fontManager, "ARMOR", out var armorLabel);
+            BottomArmorLabel = armorLabel;
+            var cargoCell = CreateStackedCell(fontManager, "CARGO", out var cargoLabel);
+            BottomCargoLabel = cargoLabel;
+            var jumpCell = CreateStackedCell(fontManager, "JUMP", out var jumpLabel);
+            BottomJumpLabel = jumpLabel;
+            var rebuyCell = CreateStackedCell(fontManager, "REBUY", out var rebuyLabel);
+            BottomRebuyLabel = rebuyLabel;
+
+            layout.Controls.Add(shipValueCell, 0, 0);
+            layout.Controls.Add(massCell, 1, 0);
+            layout.Controls.Add(armorCell, 2, 0);
+            layout.Controls.Add(cargoCell, 3, 0);
+            layout.Controls.Add(jumpCell, 4, 0);
+            layout.Controls.Add(rebuyCell, 5, 0);
+
+            bar.Controls.Add(layout);
+            return bar;
+        }
+
+        private Control CreateStackedCell(FontManager fontManager, string label, out Label valueLabel, bool highlight = false)
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(28, 18, 8),
+                Padding = new Padding(6, 2, 6, 2),
+                Margin = new Padding(4, 0, 4, 0),
+                BorderStyle = BorderStyle.FixedSingle,
+                MinimumSize = new Size(0, 0)
             };
 
             var layout = new TableLayoutPanel
@@ -62,209 +392,38 @@ namespace EliteDataRelay.UI
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 2,
-                BackColor = Color.Transparent,
-                Padding = new Padding(0),
-                Margin = new Padding(0)
+                BackColor = Color.Transparent
             };
             layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            layout.Controls.Add(CreateHeroCard(fontManager), 0, 0);
-            layout.Controls.Add(CreateStatsCard(fontManager), 0, 1);
-
-            leftPanel.Controls.Add(layout);
-            return leftPanel;
-        }
-
-        private Control CreateHeroCard(FontManager fontManager)
-        {
-            var heroCard = new AccentPanel
+            var title = new Label
             {
-                Dock = DockStyle.Top,
-                Padding = new Padding(18),
-                Margin = new Padding(0, 0, 12, 14),
-                AccentStart = Color.FromArgb(58, 74, 112),
-                AccentEnd = Color.FromArgb(24, 28, 40)
-            };
-
-            var heroLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 4,
-                BackColor = Color.Transparent
-            };
-            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            ShipTabNameLabel = new Label
-            {
-                Text = "Ship Name",
-                Dock = DockStyle.Fill,
-                Font = fontManager.SegoeUIFontLarge,
-                ForeColor = Color.White,
-                Margin = new Padding(0, 0, 0, 4)
-            };
-            heroLayout.Controls.Add(ShipTabNameLabel, 0, 0);
-
-            ShipTabIdentLabel = new Label
-            {
-                Text = "ID: N/A",
-                Dock = DockStyle.Fill,
-                Font = fontManager.SegoeUIFont,
-                ForeColor = Color.FromArgb(206, 212, 224),
-                Margin = new Padding(0, 0, 0, 12)
-            };
-            heroLayout.Controls.Add(ShipTabIdentLabel, 0, 1);
-
-            var metaRow = new TableLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                ColumnCount = 2,
-                Margin = new Padding(0, 0, 0, 6)
-            };
-            metaRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            metaRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-
-            ShipFuelLabel = CreateHeroChipLabel(fontManager.SegoeUIFontBold, "Main: 0.0 T  |  Res: 0.0 T");
-            ShipValueLabel = CreateHeroChipLabel(fontManager.SegoeUIFontBold, "Value: 0 CR");
-            metaRow.Controls.Add(ShipFuelLabel, 0, 0);
-            metaRow.Controls.Add(ShipValueLabel, 1, 0);
-            heroLayout.Controls.Add(metaRow, 0, 2);
-
-            var infoLabel = new Label
-            {
-                Text = "Click the ship name to open the current loadout on EDSY.",
-                Dock = DockStyle.Fill,
-                Font = fontManager.SegoeUIFont,
-                ForeColor = Color.FromArgb(200, 210, 220),
-                Margin = new Padding(0)
-            };
-            heroLayout.Controls.Add(infoLabel, 0, 3);
-
-            heroCard.Controls.Add(heroLayout);
-            return heroCard;
-        }
-
-        private Label CreateHeroChipLabel(Font font, string text)
-        {
-            return new Label
-            {
-                Text = text,
-                Dock = DockStyle.Fill,
-                AutoSize = false,
-                TextAlign = ContentAlignment.MiddleLeft,
-                ForeColor = Color.FromArgb(224, 229, 242),
-                Font = font,
-                Margin = new Padding(0, 0, 8, 0),
-                Padding = new Padding(10, 6, 10, 6),
-                BackColor = Color.FromArgb(46, 56, 84),
-                BorderStyle = BorderStyle.None
-            };
-        }
-
-        private Control CreateStatsCard(FontManager fontManager)
-        {
-            var card = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(24, 26, 33),
-                Padding = new Padding(16),
-                Margin = new Padding(0, 0, 12, 0)
-            };
-
-            var header = new Label
-            {
-                Text = "Performance Snapshot",
+                Text = label,
                 Dock = DockStyle.Top,
                 Font = fontManager.SegoeUIFontBold,
+                ForeColor = highlight ? Color.White : Color.FromArgb(255, 136, 0),
+                Height = 16,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            valueLabel = new Label
+            {
+                Text = "-",
+                Dock = DockStyle.Fill,
+                Font = highlight ? fontManager.SegoeUIFontBold : fontManager.SegoeUIFont,
                 ForeColor = Color.White,
-                Margin = new Padding(0, 0, 0, 4)
-            };
-            var subtitle = new Label
-            {
-                Text = "Live stats derived from current loadout and journal telemetry.",
-                Dock = DockStyle.Top,
-                Font = fontManager.SegoeUIFont,
-                ForeColor = Color.FromArgb(170, 179, 196),
-                Margin = new Padding(0, 0, 0, 12)
-            };
-
-            ShipStatsPanel = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                AutoScroll = true,
-                AutoSize = false,
-                ColumnCount = 2,
                 BackColor = Color.Transparent,
-                Padding = new Padding(4),
-                Margin = new Padding(0),
-                GrowStyle = TableLayoutPanelGrowStyle.AddRows
-            };
-            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            ShipStatsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-
-            card.Controls.Add(ShipStatsPanel);
-            card.Controls.Add(subtitle);
-            card.Controls.Add(header);
-            return card;
-        }
-
-        private Panel CreateShipRightPanel(FontManager fontManager)
-        {
-            Panel rightPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.Transparent,
-                Padding = new Padding(0)
+                TextAlign = ContentAlignment.TopLeft,
+                Padding = new Padding(0),
+                AutoSize = false
             };
 
-            var container = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 2,
-                BackColor = Color.Transparent
-            };
-            container.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            container.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            layout.Controls.Add(title, 0, 0);
+            layout.Controls.Add(valueLabel, 0, 1);
 
-            var header = new Label
-            {
-                Text = "Module Breakdown",
-                Dock = DockStyle.Top,
-                Font = fontManager.SegoeUIFontBold,
-                ForeColor = Color.White,
-                Margin = new Padding(0, 0, 0, 6)
-            };
-            container.Controls.Add(header, 0, 0);
-
-            var moduleCard = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(24, 27, 36),
-                Padding = new Padding(12),
-                Margin = new Padding(0)
-            };
-
-            ModuleTabControl = new TabControl
-            {
-                Dock = DockStyle.Fill,
-                Appearance = TabAppearance.Normal,
-                DrawMode = TabDrawMode.OwnerDrawFixed,
-                Font = fontManager.SegoeUIFont,
-                ItemSize = new Size(120, 28),
-                SizeMode = TabSizeMode.Fixed
-            };
-            ModuleTabControl.DrawItem += TabControl_DrawItem;
-            moduleCard.Controls.Add(ModuleTabControl);
-
-            container.Controls.Add(moduleCard, 0, 1);
-            rightPanel.Controls.Add(container);
-
-            return rightPanel;
+            panel.Controls.Add(layout);
+            return panel;
         }
 
         private void DisposeShipTabControls()
@@ -274,48 +433,17 @@ namespace EliteDataRelay.UI
             ShipTabIdentLabel?.Dispose();
             ShipFuelLabel?.Dispose();
             ShipValueLabel?.Dispose();
-            if (ModuleTabControl != null)
-            {
-                ModuleTabControl.DrawItem -= TabControl_DrawItem;
-                ModuleTabControl.Dispose();
-            }
-        }
-
-        // Custom drawing for the ListView to match the WPF style
-        private void TabControl_DrawItem(object? sender, DrawItemEventArgs e)
-        {
-            if (sender is not TabControl tabControl) return;
-            if (e.Font is null) return; // Prevent drawing if font is not available
-            TabPage tab = tabControl.TabPages[e.Index];
-
-            // Draw background
-            bool isSelected = (e.Index == tabControl.SelectedIndex);
-            using (var bgBrush = new SolidBrush(isSelected ? Color.FromArgb(41, 46, 64) : Color.FromArgb(30, 32, 42)))
-            {
-                e.Graphics.FillRectangle(bgBrush, e.Bounds);
-            }
-
-            // Draw text
-            using (Brush textBrush = isSelected ?
-                new SolidBrush(Color.FromArgb(52, 199, 89)) :
-                new SolidBrush(Color.FromArgb(156, 163, 175)))
-            {
-                StringFormat sf = new StringFormat
-                {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Center
-                };
-                e.Graphics.DrawString(tab.Text, e.Font, textBrush, e.Bounds, sf);
-            }
-
-            // Draw bottom border for selected tab
-            if (isSelected)
-            {
-                using (var borderPen = new Pen(Color.FromArgb(52, 199, 89), 2))
-                {
-                    e.Graphics.DrawLine(borderPen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
-                }
-            }
+            BottomMassLabel?.Dispose();
+            BottomArmorLabel?.Dispose();
+            BottomCargoLabel?.Dispose();
+            BottomJumpLabel?.Dispose();
+            BottomRebuyLabel?.Dispose();
+            SidebarHardpointsPanel?.Dispose();
+            SidebarUtilitiesPanel?.Dispose();
+            HardpointListPanel?.Dispose();
+            UtilityListPanel?.Dispose();
+            CoreListPanel?.Dispose();
+            OptionalListPanel?.Dispose();
         }
 
         /// <summary>
@@ -387,8 +515,8 @@ namespace EliteDataRelay.UI
                         e.Graphics.DrawPath(accentPen, path);
                     }
 
-                var labelRect = new RectangleF(rect.X + 8, rect.Y + 6, rect.Width - 16, _labelFont.GetHeight(e.Graphics) + 2);
-                var valueRect = new RectangleF(rect.X + 8, labelRect.Bottom + 4, rect.Width - 16, rect.Height - labelRect.Height - 12);
+                    var labelRect = new RectangleF(rect.X + 8, rect.Y + 6, rect.Width - 16, _labelFont.GetHeight(e.Graphics) + 2);
+                    var valueRect = new RectangleF(rect.X + 8, labelRect.Bottom + 4, rect.Width - 16, rect.Height - labelRect.Height - 12);
 
                     e.Graphics.DrawString(_label, _labelFont, labelBrush, labelRect, _labelFormat);
                     e.Graphics.DrawString(_value, _valueFont, valueBrush, valueRect, _valueFormat);
@@ -406,6 +534,42 @@ namespace EliteDataRelay.UI
                 }
                 base.Dispose(disposing);
             }
+        }
+
+        private sealed class NoBarFlowLayoutPanel : FlowLayoutPanel
+        {
+            private const int WS_VSCROLL = 0x00200000;
+            private const int WS_HSCROLL = 0x00100000;
+            private const int SB_BOTH = 3;
+
+            public NoBarFlowLayoutPanel()
+            {
+                DoubleBuffered = true;
+            }
+
+            protected override CreateParams CreateParams
+            {
+                get
+                {
+                    var cp = base.CreateParams;
+                    cp.Style &= ~WS_VSCROLL;
+                    cp.Style &= ~WS_HSCROLL;
+                    return cp;
+                }
+            }
+
+            protected override void WndProc(ref Message m)
+            {
+                base.WndProc(ref m);
+                if (IsHandleCreated)
+                {
+                    ShowScrollBar(Handle, SB_BOTH, false);
+                }
+            }
+
+            [DllImport("user32.dll")]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            private static extern bool ShowScrollBar(IntPtr hWnd, int wBar, bool bShow);
         }
 
         private sealed class AccentPanel : Panel

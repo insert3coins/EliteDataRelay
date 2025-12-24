@@ -1,10 +1,11 @@
-Release Notes - v0.74.2
+Release Notes - v0.75.2
 
 What's new
 ----------
+- Ship tab layout rebuilt: left hardpoints/utility and right core/optional panels sit side-by-side, filling available width without the old header gap.
+- Loadout rows wrap engineering summaries and hide native scrollbars via custom panels for smoother scrolling and aligned widths.
+- Bottom stats bar now uniform with consistent borders; values sit directly under labels (Ship Value, Mass, Armor, Cargo, Jump, Rebuy).
+- Jump range pulls MaxJumpRange when available to avoid inflated numbers; engineering info restored to module rows with tooltips.
+- Section headers widened/padded to prevent truncation; placeholder handling shows "EMPTY" instead of hiding blanks.
 
-- Removed the non-functional “Motherlodes” column from the Mining tab to avoid empty data.
-- Mining tab “Collected” values now track cargo scoops so the column reflects mined ore pickups.
-- Mining tab keeps the last session yield visible even when the session ends or no new activity occurs.
-- Ship tab received a complete visual refresh with a modern summary card, clearer stats grid, and cleaner module section.
-- Module breakdown cards were restyled to tighter, scroll-friendly tiles without the redundant status badge.
+

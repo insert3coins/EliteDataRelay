@@ -64,13 +64,6 @@ namespace EliteDataRelay.UI
             e.Graphics.FillRectangle(new SolidBrush(toolTip.BackColor), e.Bounds);
             e.DrawBorder(); // Keep the standard border
 
-            // Check if this is a tooltip for our custom ModulePanel
-            if (e.AssociatedControl is CargoFormUI.ModulePanel modulePanel && modulePanel.Tag is ShipModule module && module.Engineering != null)
-            {
-                DrawModuleToolTip(e, toolTip.ForeColor);
-                return;
-            }
-
             // For all other tooltips, use the default text drawing which handles multiline correctly.
             // We pass the ForeColor from the event args to ensure light text on our dark background.
             TextRenderer.DrawText(e.Graphics, e.ToolTipText, _font, e.Bounds, toolTip.ForeColor, 
