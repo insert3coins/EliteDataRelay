@@ -29,6 +29,7 @@ namespace EliteDataRelay.UI
             if (_controlFactory == null) return;
             _currentStatus = status;
             UpdateShipFuelSummary();
+            UpdateShipMassSummary();
         }
 
         public void UpdateShipLoadout(ShipLoadout loadout)
@@ -69,9 +70,6 @@ namespace EliteDataRelay.UI
             factory.ShipValueLabel.Text = $"{totalValue:N0} CR";
             factory.ToolTip.SetToolTip(factory.ShipValueLabel, $"Hull: {loadout.HullValue:N0} CR\nModules: {loadout.ModulesValue:N0} CR");
 
-            factory.BottomMassLabel.Text = $"{loadout.UnladenMass:N1} T";
-            factory.ToolTip.SetToolTip(factory.BottomMassLabel, $"Unladen Mass: {loadout.UnladenMass:N1} T");
-
             factory.BottomArmorLabel.Text = $"{(loadout.HullHealth * 100):N0}%";
             factory.ToolTip.SetToolTip(factory.BottomArmorLabel, $"Hull Health: {(loadout.HullHealth * 100):N0}%");
 
@@ -83,6 +81,8 @@ namespace EliteDataRelay.UI
 
             factory.BottomRebuyLabel.Text = $"{loadout.Rebuy:N0} CR";
             factory.ToolTip.SetToolTip(factory.BottomRebuyLabel, $"Insurance Rebuy Cost: {loadout.Rebuy:N0} CR");
+
+            UpdateShipMassSummary();
         }
 
         private void UpdateShipFuelSummary()
@@ -108,6 +108,24 @@ namespace EliteDataRelay.UI
 
             _controlFactory.ShipFuelLabel.Text = $"Main: {mainDisplay}  |  Res: {reserveDisplay}";
             _controlFactory.ToolTip.SetToolTip(_controlFactory.ShipFuelLabel, $"Main Tank: {mainDisplay}\nReserve Tank: {reserveDisplay}");
+        }
+
+        private void UpdateShipMassSummary()
+        {
+            if (_controlFactory == null || _currentLoadout == null) return;
+
+            double unladen = _currentLoadout.UnladenMass;
+            double cargo = _currentStatus?.Cargo ?? 0d;
+            double fuelMain = _currentStatus?.Fuel?.FuelMain ?? 0d;
+            double fuelReserve = _currentStatus?.Fuel?.FuelReservoir ?? 0d;
+            double fuelTotal = fuelMain + fuelReserve;
+            double currentMass = unladen + cargo + fuelTotal;
+
+            _controlFactory.BottomMassLabel.Text = $"{currentMass:N1} T";
+            _controlFactory.ToolTip.SetToolTip(
+                _controlFactory.BottomMassLabel,
+                $"Current Mass: {currentMass:N1} T\nUnladen: {unladen:N1} T\nCargo: {cargo:N1} T\nFuel: {fuelTotal:N1} T (Main {fuelMain:N1} + Res {fuelReserve:N1})"
+            );
         }
 
         private double CalculatePowerCapacity(ShipLoadout loadout)
