@@ -10,10 +10,12 @@ namespace EliteDataRelay.UI
     /// </summary>
     public partial class ControlFactory : IDisposable
     {
+        private readonly JournalHistoryService _journalHistoryService;
         public Label ShipNameLabel { get; private set; } = null!;
         public Label ShipIdentLabel { get; private set; } = null!;
         public TreeView ShipModulesTreeView { get; private set; } = null!;
         public TabControl TabControl { get; private set; } = null!;
+        public HistoryTab? HistoryTab { get; private set; }
         public SessionTab? SessionTab { get; private set; }
         public MiningTab? MiningTab { get; private set; }
         public Button StartBtn { get; private set; } = null!;
@@ -29,9 +31,10 @@ namespace EliteDataRelay.UI
         public Button BalanceLabel { get; private set; } = null!;
         public ToolTip ToolTip { get; private set; } = null!;
 
-        public ControlFactory(FontManager fontManager, SessionTrackingService sessionTracker, MiningTrackerService miningTracker)
+        public ControlFactory(FontManager fontManager, SessionTrackingService sessionTracker, MiningTrackerService miningTracker, JournalHistoryService journalHistoryService)
         {
-            CreateTabControls(fontManager, sessionTracker, miningTracker);
+            _journalHistoryService = journalHistoryService ?? throw new ArgumentNullException(nameof(journalHistoryService));
+            CreateTabControls(fontManager, sessionTracker, miningTracker, journalHistoryService);
             CreateActionButtons(fontManager);
             CreateInfoLabels(fontManager);
             CreateToolTips(fontManager);

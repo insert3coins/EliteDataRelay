@@ -22,6 +22,7 @@ namespace EliteDataRelay.UI
         private readonly SessionTrackingService _sessionTrackingService;
         private readonly MiningTrackerService _miningTrackerService;
         private readonly ExplorationDataService _explorationDataService;
+        private readonly JournalHistoryService _journalHistoryService;
         private MemoryStream? _iconStream;
         private WatchingAnimationManager? _watchingAnimationManager;
         private string _currentLocation = "Unknown";
@@ -39,12 +40,13 @@ namespace EliteDataRelay.UI
 
         public event EventHandler? SettingsClicked;
 
-        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService, ExplorationDataService explorationDataService, MiningTrackerService miningTrackerService)
+        public CargoFormUI(OverlayService overlayService, SessionTrackingService sessionTrackingService, ExplorationDataService explorationDataService, MiningTrackerService miningTrackerService, JournalHistoryService journalHistoryService)
         {
             _overlayService = overlayService ?? throw new ArgumentNullException(nameof(overlayService));
             _sessionTrackingService = sessionTrackingService ?? throw new ArgumentNullException(nameof(sessionTrackingService));
             _explorationDataService = explorationDataService ?? throw new ArgumentNullException(nameof(explorationDataService));
             _miningTrackerService = miningTrackerService ?? throw new ArgumentNullException(nameof(miningTrackerService));
+            _journalHistoryService = journalHistoryService ?? throw new ArgumentNullException(nameof(journalHistoryService));
         }
 
         public void InitializeUI(Form form)
@@ -52,7 +54,7 @@ namespace EliteDataRelay.UI
             _form = form ?? throw new ArgumentNullException(nameof(form));
             InitializeIcon();
             _fontManager = new FontManager();
-            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService, _miningTrackerService);
+            _controlFactory = new ControlFactory(_fontManager, _sessionTrackingService, _miningTrackerService, _journalHistoryService);
 
             if (_controlFactory.WatchingLabel != null)
             {
@@ -78,9 +80,20 @@ namespace EliteDataRelay.UI
                 // Force the Ship tab to be created and have a handle by briefly selecting it.
                 // This ensures that controls on it (like the PictureBox) can be invalidated and painted
                 // even before the user clicks the tab for the first time.
-                var originalIndex = _controlFactory.TabControl.SelectedIndex;
-                _controlFactory.TabControl.SelectedIndex = 1; // Index of Ship tab
-                _controlFactory.TabControl.SelectedIndex = originalIndex;
+                var originalTab = _controlFactory.TabControl.SelectedTab;
+                var shipTab = _controlFactory.TabControl.TabPages
+                    .Cast<TabPage?>()
+                    .FirstOrDefault(p => p != null && string.Equals(p.Text, "Ship", StringComparison.OrdinalIgnoreCase));
+
+                if (shipTab != null)
+                {
+                    _controlFactory.TabControl.SelectedTab = shipTab;
+                }
+
+                if (originalTab != null)
+                {
+                    _controlFactory.TabControl.SelectedTab = originalTab;
+                }
             }
             InitializeMaterialsTab();
             InitializeExplorationTab();

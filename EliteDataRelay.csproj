@@ -11,7 +11,7 @@
 	<ApplicationIcon>Resources\Appicon.ico</ApplicationIcon>
 
     <!-- Assembly Information for File Details -->
-    <Version>0.76.1</Version> <!-- This sets the product version and is used for file version. -->
+    <Version>0.76.5</Version> <!-- This sets the product version and is used for file version. -->
     <Company>insert3coins</Company>
     <Product>Elite Data Relay</Product>
     <Copyright>Copyright © 2024 insert3coins</Copyright>
@@ -35,6 +35,16 @@
      <EmbeddedResource Include="Resources\outfitting.csv" />
     <EmbeddedResource Include="Resources\material.csv" />
     <EmbeddedResource Include="Resources\microresources.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Images\History\**\*.cs" />
+    <None Remove="Images\History\**\*.csproj" />
+    <Content Remove="Images\History\**\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Images\History\**\*.png" />
   </ItemGroup>
 
   <Target Name="RefreshExecutableCreationTime" BeforeTargets="CoreCompile">

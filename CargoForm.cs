@@ -31,6 +31,7 @@ namespace EliteDataRelay
         private readonly ExplorationDatabaseService _explorationDatabaseService;
         private readonly ScreenshotRenamerService _screenshotRenamerService;
         private readonly EdsmUploadService _edsmUploadService;
+        private readonly JournalHistoryService _journalHistoryService;
 
         public CargoForm()
         {
@@ -50,7 +51,8 @@ namespace EliteDataRelay
             _explorationDatabaseService = new ExplorationDatabaseService();
             _explorationDatabaseService.Initialize();
             _explorationDataService = new ExplorationDataService(_explorationDatabaseService);
-            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService, _miningTrackerService);
+            _journalHistoryService = new JournalHistoryService(_journalWatcherService);
+            _cargoFormUI = new CargoFormUI(_overlayService, _sessionTrackingService, _explorationDataService, _miningTrackerService, _journalHistoryService);
 
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
@@ -303,6 +305,8 @@ namespace EliteDataRelay
                 _explorationDataService.Dispose();
                 _explorationDatabaseService.Dispose();
                 _screenshotRenamerService?.Dispose();
+                _journalHistoryService?.Dispose();
+                _edsmUploadService?.Dispose();
 
                 // Free any cached UI images
                 UI.BodyIconGenerator.ClearCache();

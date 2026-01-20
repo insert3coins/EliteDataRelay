@@ -7,7 +7,7 @@ namespace EliteDataRelay.UI
 {
     public partial class ControlFactory
     {
-        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker, MiningTrackerService miningTracker)
+        private void CreateTabControls(FontManager fontManager, SessionTrackingService sessionTracker, MiningTrackerService miningTracker, JournalHistoryService historyService)
         {
             // Tab control to switch between Cargo and Materials
             TabControl = new TabControl
@@ -16,12 +16,14 @@ namespace EliteDataRelay.UI
                 Font = fontManager.VerdanaFont,
             };
 
+            var historyPage = CreateHistoryTabPage(fontManager, historyService);
             var cargoPage = CreateCargoTabPage(fontManager);
             var shipPage = CreateShipTabPage(fontManager);
             var sessionPage = CreateSessionTabPage(fontManager, sessionTracker);
             var miningPage = CreateMiningTabPage(fontManager, miningTracker);
             
-            TabControl.TabPages.AddRange(new[] { cargoPage, shipPage, sessionPage, miningPage });
+            TabControl.TabPages.AddRange(new[] { historyPage, cargoPage, shipPage, sessionPage, miningPage });
+            TabControl.SelectedTab = historyPage;
         }
 
         private void DisposeTabControls()
@@ -30,6 +32,8 @@ namespace EliteDataRelay.UI
             TabControl = null!;
             DisposeCargoTabControls();
             DisposeShipTabControls();
+            HistoryTab?.Dispose();
+            HistoryTab = null;
             SessionTab = null;
             MiningTab = null;
         }
