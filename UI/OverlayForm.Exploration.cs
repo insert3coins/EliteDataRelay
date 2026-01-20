@@ -239,16 +239,17 @@ namespace EliteDataRelay.UI
                 var firstDiscoveries = data.Bodies.Count(b => !b.WasDiscovered);
                 var firstMappings = data.Bodies.Count(b => b.IsMapped && !b.WasMapped);
                 var firstFootfalls = data.Bodies.Count(b => b.FirstFootfall);
+                bool hasFirsts = firstDiscoveries > 0 || firstMappings > 0 || firstFootfalls > 0;
 
-                if (firstDiscoveries > 0 || firstMappings > 0 || firstFootfalls > 0)
+                if (hasFirsts)
                 {
                     // Line 1: First discoveries and mappings
                     string firstsText = "";
-                    if (firstDiscoveries > 0) firstsText += $"⭐ {firstDiscoveries} First";
+                    if (firstDiscoveries > 0) firstsText += $"First: {firstDiscoveries}";
                     if (firstMappings > 0)
                     {
                         if (!string.IsNullOrEmpty(firstsText)) firstsText += "  ";
-                        firstsText += $"🗺️ {firstMappings} Mapped";
+                        firstsText += $"First mapped: {firstMappings}";
                     }
 
                     if (!string.IsNullOrEmpty(firstsText))
@@ -264,7 +265,7 @@ namespace EliteDataRelay.UI
                     // Line 2: First footfalls (if any)
                     if (firstFootfalls > 0)
                     {
-                        string footfallText = $"👣 {firstFootfalls} First Footfall";
+                        string footfallText = $"First footfall: {firstFootfalls}";
                         TextRenderer.DrawText(g, footfallText, GameColors.FontNormal,
                                               new Point(padding, y),
                                               GameColors.Gold,
@@ -272,55 +273,56 @@ namespace EliteDataRelay.UI
                         y += lineHeight;
                     }
                 }
-                else
+
+                // Always show EDSM/system info, even when firsts are present
+                bool drewSystemInfo = false;
+                if (AppConfiguration.ShowTrafficOnExplorationOverlay &&
+                    _currentSystemInfo != null &&
+                    (_currentSystemInfo.TrafficDay > 0 || _currentSystemInfo.TrafficWeek > 0 || _currentSystemInfo.TrafficTotal > 0))
                 {
-                    // Instead of "Known System", display EDSM traffic here if available (and enabled)
-                    if (AppConfiguration.ShowTrafficOnExplorationOverlay &&
-                        _currentSystemInfo != null &&
-                        (_currentSystemInfo.TrafficDay > 0 || _currentSystemInfo.TrafficWeek > 0 || _currentSystemInfo.TrafficTotal > 0))
+                    // Compact, readable formatting with bullet separators, truncated to fit overlay width
+                    string trafficText = $"Traffic:  {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
+                    string trafficDraw = TruncateText(g, trafficText, GameColors.FontSmall, width - padding * 2);
+                    g.DrawString(trafficDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                    // Source tag removed per request; show only values
+                    y += lineHeight;
+                    drewSystemInfo = true;
+                }
+
+                if (!drewSystemInfo)
+                {
+                    if (_currentSystemInfo != null)
                     {
-                        // Compact, readable formatting with bullet separators, truncated to fit overlay width
-                        string trafficText = $"Traffic:  {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
-                        string trafficDraw = TruncateText(g, trafficText, GameColors.FontSmall, width - padding * 2);
-                        g.DrawString(trafficDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-                        // Source tag removed per request; show only values
-                        y += lineHeight;
-                    }
-                    else
-                    {
-                        if (_currentSystemInfo != null)
-                        {
-                            var parts = new List<string>();
+                        var parts = new List<string>();
 
-                            bool hasAllegiance = !string.IsNullOrWhiteSpace(_currentSystemInfo.Allegiance) &&
-                                                 !string.Equals(_currentSystemInfo.Allegiance, "N/A", StringComparison.OrdinalIgnoreCase);
-                            bool hasSecurity = !string.IsNullOrWhiteSpace(_currentSystemInfo.Security) &&
-                                               !string.Equals(_currentSystemInfo.Security, "N/A", StringComparison.OrdinalIgnoreCase);
+                        bool hasAllegiance = !string.IsNullOrWhiteSpace(_currentSystemInfo.Allegiance) &&
+                                             !string.Equals(_currentSystemInfo.Allegiance, "N/A", StringComparison.OrdinalIgnoreCase);
+                        bool hasSecurity = !string.IsNullOrWhiteSpace(_currentSystemInfo.Security) &&
+                                           !string.Equals(_currentSystemInfo.Security, "N/A", StringComparison.OrdinalIgnoreCase);
 
-                            if (hasAllegiance)
-                                parts.Add($"Allegiance: {_currentSystemInfo.Allegiance}");
-                            if (hasSecurity)
-                                parts.Add($"Security: {_currentSystemInfo.Security}");
-                            if (_currentSystemInfo.Population > 0)
-                                parts.Add($"Pop: {_currentSystemInfo.Population:N0}");
+                        if (hasAllegiance)
+                            parts.Add($"Allegiance: {_currentSystemInfo.Allegiance}");
+                        if (hasSecurity)
+                            parts.Add($"Security: {_currentSystemInfo.Security}");
+                        if (_currentSystemInfo.Population > 0)
+                            parts.Add($"Pop: {_currentSystemInfo.Population:N0}");
 
-                            if (parts.Count == 0)
-                            {
-                                g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-                                y += lineHeight;
-                            }
-                            else
-                            {
-                                // Draw tokens with wrapping to avoid truncation (e.g., long allegiance values)
-                                int pixels = DrawWrappedTokens(g, padding, y, width - padding * 2, parts, GameColors.FontSmall, GameColors.BrushGrayText);
-                                y += pixels;
-                            }
-                        }
-                        else
+                        if (parts.Count == 0)
                         {
                             g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                             y += lineHeight;
                         }
+                        else
+                        {
+                            // Draw tokens with wrapping to avoid truncation (e.g., long allegiance values)
+                            int pixels = DrawWrappedTokens(g, padding, y, width - padding * 2, parts, GameColors.FontSmall, GameColors.BrushGrayText);
+                            y += pixels;
+                        }
+                    }
+                    else
+                    {
+                        g.DrawString("Known System", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                        y += lineHeight;
                     }
                 }
 
@@ -418,3 +420,4 @@ namespace EliteDataRelay.UI
         }
     }
 }
+
