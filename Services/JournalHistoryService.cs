@@ -115,7 +115,7 @@ namespace EliteDataRelay.Services
             var body = TryGetString(root, "Body");
             var station = TryGetString(root, "StationName");
             var category = GetCategory(eventName);
-            var summary = BuildSummary(eventName, root, starSystem, station, body);
+            var summary = BuildSummaryDetailed(eventName, root, starSystem, station, body);
 
             return new JournalHistoryEntry
             {
@@ -130,7 +130,7 @@ namespace EliteDataRelay.Services
             };
         }
 
-        private static string BuildSummary(string eventName, JsonElement root, string? starSystem, string? station, string? body)
+        private static string BuildSummaryLegacy(string eventName, JsonElement root, string? starSystem, string? station, string? body)
         {
             switch (eventName)
             {
@@ -202,6 +202,103 @@ namespace EliteDataRelay.Services
             }
         }
 
+        private static string BuildSummaryDetailed(string eventName, JsonElement root, string? starSystem, string? station, string? body)
+        {
+            string summary = eventName;
+
+            switch (eventName)
+            {
+                case "FSDJump":
+                case "CarrierJump":
+                    var dist = TryGetDouble(root, "JumpDist");
+                    var fuel = TryGetDouble(root, "FuelUsed");
+                    var fsdParts = new List<string>();
+                    if (!string.IsNullOrWhiteSpace(starSystem)) fsdParts.Add(starSystem);
+                    if (dist.HasValue) fsdParts.Add($"{dist.Value:F1} ly");
+                    if (fuel.HasValue) fsdParts.Add($"{fuel.Value:F1} t fuel");
+                    summary = fsdParts.Count > 0 ? string.Join(" · ", fsdParts) : eventName;
+                    break;
+
+                case "Location":
+                    bool docked = TryGetBool(root, "Docked") ?? false;
+                    summary = docked && !string.IsNullOrWhiteSpace(station)
+                        ? $"Docked at {station}"
+                        : (!string.IsNullOrWhiteSpace(body) ? $"{body}" : (starSystem ?? eventName));
+                    break;
+
+                case "Docked":
+                    summary = string.IsNullOrWhiteSpace(station) ? "Docked" : $"Docked at {station}";
+                    break;
+
+                case "Undocked":
+                    summary = $"Undocked{(string.IsNullOrWhiteSpace(station) ? string.Empty : $" from {station}")}";
+                    break;
+
+                case "Loadout":
+                case "ShipyardSwap":
+                case "ShipyardBuy":
+                case "ShipyardNew":
+                    var ship = TryGetString(root, "Ship_Localised") ?? TryGetString(root, "Ship") ?? "Ship";
+                    var name = TryGetString(root, "ShipName");
+                    summary = string.IsNullOrWhiteSpace(name) ? ship : $"{ship} \"{name}\"";
+                    break;
+
+                case "Market":
+                case "Outfitting":
+                case "Shipyard":
+                    summary = string.IsNullOrWhiteSpace(station) ? eventName : $"{station} market";
+                    break;
+
+                case "Scan":
+                case "SAAScanComplete":
+                case "NavBeaconScan":
+                    var bodyName = TryGetString(root, "BodyName") ?? body ?? "Body";
+                    var wasMapped = TryGetBool(root, "WasMapped");
+                    var wasDiscovered = TryGetBool(root, "WasDiscovered");
+                    var scanParts = new List<string> { bodyName };
+                    if (wasDiscovered.HasValue) scanParts.Add(wasDiscovered.Value ? "first discover" : "discovered");
+                    if (wasMapped.HasValue) scanParts.Add(wasMapped.Value ? "mapped" : "unmapped");
+                    summary = $"{eventName} · {string.Join(" · ", scanParts)}";
+                    break;
+
+                case "FSSDiscoveryScan":
+                    var bodies = TryGetInt(root, "Bodies");
+                    summary = bodies.HasValue ? $"Discovered {bodies.Value} bodies" : "Discovery scan";
+                    break;
+
+                case "SellExplorationData":
+                case "MultiSellExplorationData":
+                    var count = TryGetArrayLength(root, "Systems");
+                    var earnings = TryGetLong(root, "TotalEarnings");
+                    var pieces = new List<string>();
+                    if (count.HasValue) pieces.Add($"{count.Value} systems");
+                    if (earnings.HasValue) pieces.Add($"{earnings.Value:N0} cr");
+                    summary = pieces.Count > 0 ? $"Sold exploration data · {string.Join(" · ", pieces)}" : "Sold exploration data";
+                    break;
+
+                default:
+                    summary = eventName;
+                    break;
+            }
+
+            var location = BuildLocationSuffix(starSystem, station, body);
+            if (!string.IsNullOrWhiteSpace(location))
+            {
+                summary = $"{summary} · {location}";
+            }
+
+            return summary;
+        }
+
+        private static string BuildLocationSuffix(string? starSystem, string? station, string? body)
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(starSystem)) parts.Add(starSystem);
+            if (!string.IsNullOrWhiteSpace(station)) parts.Add(station);
+            if (!string.IsNullOrWhiteSpace(body)) parts.Add(body);
+            return parts.Count > 0 ? string.Join(" / ", parts) : string.Empty;
+        }
+
         private static string GetCategory(string eventName)
         {
             return eventName switch
@@ -268,6 +365,15 @@ namespace EliteDataRelay.Services
         private static int? TryGetInt(JsonElement root, string propertyName)
         {
             if (root.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.Number && prop.TryGetInt32(out var value))
+            {
+                return value;
+            }
+            return null;
+        }
+
+        private static long? TryGetLong(JsonElement root, string propertyName)
+        {
+            if (root.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.Number && prop.TryGetInt64(out var value))
             {
                 return value;
             }
