@@ -276,6 +276,18 @@ namespace EliteDataRelay.Services
                     summary = pieces.Count > 0 ? $"Sold exploration data · {string.Join(" · ", pieces)}" : "Sold exploration data";
                     break;
 
+                case "SendText":
+                    var sendMsg = TryGetString(root, "Message");
+                    var sendTo = TryGetString(root, "To") ?? TryGetString(root, "Channel");
+                    summary = $"Sent{(string.IsNullOrWhiteSpace(sendTo) ? string.Empty : $" ({sendTo})")}: {TruncateMessage(sendMsg)}";
+                    break;
+
+                case "ReceiveText":
+                    var recvMsg = TryGetString(root, "Message");
+                    var recvFrom = TryGetString(root, "From") ?? TryGetString(root, "Channel");
+                    summary = $"Recv{(string.IsNullOrWhiteSpace(recvFrom) ? string.Empty : $" ({recvFrom})")}: {TruncateMessage(recvMsg)}";
+                    break;
+
                 default:
                     summary = eventName;
                     break;
@@ -378,6 +390,13 @@ namespace EliteDataRelay.Services
                 return value;
             }
             return null;
+        }
+
+        private static string TruncateMessage(string? message)
+        {
+            if (string.IsNullOrEmpty(message)) return "(blank)";
+            const int max = 140;
+            return message.Length <= max ? message : message.Substring(0, max) + "…";
         }
 
         private static int? TryGetArrayLength(JsonElement root, string propertyName)
