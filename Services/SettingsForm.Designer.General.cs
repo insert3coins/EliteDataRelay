@@ -60,6 +60,33 @@ namespace EliteDataRelay.UI
             }
             generalTabPage.Controls.Add(grpScreenshots);
 
+            // EDSM upload
+            var grpEdsm = new GroupBox
+            {
+                Text = "EDSM Upload",
+                Location = new Point(12, grpScreenshots.Bottom + 12),
+                Size = new Size(520, 110),
+                BackColor = Color.Transparent,
+                ForeColor = Color.FromArgb(31, 41, 55)
+            };
+            var lblCommander = new Label { Text = "Commander Name:", Location = new Point(15, 25), AutoSize = true };
+            _txtEdsmCommander = new TextBox { Location = new Point(150, 22), Size = new Size(330, 20) };
+            var lblApiKey = new Label { Text = "API Key:", Location = new Point(15, 55), AutoSize = true };
+            _txtEdsmApiKey = new TextBox { Location = new Point(150, 52), Size = new Size(330, 20), UseSystemPasswordChar = true };
+            var lblHint = new Label
+            {
+                Text = "Saved locally; used to send your current system to EDSM.",
+                Location = new Point(15, 80),
+                AutoSize = true,
+                ForeColor = Color.FromArgb(90, 108, 125)
+            };
+            grpEdsm.Controls.Add(lblCommander);
+            grpEdsm.Controls.Add(_txtEdsmCommander);
+            grpEdsm.Controls.Add(lblApiKey);
+            grpEdsm.Controls.Add(_txtEdsmApiKey);
+            grpEdsm.Controls.Add(lblHint);
+            generalTabPage.Controls.Add(grpEdsm);
+
             // Advanced moved to its own tab
         }
     }

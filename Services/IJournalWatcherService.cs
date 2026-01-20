@@ -38,6 +38,7 @@ namespace EliteDataRelay.Services
         event EventHandler<SAASignalsFoundEvent>? SAASignalsFound;
         event EventHandler<FSSSignalDiscoveredEvent>? FSSSignalDiscovered;
         event EventHandler<FSSAllBodiesFoundEvent>? FSSAllBodiesFound;
+        event EventHandler<JournalEventArgs>? JournalEventReceived;
         event EventHandler<DiscoveryScanEvent>? DiscoveryScan;
         event EventHandler<NavBeaconScanEvent>? NavBeaconScan;
         event EventHandler<FirstFootfallEvent>? FirstFootfall;

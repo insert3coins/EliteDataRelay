@@ -39,6 +39,10 @@ namespace EliteDataRelay.Configuration
 
         // Webhook removed
 
+        // EDSM upload
+        public static string EdsmCommanderName { get; set; } = string.Empty;
+        public static string EdsmApiKey { get; set; } = string.Empty;
+
         
     }
 }

@@ -81,6 +81,7 @@ namespace EliteDataRelay
             _fileMonitoringService.StartMonitoring();
             _stationInfoService.Start();
             _systemInfoService.Start();
+            _edsmUploadService.Start();
             _gameProcessCheckTimer?.Start();
             _sessionOverlayTimer?.Start();
 
@@ -144,6 +145,7 @@ namespace EliteDataRelay
             _lastSystemInfoData = null;
 
             // Stop optional services
+            _edsmUploadService.Stop();
             _screenshotRenamerService.Stop();
             
             // mining companion removed

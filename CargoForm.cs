@@ -30,6 +30,7 @@ namespace EliteDataRelay
         private readonly ExplorationDataService _explorationDataService;
         private readonly ExplorationDatabaseService _explorationDatabaseService;
         private readonly ScreenshotRenamerService _screenshotRenamerService;
+        private readonly EdsmUploadService _edsmUploadService;
 
         public CargoForm()
         {
@@ -53,6 +54,7 @@ namespace EliteDataRelay
 
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
+            _edsmUploadService = new EdsmUploadService(_journalWatcherService);
 
 
             InitializeComponent();

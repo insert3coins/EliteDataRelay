@@ -195,6 +195,11 @@ namespace EliteDataRelay.Services
         public event EventHandler<CodexEntryEvent>? CodexEntry;
 
         /// <summary>
+        /// Event raised for every processed journal line (raw JSON string).
+        /// </summary>
+        public event EventHandler<JournalEventArgs>? JournalEventReceived;
+
+        /// <summary>
         /// Event raised when exploration data is sold.
         /// </summary>
         public event EventHandler<SellExplorationDataEvent>? SellExplorationData;

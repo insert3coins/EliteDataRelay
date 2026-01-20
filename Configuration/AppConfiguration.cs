@@ -118,6 +118,10 @@ namespace EliteDataRelay.Configuration
                         EnableScreenshotRenamer = config.EnableScreenshotRenamer;
                         ScreenshotRenameFormat = config.ScreenshotRenameFormat;
 
+                        // EDSM upload
+                        EdsmCommanderName = config.EdsmCommanderName ?? string.Empty;
+                        EdsmApiKey = config.EdsmApiKey ?? string.Empty;
+
                         // Webhook removed
 
                         // Web overlay
@@ -194,6 +198,10 @@ namespace EliteDataRelay.Configuration
                     // Screenshot renamer
                     EnableScreenshotRenamer = AppConfiguration.EnableScreenshotRenamer,
                     ScreenshotRenameFormat = AppConfiguration.ScreenshotRenameFormat,
+
+                    // EDSM upload
+                    EdsmCommanderName = AppConfiguration.EdsmCommanderName,
+                    EdsmApiKey = AppConfiguration.EdsmApiKey,
 
                     // Webhook removed
 
@@ -274,6 +282,10 @@ namespace EliteDataRelay.Configuration
             // Screenshot renamer
             public bool EnableScreenshotRenamer { get; set; } = false;
             public string ScreenshotRenameFormat { get; set; } = "{System} - {Body} - {Timestamp}";
+
+            // EDSM upload
+            public string EdsmCommanderName { get; set; } = string.Empty;
+            public string EdsmApiKey { get; set; } = string.Empty;
 
             // Webhook removed
 

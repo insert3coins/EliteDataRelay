@@ -42,6 +42,8 @@ namespace EliteDataRelay.UI
         private Panel _pnlBorderColor = null!;
         private TrackBar _trackBarOpacity = null!;
         private Label _lblOpacityValue = null!;
+        private TextBox _txtEdsmCommander = null!;
+        private TextBox _txtEdsmApiKey = null!;
         // Web overlay UI (local to Advanced tab; created inline), add fields if later reused
 
 
@@ -109,6 +111,10 @@ namespace EliteDataRelay.UI
             // Next Jump traffic removed
             // Hotkeys removed
             // Hotkeys removed
+
+            // EDSM upload
+            _txtEdsmCommander.Text = AppConfiguration.EdsmCommanderName;
+            _txtEdsmApiKey.Text = AppConfiguration.EdsmApiKey;
 
             // Load overlay appearance settings
             _overlayFont = new Font(AppConfiguration.OverlayFontName, AppConfiguration.OverlayFontSize);
@@ -178,6 +184,10 @@ namespace EliteDataRelay.UI
             AppConfiguration.ShowTrafficOnExplorationOverlay = _chkTrafficExplorationOverlay.Checked;
             // Hotkeys removed
             // Removed legacy output directory persistence
+
+            // EDSM upload
+            AppConfiguration.EdsmCommanderName = _txtEdsmCommander.Text?.Trim() ?? string.Empty;
+            AppConfiguration.EdsmApiKey = _txtEdsmApiKey.Text?.Trim() ?? string.Empty;
 
             // Save appearance settings
             AppConfiguration.OverlayFontName = _overlayFont.Name;

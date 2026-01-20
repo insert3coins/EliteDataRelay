@@ -198,6 +198,16 @@ namespace EliteDataRelay.Services
 
                         string? eventType = eventElement.GetString();
 
+                        // Emit the raw journal line for any subscribers before specialized handling.
+                        if (!string.IsNullOrEmpty(eventType))
+                        {
+                            try
+                            {
+                                JournalEventReceived?.Invoke(this, new JournalEventArgs(eventType, journalLine));
+                            }
+                            catch { /* swallow to avoid impacting parsing */ }
+                        }
+
                         // Skip location events as they were handled in the first pass (allow FSDJump for JumpCompleted)
                         if (eventType == "Location" || eventType == "FSDTarget")
                         {
