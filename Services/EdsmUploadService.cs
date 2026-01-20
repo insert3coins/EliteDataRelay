@@ -29,10 +29,13 @@ namespace EliteDataRelay.Services
         {
             "FSDJump", "CarrierJump", "Location",
             "Docked", "Undocked",
+            "LoadGame",
             "Loadout", "ShipyardSwap", "ShipyardNew", "ShipyardTransfer", "ShipyardSell", "ShipyardBuy", "SetUserShipName",
             "Market", "Outfitting", "Shipyard", "CarrierTradeOrder",
             "FSSDiscoveryScan", "FSSAllBodiesFound", "DiscoveryScan", "Scan", "SAAScanComplete", "NavBeaconScan",
-            "SellExplorationData", "MultiSellExplorationData"
+            "SellExplorationData", "MultiSellExplorationData",
+            "Statistics",
+            "Fileheader"
         };
 
         private readonly IJournalWatcherService _journalWatcher;
@@ -46,6 +49,10 @@ namespace EliteDataRelay.Services
         private CancellationTokenSource? _cts;
         private Task? _worker;
         private bool _started;
+        private string _gameVersion = "Unknown";
+        private string _gameBuild = "Unknown";
+        private string? _lastBalanceRaw;
+        private string? _lastBalanceEventName;
 
         public EdsmUploadService(IJournalWatcherService journalWatcher)
         {
@@ -61,6 +68,7 @@ namespace EliteDataRelay.Services
             _cts = new CancellationTokenSource();
 
             _journalWatcher.JournalEventReceived += OnJournalEventReceived;
+            SendCachedBalanceSnapshotIfAvailable();
             EnsureWorker();
 
             Trace.WriteLine("[EdsmUpload] Started.");
@@ -87,25 +95,34 @@ namespace EliteDataRelay.Services
                 return;
             }
 
-            if (!_allowedEvents.Contains(e.EventName))
-            {
-                return;
-            }
-
             try
             {
                 using var doc = JsonDocument.Parse(e.RawLine);
                 var root = doc.RootElement;
                 var evtTimestamp = GetTimestampUtc(root);
                 var evtName = GetEventName(root) ?? e.EventName;
+                if (!IsAllowed(evtName, root))
+                {
+                    return;
+                }
+                if (IsBalanceRelated(root))
+                {
+                    _lastBalanceRaw = e.RawLine;
+                    _lastBalanceEventName = evtName;
+                }
                 var hash = ComputeHash(e.RawLine);
 
-                if (ShouldSkipUpload(evtTimestamp, hash, evtName))
+                if (evtName.Equals("Fileheader", StringComparison.OrdinalIgnoreCase))
+                {
+                    CacheGameVersions(root);
+                }
+
+                if (ShouldSkipUpload(evtTimestamp, hash, evtName, forceSend: false))
                 {
                     return;
                 }
 
-                _queue.Enqueue(new QueuedEvent(root.Clone(), hash, evtTimestamp, evtName));
+                _queue.Enqueue(new QueuedEvent(root.Clone(), hash, evtTimestamp, evtName, e.RawLine, false));
                 EnsureWorker();
             }
             catch (Exception ex)
@@ -121,86 +138,66 @@ namespace EliteDataRelay.Services
 
             _worker = Task.Run(async () =>
             {
-                const int batchSize = 10;
                 var token = _cts.Token;
 
                 while (!token.IsCancellationRequested)
                 {
-                    if (_queue.IsEmpty)
+                    if (!_queue.TryDequeue(out var item))
                     {
                         await Task.Delay(200, token).ConfigureAwait(false);
                         continue;
                     }
 
-                    var batch = new List<QueuedEvent>(batchSize);
-                    while (batch.Count < batchSize && _queue.TryDequeue(out var item))
-                    {
-                        batch.Add(item);
-                    }
-
-                    await SendBatchAsync(batch, token).ConfigureAwait(false);
+                    await SendEventAsync(item, token).ConfigureAwait(false);
                     await Task.Delay(500, token).ConfigureAwait(false); // small gap to avoid flooding
                 }
             }, _cts.Token);
         }
 
-        private async Task SendBatchAsync(List<QueuedEvent> eventsBatch, CancellationToken token)
+        private async Task SendEventAsync(QueuedEvent queuedEvent, CancellationToken token)
         {
-            if (eventsBatch.Count == 0) return;
             if (!TryGetCredentials(out var commanderName, out var apiKey))
             {
-                Trace.WriteLine("[EdsmUpload] Skipping batch: commander/API key not configured.");
+                Trace.WriteLine("[EdsmUpload] Skipping: commander/API key not configured.");
                 return;
             }
 
-            // Send events one-by-one (no batching)
-            var stateChanged = false;
-            foreach (var single in eventsBatch)
+            var payload = new
             {
-                if (token.IsCancellationRequested) break;
+                commanderName,
+                apiKey,
+                fromSoftware = "EliteDataRelay",
+                fromSoftwareVersion = _softwareVersion,
+                fromGameVersion = _gameVersion,
+                fromGameBuild = _gameBuild,
+                message = new[] { queuedEvent.Payload }
+            };
 
-                var payload = new
-                {
-                    commanderName,
-                    apiKey,
-                    fromSoftware = "EliteDataRelay",
-                    fromSoftwareVersion = _softwareVersion,
-                    fromGameVersion = "Unknown",
-                    fromGameBuild = "Unknown",
-                    message = new[] { single.Payload }
-                };
+            var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            });
 
-                var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
-                {
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                });
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            var evtName = queuedEvent.EventName ?? GetEventName(queuedEvent.Payload) ?? "unknown";
+            Trace.WriteLine($"[EdsmUpload] POST api-journal-v1 event='{evtName}' as '{commanderName}'.");
 
-                using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                var evtName = single.EventName ?? GetEventName(single.Payload) ?? "unknown";
-                Trace.WriteLine($"[EdsmUpload] POST api-journal-v1 event='{evtName}' as '{commanderName}'.");
-
-                try
+            try
+            {
+                var response = await _httpClient.PostAsync(Endpoint, content, token).ConfigureAwait(false);
+                var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+                LogResponse(response, body, evtName);
+                if (response.IsSuccessStatusCode)
                 {
-                    var response = await _httpClient.PostAsync(Endpoint, content, token).ConfigureAwait(false);
-                    var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
-                    LogResponse(response, body, evtName);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        RegisterSent(single.EventHash, single.TimestampUtc);
-                        stateChanged = true;
-                    }
-                }
-                catch (OperationCanceledException) { /* shutting down */ }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine($"[EdsmUpload] Error sending event '{evtName}': {ex.Message}");
+                    RegisterSent(queuedEvent.EventHash, queuedEvent.TimestampUtc);
+                    SaveState();
                 }
             }
-
-            if (stateChanged)
+            catch (OperationCanceledException) { /* shutting down */ }
+            catch (Exception ex)
             {
-                SaveState();
+                Trace.WriteLine($"[EdsmUpload] Error sending event '{evtName}': {ex.Message}");
             }
         }
 
@@ -235,6 +232,41 @@ namespace EliteDataRelay.Services
             return value.Length <= max ? value : value[..max] + "...";
         }
 
+        private static bool IsAllowed(string eventName, JsonElement root)
+        {
+            if (_allowedEvents.Contains(eventName))
+            {
+                return true;
+            }
+
+            // Fallback: allow events that contain balance/credits data.
+            return IsBalanceRelated(root);
+        }
+
+        private static bool IsBalanceRelated(JsonElement root)
+        {
+            if (root.ValueKind != JsonValueKind.Object) return false;
+
+            foreach (var prop in root.EnumerateObject())
+            {
+                var name = prop.Name;
+                if (name.Equals("Balance", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("Credits", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("Loan", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                // Statistics event embeds balances in BankAccount
+                if (name.Equals("BankAccount", StringComparison.OrdinalIgnoreCase) && prop.Value.ValueKind == JsonValueKind.Object)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static string ComputeHash(string rawLine)
         {
             var bytes = Encoding.UTF8.GetBytes(rawLine ?? string.Empty);
@@ -259,6 +291,88 @@ namespace EliteDataRelay.Services
             }
 
             return DateTime.UtcNow;
+        }
+
+        private void CacheGameVersions(JsonElement root)
+        {
+            if (root.ValueKind != JsonValueKind.Object) return;
+
+            string? gameVersion = null;
+            if (root.TryGetProperty("gameversion", out var gv) && gv.ValueKind == JsonValueKind.String)
+                gameVersion = gv.GetString();
+            else if (root.TryGetProperty("gameVersion", out var gv2) && gv2.ValueKind == JsonValueKind.String)
+                gameVersion = gv2.GetString();
+
+            string? gameBuild = null;
+            if (root.TryGetProperty("build", out var gb) && gb.ValueKind == JsonValueKind.String)
+                gameBuild = gb.GetString();
+            else if (root.TryGetProperty("gamebuild", out var gb2) && gb2.ValueKind == JsonValueKind.String)
+                gameBuild = gb2.GetString();
+            else if (root.TryGetProperty("gameBuild", out var gb3) && gb3.ValueKind == JsonValueKind.String)
+                gameBuild = gb3.GetString();
+
+            if (!string.IsNullOrWhiteSpace(gameVersion)) _gameVersion = gameVersion;
+            if (!string.IsNullOrWhiteSpace(gameBuild)) _gameBuild = gameBuild;
+        }
+
+        private void SendCachedBalanceSnapshotIfAvailable()
+        {
+            if (string.IsNullOrWhiteSpace(_lastBalanceRaw)) return;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(_lastBalanceRaw);
+                var updatedRaw = CloneWithTimestamp(doc.RootElement, DateTime.UtcNow);
+                using var updatedDoc = JsonDocument.Parse(updatedRaw);
+                var clone = updatedDoc.RootElement.Clone();
+                var evtName = GetEventName(updatedDoc.RootElement) ?? _lastBalanceEventName ?? "Statistics";
+                var hash = ComputeHash(updatedRaw + "|start-balance");
+                _queue.Enqueue(new QueuedEvent(clone, hash, DateTime.UtcNow, evtName, updatedRaw, true));
+                EnsureWorker();
+                Trace.WriteLine("[EdsmUpload] Enqueued current balance snapshot on start.");
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[EdsmUpload] Failed to enqueue balance snapshot: {ex.Message}");
+            }
+        }
+
+        private static string CloneWithTimestamp(JsonElement root, DateTime timestampUtc)
+        {
+            using var stream = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(stream))
+            {
+                if (root.ValueKind == JsonValueKind.Object)
+                {
+                    writer.WriteStartObject();
+                    var hadTimestamp = false;
+                    foreach (var prop in root.EnumerateObject())
+                    {
+                        if (prop.NameEquals("timestamp"))
+                        {
+                            hadTimestamp = true;
+                            writer.WriteString(prop.Name, timestampUtc.ToString("O"));
+                        }
+                        else
+                        {
+                            prop.WriteTo(writer);
+                        }
+                    }
+                    if (!hadTimestamp)
+                    {
+                        writer.WriteString("timestamp", timestampUtc.ToString("O"));
+                    }
+                    writer.WriteEndObject();
+                }
+                else
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("timestamp", timestampUtc.ToString("O"));
+                    writer.WriteEndObject();
+                }
+            }
+
+            return Encoding.UTF8.GetString(stream.ToArray());
         }
 
         private bool TryGetCredentials(out string commanderName, out string apiKey)
@@ -289,16 +403,11 @@ namespace EliteDataRelay.Services
             return client;
         }
 
-        private bool ShouldSkipUpload(DateTime timestampUtc, string eventHash, string evtName)
+        private bool ShouldSkipUpload(DateTime timestampUtc, string eventHash, string evtName, bool forceSend)
         {
+            if (forceSend) return false;
             lock (_stateLock)
             {
-                if (_lastSentTimestampUtc.HasValue && timestampUtc <= _lastSentTimestampUtc.Value)
-                {
-                    Trace.WriteLine($"[EdsmUpload] Skip '{evtName}': timestamp {timestampUtc:O} <= last sent {_lastSentTimestampUtc:O}");
-                    return true;
-                }
-
                 if (_sentEventHashes.Contains(eventHash))
                 {
                     Trace.WriteLine($"[EdsmUpload] Skip '{evtName}': already sent.");
@@ -403,7 +512,7 @@ namespace EliteDataRelay.Services
             _cts?.Dispose();
         }
 
-        private readonly record struct QueuedEvent(JsonElement Payload, string EventHash, DateTime TimestampUtc, string EventName);
+        private readonly record struct QueuedEvent(JsonElement Payload, string EventHash, DateTime TimestampUtc, string EventName, string RawLine, bool ForceSend);
 
         private sealed class EdsmUploadState
         {

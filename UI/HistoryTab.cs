@@ -127,9 +127,8 @@ namespace EliteDataRelay.UI
 
             list.Columns.Add(string.Empty, 28);
             list.Columns.Add("Time (Local)", 140);
-            list.Columns.Add("Event", 140);
-            list.Columns.Add("Location", 220);
-            list.Columns.Add("Details", 460);
+            list.Columns.Add("Event", 160);
+            list.Columns.Add("Details", 600);
 
             typeof(ListView).GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic)
                 ?.SetValue(list, true);
@@ -231,7 +230,6 @@ namespace EliteDataRelay.UI
 
                 item.SubItems.Add(entry.TimestampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
                 item.SubItems.Add(entry.EventName);
-                item.SubItems.Add(BuildLocation(entry));
                 item.SubItems.Add(entry.Summary);
 
                 _listView.Items.Add(item);
@@ -239,17 +237,6 @@ namespace EliteDataRelay.UI
 
             _listView.EndUpdate();
             _countLabel.Text = $"Showing {entries.Count:N0} / {_cachedEntries.Count:N0}";
-        }
-
-        private static string BuildLocation(JournalHistoryEntry entry)
-        {
-            var system = entry.StarSystem ?? "Unknown";
-            var parts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(entry.Station)) parts.Add(entry.Station);
-            if (!string.IsNullOrWhiteSpace(entry.Body)) parts.Add(entry.Body);
-
-            if (parts.Count == 0) return system;
-            return $"{system} ({string.Join(" · ", parts)})";
         }
 
         private void ShowRawJson()
