@@ -277,11 +277,18 @@ namespace EliteDataRelay.UI
                 // Always show EDSM/system info, even when firsts are present
                 bool drewSystemInfo = false;
                 if (AppConfiguration.ShowTrafficOnExplorationOverlay &&
-                    _currentSystemInfo != null &&
-                    (_currentSystemInfo.TrafficDay > 0 || _currentSystemInfo.TrafficWeek > 0 || _currentSystemInfo.TrafficTotal > 0))
+                    _currentSystemInfo != null)
                 {
                     // Compact, readable formatting with bullet separators, truncated to fit overlay width
-                    string trafficText = $"Traffic:  {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
+                    string trafficText;
+                    if (_currentSystemInfo.TrafficDay == 0 && _currentSystemInfo.TrafficWeek == 0 && _currentSystemInfo.TrafficTotal == 0)
+                    {
+                        trafficText = "Traffic: none recorded on EDSM";
+                    }
+                    else
+                    {
+                        trafficText = $"Traffic:  {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
+                    }
                     string trafficDraw = TruncateText(g, trafficText, GameColors.FontSmall, width - padding * 2);
                     g.DrawString(trafficDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
                     // Source tag removed per request; show only values
