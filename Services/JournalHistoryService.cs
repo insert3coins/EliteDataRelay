@@ -202,10 +202,11 @@ namespace EliteDataRelay.Services
             }
         }
 
-                        private static string BuildSummaryDetailed(string eventName, JsonElement root, string? starSystem, string? station, string? body)
+        private static string BuildSummaryDetailed(string eventName, JsonElement root, string? starSystem, string? station, string? body)
         {
             string summary = eventName;
             bool includeLocationSuffix = true;
+            var usedProps = new List<string> { "event", "timestamp" };
 
             switch (eventName)
             {
@@ -218,6 +219,7 @@ namespace EliteDataRelay.Services
                     if (dist.HasValue) fsdParts.Add($"{dist.Value:F1} ly");
                     if (fuel.HasValue) fsdParts.Add($"{fuel.Value:F1} t fuel");
                     summary = fsdParts.Count > 0 ? string.Join(" | ", fsdParts) : eventName;
+                    usedProps.AddRange(new[] { "JumpDist", "FuelUsed" });
                     break;
 
                 case "Location":
@@ -225,6 +227,7 @@ namespace EliteDataRelay.Services
                     summary = docked && !string.IsNullOrWhiteSpace(station)
                         ? $"Docked at {station}"
                         : (!string.IsNullOrWhiteSpace(body) ? $"{body}" : (starSystem ?? eventName));
+                    usedProps.Add("Docked");
                     break;
 
                 case "Docked":
@@ -242,6 +245,7 @@ namespace EliteDataRelay.Services
                     var ship = TryGetString(root, "Ship_Localised") ?? TryGetString(root, "Ship") ?? "Ship";
                     var name = TryGetString(root, "ShipName");
                     summary = string.IsNullOrWhiteSpace(name) ? ship : $"{ship} \"{name}\"";
+                    usedProps.AddRange(new[] { "Ship_Localised", "Ship", "ShipName" });
                     break;
 
                 case "Market":
@@ -260,11 +264,13 @@ namespace EliteDataRelay.Services
                     if (wasDiscovered.HasValue) scanParts.Add(wasDiscovered.Value ? "first discover" : "discovered");
                     if (wasMapped.HasValue) scanParts.Add(wasMapped.Value ? "mapped" : "unmapped");
                     summary = $"{eventName} | {string.Join(" | ", scanParts)}";
+                    usedProps.AddRange(new[] { "BodyName", "WasMapped", "WasDiscovered" });
                     break;
 
                 case "FSSDiscoveryScan":
                     var bodies = TryGetInt(root, "Bodies");
                     summary = bodies.HasValue ? $"Discovered {bodies.Value} bodies" : "Discovery scan";
+                    usedProps.Add("Bodies");
                     break;
 
                 case "SellExplorationData":
@@ -275,19 +281,88 @@ namespace EliteDataRelay.Services
                     if (count.HasValue) pieces.Add($"{count.Value} systems");
                     if (earnings.HasValue) pieces.Add($"{earnings.Value:N0} cr");
                     summary = pieces.Count > 0 ? $"Sold exploration data | {string.Join(" | ", pieces)}" : "Sold exploration data";
+                    usedProps.AddRange(new[] { "Systems", "TotalEarnings" });
                     break;
 
                 case "SendText":
                     var sendMsg = TryGetString(root, "Message");
                     var sendTo = TryGetString(root, "To") ?? TryGetString(root, "Channel");
                     summary = $"Sent{(string.IsNullOrWhiteSpace(sendTo) ? string.Empty : $" ({sendTo})")}: {TruncateMessage(sendMsg)}";
+                    usedProps.AddRange(new[] { "Message", "To", "Channel" });
                     includeLocationSuffix = false;
                     break;
 
                 case "ReceiveText":
                     var recvMsg = TryGetString(root, "Message_Localised") ?? TryGetString(root, "Message");
                     summary = string.IsNullOrWhiteSpace(recvMsg) ? "Received message" : TruncateMessage(recvMsg);
+                    usedProps.AddRange(new[] { "Message_Localised", "Message" });
                     includeLocationSuffix = false;
+                    break;
+
+                case "FuelScoop":
+                    var scooped = TryGetDouble(root, "Scooped");
+                    var total = TryGetDouble(root, "Total");
+                    var scoopParts = new List<string> { "Fuel scoop" };
+                    if (scooped.HasValue) scoopParts.Add($"{scooped.Value:F2} t");
+                    if (total.HasValue) scoopParts.Add($"Total {total.Value:F2} t");
+                    summary = string.Join(" | ", scoopParts);
+                    usedProps.AddRange(new[] { "Scooped", "Total" });
+                    break;
+
+                case "FSDTarget":
+                    var targetName = TryGetString(root, "Name") ?? "FSD Target";
+                    var remaining = TryGetInt(root, "RemainingJumpsInRoute");
+                    var starClass = TryGetString(root, "StarClass");
+                    var targetParts = new List<string> { targetName };
+                    if (!string.IsNullOrWhiteSpace(starClass)) targetParts.Add($"Class {starClass}");
+                    if (remaining.HasValue) targetParts.Add($"{remaining.Value} jumps left");
+                    summary = string.Join(" | ", targetParts);
+                    usedProps.AddRange(new[] { "Name", "StarClass", "RemainingJumpsInRoute" });
+                    includeLocationSuffix = false;
+                    break;
+
+                case "StartJump":
+                    var jumpType = TryGetString(root, "JumpType");
+                    var targetSystem = TryGetString(root, "StarSystem");
+                    var startStarClass = TryGetString(root, "StarClass");
+                    var startParts = new List<string>();
+                    if (!string.IsNullOrWhiteSpace(jumpType)) startParts.Add(jumpType);
+                    if (!string.IsNullOrWhiteSpace(targetSystem)) startParts.Add($"to {targetSystem}");
+                    if (!string.IsNullOrWhiteSpace(startStarClass)) startParts.Add($"({startStarClass})");
+                    summary = startParts.Count > 0 ? $"Jump {string.Join(" ", startParts)}" : eventName;
+                    usedProps.AddRange(new[] { "JumpType", "StarSystem", "StarClass" });
+                    includeLocationSuffix = false;
+                    break;
+
+                case "JetConeBoost":
+                    var boostVal = TryGetDouble(root, "BoostValue");
+                    summary = boostVal.HasValue ? $"Jet cone boost x{boostVal.Value:F1}" : "Jet cone boost";
+                    usedProps.Add("BoostValue");
+                    break;
+
+                case "ReservoirReplenished":
+                    var fuelMain = TryGetDouble(root, "FuelMain");
+                    var fuelRes = TryGetDouble(root, "FuelReservoir");
+                    var resParts = new List<string> { "Reservoir replenished" };
+                    if (fuelMain.HasValue) resParts.Add($"Main {fuelMain.Value:F2} t");
+                    if (fuelRes.HasValue) resParts.Add($"Reserve {fuelRes.Value:F2} t");
+                    summary = string.Join(" | ", resParts);
+                    usedProps.AddRange(new[] { "FuelMain", "FuelReservoir" });
+                    break;
+
+                case "FSSAllBodiesFound":
+                    var countBodies = TryGetInt(root, "Count");
+                    summary = countBodies.HasValue ? $"All bodies found ({countBodies.Value})" : "All bodies found";
+                    usedProps.Add("Count");
+                    break;
+
+                case "FSSSignalDiscovered":
+                    var signalName = TryGetString(root, "SignalName_Localised") ?? TryGetString(root, "SignalName") ?? "Signal discovered";
+                    var signalStrength = TryGetDouble(root, "Strength");
+                    summary = signalStrength.HasValue
+                        ? $"{signalName} | Strength {signalStrength.Value:F1}"
+                        : signalName;
+                    usedProps.AddRange(new[] { "SignalName_Localised", "SignalName", "Strength" });
                     break;
 
                 default:
@@ -302,6 +377,12 @@ namespace EliteDataRelay.Services
                 {
                     summary = $"{summary} | {location}";
                 }
+            }
+
+            var extras = BuildPropertySummary(root, usedProps);
+            if (!string.IsNullOrWhiteSpace(extras))
+            {
+                summary = $"{summary} | {extras}";
             }
 
             return summary;
@@ -347,8 +428,62 @@ namespace EliteDataRelay.Services
                 "Bounty" => "combat",
                 "Died" => "combat",
                 "Resurrect" => "combat",
+                "FuelScoop" => "travel",
+                "FSDTarget" => "travel",
+                "JetConeBoost" => "travel",
+                "ReservoirReplenished" => "travel",
                 _ => "other"
             };
+        }
+
+        private static string BuildPropertySummary(JsonElement root, IEnumerable<string> alreadyUsed)
+        {
+            var used = new HashSet<string>(alreadyUsed, StringComparer.OrdinalIgnoreCase)
+            {
+                "timestamp",
+                "event",
+                "StarSystem",
+                "SystemAddress",
+                "Body",
+                "BodyID",
+                "BodyName",
+                "StationName",
+                "StarPos",
+                "StarPosFromCmdr",
+                "Taxi",
+                "Multicrew",
+                "OnFoot"
+            };
+
+            var parts = new List<string>();
+            foreach (var prop in root.EnumerateObject())
+            {
+                if (used.Contains(prop.Name)) continue;
+                if (prop.Value.ValueKind == JsonValueKind.Object || prop.Value.ValueKind == JsonValueKind.Array) continue;
+
+                string? value = prop.Value.ValueKind switch
+                {
+                    JsonValueKind.String => prop.Value.GetString(),
+                    JsonValueKind.Number => FormatNumber(prop.Value),
+                    JsonValueKind.True => "true",
+                    JsonValueKind.False => "false",
+                    _ => null
+                };
+
+                if (string.IsNullOrWhiteSpace(value)) continue;
+                if (value.Length > 64) value = value.Substring(0, 64) + "...";
+                parts.Add($"{prop.Name}: {value}");
+                if (parts.Count >= 6) break;
+            }
+
+            return parts.Count == 0 ? string.Empty : string.Join(" | ", parts);
+        }
+
+        private static string FormatNumber(JsonElement value)
+        {
+            if (value.TryGetInt64(out var l)) return l.ToString("N0", CultureInfo.InvariantCulture);
+            if (value.TryGetDouble(out var d)) return d.ToString("0.###", CultureInfo.InvariantCulture);
+            return value.ToString();
         }
 
         private static string? TryGetString(JsonElement root, string propertyName)
