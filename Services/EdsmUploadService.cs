@@ -31,7 +31,7 @@ namespace EliteDataRelay.Services
             "Docked", "Undocked", "SupercruiseEntry", "SupercruiseExit",
 
             // Game state
-            "Commander", "LoadGame", "Statistics", "Fileheader", "NewCommander", "ClearSavedGame",
+            "Commander", "LoadGame", "Statistics", "Fileheader", "NewCommander", "ClearSavedGame", "Balance",
             "Rank", "Progress", "Reputation", "EngineerProgress",
 
             // Ship & Modules
@@ -57,7 +57,8 @@ namespace EliteDataRelay.Services
             "Died", "PVPKill", "CommitCrime", "CrimeVictim",
 
             // Credits & Vouchers
-            "MissionCompleted", "MissionFailed", "MissionAbandoned", "SearchAndRescue", "CommunityGoalReward",
+            "MissionCompleted", "MissionFailed", "MissionAbandoned", "SearchAndRescue",
+            "CommunityGoal", "CommunityGoalJoin", "CommunityGoalDiscard", "CommunityGoalReward",
             "Bounty", "FactionKillBond", "CapShipBond", "Resurrect",
             "PayFines", "PayBounties", "PayLegacyFines", "RedeemVoucher", "DatalinkVoucher",
 
@@ -66,13 +67,15 @@ namespace EliteDataRelay.Services
 
             // Crew & Wings
             "CrewHire", "WingAdd", "WingJoin", "WingLeave", "WingInvite",
+            "AppliedToSquadron", "InvitedToSquadron", "JoinedSquadron", "LeftSquadron", "KickedFromSquadron", "SquadronStartup",
 
             // Carrier Management
             "CarrierBankTransfer", "CarrierFinance", "CarrierCrewServices", "CarrierBuy", "CarrierSell", "CarrierStats",
+            "CarrierJumpRequest", "CarrierNameChange", "CarrierDecommission", "FCMaterials",
 
             // On-Foot (Odyssey)
             "BuySuit", "SellSuit", "BuyWeapon", "SellWeapon", "UpgradeSuit", "UpgradeWeapon",
-            "BuyMicroResources", "SellMicroResources", "BookTaxi"
+            "BuyMicroResources", "SellMicroResources", "BookTaxi", "ShipLocker"
         };
 
         private readonly IJournalWatcherService _journalWatcher;
@@ -217,28 +220,55 @@ namespace EliteDataRelay.Services
             {
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
             });
-
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             var evtName = queuedEvent.EventName ?? GetEventName(queuedEvent.Payload) ?? "unknown";
-            Trace.WriteLine($"[EdsmUpload] POST api-journal-v1 event='{evtName}' as '{commanderName}'.");
 
-            try
+            const int maxRetries = 3;
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                var response = await _httpClient.PostAsync(Endpoint, content, token).ConfigureAwait(false);
-                var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
-                LogResponse(response, body, evtName);
-                if (response.IsSuccessStatusCode)
+                if (token.IsCancellationRequested) return;
+
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+                Trace.WriteLine($"[EdsmUpload] POST api-journal-v1 event='{evtName}' as '{commanderName}' (attempt {attempt}/{maxRetries}).");
+
+                try
                 {
-                    RegisterSent(queuedEvent.EventHash, queuedEvent.TimestampUtc);
-                    SaveState();
+                    var response = await _httpClient.PostAsync(Endpoint, content, token).ConfigureAwait(false);
+                    var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+                    LogResponse(response, body, evtName);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        RegisterSent(queuedEvent.EventHash, queuedEvent.TimestampUtc);
+                        SaveState();
+                        return; // Success, exit the retry loop
+                    }
+
+                    // If it's a client error (4xx), don't retry. It's a bad request.
+                    if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
+                    {
+                        Trace.WriteLine($"[EdsmUpload] Client error {response.StatusCode}. Will not retry.");
+                        return;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    return; // Shutting down, don't retry
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"[EdsmUpload] Error sending event '{evtName}' on attempt {attempt}: {ex.Message}");
+                }
+
+                // If we got here, it was a server error or a network error. Wait before retrying.
+                if (attempt < maxRetries)
+                {
+                    await Task.Delay(2000 * attempt, token).ConfigureAwait(false); // Wait 2s, 4s
                 }
             }
-            catch (OperationCanceledException) { /* shutting down */ }
-            catch (Exception ex)
-            {
-                Trace.WriteLine($"[EdsmUpload] Error sending event '{evtName}': {ex.Message}");
-            }
+
+            Trace.WriteLine($"[EdsmUpload] Failed to send event '{evtName}' after {maxRetries} attempts.");
         }
 
         private static void LogResponse(HttpResponseMessage response, string body, string context)
