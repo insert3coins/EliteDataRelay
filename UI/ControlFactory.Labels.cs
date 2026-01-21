@@ -62,7 +62,7 @@ namespace EliteDataRelay.UI
             CommanderLabel = CreateInfoLabel("CMDR: Unknown", fontManager.VerdanaFont);
             ShipLabel = CreateInfoLabel("Ship: Unknown", fontManager.VerdanaFont);
             BalanceLabel = CreateInfoLabel("Balance: Unknown", fontManager.VerdanaFont);
-            EdsmStatusLabel = CreateInfoLabel("EDSM: Idle • Last sync: never", fontManager.VerdanaFont);
+            EdsmStatusLabel = CreateStatusLabel("EDSM: Idle", fontManager.VerdanaFont);
 
             // Configure properties for the flexible layout
             ShipLabel.AutoSize = false;
@@ -110,6 +110,22 @@ namespace EliteDataRelay.UI
                     MouseOverBackColor = Color.Transparent
                 },
                 Margin = new Padding(5, 3, 5, 3),
+            };
+        }
+
+        private static Label CreateStatusLabel(string text, Font font)
+        {
+            return new Label
+            {
+                Text = text,
+                Font = font,
+                AutoSize = true,
+                AutoEllipsis = true,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Margin = new Padding(5, 3, 5, 3),
+                BackColor = UIConstants.DefaultButtonBackColor,
+                Padding = new Padding(4, 4, 4, 4),
+                TabStop = false
             };
         }
 

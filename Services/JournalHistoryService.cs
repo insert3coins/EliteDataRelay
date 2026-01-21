@@ -202,9 +202,10 @@ namespace EliteDataRelay.Services
             }
         }
 
-        private static string BuildSummaryDetailed(string eventName, JsonElement root, string? starSystem, string? station, string? body)
+                        private static string BuildSummaryDetailed(string eventName, JsonElement root, string? starSystem, string? station, string? body)
         {
             string summary = eventName;
+            bool includeLocationSuffix = true;
 
             switch (eventName)
             {
@@ -216,7 +217,7 @@ namespace EliteDataRelay.Services
                     if (!string.IsNullOrWhiteSpace(starSystem)) fsdParts.Add(starSystem);
                     if (dist.HasValue) fsdParts.Add($"{dist.Value:F1} ly");
                     if (fuel.HasValue) fsdParts.Add($"{fuel.Value:F1} t fuel");
-                    summary = fsdParts.Count > 0 ? string.Join(" · ", fsdParts) : eventName;
+                    summary = fsdParts.Count > 0 ? string.Join(" | ", fsdParts) : eventName;
                     break;
 
                 case "Location":
@@ -258,7 +259,7 @@ namespace EliteDataRelay.Services
                     var scanParts = new List<string> { bodyName };
                     if (wasDiscovered.HasValue) scanParts.Add(wasDiscovered.Value ? "first discover" : "discovered");
                     if (wasMapped.HasValue) scanParts.Add(wasMapped.Value ? "mapped" : "unmapped");
-                    summary = $"{eventName} · {string.Join(" · ", scanParts)}";
+                    summary = $"{eventName} | {string.Join(" | ", scanParts)}";
                     break;
 
                 case "FSSDiscoveryScan":
@@ -273,19 +274,20 @@ namespace EliteDataRelay.Services
                     var pieces = new List<string>();
                     if (count.HasValue) pieces.Add($"{count.Value} systems");
                     if (earnings.HasValue) pieces.Add($"{earnings.Value:N0} cr");
-                    summary = pieces.Count > 0 ? $"Sold exploration data · {string.Join(" · ", pieces)}" : "Sold exploration data";
+                    summary = pieces.Count > 0 ? $"Sold exploration data | {string.Join(" | ", pieces)}" : "Sold exploration data";
                     break;
 
                 case "SendText":
                     var sendMsg = TryGetString(root, "Message");
                     var sendTo = TryGetString(root, "To") ?? TryGetString(root, "Channel");
                     summary = $"Sent{(string.IsNullOrWhiteSpace(sendTo) ? string.Empty : $" ({sendTo})")}: {TruncateMessage(sendMsg)}";
+                    includeLocationSuffix = false;
                     break;
 
                 case "ReceiveText":
                     var recvMsg = TryGetString(root, "Message_Localised") ?? TryGetString(root, "Message");
-                    var recvFrom = TryGetString(root, "From") ?? TryGetString(root, "Channel");
-                    summary = $"Recv{(string.IsNullOrWhiteSpace(recvFrom) ? string.Empty : $" ({recvFrom})")}: {TruncateMessage(recvMsg)}";
+                    summary = string.IsNullOrWhiteSpace(recvMsg) ? "Received message" : TruncateMessage(recvMsg);
+                    includeLocationSuffix = false;
                     break;
 
                 default:
@@ -293,10 +295,13 @@ namespace EliteDataRelay.Services
                     break;
             }
 
-            var location = BuildLocationSuffix(starSystem, station, body);
-            if (!string.IsNullOrWhiteSpace(location))
+            if (includeLocationSuffix)
             {
-                summary = $"{summary} · {location}";
+                var location = BuildLocationSuffix(starSystem, station, body);
+                if (!string.IsNullOrWhiteSpace(location))
+                {
+                    summary = $"{summary} | {location}";
+                }
             }
 
             return summary;

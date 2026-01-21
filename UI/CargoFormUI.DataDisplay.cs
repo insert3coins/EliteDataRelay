@@ -260,7 +260,7 @@ namespace EliteDataRelay.UI
             var lastSync = status.LastSuccessfulUploadUtc.HasValue
                 ? status.LastSuccessfulUploadUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                 : "never";
-            _controlFactory.EdsmStatusLabel.Text = $"{statusText} • Last sync: {lastSync}";
+            _controlFactory.EdsmStatusLabel.Text = statusText;
             _controlFactory.EdsmStatusLabel.BackColor = backColor;
             _controlFactory.ToolTip.SetToolTip(
                 _controlFactory.EdsmStatusLabel,
