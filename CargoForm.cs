@@ -57,11 +57,13 @@ namespace EliteDataRelay
             // Optional services
             _screenshotRenamerService = new ScreenshotRenamerService(_journalWatcherService);
             _edsmUploadService = new EdsmUploadService(_journalWatcherService);
+            _edsmUploadService.StatusChanged += OnEdsmStatusChanged;
 
 
             InitializeComponent();
 
             SetupEventHandlers();
+            _cargoFormUI.UpdateEdsmStatus(_edsmUploadService.GetStatus());
         }
 
         private int? _cargoCapacity;
@@ -306,6 +308,10 @@ namespace EliteDataRelay
                 _explorationDatabaseService.Dispose();
                 _screenshotRenamerService?.Dispose();
                 _journalHistoryService?.Dispose();
+                if (_edsmUploadService != null)
+                {
+                    _edsmUploadService.StatusChanged -= OnEdsmStatusChanged;
+                }
                 _edsmUploadService?.Dispose();
 
                 // Free any cached UI images

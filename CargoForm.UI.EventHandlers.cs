@@ -151,6 +151,7 @@ namespace EliteDataRelay
 
             // Update the main form's visuals to reflect the current monitoring state.
             _cargoFormUI.UpdateMonitoringVisuals(_fileMonitoringService.IsMonitoring);
+            _edsmUploadService.RefreshStatus();
         }
 
         // Periodically checks if the game process is still running and stops monitoring if it's not.

@@ -1,4 +1,5 @@
 using EliteDataRelay.Models;
+using EliteDataRelay.Services;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -19,6 +20,7 @@ namespace EliteDataRelay.UI
         void UpdateCargoList(CargoSnapshot cargoSnapshot);
         void UpdateCargoDisplay(CargoSnapshot cargoSnapshot, int? capacity);
         void UpdateBalance(long balance);
+        void UpdateEdsmStatus(EdsmUploadStatus status);
         void UpdateCommanderName(string commanderName);
         void UpdateShipInfo(string shipName, string shipIdent, string shipType, string internalShipName);
         void UpdateShipLoadout(ShipLoadout loadout);

@@ -233,6 +233,40 @@ namespace EliteDataRelay.UI
             }
         }
 
+        public void UpdateEdsmStatus(EdsmUploadStatus status)
+        {
+            if (_controlFactory?.EdsmStatusLabel == null) return;
+
+            var hasCredentials = status.HasCredentials;
+            var isActive = status.IsActive;
+            string statusText;
+            Color backColor;
+            if (isActive && hasCredentials)
+            {
+                statusText = "EDSM: Active";
+                backColor = UIConstants.StartButtonActiveColor;
+            }
+            else if (!hasCredentials)
+            {
+                statusText = "EDSM: Missing credentials";
+                backColor = UIConstants.StopButtonActiveColor;
+            }
+            else
+            {
+                statusText = "EDSM: Idle";
+                backColor = UIConstants.DefaultButtonBackColor;
+            }
+
+            var lastSync = status.LastSuccessfulUploadUtc.HasValue
+                ? status.LastSuccessfulUploadUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                : "never";
+            _controlFactory.EdsmStatusLabel.Text = $"{statusText} • Last sync: {lastSync}";
+            _controlFactory.EdsmStatusLabel.BackColor = backColor;
+            _controlFactory.ToolTip.SetToolTip(
+                _controlFactory.EdsmStatusLabel,
+                $"{statusText}\nLast sync: {lastSync}\nCommander: {(string.IsNullOrWhiteSpace(status.CommanderName) ? "Unknown" : status.CommanderName)}");
+        }
+
         public void UpdateTitle(string title)
         {
             _baseTitle = title;

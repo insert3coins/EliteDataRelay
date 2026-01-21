@@ -144,21 +144,34 @@ namespace EliteDataRelay.Services
                                 timestamp = ts;
                             }
 
-                            // A "new system" is detected if it's a jump event, the first location event,
-                            // or if the system name has changed from the last known one.
-                            bool isNewSystem = eventType == "FSDJump" || _lastStarSystem == null || starSystem != _lastStarSystem;
+                            // Only treat actual arrival/location events as system changes.
+                            bool isArrivalEvent = eventType == "FSDJump" || eventType == "Location";
+                            bool isSameSystem = _lastStarSystem != null &&
+                                                string.Equals(starSystem, _lastStarSystem, StringComparison.OrdinalIgnoreCase);
 
-                            if (isNewSystem)
+                            // If this event references a different system but isn't an arrival (e.g., StartJump/FSDTarget),
+                            // do not advance location; keep showing the current system until the jump completes.
+                            if (!isArrivalEvent && !isSameSystem && _lastStarSystem != null)
                             {
-                                _lastStarSystem = starSystem;
-                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), true, systemAddress, timestamp);
-                                Debug.WriteLine($"[JournalWatcherService] Found new system event ({eventType}). StarSystem: {starSystem}");
-                                LocationChanged?.Invoke(this, _lastLocationArgs);
+                                // Still allow downstream handling (e.g., FSDTarget) without altering location.
                             }
-                            else // This only applies to subsequent "Location" events in the same system.
+                            else
                             {
-                                _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), false, systemAddress, timestamp);
-                                LocationChanged?.Invoke(this, _lastLocationArgs);
+                                bool isNewSystem = _lastStarSystem == null ||
+                                                   (isArrivalEvent && !isSameSystem);
+
+                                if (isNewSystem)
+                                {
+                                    _lastStarSystem = starSystem;
+                                    _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), true, systemAddress, timestamp);
+                                    Debug.WriteLine($"[JournalWatcherService] Found new system event ({eventType}). StarSystem: {starSystem}");
+                                    LocationChanged?.Invoke(this, _lastLocationArgs);
+                                }
+                                else // This only applies to subsequent "Location" events in the same system.
+                                {
+                                    _lastLocationArgs = new LocationChangedEventArgs(starSystem, starPos ?? Array.Empty<double>(), false, systemAddress, timestamp);
+                                    LocationChanged?.Invoke(this, _lastLocationArgs);
+                                }
                             }
 
                             // Handle FSDTarget to get next jump system and route metadata

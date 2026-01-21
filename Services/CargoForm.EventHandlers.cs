@@ -30,6 +30,11 @@ namespace EliteDataRelay
             }
         }
 
+        private void OnEdsmStatusChanged(object? sender, EdsmUploadStatus status)
+        {
+            SafeInvoke(() => _cargoFormUI.UpdateEdsmStatus(status));
+        }
+
         private void OnCargoProcessed(object? sender, CargoProcessedEventArgs e)
         {
             SafeInvoke(() =>
@@ -320,9 +325,6 @@ namespace EliteDataRelay
                             }
                         }
                         catch { /* ignore info service issues */ }
-
-                        // Kick off an immediate system info fetch for the target to populate traffic ASAP
-                        try { if (!string.IsNullOrWhiteSpace(data.TargetSystemName)) _systemInfoService.RequestFetch(data.TargetSystemName); } catch { /* ignore */ }
                         // If still no target name, do not bail — show minimal overlay
                         _overlayService.ShowNextJumpOverlay(data);
 
@@ -523,7 +525,14 @@ namespace EliteDataRelay
         private void OnJumpCompleted(object? sender, JumpCompletedEventArgs e)
         {
             // Hide Next Jump overlay on arrival (SrvSurvey-style)
-            SafeInvoke(() => { System.Diagnostics.Trace.WriteLine("[CargoForm] FSDJump detected. Hiding Next Jump overlay after delay."); _overlayService.HideNextJumpOverlayAfter(TimeSpan.FromSeconds(2)); });
+            SafeInvoke(() =>
+            {
+                System.Diagnostics.Trace.WriteLine("[CargoForm] FSDJump detected. Hiding Next Jump overlay after delay.");
+                _overlayService.HideNextJumpOverlayAfter(TimeSpan.FromSeconds(2));
+
+                // Refresh EDSM traffic on arrival to avoid stale/empty data shown during FSD charge
+                try { _systemInfoService.RequestFetch(e.SystemName); } catch { /* ignore info fetch issues */ }
+            });
         }
 
         private void OnNextJumpSystemChanged(object? sender, NextJumpSystemChangedEventArgs e)

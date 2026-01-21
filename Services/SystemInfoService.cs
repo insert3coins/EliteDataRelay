@@ -162,7 +162,7 @@ namespace EliteDataRelay.Services
             try
             {
                 // EDSM API endpoint for system information
-                var url = $"https://www.edsm.net/api-v1/system?systemName={Uri.EscapeDataString(systemName)}&showInformation=1";
+                var url = $"https://www.edsm.net/api-v1/system?systemName={Uri.EscapeDataString(systemName)}&showInformation=1&showTraffic=1";
 
                 // Pass the cancellation token to the HTTP client.
                 var response = await _httpClient.GetAsync(url, cancellationToken);
@@ -194,21 +194,34 @@ namespace EliteDataRelay.Services
                     FactionState = info?.FactionState ?? "N/A"
                 };
 
-                // Also fetch traffic stats (arrivals/departures) from EDSM
-                try
+                // Prefer inline traffic from showTraffic=1; fall back to the dedicated endpoint if missing
+                bool hasInlineTraffic = false;
+                if (edsmSystem?.Traffic != null)
                 {
-                    var traffic = await FetchTrafficAsync(systemName, cancellationToken);
-                    if (traffic.HasValue)
-                    {
-                        var t = traffic.Value;
-                        result.TrafficDay = t.Day;
-                        result.TrafficWeek = t.Week;
-                        result.TrafficTotal = t.Total;
-                    }
+                    result.TrafficDay = edsmSystem.Traffic.Day ?? 0;
+                    result.TrafficWeek = edsmSystem.Traffic.Week ?? 0;
+                    result.TrafficTotal = edsmSystem.Traffic.Total ?? 0;
+                    hasInlineTraffic = edsmSystem.Traffic.Day.HasValue || edsmSystem.Traffic.Week.HasValue || edsmSystem.Traffic.Total.HasValue;
                 }
-                catch (Exception ex)
+
+                if (!hasInlineTraffic)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Traffic fetch failed for '{systemName}': {ex.Message}");
+                    // Also fetch traffic stats (arrivals/departures) from EDSM as a fallback
+                    try
+                    {
+                        var traffic = await FetchTrafficAsync(systemName, cancellationToken);
+                        if (traffic.HasValue)
+                        {
+                            var t = traffic.Value;
+                            result.TrafficDay = t.Day;
+                            result.TrafficWeek = t.Week;
+                            result.TrafficTotal = t.Total;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SystemInfoService] Traffic fetch failed for '{systemName}': {ex.Message}");
+                    }
                 }
 
                 return result;

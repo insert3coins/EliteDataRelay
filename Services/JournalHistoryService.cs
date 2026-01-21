@@ -283,7 +283,7 @@ namespace EliteDataRelay.Services
                     break;
 
                 case "ReceiveText":
-                    var recvMsg = TryGetString(root, "Message");
+                    var recvMsg = TryGetString(root, "Message_Localised") ?? TryGetString(root, "Message");
                     var recvFrom = TryGetString(root, "From") ?? TryGetString(root, "Channel");
                     summary = $"Recv{(string.IsNullOrWhiteSpace(recvFrom) ? string.Empty : $" ({recvFrom})")}: {TruncateMessage(recvMsg)}";
                     break;

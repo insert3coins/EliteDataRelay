@@ -62,6 +62,7 @@ namespace EliteDataRelay.UI
             CommanderLabel = CreateInfoLabel("CMDR: Unknown", fontManager.VerdanaFont);
             ShipLabel = CreateInfoLabel("Ship: Unknown", fontManager.VerdanaFont);
             BalanceLabel = CreateInfoLabel("Balance: Unknown", fontManager.VerdanaFont);
+            EdsmStatusLabel = CreateInfoLabel("EDSM: Idle • Last sync: never", fontManager.VerdanaFont);
 
             // Configure properties for the flexible layout
             ShipLabel.AutoSize = false;
@@ -77,6 +78,7 @@ namespace EliteDataRelay.UI
             try { CommanderLabel.Font = SystemFonts.DefaultFont; } catch { }
             try { ShipLabel.Font = SystemFonts.DefaultFont; } catch { }
             try { BalanceLabel.Font = SystemFonts.DefaultFont; } catch { }
+            try { EdsmStatusLabel.Font = SystemFonts.DefaultFont; } catch { }
 
             WatchingLabel.Dispose();
             CargoHeaderLabel.Dispose();
@@ -84,6 +86,7 @@ namespace EliteDataRelay.UI
             CommanderLabel.Dispose();
             ShipLabel.Dispose();
             BalanceLabel.Dispose();
+            EdsmStatusLabel.Dispose();
         }
 
         /// <summary>

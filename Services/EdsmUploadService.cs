@@ -28,14 +28,51 @@ namespace EliteDataRelay.Services
         private static readonly HashSet<string> _allowedEvents = new(StringComparer.OrdinalIgnoreCase)
         {
             "FSDJump", "CarrierJump", "Location",
-            "Docked", "Undocked",
-            "LoadGame",
+            "Docked", "Undocked", "SupercruiseEntry", "SupercruiseExit",
+
+            // Game state
+            "Commander", "LoadGame", "Statistics", "Fileheader", "NewCommander", "ClearSavedGame",
+            "Rank", "Progress", "Reputation", "EngineerProgress",
+
+            // Ship & Modules
             "Loadout", "ShipyardSwap", "ShipyardNew", "ShipyardTransfer", "ShipyardSell", "ShipyardBuy", "SetUserShipName",
-            "Market", "Outfitting", "Shipyard", "CarrierTradeOrder",
+            "ModuleBuy", "ModuleSell", "MassModuleStore", "ModuleStore", "ModuleRetrieve", "ModuleSellRemote", "FetchRemoteModule",
+            "SellShipOnRebuy", "TechnologyBroker", "AfmuRepairs",
+
+            // Station Services & Market
+            "Market", "MarketBuy", "MarketSell", "Outfitting", "Shipyard", "CarrierTradeOrder", "SellDrones",
+            "Repair", "RepairAll", "RefuelAll", "RefuelPartial", "RestockVehicle", "BuyAmmo",
+
+            // Cargo & Materials
+            "Cargo", "CollectCargo", "EjectCargo", "MiningRefined", "CargoDepot",
+            "Materials", "MaterialCollected", "MaterialDiscarded", "MaterialTrade", "Synthesis",
+            "EngineerCraft", "EngineerContribution",
+
+            // Exploration
+            "Touchdown", "Liftoff",
             "FSSDiscoveryScan", "FSSAllBodiesFound", "DiscoveryScan", "Scan", "SAAScanComplete", "NavBeaconScan",
-            "SellExplorationData", "MultiSellExplorationData",
-            "Statistics",
-            "Fileheader"
+            "SellExplorationData", "MultiSellExplorationData", "SellOrganicData", "BuyExplorationData",
+
+            // Combat & Crime
+            "Died", "PVPKill", "CommitCrime", "CrimeVictim",
+
+            // Credits & Vouchers
+            "MissionCompleted", "MissionFailed", "MissionAbandoned", "SearchAndRescue", "CommunityGoalReward",
+            "Bounty", "FactionKillBond", "CapShipBond", "Resurrect",
+            "PayFines", "PayBounties", "PayLegacyFines", "RedeemVoucher", "DatalinkVoucher",
+
+            // Powerplay
+            "PowerplaySalary", "PowerplayVoucher", "PowerplayDefect", "PowerplayFastTrack",
+
+            // Crew & Wings
+            "CrewHire", "WingAdd", "WingJoin", "WingLeave", "WingInvite",
+
+            // Carrier Management
+            "CarrierBankTransfer", "CarrierFinance", "CarrierCrewServices", "CarrierBuy", "CarrierSell", "CarrierStats",
+
+            // On-Foot (Odyssey)
+            "BuySuit", "SellSuit", "BuyWeapon", "SellWeapon", "UpgradeSuit", "UpgradeWeapon",
+            "BuyMicroResources", "SellMicroResources", "BookTaxi"
         };
 
         private readonly IJournalWatcherService _journalWatcher;
@@ -45,6 +82,7 @@ namespace EliteDataRelay.Services
         private readonly object _stateLock = new();
         private readonly string _stateFilePath = Path.Combine(AppConfiguration.AppDataPath, "edsm-upload-state.json");
         private readonly string _softwareVersion;
+        public event EventHandler<EdsmUploadStatus>? StatusChanged;
         private DateTime? _lastSentTimestampUtc;
         private CancellationTokenSource? _cts;
         private Task? _worker;
@@ -70,6 +108,7 @@ namespace EliteDataRelay.Services
             _journalWatcher.JournalEventReceived += OnJournalEventReceived;
             SendCachedBalanceSnapshotIfAvailable();
             EnsureWorker();
+            NotifyStatusChanged();
 
             Trace.WriteLine("[EdsmUpload] Started.");
         }
@@ -83,6 +122,7 @@ namespace EliteDataRelay.Services
             _cts?.Cancel();
             _cts = null;
             _worker = null;
+            NotifyStatusChanged();
 
             Trace.WriteLine("[EdsmUpload] Stopped.");
         }
@@ -418,8 +458,9 @@ namespace EliteDataRelay.Services
             return false;
         }
 
-        private void RegisterSent(string eventHash, DateTime timestampUtc)
+        private void RegisterSent(string eventHash, DateTime eventTimestampUtc)
         {
+            var sentAtUtc = DateTime.UtcNow;
             lock (_stateLock)
             {
                 if (_sentEventHashes.Add(eventHash))
@@ -432,11 +473,13 @@ namespace EliteDataRelay.Services
                     }
                 }
 
-                if (!_lastSentTimestampUtc.HasValue || timestampUtc > _lastSentTimestampUtc.Value)
+                var latest = sentAtUtc > eventTimestampUtc ? sentAtUtc : eventTimestampUtc;
+                if (!_lastSentTimestampUtc.HasValue || latest > _lastSentTimestampUtc.Value)
                 {
-                    _lastSentTimestampUtc = timestampUtc;
+                    _lastSentTimestampUtc = latest;
                 }
             }
+            NotifyStatusChanged();
         }
 
         private void LoadState()
@@ -506,6 +549,33 @@ namespace EliteDataRelay.Services
             }
         }
 
+        public EdsmUploadStatus GetStatus()
+        {
+            var hasCredentials = TryGetCredentials(out var commanderName, out _);
+            DateTime? lastSent;
+            lock (_stateLock)
+            {
+                lastSent = _lastSentTimestampUtc;
+            }
+
+            return new EdsmUploadStatus(_started, hasCredentials, lastSent, commanderName);
+        }
+
+        public void RefreshStatus() => NotifyStatusChanged();
+
+        private void NotifyStatusChanged()
+        {
+            var snapshot = GetStatus();
+            try
+            {
+                StatusChanged?.Invoke(this, snapshot);
+            }
+            catch
+            {
+                // Ignore UI errors to keep upload pipeline resilient.
+            }
+        }
+
         public void Dispose()
         {
             Stop();
@@ -520,4 +590,6 @@ namespace EliteDataRelay.Services
             public List<string>? EventHashes { get; set; }
         }
     }
+
+    public readonly record struct EdsmUploadStatus(bool IsActive, bool HasCredentials, DateTime? LastSuccessfulUploadUtc, string CommanderName);
 }
