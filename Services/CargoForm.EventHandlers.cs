@@ -125,6 +125,7 @@ namespace EliteDataRelay
 
                     // Notify the session tracker of the new balance to update session stats.
                     _sessionTrackingService.UpdateBalance(e.Balance);
+                    _edsmUploadService.EnqueueBalanceSnapshot(e.Balance);
 
                     // Web overlay
                     
@@ -236,6 +237,12 @@ namespace EliteDataRelay
 
                 // Now that all initial data is cached, update the entire UI at once.
                 RefreshAllUIData();
+
+                // Send initial balance to EDSM if available
+                if (_lastBalance.HasValue)
+                {
+                    _edsmUploadService.EnqueueBalanceSnapshot(_lastBalance.Value);
+                }
 
                 // Set exploration current system exactly once, then re-enable events
                 if (!string.IsNullOrWhiteSpace(_lastLocation))

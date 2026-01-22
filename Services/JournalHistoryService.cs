@@ -365,6 +365,12 @@ namespace EliteDataRelay.Services
                     usedProps.AddRange(new[] { "SignalName_Localised", "SignalName", "Strength" });
                     break;
 
+                case "ShipLocker":
+                    summary = SummarizeShipLocker(root);
+                    usedProps.AddRange(new[] { "Items", "Components", "Consumables", "Data" });
+                    includeLocationSuffix = false;
+                    break;
+
                 default:
                     summary = eventName;
                     break;
@@ -477,6 +483,48 @@ namespace EliteDataRelay.Services
             }
 
             return parts.Count == 0 ? string.Empty : string.Join(" | ", parts);
+        }
+
+        private static string SummarizeShipLocker(JsonElement root)
+        {
+            var parts = new List<string> { "Ship locker" };
+            AddShipLockerPart(root, "Items", parts);
+            AddShipLockerPart(root, "Components", parts);
+            AddShipLockerPart(root, "Consumables", parts);
+            AddShipLockerPart(root, "Data", parts);
+
+            return string.Join(" | ", parts);
+        }
+
+        private static void AddShipLockerPart(JsonElement root, string propertyName, List<string> parts)
+        {
+            if (!root.TryGetProperty(propertyName, out var arr) || arr.ValueKind != JsonValueKind.Array || arr.GetArrayLength() == 0)
+            {
+                return;
+            }
+
+            int totalCount = 0;
+            var topItems = new List<(string Name, int Count)>();
+
+            foreach (var item in arr.EnumerateArray())
+            {
+                var count = item.TryGetProperty("Count", out var c) && c.ValueKind == JsonValueKind.Number && c.TryGetInt32(out var cv) ? cv : 0;
+                var name = TryGetString(item, "Name_Localised") ?? TryGetString(item, "Name") ?? "Unknown";
+                totalCount += count;
+                topItems.Add((name, count));
+            }
+
+            topItems = topItems
+                .OrderByDescending(t => t.Count)
+                .ThenBy(t => t.Name, StringComparer.OrdinalIgnoreCase)
+                .Take(3)
+                .ToList();
+
+            var topLabel = topItems.Count > 0
+                ? $" top: {string.Join(", ", topItems.Select(t => $"{t.Name} x{t.Count}"))}"
+                : string.Empty;
+
+            parts.Add($"{propertyName}: {arr.GetArrayLength()} types (total {totalCount}){topLabel}");
         }
 
         private static string FormatNumber(JsonElement value)

@@ -23,7 +23,7 @@ namespace EliteDataRelay.Services
     public sealed class EdsmUploadService : IDisposable
     {
         private const int MaxRememberedEvents = 5000;
-        private const string Endpoint = "https://www.edsm.net/api-journal-v1";
+        private const string JournalEndpoint = "https://www.edsm.net/api-journal-v1";
         private static readonly HttpClient _httpClient = CreateHttpClient();
         private static readonly HashSet<string> _allowedEvents = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -52,6 +52,7 @@ namespace EliteDataRelay.Services
             "Touchdown", "Liftoff",
             "FSSDiscoveryScan", "FSSAllBodiesFound", "DiscoveryScan", "Scan", "SAAScanComplete", "NavBeaconScan",
             "SellExplorationData", "MultiSellExplorationData", "SellOrganicData", "BuyExplorationData",
+            "ScanOrganic", "CodexEntry", "FSSBodySignals", "SAASignalsFound", "FSSSignalDiscovered", "ApproachSettlement",
 
             // Combat & Crime
             "Died", "PVPKill", "CommitCrime", "CrimeVictim",
@@ -128,6 +129,35 @@ namespace EliteDataRelay.Services
             NotifyStatusChanged();
 
             Trace.WriteLine("[EdsmUpload] Stopped.");
+        }
+
+        /// <summary>
+        /// Enqueue an immediate Balance snapshot (used when Status.json balance changes but no Balance journal event fires).
+        /// </summary>
+        public void EnqueueBalanceSnapshot(long balance, long? loan = null)
+        {
+            if (!TryGetCredentials(out _, out _))
+            {
+                return;
+            }
+
+            var timestamp = DateTime.UtcNow;
+            var json = BuildBalanceJson(balance, loan, timestamp);
+            using var doc = JsonDocument.Parse(json);
+            var clone = doc.RootElement.Clone();
+            var hash = ComputeHash(json);
+
+            // Remember latest balance for restart snapshot logic
+            _lastBalanceRaw = json;
+            _lastBalanceEventName = "Balance";
+
+            if (ShouldSkipUpload(timestamp, hash, "Balance", forceSend: false))
+            {
+                return;
+            }
+
+            _queue.Enqueue(new QueuedEvent(clone, hash, timestamp, "Balance", json, false));
+            EnsureWorker();
         }
 
         private void OnJournalEventReceived(object? sender, JournalEventArgs e)
@@ -234,7 +264,7 @@ namespace EliteDataRelay.Services
 
                 try
                 {
-                    var response = await _httpClient.PostAsync(Endpoint, content, token).ConfigureAwait(false);
+                    var response = await _httpClient.PostAsync(JournalEndpoint, content, token).ConfigureAwait(false);
                     var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
                     LogResponse(response, body, evtName);
 
@@ -405,6 +435,22 @@ namespace EliteDataRelay.Services
             {
                 Trace.WriteLine($"[EdsmUpload] Failed to enqueue balance snapshot: {ex.Message}");
             }
+        }
+
+        private static string BuildBalanceJson(long balance, long? loan, DateTime timestampUtc)
+        {
+            using var stream = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(stream))
+            {
+                writer.WriteStartObject();
+                writer.WriteString("timestamp", timestampUtc.ToString("O"));
+                writer.WriteString("event", "Balance");
+                writer.WriteNumber("Balance", balance);
+                if (loan.HasValue) writer.WriteNumber("Loan", loan.Value);
+                writer.WriteEndObject();
+            }
+
+            return Encoding.UTF8.GetString(stream.ToArray());
         }
 
         private static string CloneWithTimestamp(JsonElement root, DateTime timestampUtc)
