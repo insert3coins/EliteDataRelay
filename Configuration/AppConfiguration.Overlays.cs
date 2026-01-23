@@ -43,6 +43,6 @@ namespace EliteDataRelay.Configuration
 
         // Traffic display options
         public static bool ShowTrafficOnExplorationOverlay { get; set; } = true;
-        public static bool ShowTrafficOnJumpOverlay { get; set; } = true;
+        public static bool ShowTrafficOnJumpOverlay { get; set; } = false;
     }
 }

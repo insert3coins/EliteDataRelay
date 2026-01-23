@@ -167,16 +167,6 @@ namespace EliteDataRelay.UI
                 }
                 y += lineHeight;
 
-                // Traffic summary (EDSM)
-                var info = data?.SystemInfo;
-                if (info != null && AppConfiguration.ShowTrafficOnJumpOverlay)
-                {
-                    int trafficX = padding;
-                    trafficX += DrawPill(g, $"Traffic {info.TrafficDay:N0}/day", trafficX, y, GameColors.GrayText) + 6;
-                    trafficX += DrawPill(g, $"{info.TrafficWeek:N0}/week", trafficX, y, GameColors.GrayText);
-                    y += lineHeight;
-                }
-
                 // Upcoming hops preview
                 if (data?.Hops?.Any() == true)
                 {
