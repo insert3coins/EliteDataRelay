@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -24,60 +25,33 @@ namespace EliteDataRelay.Services
     {
         private const int MaxRememberedEvents = 5000;
         private const string JournalEndpoint = "https://www.edsm.net/api-journal-v1";
+        private const string DiscardEndpoint = "https://www.edsm.net/api-journal-v1/discard";
         private static readonly HttpClient _httpClient = CreateHttpClient();
-        private static readonly HashSet<string> _allowedEvents = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly string[] DefaultDiscardList =
         {
-            "FSDJump", "CarrierJump", "Location",
-            "Docked", "Undocked", "SupercruiseEntry", "SupercruiseExit",
-
-            // Game state
-            "Commander", "LoadGame", "Statistics", "Fileheader", "NewCommander", "ClearSavedGame", "Balance",
-            "Rank", "Progress", "Reputation", "EngineerProgress",
-
-            // Ship & Modules
-            "Loadout", "ShipyardSwap", "ShipyardNew", "ShipyardTransfer", "ShipyardSell", "ShipyardBuy", "SetUserShipName",
-            "ModuleBuy", "ModuleSell", "MassModuleStore", "ModuleStore", "ModuleRetrieve", "ModuleSellRemote", "FetchRemoteModule",
-            "SellShipOnRebuy", "TechnologyBroker", "AfmuRepairs",
-
-            // Station Services & Market
-            "Market", "MarketBuy", "MarketSell", "Outfitting", "Shipyard", "CarrierTradeOrder", "SellDrones",
-            "Repair", "RepairAll", "RefuelAll", "RefuelPartial", "RestockVehicle", "BuyAmmo",
-
-            // Cargo & Materials
-            "Cargo", "CollectCargo", "EjectCargo", "MiningRefined", "CargoDepot",
-            "Materials", "MaterialCollected", "MaterialDiscarded", "MaterialTrade", "Synthesis",
-            "EngineerCraft", "EngineerContribution",
-
-            // Exploration
-            "Touchdown", "Liftoff",
-            "FSSDiscoveryScan", "FSSAllBodiesFound", "DiscoveryScan", "Scan", "SAAScanComplete", "NavBeaconScan",
-            "SellExplorationData", "MultiSellExplorationData", "SellOrganicData", "BuyExplorationData",
-            "ScanOrganic", "CodexEntry", "FSSBodySignals", "SAASignalsFound", "FSSSignalDiscovered", "ApproachSettlement",
-
-            // Combat & Crime
-            "Died", "PVPKill", "CommitCrime", "CrimeVictim",
-
-            // Credits & Vouchers
-            "MissionCompleted", "MissionFailed", "MissionAbandoned", "SearchAndRescue",
-            "CommunityGoal", "CommunityGoalJoin", "CommunityGoalDiscard", "CommunityGoalReward",
-            "Bounty", "FactionKillBond", "CapShipBond", "Resurrect",
-            "PayFines", "PayBounties", "PayLegacyFines", "RedeemVoucher", "DatalinkVoucher",
-
-            // Powerplay
-            "PowerplaySalary", "PowerplayVoucher", "PowerplayDefect", "PowerplayFastTrack",
-
-            // Crew & Wings
-            "CrewHire", "WingAdd", "WingJoin", "WingLeave", "WingInvite",
-            "AppliedToSquadron", "InvitedToSquadron", "JoinedSquadron", "LeftSquadron", "KickedFromSquadron", "SquadronStartup",
-
-            // Carrier Management
-            "CarrierBankTransfer", "CarrierFinance", "CarrierCrewServices", "CarrierBuy", "CarrierSell", "CarrierStats",
-            "CarrierJumpRequest", "CarrierNameChange", "CarrierDecommission", "FCMaterials",
-
-            // On-Foot (Odyssey)
-            "BuySuit", "SellSuit", "BuyWeapon", "SellWeapon", "UpgradeSuit", "UpgradeWeapon",
-            "BuyMicroResources", "SellMicroResources", "BookTaxi", "ShipLocker"
+            "ShutDown","EDDItemSet","EDDCommodityPrices","ModuleArrived","ShipArrived","Coriolis","EDShipyard","Market","Shipyard","Outfitting","ModuleInfo","Status",
+            "SquadronCreated","SquadronStartup","DisbandedSquadron","InvitedToSquadron","AppliedToSquadron","JoinedSquadron","LeftSquadron","SharedBookmarkToSquadron",
+            "CarrierStats","CarrierTradeOrder","CarrierFinance","CarrierBankTransfer","CarrierCrewServices","CarrierJumpRequest","CarrierJumpCancelled","CarrierDepositFuel",
+            "CarrierDockingPermission","CarrierModulePack","CarrierBuy","CarrierNameChange","CarrierDecommission","ColonisationConstructionDepot","ColonisationContribution",
+            "BookDropship","CancelDropship","DropshipDeploy","CollectItems","DropItems","Disembark","Embark","Fileheader","Commander","NewCommander","ClearSavedGame",
+            "Music","Continued","Passengers","DockingCancelled","DockingDenied","DockingGranted","DockingRequested","DockingTimeout","StartJump","Touchdown","Liftoff",
+            "NavBeaconScan","SupercruiseEntry","SupercruiseExit","NavRoute","NavRouteClear","PVPKill","CrimeVictim","UnderAttack","ShipTargeted","Scanned","DataScanned",
+            "DatalinkScan","EngineerApply","EngineerLegacyConvert","FactionKillBond","Bounty","CapShipBond","DatalinkVoucher","SystemsShutdown","EscapeInterdiction",
+            "HeatDamage","HeatWarning","HullDamage","ShieldState","FuelScoop","LaunchDrone","AfmuRepairs","CockpitBreached","ReservoirReplenished","CargoTransfer",
+            "ApproachBody","LeaveBody","DiscoveryScan","MaterialDiscovered","Screenshot","CrewAssign","CrewFire","NpcCrewRank","ShipyardNew","StoredModules",
+            "MassModuleStore","ModuleStore","ModuleSwap","SuitLoadout","SwitchSuitLoadout","CreateSuitLoadout","LoadoutEquipModule","PowerplayVote","PowerplayVoucher",
+            "PowerplayMerits","ChangeCrewRole","CrewLaunchFighter","CrewMemberJoins","CrewMemberQuits","CrewMemberRoleChange","KickCrewMember","EndCrewSession",
+            "LaunchFighter","DockFighter","FighterDestroyed","FighterRebuilt","VehicleSwitch","LaunchSRV","DockSRV","SRVDestroyed","JetConeBoost","JetConeDamage",
+            "RebootRepair","RepairDrone","WingAdd","WingInvite","WingJoin","WingLeave","ReceiveText","SendText","Shutdown","SupercruiseDestinationDrop",
+            "FSSSignalDiscovered","AsteroidCracked","ProspectedAsteroid","ScanBaryCentre","FSSBodySignals","SAASignalsFound","ScanOrganic"
         };
+        private static readonly string[] ContextSeedEvents =
+        {
+            "LoadGame","FSDJump","CarrierJump","Location","Loadout","Statistics","Rank","Reputation","Progress","EngineerProgress","Balance"
+        };
+
+        private readonly HashSet<string> _discardedEvents = new(StringComparer.OrdinalIgnoreCase);
+        private readonly object _discardLock = new();
 
         private readonly IJournalWatcherService _journalWatcher;
         private readonly ConcurrentQueue<QueuedEvent> _queue = new();
@@ -100,6 +74,7 @@ namespace EliteDataRelay.Services
         {
             _journalWatcher = journalWatcher ?? throw new ArgumentNullException(nameof(journalWatcher));
             _softwareVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0";
+            LoadDefaultDiscardList();
             LoadState();
         }
 
@@ -109,7 +84,19 @@ namespace EliteDataRelay.Services
             _started = true;
             _cts = new CancellationTokenSource();
 
+            PrimeGameVersionFromHistory();
+            _ = RefreshDiscardListAsync(_cts.Token);
+
             _journalWatcher.JournalEventReceived += OnJournalEventReceived;
+
+            // When fast-start is enabled we skip historical lines. Replay a minimal set of
+            // recent context events (last load/game/location/loadout) so EDSM has the
+            // correct commander state before live streaming begins.
+            if (AppConfiguration.FastStartSkipJournalHistory)
+            {
+                SeedContextFromHistory();
+            }
+
             SendCachedBalanceSnapshotIfAvailable();
             EnsureWorker();
             NotifyStatusChanged();
@@ -171,36 +158,210 @@ namespace EliteDataRelay.Services
             try
             {
                 using var doc = JsonDocument.Parse(e.RawLine);
-                var root = doc.RootElement;
-                var evtTimestamp = GetTimestampUtc(root);
-                var evtName = GetEventName(root) ?? e.EventName;
-                if (!IsAllowed(evtName, root))
-                {
-                    return;
-                }
-                if (IsBalanceRelated(root))
-                {
-                    _lastBalanceRaw = e.RawLine;
-                    _lastBalanceEventName = evtName;
-                }
-                var hash = ComputeHash(e.RawLine);
-
-                if (evtName.Equals("Fileheader", StringComparison.OrdinalIgnoreCase))
-                {
-                    CacheGameVersions(root);
-                }
-
-                if (ShouldSkipUpload(evtTimestamp, hash, evtName, forceSend: false))
-                {
-                    return;
-                }
-
-                _queue.Enqueue(new QueuedEvent(root.Clone(), hash, evtTimestamp, evtName, e.RawLine, false));
-                EnsureWorker();
+                ProcessParsedEvent(doc.RootElement, e.RawLine, e.EventName, forceSend: false);
             }
             catch (Exception ex)
             {
                 Trace.WriteLine($"[EdsmUpload] Failed to parse journal line for EDSM: {ex.Message}");
+            }
+        }
+
+        private void ProcessParsedEvent(JsonElement root, string rawLine, string? eventNameOverride, bool forceSend)
+        {
+            var evtName = eventNameOverride ?? GetEventName(root);
+            if (string.IsNullOrWhiteSpace(evtName))
+            {
+                return;
+            }
+
+            if (evtName.Equals("Fileheader", StringComparison.OrdinalIgnoreCase) ||
+                evtName.Equals("LoadGame", StringComparison.OrdinalIgnoreCase))
+            {
+                CacheGameVersions(root);
+            }
+
+            if (!IsAllowed(evtName, root))
+            {
+                return;
+            }
+
+            if (IsBalanceRelated(root))
+            {
+                _lastBalanceRaw = rawLine;
+                _lastBalanceEventName = evtName;
+            }
+
+            var evtTimestamp = GetTimestampUtc(root);
+            var hash = ComputeHash(rawLine);
+
+            if (ShouldSkipUpload(evtTimestamp, hash, evtName, forceSend))
+            {
+                return;
+            }
+
+            _queue.Enqueue(new QueuedEvent(root.Clone(), hash, evtTimestamp, evtName, rawLine, forceSend));
+            EnsureWorker();
+        }
+
+        private void SeedContextFromHistory()
+        {
+            if (!TryGetCredentials(out _, out _))
+            {
+                return;
+            }
+
+            try
+            {
+                foreach (var line in GetContextSeedLines())
+                {
+                    using var doc = JsonDocument.Parse(line);
+                    ProcessParsedEvent(doc.RootElement, line, eventNameOverride: null, forceSend: false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[EdsmUpload] Failed to seed context events: {ex.Message}");
+            }
+        }
+
+        private IEnumerable<string> GetContextSeedLines()
+        {
+            var collected = new List<(DateTime ts, string raw)>();
+            try
+            {
+                var journalDir = AppConfiguration.JournalPath;
+                if (!Directory.Exists(journalDir)) return Enumerable.Empty<string>();
+
+                var targets = new HashSet<string>(ContextSeedEvents, StringComparer.OrdinalIgnoreCase);
+                var recentFiles = Directory.EnumerateFiles(journalDir, "Journal.*.log")
+                    .OrderByDescending(f => f)
+                    .Take(2);
+
+                foreach (var file in recentFiles)
+                {
+                    foreach (var line in File.ReadLines(file).Reverse())
+                    {
+                        if (targets.Count == 0) break;
+                        if (!TryExtractEvent(line, out var evtName, out var ts)) continue;
+                        if (!targets.Contains(evtName!)) continue;
+
+                        targets.Remove(evtName!);
+                        collected.Add((ts, line));
+                    }
+
+                    if (targets.Count == 0) break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[EdsmUpload] Failed to read context lines: {ex.Message}");
+            }
+
+            return collected
+                .OrderBy(c => c.ts)
+                .Select(c => c.raw)
+                .ToList();
+        }
+
+        private static bool TryExtractEvent(string line, out string? eventName, out DateTime ts)
+        {
+            eventName = null;
+            ts = DateTime.UtcNow;
+            try
+            {
+                using var doc = JsonDocument.Parse(line);
+                eventName = GetEventName(doc.RootElement);
+                ts = GetTimestampUtc(doc.RootElement);
+                return !string.IsNullOrWhiteSpace(eventName);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void PrimeGameVersionFromHistory()
+        {
+            if (!string.IsNullOrWhiteSpace(_gameVersion) &&
+                !_gameVersion.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(_gameBuild) &&
+                !_gameBuild.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            try
+            {
+                var journalDir = AppConfiguration.JournalPath;
+                if (!Directory.Exists(journalDir)) return;
+
+                var recentFiles = Directory.EnumerateFiles(journalDir, "Journal.*.log")
+                    .OrderByDescending(f => f)
+                    .Take(2);
+
+                foreach (var file in recentFiles)
+                {
+                    foreach (var line in File.ReadLines(file).Reverse())
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        using var doc = JsonDocument.Parse(line);
+                        if (CacheGameVersions(doc.RootElement))
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[EdsmUpload] Failed to prime game version from history: {ex.Message}");
+            }
+        }
+
+        private void LoadDefaultDiscardList()
+        {
+            lock (_discardLock)
+            {
+                _discardedEvents.Clear();
+                foreach (var evt in DefaultDiscardList)
+                {
+                    _discardedEvents.Add(evt);
+                }
+            }
+        }
+
+        private async Task RefreshDiscardListAsync(CancellationToken token)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync(DiscardEndpoint, token).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode) return;
+
+                var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+                var events = JsonSerializer.Deserialize<string[]>(body);
+                if (events == null || events.Length == 0) return;
+
+                lock (_discardLock)
+                {
+                    _discardedEvents.Clear();
+                    foreach (var evt in events)
+                    {
+                        if (!string.IsNullOrWhiteSpace(evt))
+                        {
+                            _discardedEvents.Add(evt);
+                        }
+                    }
+                }
+
+                Trace.WriteLine($"[EdsmUpload] Refreshed discard list ({events.Length} events).");
+            }
+            catch (OperationCanceledException)
+            {
+                // shutting down, ignore
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"[EdsmUpload] Failed to refresh discard list, using defaults. {ex.Message}");
             }
         }
 
@@ -233,6 +394,18 @@ namespace EliteDataRelay.Services
             {
                 Trace.WriteLine("[EdsmUpload] Skipping: commander/API key not configured.");
                 return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_gameVersion) || _gameVersion.Equals("Unknown", StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(_gameBuild) || _gameBuild.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                PrimeGameVersionFromHistory();
+                if (string.IsNullOrWhiteSpace(_gameVersion) || _gameVersion.Equals("Unknown", StringComparison.OrdinalIgnoreCase) ||
+                    string.IsNullOrWhiteSpace(_gameBuild) || _gameBuild.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+                {
+                    Trace.WriteLine("[EdsmUpload] Game version/build unknown; waiting for LoadGame/Fileheader before uploading.");
+                    return;
+                }
             }
 
             var payload = new
@@ -332,15 +505,24 @@ namespace EliteDataRelay.Services
             return value.Length <= max ? value : value[..max] + "...";
         }
 
-        private static bool IsAllowed(string eventName, JsonElement root)
+        private bool IsAllowed(string eventName, JsonElement root)
         {
-            if (_allowedEvents.Contains(eventName))
+            if (string.IsNullOrWhiteSpace(eventName))
             {
-                return true;
+                return false;
             }
 
-            // Fallback: allow events that contain balance/credits data.
-            return IsBalanceRelated(root);
+            // Skip anything the server explicitly discards.
+            lock (_discardLock)
+            {
+                if (_discardedEvents.Contains(eventName))
+                {
+                    return false;
+                }
+            }
+
+            // Allow all other events (EDSM will ignore unknowns); keep balance-related as a safety net.
+            return true;
         }
 
         private static bool IsBalanceRelated(JsonElement root)
@@ -393,9 +575,9 @@ namespace EliteDataRelay.Services
             return DateTime.UtcNow;
         }
 
-        private void CacheGameVersions(JsonElement root)
+        private bool CacheGameVersions(JsonElement root)
         {
-            if (root.ValueKind != JsonValueKind.Object) return;
+            if (root.ValueKind != JsonValueKind.Object) return false;
 
             string? gameVersion = null;
             if (root.TryGetProperty("gameversion", out var gv) && gv.ValueKind == JsonValueKind.String)
@@ -411,8 +593,19 @@ namespace EliteDataRelay.Services
             else if (root.TryGetProperty("gameBuild", out var gb3) && gb3.ValueKind == JsonValueKind.String)
                 gameBuild = gb3.GetString();
 
-            if (!string.IsNullOrWhiteSpace(gameVersion)) _gameVersion = gameVersion;
-            if (!string.IsNullOrWhiteSpace(gameBuild)) _gameBuild = gameBuild;
+            var updated = false;
+            if (!string.IsNullOrWhiteSpace(gameVersion) && !_gameVersion.Equals(gameVersion, StringComparison.OrdinalIgnoreCase))
+            {
+                _gameVersion = gameVersion;
+                updated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(gameBuild) && !_gameBuild.Equals(gameBuild, StringComparison.OrdinalIgnoreCase))
+            {
+                _gameBuild = gameBuild;
+                updated = true;
+            }
+
+            return updated;
         }
 
         private void SendCachedBalanceSnapshotIfAvailable()
@@ -574,6 +767,8 @@ namespace EliteDataRelay.Services
                 lock (_stateLock)
                 {
                     _lastSentTimestampUtc = state.LastSentTimestampUtc;
+                    if (!string.IsNullOrWhiteSpace(state.GameVersion)) _gameVersion = state.GameVersion;
+                    if (!string.IsNullOrWhiteSpace(state.GameBuild)) _gameBuild = state.GameBuild;
                     if (state.EventHashes != null)
                     {
                         foreach (var hash in state.EventHashes)
@@ -612,7 +807,9 @@ namespace EliteDataRelay.Services
                     snapshot = new EdsmUploadState
                     {
                         LastSentTimestampUtc = _lastSentTimestampUtc,
-                        EventHashes = new List<string>(_sentEventOrder)
+                        EventHashes = new List<string>(_sentEventOrder),
+                        GameVersion = _gameVersion,
+                        GameBuild = _gameBuild
                     };
                 }
 
@@ -664,6 +861,8 @@ namespace EliteDataRelay.Services
         {
             public DateTime? LastSentTimestampUtc { get; set; }
             public List<string>? EventHashes { get; set; }
+            public string? GameVersion { get; set; }
+            public string? GameBuild { get; set; }
         }
     }
 

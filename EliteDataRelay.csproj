@@ -31,8 +31,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-     <EmbeddedResource Include="Resources\blueprints.txt" />
-     <EmbeddedResource Include="Resources\outfitting.csv" />
+    <EmbeddedResource Include="Resources\blueprints.txt" />
+    <EmbeddedResource Include="Resources\outfitting.csv" />
     <EmbeddedResource Include="Resources\material.csv" />
     <EmbeddedResource Include="Resources\microresources.csv" />
   </ItemGroup>
