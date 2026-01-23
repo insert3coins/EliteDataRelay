@@ -88,7 +88,13 @@ namespace EliteDataRelay.Services
             _lastSystemInfoData = data;
             _explorationOverlayForm?.UpdateSystemInfo(data);
 
-            // Next Jump overlay removed; no further propagation
+            if (_lastJumpOverlayData != null &&
+                !string.IsNullOrWhiteSpace(_lastJumpOverlayData.TargetSystemName) &&
+                string.Equals(_lastJumpOverlayData.TargetSystemName, data.SystemName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                _lastJumpOverlayData.SystemInfo = data;
+                _jumpOverlayForm?.UpdateJumpOverlay(_lastJumpOverlayData);
+            }
         }
         public void UpdateStationInfo(StationInfoData data) { }
 
@@ -129,6 +135,7 @@ namespace EliteDataRelay.Services
 
         private static readonly TimeSpan MiningOverlayHoldDuration = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan ProspectorOverlayHoldDuration = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan JumpOverlayHoldDuration = TimeSpan.FromSeconds(10);
 
         public void UpdateMiningOverlay(MiningOverlayData? data)
         {
@@ -252,17 +259,52 @@ namespace EliteDataRelay.Services
 
         public void ShowNextJumpOverlay(NextJumpOverlayData data)
         {
-            // Next Jump overlay removed; ignore calls
+            if (!AppConfiguration.EnableJumpOverlay) return;
+
+            // If star class is missing, try to reuse from upcoming hop to avoid "?" on the banner.
+            if (string.IsNullOrWhiteSpace(data.StarClass) && data.Hops?.FirstOrDefault()?.StarClass is string hopClass && !string.IsNullOrWhiteSpace(hopClass))
+            {
+                data.StarClass = hopClass;
+            }
+
+            EnsureOverlaysCreated(_overlayOwner);
+            _lastJumpOverlayData = data;
+
+            _jumpOverlayHideTimer?.Dispose();
+            _jumpOverlayHideTimer = null;
+
+            if (!_overlaysVisible && !_forceShowAllOverlays)
+            {
+                return;
+            }
+
+            _jumpOverlayForm?.UpdateJumpOverlay(data);
+            _jumpOverlayForm?.FadeIn(200, allowAnyOverlay: true);
         }
 
         public void HideNextJumpOverlay()
         {
-            // Next Jump overlay removed; ignore calls
+            _lastJumpOverlayData = null;
+            _jumpOverlayHideTimer?.Dispose();
+            _jumpOverlayHideTimer = null;
+            _jumpOverlayForm?.FadeOutAndHide(200, allowAnyOverlay: true);
         }
 
         public void HideNextJumpOverlayAfter(TimeSpan delay)
         {
-            // Next Jump overlay removed; ignore calls
+            _jumpOverlayHideTimer?.Dispose();
+            _jumpOverlayHideTimer = new System.Threading.Timer(_ =>
+            {
+                try
+                {
+                    HideNextJumpOverlay();
+                }
+                finally
+                {
+                    _jumpOverlayHideTimer?.Dispose();
+                    _jumpOverlayHideTimer = null;
+                }
+            }, null, delay, Timeout.InfiniteTimeSpan);
         }
 
         #endregion

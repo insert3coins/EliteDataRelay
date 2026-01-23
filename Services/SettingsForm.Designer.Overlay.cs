@@ -62,11 +62,25 @@ namespace EliteDataRelay.UI
                 AutoSize = true
             };
 
+            _chkEnableJumpOverlay = new CheckBox
+            {
+                Text = "Enable jump overlay (Next Jump)",
+                Location = new Point(15, 170),
+                AutoSize = true
+            };
+
             // Show Traffic: Exploration Overlay
             _chkTrafficExplorationOverlay = new CheckBox
             {
                 Text = "Show traffic on exploration overlay",
-                Location = new Point(15, 170),
+                Location = new Point(15, 195),
+                AutoSize = true
+            };
+
+            _chkTrafficJumpOverlay = new CheckBox
+            {
+                Text = "Show traffic on jump overlay",
+                Location = new Point(15, 220),
                 AutoSize = true
             };
 
@@ -76,7 +90,7 @@ namespace EliteDataRelay.UI
             {
                 Text = "Reposition Overlays",
                 // Place after the traffic toggles to avoid overlap
-                Location = new Point(15, 204),
+                Location = new Point(15, 254),
                 Size = new Size(160, 23)
             };
             _btnRepositionOverlays.Click += OnRepositionOverlaysClicked;
@@ -88,7 +102,9 @@ namespace EliteDataRelay.UI
             _grpOverlaySettings.Controls.Add(_chkEnableExplorationOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableMiningOverlay);
             _grpOverlaySettings.Controls.Add(_chkEnableProspectorOverlay);
+            _grpOverlaySettings.Controls.Add(_chkEnableJumpOverlay);
             _grpOverlaySettings.Controls.Add(_chkTrafficExplorationOverlay);
+            _grpOverlaySettings.Controls.Add(_chkTrafficJumpOverlay);
             _grpOverlaySettings.Controls.Add(_btnRepositionOverlays);
             foreach (Control c in _grpOverlaySettings.Controls)
             {
@@ -147,12 +163,14 @@ namespace EliteDataRelay.UI
             _chkShowBorderMining = new CheckBox { Text = "Mining", Location = new Point(bx + 240, by), AutoSize = true };
             _chkShowBorderExploration = new CheckBox { Text = "Exploration", Location = new Point(bx, by + bdy), AutoSize = true };
             _chkShowBorderProspector = new CheckBox { Text = "Prospector", Location = new Point(bx + 120, by + bdy), AutoSize = true };
+            _chkShowBorderJump = new CheckBox { Text = "Jump", Location = new Point(bx + 240, by + bdy), AutoSize = true };
             _chkShowBorderInfo.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderCargo.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderSession.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderMining.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderExploration.CheckedChanged += OnShowOverlayBordersChanged;
             _chkShowBorderProspector.CheckedChanged += OnShowOverlayBordersChanged;
+            _chkShowBorderJump.CheckedChanged += OnShowOverlayBordersChanged;
             // Place opacity row below the per-overlay checkboxes
             int opacityY = by + bdy + 24; // add extra spacing after second row
             var lblOpacity = new Label { Text = "Background Opacity:", Location = new Point(15, opacityY), AutoSize = true };
@@ -174,6 +192,7 @@ namespace EliteDataRelay.UI
             grpColors.Controls.Add(_chkShowBorderMining);
             grpColors.Controls.Add(_chkShowBorderExploration);
             grpColors.Controls.Add(_chkShowBorderProspector);
+            grpColors.Controls.Add(_chkShowBorderJump);
             grpColors.Controls.Add(lblOpacity);
             grpColors.Controls.Add(_trackBarOpacity);
             grpColors.Controls.Add(_lblOpacityValue);

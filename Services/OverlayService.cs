@@ -22,6 +22,7 @@ namespace EliteDataRelay.Services
         private SystemExplorationData? _lastExplorationData;
         private ExplorationSessionData? _lastExplorationSessionData;
         private SystemInfoData? _lastSystemInfoData;
+        private NextJumpOverlayData? _lastJumpOverlayData;
         
         private string? _lastCommanderName;
         private string? _lastShipType;
@@ -41,6 +42,7 @@ namespace EliteDataRelay.Services
         private Form? _overlayOwner;
         private System.Threading.Timer? _miningOverlayHideTimer;
         private System.Threading.Timer? _prospectorOverlayHideTimer;
+        private System.Threading.Timer? _jumpOverlayHideTimer;
         private bool _forceShowAllOverlays;
         private bool _overlaysVisible;
 
@@ -104,7 +106,17 @@ namespace EliteDataRelay.Services
                 _prospectorOverlayForm.Close();
                 _prospectorOverlayForm = null;
             }
-            // Next Jump overlay removed/disabled
+            if (_jumpOverlayForm == null && (force || AppConfiguration.EnableJumpOverlay))
+            {
+                _jumpOverlayForm = new OverlayForm(OverlayForm.OverlayPosition.JumpInfo, AppConfiguration.AllowOverlayDrag, overlayOwner);
+                _jumpOverlayForm.PositionChanged += OnOverlayPositionChanged;
+                _jumpOverlayForm.Hide();
+            }
+            else if (!force && _jumpOverlayForm != null && !AppConfiguration.EnableJumpOverlay)
+            {
+                _jumpOverlayForm.Close();
+                _jumpOverlayForm = null;
+            }
 
             PositionOverlays(screen);
         }
@@ -185,7 +197,18 @@ namespace EliteDataRelay.Services
                 }
             }
 
-            // Jump overlay removed
+            if (_jumpOverlayForm != null)
+            {
+                if (_forceShowAllOverlays)
+                {
+                    _jumpOverlayForm.Show();
+                    if (_lastJumpOverlayData != null) _jumpOverlayForm.UpdateJumpOverlay(_lastJumpOverlayData);
+                }
+                else
+                {
+                    _jumpOverlayForm.Hide();
+                }
+            }
 
             // Export overlay positions for OBS
             ExportObsPositions();
@@ -209,10 +232,13 @@ namespace EliteDataRelay.Services
             _prospectorOverlayForm = null;
             _jumpOverlayForm = null;
             _overlayOwner = null;
+            _lastJumpOverlayData = null;
             _miningOverlayHideTimer?.Dispose();
             _miningOverlayHideTimer = null;
             _prospectorOverlayHideTimer?.Dispose();
             _prospectorOverlayHideTimer = null;
+            _jumpOverlayHideTimer?.Dispose();
+            _jumpOverlayHideTimer = null;
 
             lock (_explorationDebounceLock)
             {
@@ -242,7 +268,15 @@ namespace EliteDataRelay.Services
             {
                 _prospectorOverlayForm?.Hide();
             }
-            // Jump overlay is transient; do not force show here
+            if (AppConfiguration.EnableJumpOverlay && _lastJumpOverlayData != null)
+            {
+                _jumpOverlayForm?.Show();
+                _jumpOverlayForm?.UpdateJumpOverlay(_lastJumpOverlayData);
+            }
+            else
+            {
+                _jumpOverlayForm?.Hide();
+            }
         }
 
         public void Hide()
@@ -268,6 +302,8 @@ namespace EliteDataRelay.Services
                 _miningOverlayHideTimer = null;
                 _prospectorOverlayHideTimer?.Dispose();
                 _prospectorOverlayHideTimer = null;
+                _jumpOverlayHideTimer?.Dispose();
+                _jumpOverlayHideTimer = null;
                 EnsureOverlaysCreated(owner ?? _overlayOwner, force: true);
                 ShowAllEnabledOverlays();
             }
@@ -314,6 +350,18 @@ namespace EliteDataRelay.Services
                         _prospectorOverlayForm?.Hide();
                     }
                 }
+                if (AppConfiguration.EnableJumpOverlay)
+                {
+                    if (_forceShowAllOverlays || _lastJumpOverlayData != null)
+                    {
+                        _jumpOverlayForm?.Show();
+                        if (_lastJumpOverlayData != null) _jumpOverlayForm?.UpdateJumpOverlay(_lastJumpOverlayData);
+                    }
+                    else
+                    {
+                        _jumpOverlayForm?.Hide();
+                    }
+                }
             }
             else
             {
@@ -323,6 +371,7 @@ namespace EliteDataRelay.Services
                 _explorationOverlayForm?.Hide();
                 _miningOverlayForm?.Hide();
                 _prospectorOverlayForm?.Hide();
+                _jumpOverlayForm?.Hide();
             }
         }
 
@@ -362,6 +411,16 @@ namespace EliteDataRelay.Services
                 _prospectorOverlayForm?.Hide();
             }
 
+            if (_forceShowAllOverlays || AppConfiguration.EnableJumpOverlay)
+            {
+                _jumpOverlayForm?.Show();
+                _jumpOverlayForm?.UpdateJumpOverlay(_lastJumpOverlayData);
+            }
+            else
+            {
+                _jumpOverlayForm?.Hide();
+            }
+
             ApplyCachedOverlayData();
         }
 
@@ -379,6 +438,8 @@ namespace EliteDataRelay.Services
                 AppConfiguration.MiningOverlayLocation = _miningOverlayForm.Location;
             if (_prospectorOverlayForm != null)
                 AppConfiguration.ProspectorOverlayLocation = _prospectorOverlayForm.Location;
+            if (_jumpOverlayForm != null)
+                AppConfiguration.JumpOverlayLocation = _jumpOverlayForm.Location;
 
             AppConfiguration.Save();
             ExportObsPositions();
@@ -420,6 +481,11 @@ namespace EliteDataRelay.Services
             if (_prospectorOverlayForm != null)
             {
                 _prospectorOverlayForm.UpdateProspectorOverlay(_lastProspectorOverlayData);
+            }
+
+            if (_jumpOverlayForm != null)
+            {
+                _jumpOverlayForm.UpdateJumpOverlay(_lastJumpOverlayData);
             }
         }
 

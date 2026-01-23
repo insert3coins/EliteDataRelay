@@ -90,6 +90,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
             AppConfiguration.OverlayShowBorderMining = _chkShowBorderMining.Checked;
             AppConfiguration.OverlayShowBorderProspector = _chkShowBorderProspector.Checked;
+            AppConfiguration.OverlayShowBorderJump = _chkShowBorderJump.Checked;
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -101,12 +102,20 @@ namespace EliteDataRelay.UI
             _overlayBackColor = Color.FromArgb(200, 0, 0, 0);
             _overlayBorderColor = Color.FromArgb(255, 111, 0); // Elite Dangerous Orange
             _overlayOpacity = 85;
+            _overlayShowBorderInfo = true;
+            _overlayShowBorderCargo = true;
+            _overlayShowBorderSession = true;
+            _overlayShowBorderExploration = true;
+            _overlayShowBorderMining = true;
+            _overlayShowBorderProspector = true;
+            _overlayShowBorderJump = true;
             _chkShowBorderInfo.Checked = true;
             _chkShowBorderCargo.Checked = true;
             _chkShowBorderSession.Checked = true;
             _chkShowBorderExploration.Checked = true;
             _chkShowBorderMining.Checked = true;
             _chkShowBorderProspector.Checked = true;
+            _chkShowBorderJump.Checked = true;
             UpdateAppearanceControls();
 
             // Also update the static configuration directly to apply the changes live.
@@ -122,6 +131,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderExploration = true;
             AppConfiguration.OverlayShowBorderMining = true;
             AppConfiguration.OverlayShowBorderProspector = true;
+            AppConfiguration.OverlayShowBorderJump = true;
 
             // Also reset overlay positions
             AppConfiguration.InfoOverlayLocation = Point.Empty;
@@ -129,6 +139,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.SessionOverlayLocation = Point.Empty;
             AppConfiguration.MiningOverlayLocation = Point.Empty;
             AppConfiguration.ProspectorOverlayLocation = Point.Empty;
+            AppConfiguration.JumpOverlayLocation = Point.Empty;
 
             // Raise the event to trigger a refresh of the live overlays.
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);

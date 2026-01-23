@@ -63,6 +63,7 @@ namespace EliteDataRelay.UI
         private SystemInfoData? _currentSystemInfo;
         private MiningOverlayData? _currentMiningData;
         private ProspectorOverlayData? _currentProspectorData;
+        private NextJumpOverlayData? _currentJumpData;
 
         private readonly bool _allowDrag;
 

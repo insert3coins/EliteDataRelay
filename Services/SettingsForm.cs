@@ -22,14 +22,17 @@ namespace EliteDataRelay.UI
         private CheckBox _chkEnableExplorationOverlay = null!;
         private CheckBox _chkEnableMiningOverlay = null!;
         private CheckBox _chkEnableProspectorOverlay = null!;
+        private CheckBox _chkEnableJumpOverlay = null!;
         private GroupBox _grpOverlaySettings = null!;
         private CheckBox _chkTrafficExplorationOverlay = null!;
+        private CheckBox _chkTrafficJumpOverlay = null!;
         private CheckBox _chkShowBorderInfo = null!;
         private CheckBox _chkShowBorderCargo = null!;
         private CheckBox _chkShowBorderSession = null!;
         private CheckBox _chkShowBorderExploration = null!;
         private CheckBox _chkShowBorderMining = null!;
         private CheckBox _chkShowBorderProspector = null!;
+        private CheckBox _chkShowBorderJump = null!;
         private CheckBox _chkFastStart = null!;
         private GroupBox _grpSessionTracking = null!;
         private CheckBox _chkEnableSessionTracking = null!;
@@ -61,6 +64,7 @@ namespace EliteDataRelay.UI
         private bool _overlayShowBorderExploration;
         private bool _overlayShowBorderMining;
         private bool _overlayShowBorderProspector;
+        private bool _overlayShowBorderJump;
 
         // Cache for original settings to allow for cancellation of live changes
         private Font _originalOverlayFont = null!;
@@ -74,11 +78,13 @@ namespace EliteDataRelay.UI
         private bool _originalShowBorderExploration;
         private bool _originalShowBorderMining;
         private bool _originalShowBorderProspector;
+        private bool _originalShowBorderJump;
         private Point _originalInfoOverlayLocation;
         private Point _originalCargoOverlayLocation;
         private Point _originalSessionOverlayLocation;
         private Point _originalMiningOverlayLocation;
         private Point _originalProspectorOverlayLocation;
+        private Point _originalJumpOverlayLocation;
 
         public event EventHandler? LiveSettingsChanged;
         public event EventHandler<bool>? RepositionModeChanged;
@@ -104,11 +110,12 @@ namespace EliteDataRelay.UI
             _chkEnableExplorationOverlay.Checked = AppConfiguration.EnableExplorationOverlay;
             _chkEnableMiningOverlay.Checked = AppConfiguration.EnableMiningOverlay;
             _chkEnableProspectorOverlay.Checked = AppConfiguration.EnableProspectorOverlay;
+            _chkEnableJumpOverlay.Checked = AppConfiguration.EnableJumpOverlay;
             _chkFastStart.Checked = AppConfiguration.FastStartSkipJournalHistory;
             // Hotkeys removed
             // Traffic toggles
             if (_chkTrafficExplorationOverlay != null) _chkTrafficExplorationOverlay.Checked = AppConfiguration.ShowTrafficOnExplorationOverlay;
-            // Next Jump traffic removed
+            if (_chkTrafficJumpOverlay != null) _chkTrafficJumpOverlay.Checked = AppConfiguration.ShowTrafficOnJumpOverlay;
             // Hotkeys removed
             // Hotkeys removed
 
@@ -128,6 +135,7 @@ namespace EliteDataRelay.UI
             _overlayShowBorderExploration = AppConfiguration.OverlayShowBorderExploration;
             _overlayShowBorderMining = AppConfiguration.OverlayShowBorderMining;
             _overlayShowBorderProspector = AppConfiguration.OverlayShowBorderProspector;
+            _overlayShowBorderJump = AppConfiguration.OverlayShowBorderJump;
 
             // Store original values for cancellation
             _originalOverlayFont = (Font)_overlayFont.Clone();
@@ -141,11 +149,13 @@ namespace EliteDataRelay.UI
             _originalShowBorderExploration = _overlayShowBorderExploration;
             _originalShowBorderMining = _overlayShowBorderMining;
             _originalShowBorderProspector = _overlayShowBorderProspector;
+            _originalShowBorderJump = _overlayShowBorderJump;
             _originalInfoOverlayLocation = AppConfiguration.InfoOverlayLocation;
             _originalCargoOverlayLocation = AppConfiguration.CargoOverlayLocation;
             _originalSessionOverlayLocation = AppConfiguration.SessionOverlayLocation;
             _originalMiningOverlayLocation = AppConfiguration.MiningOverlayLocation;
             _originalProspectorOverlayLocation = AppConfiguration.ProspectorOverlayLocation;
+            _originalJumpOverlayLocation = AppConfiguration.JumpOverlayLocation;
 
             UpdateAppearanceControls();
         }
@@ -166,6 +176,7 @@ namespace EliteDataRelay.UI
             if (_chkShowBorderExploration != null) _chkShowBorderExploration.Checked = _overlayShowBorderExploration;
             if (_chkShowBorderMining != null) _chkShowBorderMining.Checked = _overlayShowBorderMining;
             if (_chkShowBorderProspector != null) _chkShowBorderProspector.Checked = _overlayShowBorderProspector;
+            if (_chkShowBorderJump != null) _chkShowBorderJump.Checked = _overlayShowBorderJump;
         }
 
         private void SaveSettings()
@@ -179,9 +190,11 @@ namespace EliteDataRelay.UI
             AppConfiguration.EnableExplorationOverlay = _chkEnableExplorationOverlay.Checked;
             AppConfiguration.EnableMiningOverlay = _chkEnableMiningOverlay.Checked;
             AppConfiguration.EnableProspectorOverlay = _chkEnableProspectorOverlay.Checked;
+            AppConfiguration.EnableJumpOverlay = _chkEnableJumpOverlay.Checked;
             AppConfiguration.FastStartSkipJournalHistory = _chkFastStart.Checked;
             // Hotkeys removed
             AppConfiguration.ShowTrafficOnExplorationOverlay = _chkTrafficExplorationOverlay.Checked;
+            AppConfiguration.ShowTrafficOnJumpOverlay = _chkTrafficJumpOverlay.Checked;
             // Hotkeys removed
             // Removed legacy output directory persistence
 
@@ -202,6 +215,7 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderExploration = _chkShowBorderExploration.Checked;
             AppConfiguration.OverlayShowBorderMining = _chkShowBorderMining.Checked;
             AppConfiguration.OverlayShowBorderProspector = _chkShowBorderProspector.Checked;
+            AppConfiguration.OverlayShowBorderJump = _chkShowBorderJump.Checked;
 
             AppConfiguration.Save();
         }
@@ -262,11 +276,13 @@ namespace EliteDataRelay.UI
             AppConfiguration.OverlayShowBorderExploration = _originalShowBorderExploration;
             AppConfiguration.OverlayShowBorderMining = _originalShowBorderMining;
             AppConfiguration.OverlayShowBorderProspector = _originalShowBorderProspector;
+            AppConfiguration.OverlayShowBorderJump = _originalShowBorderJump;
             AppConfiguration.InfoOverlayLocation = _originalInfoOverlayLocation;
             AppConfiguration.CargoOverlayLocation = _originalCargoOverlayLocation;
             AppConfiguration.SessionOverlayLocation = _originalSessionOverlayLocation;
             AppConfiguration.MiningOverlayLocation = _originalMiningOverlayLocation;
             AppConfiguration.ProspectorOverlayLocation = _originalProspectorOverlayLocation;
+            AppConfiguration.JumpOverlayLocation = _originalJumpOverlayLocation;
 
             LiveSettingsChanged?.Invoke(this, EventArgs.Empty);
         }

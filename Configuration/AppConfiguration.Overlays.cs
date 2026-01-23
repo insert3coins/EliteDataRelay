@@ -11,7 +11,7 @@ namespace EliteDataRelay.Configuration
         public static bool EnableExplorationOverlay { get; set; } = false;
         public static bool EnableMiningOverlay { get; set; } = false;
         public static bool EnableProspectorOverlay { get; set; } = false;
-        public static bool EnableJumpOverlay { get; set; } = false; // removed
+        public static bool EnableJumpOverlay { get; set; } = true;
         public static bool AllowOverlayDrag { get; set; } = true;
         public static Point InfoOverlayLocation { get; set; } = Point.Empty;
         public static Point CargoOverlayLocation { get; set; } = Point.Empty;
@@ -36,13 +36,13 @@ namespace EliteDataRelay.Configuration
         public static bool OverlayShowBorderExploration { get; set; } = true;
         public static bool OverlayShowBorderMining { get; set; } = true;
         public static bool OverlayShowBorderProspector { get; set; } = true;
-        public static bool OverlayShowBorderJump { get; set; } = false; // removed
+        public static bool OverlayShowBorderJump { get; set; } = true;
 
         // Next Jump overlay options
         public static bool ShowNextJumpJumpsLeft { get; set; } = true;
 
         // Traffic display options
         public static bool ShowTrafficOnExplorationOverlay { get; set; } = true;
-        public static bool ShowTrafficOnJumpOverlay { get; set; } = false; // removed
+        public static bool ShowTrafficOnJumpOverlay { get; set; } = true;
     }
 }

@@ -81,9 +81,8 @@ namespace EliteDataRelay.UI
             }
             else if (_position == OverlayPosition.Exploration)
             {
-                // Exploration overlay with FSS tracking: increased to fit completion/signals/codex rows
-                // Previous: 340x195. New: 360x255 for improved readability.
-                this.Size = new Size(360, 225);
+                // Exploration overlay with FSS tracking: give generous fixed canvas for readability.
+                this.Size = new Size(345, 230);
 
                 // Custom render panel for bitmap-cached drawing (SrvSurvey PlotBase2 style)
                 _renderPanel = new DoubleBufferedPanel
@@ -130,7 +129,23 @@ namespace EliteDataRelay.UI
                 Controls.Add(_renderPanel);
                 ApplyRoundedRegion();
             }
-            // JumpInfo overlay removed
+            else if (_position == OverlayPosition.JumpInfo)
+            {
+                // Slightly tighter canvas to reduce vertical whitespace.
+                this.Size = new Size(435, 180);
+
+                _renderPanel = new DoubleBufferedPanel
+                {
+                    Location = new Point(0, 0),
+                    Size = this.ClientSize,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    BackColor = Color.Transparent
+                };
+                _renderPanel.Paint += OnJumpPanelPaint;
+
+                Controls.Add(_renderPanel);
+                ApplyRoundedRegion();
+            }
             
         }
 

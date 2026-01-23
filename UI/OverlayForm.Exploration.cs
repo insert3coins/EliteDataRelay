@@ -113,6 +113,10 @@ namespace EliteDataRelay.UI
 
             if (width <= 0 || height <= 0) return;
 
+            const int padding = 12;
+            const int lineHeight = 20;
+            int y = padding;
+
             // Dispose old frame and create new one
             _frameCache?.Dispose();
             _frameCache = new Bitmap(width, height);
@@ -138,10 +142,14 @@ namespace EliteDataRelay.UI
                     }
                 }
 
-                // Layout constants
-                const int padding = 12;
-                const int lineHeight = 20;
-                int y = padding;
+                int LabelWidth(Graphics g) => (int)Math.Ceiling(g.MeasureString("Mapped:", GameColors.FontNormal).Width) + 6;
+                int labelWidth = LabelWidth(g);
+                Action<string, string, Brush> drawRow = (label, value, brush) =>
+                {
+                    g.DrawString(label, GameColors.FontNormal, GameColors.BrushGrayText, padding, y);
+                    g.DrawString(value, GameColors.FontNormal, brush, padding + labelWidth, y);
+                    y += lineHeight;
+                };
 
                 if (_currentExplorationData == null || string.IsNullOrEmpty(_currentExplorationData.SystemName))
                 {
@@ -166,22 +174,19 @@ namespace EliteDataRelay.UI
                 // Show FSS progress if not complete
                 if (data.FSSProgress > 0 && data.FSSProgress < 100)
                 {
-                    string fssText = $"FSS:     {data.FSSProgress:F1}%";
+                    string fssValue = $"{data.FSSProgress:F1}%";
                     if (data.TotalBodies > 0)
                     {
-                        // Calculate detected bodies from percentage
                         int detectedBodies = (int)Math.Round(data.TotalBodies * (data.FSSProgress / 100.0));
-                        fssText += $"  ({detectedBodies}/{data.TotalBodies} detected)";
+                        fssValue += $" ({detectedBodies}/{data.TotalBodies})";
                     }
-                    g.DrawString(fssText, GameColors.FontNormal, GameColors.BrushOrange, padding, y);
-                    y += lineHeight;
+                    drawRow("FSS:", fssValue, GameColors.BrushOrange);
                 }
                 else if (data.FSSProgress >= 100 && data.TotalBodies > 0)
                 {
                     // FSS Complete
-                    string fssText = $"FSS:     Complete ({data.TotalBodies} bodies)";
-                    g.DrawString(fssText, GameColors.FontNormal, GameColors.BrushGreen, padding, y);
-                    y += lineHeight;
+                    string fssValue = $"Complete ({data.TotalBodies} bodies)";
+                    drawRow("FSS:", fssValue, GameColors.BrushGreen);
                 }
 
                 // === DETAILED SCAN STATUS ===
@@ -194,20 +199,17 @@ namespace EliteDataRelay.UI
                 if (data.TotalBodies > 0)
                 {
                     int shown = Math.Min(scannedDisplay, data.TotalBodies);
-                    g.DrawString($"Scanned: {shown} / {data.TotalBodies}", GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                    drawRow("Scanned:", $"{shown} / {data.TotalBodies}", GameColors.BrushCyan);
                 }
                 else
                 {
-                    g.DrawString($"Scanned: {scannedDisplay}", GameColors.FontNormal, GameColors.BrushCyan, padding, y);
+                    drawRow("Scanned:", $"{scannedDisplay}", GameColors.BrushCyan);
                 }
-                y += lineHeight;
 
                 // (Traffic moved to Known System location below)
 
                 // === MAPPED INFO ===
-                string mappedText = $"Mapped:  {data.MappedBodies}";
-                g.DrawString(mappedText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
-                y += lineHeight;
+                drawRow("Mapped:", $"{data.MappedBodies}", GameColors.BrushCyan);
 
                 // === COMPLETION BADGES (All scanned / All mapped) ===
                 bool allScanned = data.TotalBodies > 0 && data.ScannedBodies >= data.TotalBodies;
@@ -219,8 +221,9 @@ namespace EliteDataRelay.UI
                 if (mappable > 0 && mapped >= mappable) completionParts.Add("All mapped");
                 if (completionParts.Count > 0)
                 {
-                    string completionText = "Completion: " + string.Join(" \u2022 ", completionParts);
-                    g.DrawString(completionText, GameColors.FontSmall, GameColors.BrushGreen, padding, y);
+                    string completionText = string.Join(" \u2022 ", completionParts);
+                    g.DrawString("Completion:", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
+                    g.DrawString(completionText, GameColors.FontSmall, GameColors.BrushGreen, padding + labelWidth, y);
                     y += lineHeight;
                 }
 
@@ -230,9 +233,7 @@ namespace EliteDataRelay.UI
                 int bioCodex = data.CodexBiologicalEntries?.Count ?? 0;
                 if (bioCodex > 0)
                 {
-                    string codexText = $"Codex:  {bioCodex} bio";
-                    g.DrawString(codexText, GameColors.FontNormal, GameColors.BrushCyan, padding, y);
-                    y += lineHeight;
+                    drawRow("Codex:", $"{bioCodex} bio", GameColors.BrushCyan);
                 }
 
                 // === FIRST DISCOVERIES / MAPPINGS / FOOTFALLS ===
@@ -255,8 +256,12 @@ namespace EliteDataRelay.UI
                     if (!string.IsNullOrEmpty(firstsText))
                     {
                         // Use TextRenderer for better emoji support. Graphics.DrawString can fail to render color emojis.
-                        TextRenderer.DrawText(g, firstsText, GameColors.FontNormal,
+                        TextRenderer.DrawText(g, "Firsts:", GameColors.FontNormal,
                                               new Point(padding, y),
+                                              GameColors.GrayText,
+                                              TextFormatFlags.Left | TextFormatFlags.NoPadding);
+                        TextRenderer.DrawText(g, firstsText, GameColors.FontNormal,
+                                              new Point(padding + labelWidth, y),
                                               GameColors.Gold,
                                               TextFormatFlags.Left | TextFormatFlags.NoPadding);
                         y += lineHeight;
@@ -265,9 +270,9 @@ namespace EliteDataRelay.UI
                     // Line 2: First footfalls (if any)
                     if (firstFootfalls > 0)
                     {
-                        string footfallText = $"First footfall: {firstFootfalls}";
+                        string footfallText = $"Footfalls: {firstFootfalls}";
                         TextRenderer.DrawText(g, footfallText, GameColors.FontNormal,
-                                              new Point(padding, y),
+                                              new Point(padding + labelWidth, y),
                                               GameColors.Gold,
                                               TextFormatFlags.Left | TextFormatFlags.NoPadding);
                         y += lineHeight;
@@ -280,10 +285,9 @@ namespace EliteDataRelay.UI
                     _currentSystemInfo != null)
                 {
                     // Compact, readable formatting with bullet separators, truncated to fit overlay width
-                    string trafficText = $"Traffic:  {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
+                    string trafficText = $"Traffic: {_currentSystemInfo.TrafficDay:N0} today \u2022 {_currentSystemInfo.TrafficWeek:N0} week \u2022 {_currentSystemInfo.TrafficTotal:N0} total";
                     string trafficDraw = TruncateText(g, trafficText, GameColors.FontSmall, width - padding * 2);
                     g.DrawString(trafficDraw, GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-                    // Source tag removed per request; show only values
                     y += lineHeight;
                     drewSystemInfo = true;
                 }
