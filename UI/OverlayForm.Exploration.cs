@@ -114,7 +114,7 @@ namespace EliteDataRelay.UI
             if (width <= 0 || height <= 0) return;
 
             const int padding = 12;
-            const int lineHeight = 20;
+                const int lineHeight = 22;
             int y = padding;
 
             // Dispose old frame and create new one
@@ -144,10 +144,11 @@ namespace EliteDataRelay.UI
 
                 int LabelWidth(Graphics g) => (int)Math.Ceiling(g.MeasureString("Mapped:", GameColors.FontNormal).Width) + 6;
                 int labelWidth = LabelWidth(g);
+                int valueOffset = padding + labelWidth + 29; // bump value start further right to prevent overlap
                 Action<string, string, Brush> drawRow = (label, value, brush) =>
                 {
                     g.DrawString(label, GameColors.FontNormal, GameColors.BrushGrayText, padding, y);
-                    g.DrawString(value, GameColors.FontNormal, brush, padding + labelWidth, y);
+                    g.DrawString(value, GameColors.FontNormal, brush, valueOffset, y);
                     y += lineHeight;
                 };
 
@@ -222,9 +223,9 @@ namespace EliteDataRelay.UI
                 if (completionParts.Count > 0)
                 {
                     string completionText = string.Join(" \u2022 ", completionParts);
-                    g.DrawString("Completion:", GameColors.FontSmall, GameColors.BrushGrayText, padding, y);
-                    g.DrawString(completionText, GameColors.FontSmall, GameColors.BrushGreen, padding + labelWidth, y);
-                    y += lineHeight;
+                    g.DrawString("Completion:", GameColors.FontNormal, GameColors.BrushGrayText, padding, y);
+                    g.DrawString(completionText, GameColors.FontNormal, GameColors.BrushGreen, valueOffset, y);
+                    y += lineHeight + 4; // extra buffer to avoid overlap with following rows
                 }
 
                 // Signals removed from overlay
@@ -261,7 +262,7 @@ namespace EliteDataRelay.UI
                                               GameColors.GrayText,
                                               TextFormatFlags.Left | TextFormatFlags.NoPadding);
                         TextRenderer.DrawText(g, firstsText, GameColors.FontNormal,
-                                              new Point(padding + labelWidth, y),
+                                              new Point(valueOffset, y),
                                               GameColors.Gold,
                                               TextFormatFlags.Left | TextFormatFlags.NoPadding);
                         y += lineHeight;
@@ -270,13 +271,19 @@ namespace EliteDataRelay.UI
                     // Line 2: First footfalls (if any)
                     if (firstFootfalls > 0)
                     {
-                        string footfallText = $"Footfalls: {firstFootfalls}";
-                        TextRenderer.DrawText(g, footfallText, GameColors.FontNormal,
-                                              new Point(padding + labelWidth, y),
+                        TextRenderer.DrawText(g, "Footfalls:", GameColors.FontNormal,
+                                              new Point(padding, y),
+                                              GameColors.GrayText,
+                                              TextFormatFlags.Left | TextFormatFlags.NoPadding);
+                        TextRenderer.DrawText(g, $"{firstFootfalls}", GameColors.FontNormal,
+                                              new Point(valueOffset, y),
                                               GameColors.Gold,
                                               TextFormatFlags.Left | TextFormatFlags.NoPadding);
                         y += lineHeight;
                     }
+
+                    // Add small buffer after firsts block
+                    y += 4;
                 }
 
                 // Always show EDSM/system info, even when firsts are present
