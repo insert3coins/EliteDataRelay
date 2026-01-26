@@ -162,8 +162,13 @@ namespace EliteDataRelay
             // If we don't have a reference to the game process, try to find it.
             if (_gameProcess == null)
             {
-                _gameProcess = Process.GetProcessesByName("EliteDangerous64").FirstOrDefault();
-                if (_gameProcess == null)
+                var processes = Process.GetProcessesByName("EliteDangerous64");
+                if (processes.Length > 0)
+                {
+                    _gameProcess = processes[0];
+                    for (int i = 1; i < processes.Length; i++) processes[i].Dispose();
+                }
+                else
                 {
                     // If still not found, stop monitoring.
                     Debug.WriteLine("[CargoForm] Elite Dangerous process no longer found. Stopping monitoring automatically.");
@@ -182,16 +187,11 @@ namespace EliteDataRelay
                     OnStopClicked(null, EventArgs.Empty);
                 }
             }
-            catch (Win32Exception)
+            catch (Exception ex) when (ex is Win32Exception || ex is InvalidOperationException)
             {
                 // This can happen if the process is forcefully terminated or access is denied.
                 // In either case, we should stop monitoring.
-                Debug.WriteLine("[CargoForm] Could not access game process state. Stopping monitoring automatically.");
-                OnStopClicked(null, EventArgs.Empty);
-            }
-            catch (InvalidOperationException)
-            {
-                // This can happen if the process object is in an invalid state.
+                Debug.WriteLine($"[CargoForm] Could not access game process state: {ex.Message}. Stopping monitoring automatically.");
                 OnStopClicked(null, EventArgs.Empty);
             }
         }
